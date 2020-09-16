@@ -1,0 +1,14 @@
+InventoryImage:
+  Item:
+    Enabled: true
+  Inventory:
+    Enabled: true
+  EnderChest:
+    Enabled: true
+
+Messages:
+  ReloadConfig: "&aICDiscordSRVAddon config has been reloaded!"
+  ReloadTexture: "&aICDiscordSRVAddon reloading textures... (See console for progress)"
+
+Options:
+  Updater: true

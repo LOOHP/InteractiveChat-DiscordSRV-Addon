@@ -1,0 +1,25 @@
+name: InteractiveChatDiscordSRVAddon
+author: loohp
+version: ${project.version}
+main: com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon
+api-version: 1.13
+description: DiscordSRV addon to InteractiveChat
+depend: [InteractiveChat, DiscordSRV]
+prefix: InteractiveChatDiscordSRVAddon
+
+commands:
+  interactivechatdiscordsrv:
+    usage: /<command>
+    aliases: [icd]
+    description: Plugin main command
+
+permissions:
+  interactivechatdiscordsrv.reloadconfig:
+    description: Allows you to reload the config
+    default: op
+  interactivechatdiscordsrv.reloadtexture:
+    description: Allows you to reload the texture
+    default: op
+  interactivechatdiscordsrv.update:
+    description: Get updater notifications
+    default: op
