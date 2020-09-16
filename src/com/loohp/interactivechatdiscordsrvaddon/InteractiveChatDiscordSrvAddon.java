@@ -17,7 +17,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.ChatColorUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.Events;
+import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordSRVEvents;
 import com.loohp.interactivechatdiscordsrvaddon.Metrics.Charts;
 import com.loohp.interactivechatdiscordsrvaddon.Metrics.Metrics;
 import com.loohp.interactivechatdiscordsrvaddon.Updater.Updater;
@@ -65,7 +65,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		metrics = new Metrics(this, pluginId);
 		Charts.setup(metrics);
 		
-		DiscordSRV.api.subscribe(new Events());
+		DiscordSRV.api.subscribe(new DiscordSRVEvents());
 		
 		getServer().getPluginManager().registerEvents(new Updater(), this);
 		getCommand("interactivechatdiscordsrv").setExecutor(new Commands());

@@ -36,22 +36,28 @@ import com.loohp.interactivechatdiscordsrvaddon.Image.InventoryGeneration;
 
 import github.scarsz.discordsrv.api.Subscribe;
 import github.scarsz.discordsrv.api.events.DiscordGuildMessageSentEvent;
-import github.scarsz.discordsrv.api.events.GameChatMessagePostProcessEvent;
+import github.scarsz.discordsrv.api.events.DiscordReadyEvent;
+import github.scarsz.discordsrv.api.events.GameChatMessagePreProcessEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import net.md_5.bungee.api.chat.TranslatableComponent;
 
-public class Events {
+public class DiscordSRVEvents {
 	
 	private static Random random = new Random();
 	public static Map<Integer, InventoryImageData> data = Collections.synchronizedMap(new LinkedHashMap<>());
 	
 	@Subscribe
-	public void onGameToDiscord(GameChatMessagePostProcessEvent event) {
+	public void onDiscordReady(DiscordReadyEvent event) {
+		 InteractiveChatDiscordSrvAddon.discordsrv.getJda().addEventListener(new JDAEvents());
+	}
+	
+	@Subscribe
+	public void onGameToDiscord(GameChatMessagePreProcessEvent event) {
 		InteractiveChatDiscordSrvAddon.plugin.messagesCounter.incrementAndGet();
 		Player sender = event.getPlayer();
 		PlayerWrapper wrappedSender = new PlayerWrapper(sender);
-		String message = event.getProcessedMessage();
+		String message = event.getMessage();
 		
 		long now = System.currentTimeMillis();
 		long uniCooldown = InteractiveChatAPI.getPlayerUniversalCooldown(sender) - now;
@@ -86,7 +92,7 @@ public class Events {
 						Inventory inv = Bukkit.createInventory(null, 9);
 						String title = PlaceholderParser.parse(wrappedSender, ChatColorUtils.stripColor(InteractiveChat.itemTitle));
 						inv.setItem(4, item.clone());
-						data.put(inventoryId, new InventoryImageData(title, inv));
+						data.put(inventoryId, new InventoryImageData(sender, title, inv));
 						message += "<ICD=" + inventoryId + ">";
 					}
 				}
@@ -110,7 +116,7 @@ public class Events {
 							}
 						}
 						String title = PlaceholderParser.parse(wrappedSender, ChatColorUtils.stripColor(InteractiveChat.invTitle));
-						data.put(inventoryId, new InventoryImageData(title, inv));
+						data.put(inventoryId, new InventoryImageData(sender, title, inv));
 						message += "<ICD=" + inventoryId + ">";
 					}
 				}
@@ -134,7 +140,7 @@ public class Events {
 							}
 						}
 						String title = PlaceholderParser.parse(wrappedSender, ChatColorUtils.stripColor(InteractiveChat.enderTitle));
-						data.put(inventoryId, new InventoryImageData(title, inv));
+						data.put(inventoryId, new InventoryImageData(sender, title, inv));
 						message += "<ICD=" + inventoryId + ">";
 					}
 				}
@@ -156,7 +162,7 @@ public class Events {
 			}
 		}
 		
-		event.setProcessedMessage(message);
+		event.setMessage(message);
 	}
 	
 	@Subscribe
@@ -207,12 +213,18 @@ public class Events {
 	}
 	
 	static class InventoryImageData {
-		private String title;
-		private Inventory inventory;
+		private final Player player;
+		private final String title;
+		private final Inventory inventory;
 		
-		public InventoryImageData(String title, Inventory inventory) {
+		public InventoryImageData(Player player, String title, Inventory inventory) {		
+			this.player = player;
 			this.title = title;
 			this.inventory = inventory;
+		}
+		
+		public Player getPlayer() {
+			return player;
 		}
 		
 		public String getTitle() {
