@@ -5,6 +5,10 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.net.URL;
+import java.util.Base64;
+
+import javax.imageio.ImageIO;
 
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
@@ -13,7 +17,11 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
+import com.cryptomorin.xseries.SkullUtils;
 import com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
@@ -50,6 +58,28 @@ public class InventoryGeneration {
 				itemImage = InteractiveChatDiscordSrvAddon.plugin.getBlockTexture(key);
 				if (itemImage == null) {
 					continue;
+				}
+			}
+			
+			if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
+				try {
+					String base64 = SkullUtils.getSkinValue(item);
+					if (base64 != null) {
+						JSONObject json = (JSONObject) new JSONParser().parse(new String(Base64.getDecoder().decode(base64)));
+						String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace("http://textures.minecraft.net/texture/", "");					
+						String url = "https://mc-heads.net/head/" + value + "/96";
+						BufferedImage newSkull = ImageIO.read(new URL(url));
+						
+						BufferedImage newImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+						Graphics2D g2 = newImage.createGraphics();
+						g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+						g2.drawImage(newSkull, 5, 4, 24, 27, null);
+						g2.dispose();
+						
+						itemImage = newImage;
+					}
+				} catch (ParseException e) {
+					e.printStackTrace();
 				}
 			}
 			

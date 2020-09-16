@@ -79,6 +79,25 @@ public class CustomImageUtils {
 		return image;
 	}
 	
+	public static BufferedImage squarify(BufferedImage image) {
+		if (image.getHeight() == image.getWidth()) {
+			return image;
+		}
+		int size = Math.max(image.getHeight(), image.getWidth());
+		int offsetX = (size - image.getWidth()) / 2;
+		int offsetY = (size - image.getHeight()) / 2;
+		
+		BufferedImage newImage = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+		
+		for (int y = 0; y < image.getHeight(); y++) {
+			for (int x = 0; x < image.getWidth(); x++) {
+				int colorValue = image.getRGB(x, y);
+				newImage.setRGB(x + offsetX, y + offsetY, colorValue);
+			}
+		}
+		return newImage;
+	}
+	
 	public static BufferedImage copyImage(BufferedImage source){
 	    BufferedImage b = new BufferedImage(source.getWidth(), source.getHeight(), source.getType());
 	    Graphics g = b.getGraphics();

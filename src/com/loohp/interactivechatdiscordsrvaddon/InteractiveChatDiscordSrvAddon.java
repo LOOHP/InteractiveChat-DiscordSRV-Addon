@@ -154,6 +154,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 						continue;
 					}
 					
+					item_ori = CustomImageUtils.squarify(item_ori);
+					
 					BufferedImage itemImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
 					Graphics2D g = itemImage.createGraphics();
 					g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
