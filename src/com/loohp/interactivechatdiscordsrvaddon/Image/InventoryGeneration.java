@@ -139,6 +139,11 @@ public class InventoryGeneration {
 				g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 				g2.drawImage(armorOverlay, 0, 0, null);
 				g2.dispose();
+			} else if (xMaterial.equals(XMaterial.ELYTRA)) {
+				int durability = item.getType().getMaxDurability() - (InteractiveChat.version.isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
+				if (durability <= 1) {
+					itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("broken_elytra");
+				}
 			}
 			
 			boolean tintedPotion = false;
