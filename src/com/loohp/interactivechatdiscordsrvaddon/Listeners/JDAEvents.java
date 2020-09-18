@@ -5,8 +5,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -71,12 +73,14 @@ public class JDAEvents extends ListenerAdapter {
 		}
 		
 		message.delete().queue();
+		Player player = null;
+		List<WebhookMessageBuilder> messagesToSend = new ArrayList<>();
 		
 		for (int key : matches) {
 			InventoryImageData iData = DiscordSRVEvents.data.get(key);
 			String title = iData.getTitle();
 			Inventory inv = iData.getInventory();
-			Player player = iData.getPlayer();
+			player = iData.getPlayer();
 			if (inv == null) {
 				continue;
 			}
@@ -86,51 +90,56 @@ public class JDAEvents extends ListenerAdapter {
 				ImageIO.write(image, "png", os);
 				InputStream is = new ByteArrayInputStream(os.toByteArray());
 				
-				String avatarUrl = DiscordSRV.config().getString("Experiment_EmbedAvatarUrl");
-	            avatarUrl = PlaceholderUtil.replacePlaceholders(avatarUrl, player);
-
-	            String username = DiscordSRV.config().getString("Experiment_WebhookChatMessageUsernameFormat")
-	                    .replace("%displayname%", DiscordUtil.strip(player.getDisplayName()))
-	                    .replace("%username%", player.getName());
-	            username = PlaceholderUtil.replacePlaceholders(username, player);
-	            username = DiscordUtil.strip(username);
-
-	            String userId = DiscordSRV.getPlugin().getAccountLinkManager().getDiscordId(player.getUniqueId());
-	            if (userId != null) {
-	                Member member = DiscordUtil.getMemberById(userId);
-	                if (member != null) {
-	                    if (DiscordSRV.config().getBoolean("Experiment_WebhookChatMessageAvatarFromDiscord"))
-	                        avatarUrl = member.getUser().getEffectiveAvatarUrl();
-	                    if (DiscordSRV.config().getBoolean("Experiment_WebhookChatMessageUsernameFromDiscord"))
-	                        username = member.getEffectiveName();
-	                }
-	            }
-
-	            if (StringUtils.isBlank(avatarUrl)) avatarUrl = "https://minotar.net/helm/{uuid-nodashes}/{size}";
-	            avatarUrl = avatarUrl
-	                    .replace("{timestamp}", String.valueOf(System.currentTimeMillis() / 1000))
-	                    .replace("{username}", player.getName())
-	                    .replace("{uuid}", player.getUniqueId().toString())
-	                    .replace("{uuid-nodashes}", player.getUniqueId().toString().replace("-", ""))
-	                    .replace("{size}", "128");
-				
-				String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(channel, username);
-				WebhookClient client = WebhookClient.withUrl(webHookUrl);
-				
-				if (client == null) {
-					continue;
-				}
-				
-				client.send(new WebhookMessageBuilder().setUsername(username).setAvatarUrl(avatarUrl).setContent(text).build());
-				client.send(new WebhookMessageBuilder().setUsername(username).setAvatarUrl(avatarUrl).setContent("**" + title + "**").addFile("Inventory.png", is).build());
-				
-				client.close();
+				messagesToSend.add(new WebhookMessageBuilder().setContent("**" + title + "**").addFile("Inventory.png", is));
 				
 				DiscordSRVEvents.data.remove(key);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}			
 		}
+		
+		String avatarUrl = DiscordSRV.config().getString("Experiment_EmbedAvatarUrl");
+        avatarUrl = PlaceholderUtil.replacePlaceholders(avatarUrl, player);
+
+        String username = DiscordSRV.config().getString("Experiment_WebhookChatMessageUsernameFormat")
+                .replace("%displayname%", DiscordUtil.strip(player.getDisplayName()))
+                .replace("%username%", player.getName());
+        username = PlaceholderUtil.replacePlaceholders(username, player);
+        username = DiscordUtil.strip(username);
+
+        String userId = DiscordSRV.getPlugin().getAccountLinkManager().getDiscordId(player.getUniqueId());
+        if (userId != null) {
+            Member member = DiscordUtil.getMemberById(userId);
+            if (member != null) {
+                if (DiscordSRV.config().getBoolean("Experiment_WebhookChatMessageAvatarFromDiscord"))
+                    avatarUrl = member.getUser().getEffectiveAvatarUrl();
+                if (DiscordSRV.config().getBoolean("Experiment_WebhookChatMessageUsernameFromDiscord"))
+                    username = member.getEffectiveName();
+            }
+        }
+
+        if (StringUtils.isBlank(avatarUrl)) avatarUrl = "https://minotar.net/helm/{uuid-nodashes}/{size}";
+        avatarUrl = avatarUrl
+                .replace("{timestamp}", String.valueOf(System.currentTimeMillis() / 1000))
+                .replace("{username}", player.getName())
+                .replace("{uuid}", player.getUniqueId().toString())
+                .replace("{uuid-nodashes}", player.getUniqueId().toString().replace("-", ""))
+                .replace("{size}", "128");
+		
+		String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(channel, username);
+		WebhookClient client = WebhookClient.withUrl(webHookUrl);
+		
+		if (client == null || player == null) {
+			return;
+		}
+		
+		client.send(new WebhookMessageBuilder().setUsername(username).setAvatarUrl(avatarUrl).setContent(text).build());
+		for (WebhookMessageBuilder builder : messagesToSend) {
+			client.send(builder.setUsername(username).setAvatarUrl(avatarUrl).build());
+		}
+		
+		client.close();
+		
 	}
 
 }
