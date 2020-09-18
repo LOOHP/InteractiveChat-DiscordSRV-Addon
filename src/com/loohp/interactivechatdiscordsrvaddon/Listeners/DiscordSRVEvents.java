@@ -66,7 +66,7 @@ public class DiscordSRVEvents {
 			return;
 		}
 		
-		if (InteractiveChat.useItem) {
+		if (InteractiveChat.useItem && sender.hasPermission("interactivechat.module.item")) {
 			long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, InteractiveChat.itemPlaceholder) - now;
 			if (cooldown < 0 || cooldown + 100 > ConfigManager.getConfig().getLong("ItemDisplay.Item.Cooldown") * 1000) {
 				if (message.toLowerCase().contains(InteractiveChat.itemPlaceholder.toLowerCase())) {
@@ -99,7 +99,7 @@ public class DiscordSRVEvents {
 			}
 		}
 		
-		if (InteractiveChat.useInventory) {
+		if (InteractiveChat.useInventory && sender.hasPermission("interactivechat.module.inventory")) {
 			long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, InteractiveChat.invPlaceholder) - now;
 			if (cooldown < 0 || cooldown + 100 > ConfigManager.getConfig().getLong("ItemDisplay.Inventory.Cooldown") * 1000) {
 				if (message.toLowerCase().contains(InteractiveChat.invPlaceholder.toLowerCase())) {
@@ -123,7 +123,7 @@ public class DiscordSRVEvents {
 			}
 		}
 		
-		if (InteractiveChat.useEnder) {
+		if (InteractiveChat.useEnder && sender.hasPermission("interactivechat.module.enderchest")) {
 			long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, InteractiveChat.enderPlaceholder) - now;
 			if (cooldown < 0 || cooldown + 100 > ConfigManager.getConfig().getLong("ItemDisplay.EnderChest.Cooldown") * 1000) {
 				if (message.toLowerCase().contains(InteractiveChat.enderPlaceholder.toLowerCase())) {
@@ -150,7 +150,7 @@ public class DiscordSRVEvents {
 		for (ICPlaceholder placeholder : InteractiveChatAPI.getICPlaceholderList()) {
 			if (!placeholder.isBuildIn()) {
 				CustomPlaceholder customP = placeholder.getCustomPlaceholder().get();
-				if (customP.getReplace().isEnabled()) {
+				if ((InteractiveChat.useCustomPlaceholderPermissions && sender.hasPermission("interactivechat.module.custom." + customP.getPosition())) && customP.getReplace().isEnabled()) {
 					long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, customP.getKeyword()) - now;
 					if (cooldown < 0 || cooldown + 100 > customP.getCooldown()) {
 						if (message.toLowerCase().contains(customP.getKeyword())) {
