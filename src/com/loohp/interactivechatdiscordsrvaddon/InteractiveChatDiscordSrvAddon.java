@@ -1,5 +1,6 @@
 package com.loohp.interactivechatdiscordsrvaddon;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -12,7 +13,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.imageio.ImageIO;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.loohp.interactivechat.InteractiveChat;
@@ -26,6 +26,7 @@ import com.loohp.interactivechatdiscordsrvaddon.Utils.JarUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.JarUtils.CopyOption;
 
 import github.scarsz.discordsrv.DiscordSRV;
+import net.md_5.bungee.api.ChatColor;
 
 public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	
@@ -41,6 +42,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public boolean invImage = true;
 	public boolean enderImage = true;
 	
+	public Color invColor = Color.black;
+	public Color enderColor = Color.black;
+	
 	public String reloadConfigMessage;
 	public String reloadTextureMessage;
 	
@@ -48,10 +52,10 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	
 	private Map<String, BufferedImage> blocks = new HashMap<>();
 	private Map<String, BufferedImage> items = new HashMap<>();
-	private Map<String, BufferedImage> font = new HashMap<>();
 	private Map<String, BufferedImage> misc = new HashMap<>();
 	private Map<String, BufferedImage> gui = new HashMap<>();
-	private Map<String, BufferedImage> banner = new HashMap<>();
+	private Map<String, BufferedImage> banner = new HashMap<>();	
+	private Map<String, BufferedImage> font = new HashMap<>();
 	
 	@Override
 	public void onEnable() {
@@ -62,6 +66,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		reloadConfig();
+		loadConfig();
 		
 		int pluginId = 8863;
 		metrics = new Metrics(this, pluginId);
@@ -97,6 +102,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		enderImage = getConfig().getBoolean("InventoryImage.EnderChest.Enabled");
 		
 		UpdaterEnabled = getConfig().getBoolean("Options.UpdaterEnabled");
+		
+		invColor = ChatColor.of(getConfig().getString("InventoryImage.Inventory.EmbedColor")).getColor();
+		enderColor = ChatColor.of(getConfig().getString("InventoryImage.EnderChest.EmbedColor")).getColor();
 	}
 	
 	public BufferedImage getBlockTexture(String str) {
@@ -158,6 +166,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 			Map<String, BufferedImage> banner = new HashMap<>();
 			
 			for (File file : new File(getDataFolder() + "/assets/blocks/").listFiles()) {
+				if (file.isDirectory()) {
+					continue;
+				}
 				try {
 					BufferedImage item_ori = ImageIO.read(file);
 					
@@ -187,6 +198,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 			}
 			
 			for (File file : new File(getDataFolder() + "/assets/items/").listFiles()) {
+				if (file.isDirectory()) {
+					continue;
+				}
 				try {
 					BufferedImage item_ori = ImageIO.read(file);
 					
@@ -214,6 +228,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 			}
 			
 			for (File file : new File(getDataFolder() + "/assets/font/").listFiles()) {
+				if (file.isDirectory()) {
+					continue;
+				}
 				try {
 					BufferedImage font_ori = ImageIO.read(file);
 					
@@ -241,6 +258,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 			}
 			
 			for (File file : new File(getDataFolder() + "/assets/misc/").listFiles()) {
+				if (file.isDirectory()) {
+					continue;
+				}
 				try {
 					BufferedImage miscImage = ImageIO.read(file);
 					
@@ -262,6 +282,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 			}
 			
 			for (File file : new File(getDataFolder() + "/assets/gui/").listFiles()) {
+				if (file.isDirectory()) {
+					continue;
+				}
 				try {
 					BufferedImage guiImage = ImageIO.read(file);
 					
@@ -283,6 +306,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 			}
 			
 			for (File file : new File(getDataFolder() + "/assets/banner/").listFiles()) {
+				if (file.isDirectory()) {
+					continue;
+				}
 				try {
 					BufferedImage guiImage = ImageIO.read(file);
 					

@@ -1,15 +1,15 @@
 package com.loohp.interactivechatdiscordsrvaddon.Listeners;
 
+import java.awt.Color;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 
@@ -21,6 +21,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.ConfigManager;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.API.InteractiveChatAPI;
@@ -30,14 +31,18 @@ import com.loohp.interactivechat.ObjectHolders.PlayerWrapper;
 import com.loohp.interactivechat.Utils.ChatColorUtils;
 import com.loohp.interactivechat.Utils.CustomStringUtils;
 import com.loohp.interactivechat.Utils.MaterialUtils;
+import com.loohp.interactivechat.Utils.NBTUtils;
 import com.loohp.interactivechat.Utils.PlaceholderParser;
+import com.loohp.interactivechat.Utils.RarityUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import com.loohp.interactivechatdiscordsrvaddon.Image.InventoryGeneration;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.ImageGeneration;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils;
 
 import github.scarsz.discordsrv.api.Subscribe;
 import github.scarsz.discordsrv.api.events.DiscordGuildMessageSentEvent;
 import github.scarsz.discordsrv.api.events.DiscordReadyEvent;
 import github.scarsz.discordsrv.api.events.GameChatMessagePreProcessEvent;
+import github.scarsz.discordsrv.dependencies.jda.api.EmbedBuilder;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import net.md_5.bungee.api.chat.TranslatableComponent;
@@ -45,7 +50,7 @@ import net.md_5.bungee.api.chat.TranslatableComponent;
 public class DiscordSRVEvents {
 	
 	private static Random random = new Random();
-	public static Map<Integer, InventoryImageData> data = Collections.synchronizedMap(new LinkedHashMap<>());
+	public static Map<Integer, ImageDisplayData> data = Collections.synchronizedMap(new LinkedHashMap<>());
 	
 	@Subscribe
 	public void onDiscordReady(DiscordReadyEvent event) {
@@ -75,11 +80,19 @@ public class DiscordSRVEvents {
 					if (item == null) {
 						item = new ItemStack(Material.AIR);
 					}
+					XMaterial xMaterial = XMaterial.matchXMaterial(item);
 					String itemStr;
 					if (item.hasItemMeta() && item.getItemMeta().hasDisplayName() && !item.getItemMeta().getDisplayName().equals("")) {
 						itemStr = item.getItemMeta().getDisplayName();
 					} else {
-						itemStr = new TranslatableComponent(MaterialUtils.getMinecraftLangName(item)).toLegacyText();
+						TranslatableComponent component = new TranslatableComponent(MaterialUtils.getMinecraftLangName(item));
+						if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
+							String owner = NBTUtils.getString(item, "SkullOwner", "Name");
+							if (owner != null) {
+								component.addWith(owner);
+							}
+						}
+						itemStr = component.toLegacyText();
 					}
 					itemStr = ChatColorUtils.stripColor(itemStr);
 					
@@ -89,10 +102,8 @@ public class DiscordSRVEvents {
 					message = message.replaceAll((InteractiveChat.itemCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.itemPlaceholder), replaceText);
 					if (InteractiveChatDiscordSrvAddon.plugin.itemImage && !item.getType().equals(Material.AIR)) {
 						int inventoryId = random.nextInt();
-						Inventory inv = Bukkit.createInventory(null, 9);
 						String title = PlaceholderParser.parse(wrappedSender, ChatColorUtils.stripColor(InteractiveChat.itemTitle));
-						inv.setItem(4, item.clone());
-						data.put(inventoryId, new InventoryImageData(sender, title, inv));
+						data.put(inventoryId, new ImageDisplayData(sender, title, ImageDisplayType.ITEM, item.clone()));
 						message += "<ICD=" + inventoryId + ">";
 					}
 				}
@@ -116,7 +127,7 @@ public class DiscordSRVEvents {
 							}
 						}
 						String title = PlaceholderParser.parse(wrappedSender, ChatColorUtils.stripColor(InteractiveChat.invTitle));
-						data.put(inventoryId, new InventoryImageData(sender, title, inv));
+						data.put(inventoryId, new ImageDisplayData(sender, title, ImageDisplayType.INVENTORY, inv));
 						message += "<ICD=" + inventoryId + ">";
 					}
 				}
@@ -140,7 +151,7 @@ public class DiscordSRVEvents {
 							}
 						}
 						String title = PlaceholderParser.parse(wrappedSender, ChatColorUtils.stripColor(InteractiveChat.enderTitle));
-						data.put(inventoryId, new InventoryImageData(sender, title, inv));
+						data.put(inventoryId, new ImageDisplayData(sender, title, ImageDisplayType.ENDERCHEST, inv));
 						message += "<ICD=" + inventoryId + ">";
 					}
 				}
@@ -168,59 +179,105 @@ public class DiscordSRVEvents {
 	@Subscribe
 	public void discordMessageSent(DiscordGuildMessageSentEvent event) {
 		Message message = event.getMessage();
-		String text = message.getContentRaw();
+		String text0 = message.getContentRaw();
 		TextChannel channel = event.getChannel();
 		
-		if (!text.contains("<ICD=")) {
-			return;
-		}
-		
-		Set<Integer> matches = new LinkedHashSet<>();
-		
-		Iterator<Integer> itr = data.keySet().iterator();
-		while (itr.hasNext()) {
-			int key = itr.next();
-			if (text.contains("<ICD=" + key + ">")) {
-				text = text.replace("<ICD=" + key + ">", "");
-				matches.add(key);
+		Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+			String text = text0;
+			
+			if (!text.contains("<ICD=")) {
+				return;
 			}
-		}
-		
-		if (matches.isEmpty()) {
-			return;
-		}
-		
-		message.editMessage(text).queue();
-		
-		for (int key : matches) {
-			InventoryImageData iData = data.get(key);
-			String title = iData.getTitle();
-			Inventory inv = iData.getInventory();
-			if (inv == null) {
-				continue;
+			
+			Set<Integer> matches = new LinkedHashSet<>();
+			
+			Iterator<Integer> itr = data.keySet().iterator();
+			while (itr.hasNext()) {
+				int key = itr.next();
+				if (text.contains("<ICD=" + key + ">")) {
+					text = text.replace("<ICD=" + key + ">", "");
+					matches.add(key);
+				}
 			}
-			try {
-				BufferedImage image = InventoryGeneration.getImage(inv);
-				ByteArrayOutputStream os = new ByteArrayOutputStream();
-				ImageIO.write(image, "png", os);
-				InputStream is = new ByteArrayInputStream(os.toByteArray());
-				channel.sendMessage("**" + title + "**").addFile(is, "Inventory.png").queue();
-				data.remove(key);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}			
-		}
+			
+			if (matches.isEmpty()) {
+				return;
+			}
+			
+			message.editMessage(text).queue();
+			
+			for (int key : matches) {
+				ImageDisplayData iData = data.get(key);
+				ImageDisplayType type = iData.getType();
+				String title = iData.getTitle();
+				if (iData.getItemStack().isPresent()) {
+					ItemStack item = iData.getItemStack().get();
+					Color color = RarityUtils.getRarityColor(item).getColor();
+					try {
+						String description = ItemStackUtils.getDiscordDescription(item);
+						BufferedImage image = ImageGeneration.getItemStackImage(item);					
+						ByteArrayOutputStream os = new ByteArrayOutputStream();
+						ImageIO.write(image, "png", os);
+						channel.sendMessage(new EmbedBuilder().setAuthor(title, null, "attachment://Item.png").setDescription(description).setColor(color).build()).addFile(os.toByteArray(), "Item.png").queue();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}	
+				} else if (iData.getInventory().isPresent()) {
+					Inventory inv = iData.getInventory().get();
+					try {
+						BufferedImage image = ImageGeneration.getInventoryImage(inv);
+						ByteArrayOutputStream os = new ByteArrayOutputStream();
+						Color color;
+						switch (type) {
+						case ENDERCHEST:
+							color = InteractiveChatDiscordSrvAddon.plugin.enderColor;
+							break;
+						case INVENTORY:
+							color = InteractiveChatDiscordSrvAddon.plugin.invColor;
+							break;
+						default:
+							color = Color.black;
+							break;
+						}
+						ImageIO.write(image, "png", os);
+						channel.sendMessage(new EmbedBuilder().setAuthor(title, null, null).setImage("attachment://Inventory.png").setColor(color).build()).addFile(os.toByteArray(), "Inventory.png").queue();
+						data.remove(key);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}			
+				}
+			}
+		});
 	}
 	
-	static class InventoryImageData {
+	public enum ImageDisplayType {
+		ITEM,
+		INVENTORY,
+		ENDERCHEST;
+	}
+	
+	public static class ImageDisplayData {
+		
 		private final Player player;
 		private final String title;
-		private final Inventory inventory;
+		private final ImageDisplayType type;
+		private final Optional<Inventory> inventory;
+		private final Optional<ItemStack> item;
 		
-		public InventoryImageData(Player player, String title, Inventory inventory) {		
+		public ImageDisplayData(Player player, String title, ImageDisplayType type, Inventory inventory, ItemStack item) {
+			this.type = type;
 			this.player = player;
 			this.title = title;
-			this.inventory = inventory;
+			this.inventory = Optional.ofNullable(inventory);
+			this.item = Optional.ofNullable(item);
+		}
+		
+		public ImageDisplayData(Player player, String title, ImageDisplayType type, Inventory inventory) {
+			this(player, title, type, inventory, null);
+		}
+		
+		public ImageDisplayData(Player player, String title, ImageDisplayType type, ItemStack itemstack) {
+			this(player, title, type, null, itemstack);
 		}
 		
 		public Player getPlayer() {
@@ -231,8 +288,16 @@ public class DiscordSRVEvents {
 			return title;
 		}
 
-		public Inventory getInventory() {
+		public Optional<Inventory> getInventory() {
 			return inventory;
+		}
+		
+		public Optional<ItemStack> getItemStack() {
+			return item;
+		}
+
+		public ImageDisplayType getType() {
+			return type;
 		}
 	}
 

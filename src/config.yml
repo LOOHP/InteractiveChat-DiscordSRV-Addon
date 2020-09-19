@@ -2,8 +2,10 @@ InventoryImage:
   Item:
     Enabled: true
   Inventory:
+    EmbedColor: "#55FFFF"
     Enabled: true
   EnderChest:
+    EmbedColor: "#FF55FF"
     Enabled: true
 
 Messages:

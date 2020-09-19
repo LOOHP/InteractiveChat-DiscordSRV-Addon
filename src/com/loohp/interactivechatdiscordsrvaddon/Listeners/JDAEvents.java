@@ -1,10 +1,9 @@
 package com.loohp.interactivechatdiscordsrvaddon.Listeners;
 
+import java.awt.Color;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -16,11 +15,18 @@ import javax.imageio.ImageIO;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 
-import com.loohp.interactivechatdiscordsrvaddon.Image.InventoryGeneration;
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordSRVEvents.InventoryImageData;
+import com.loohp.interactivechat.Utils.RarityUtils;
+import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
+import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordSRVEvents.ImageDisplayData;
+import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordSRVEvents.ImageDisplayType;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.ImageGeneration;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils;
 
 import club.minnced.discord.webhook.WebhookClient;
+import club.minnced.discord.webhook.send.WebhookEmbed.EmbedAuthor;
+import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.ChannelType;
@@ -77,25 +83,46 @@ public class JDAEvents extends ListenerAdapter {
 		List<WebhookMessageBuilder> messagesToSend = new ArrayList<>();
 		
 		for (int key : matches) {
-			InventoryImageData iData = DiscordSRVEvents.data.get(key);
+			ImageDisplayData iData = DiscordSRVEvents.data.get(key);
+			ImageDisplayType type = iData.getType();
 			String title = iData.getTitle();
-			Inventory inv = iData.getInventory();
 			player = iData.getPlayer();
-			if (inv == null) {
-				continue;
+			if (iData.getItemStack().isPresent()) {
+				ItemStack item = iData.getItemStack().get();
+				Color color = RarityUtils.getRarityColor(item).getColor();
+				try {
+					String description = ItemStackUtils.getDiscordDescription(item);
+					BufferedImage image = ImageGeneration.getItemStackImage(item);					
+					ByteArrayOutputStream os = new ByteArrayOutputStream();
+					ImageIO.write(image, "png", os);
+					messagesToSend.add(new WebhookMessageBuilder().addEmbeds(new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(title, "attachment://Item.png", null)).setColor(color.getRGB()).setDescription(description).build()).addFile("Item.png", os.toByteArray()));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}	
+			} else if (iData.getInventory().isPresent()) {
+				Inventory inv = iData.getInventory().get();
+				try {
+					BufferedImage image = ImageGeneration.getInventoryImage(inv);
+					ByteArrayOutputStream os = new ByteArrayOutputStream();
+					Color color;
+					switch (type) {
+					case ENDERCHEST:
+						color = InteractiveChatDiscordSrvAddon.plugin.enderColor;
+						break;
+					case INVENTORY:
+						color = InteractiveChatDiscordSrvAddon.plugin.invColor;
+						break;
+					default:
+						color = Color.black;
+						break;
+					}
+					ImageIO.write(image, "png", os);
+					messagesToSend.add(new WebhookMessageBuilder().addEmbeds(new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(title, null, null)).setColor(color.getRGB()).setImageUrl("attachment://Inventory.png").build()).addFile("Inventory.png", os.toByteArray()));					
+					DiscordSRVEvents.data.remove(key);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
-			try {
-				BufferedImage image = InventoryGeneration.getImage(inv);
-				ByteArrayOutputStream os = new ByteArrayOutputStream();
-				ImageIO.write(image, "png", os);
-				InputStream is = new ByteArrayInputStream(os.toByteArray());
-				
-				messagesToSend.add(new WebhookMessageBuilder().setContent("**" + title + "**").addFile("Inventory.png", is));
-				
-				DiscordSRVEvents.data.remove(key);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}			
 		}
 		
 		String avatarUrl = DiscordSRV.config().getString("Experiment_EmbedAvatarUrl");
@@ -139,7 +166,6 @@ public class JDAEvents extends ListenerAdapter {
 		}
 		
 		client.close();
-		
 	}
 
 }
