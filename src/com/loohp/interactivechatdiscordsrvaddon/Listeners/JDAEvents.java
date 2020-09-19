@@ -21,6 +21,7 @@ import com.loohp.interactivechat.Utils.RarityUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordSRVEvents.ImageDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordSRVEvents.ImageDisplayType;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.ColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils;
 
@@ -89,7 +90,12 @@ public class JDAEvents extends ListenerAdapter {
 			player = iData.getPlayer();
 			if (iData.getItemStack().isPresent()) {
 				ItemStack item = iData.getItemStack().get();
-				Color color = RarityUtils.getRarityColor(item).getColor();
+				Color color;
+				try {
+					color = RarityUtils.getRarityColor(item).getColor();
+				} catch (Throwable e) {
+					color = ColorUtils.getColor(RarityUtils.getRarityColor(item));
+				}
 				try {
 					String description = ItemStackUtils.getDiscordDescription(item);
 					BufferedImage image = ImageGeneration.getItemStackImage(item);					
