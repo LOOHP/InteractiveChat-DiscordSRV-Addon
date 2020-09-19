@@ -21,6 +21,7 @@ import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordSRVEvents;
 import com.loohp.interactivechatdiscordsrvaddon.Metrics.Charts;
 import com.loohp.interactivechatdiscordsrvaddon.Metrics.Metrics;
 import com.loohp.interactivechatdiscordsrvaddon.Updater.Updater;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.ColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.CustomImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.JarUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.JarUtils.CopyOption;
@@ -103,8 +104,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		
 		UpdaterEnabled = getConfig().getBoolean("Options.UpdaterEnabled");
 		
-		invColor = ChatColor.of(getConfig().getString("InventoryImage.Inventory.EmbedColor")).getColor();
-		enderColor = ChatColor.of(getConfig().getString("InventoryImage.EnderChest.EmbedColor")).getColor();
+		invColor = ColorUtils.hex2Rgb(getConfig().getString("InventoryImage.Inventory.EmbedColor"));
+		enderColor = ColorUtils.hex2Rgb(getConfig().getString("InventoryImage.EnderChest.EmbedColor"));
 	}
 	
 	public BufferedImage getBlockTexture(String str) {
