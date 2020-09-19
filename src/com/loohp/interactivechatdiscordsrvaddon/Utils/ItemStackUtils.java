@@ -31,16 +31,15 @@ public class ItemStackUtils {
 			}
 			itemStr = component.toLegacyText();
 		}
-		itemStr = ChatColorUtils.stripColor(itemStr);
 		
-		String description = "**" + itemStr + "**";
+		String description = "**" + ChatColorUtils.stripColor(itemStr) + "**";
 		if (!item.hasItemMeta()) {
 			return description;
 		}
 		
 		ItemMeta meta = item.getItemMeta();
 		if (meta.hasLore()) {
-			description += "\n" + String.join("\n", meta.getLore()); 
+			description += ChatColorUtils.stripColor("\n" + String.join("\n", meta.getLore())); 
 		}
 		
 		return description;
