@@ -2,6 +2,7 @@ package com.loohp.interactivechatdiscordsrvaddon.Utils;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
 public class CustomImageUtils {
@@ -112,7 +113,7 @@ public class CustomImageUtils {
 	
 	public static BufferedImage copyImage(BufferedImage source){
 	    BufferedImage b = new BufferedImage(source.getWidth(), source.getHeight(), source.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : source.getType());
-	    Graphics g = b.getGraphics();
+	    Graphics2D g = b.createGraphics();
 	    g.drawImage(source, 0, 0, null);
 	    g.dispose();
 	    return b;
@@ -121,7 +122,7 @@ public class CustomImageUtils {
 	public static BufferedImage copyAndGetSubImage(BufferedImage source, int x, int y, int w, int h) {
 		BufferedImage img = source.getSubimage(x, y, w, h); //fill in the corners of the desired crop location here
 		BufferedImage copyOfImage = new BufferedImage(img.getWidth(), img.getHeight(), img.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : img.getType());
-		Graphics g = copyOfImage.createGraphics();
+		Graphics2D g = copyOfImage.createGraphics();
 		g.drawImage(img, 0, 0, null);
 		return copyOfImage;
 	}

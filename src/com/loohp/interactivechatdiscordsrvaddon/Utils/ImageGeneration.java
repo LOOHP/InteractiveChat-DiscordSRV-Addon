@@ -36,7 +36,7 @@ public class ImageGeneration {
 	
 	public static BufferedImage getItemStackImage(ItemStack item) throws IOException {
 		BufferedImage background = new BufferedImage(36, 36, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g = (Graphics2D) background.getGraphics();
+		Graphics2D g = background.createGraphics();
 		if (item == null || item.getType().equals(Material.AIR)) {
 			return background;
 		}
@@ -57,7 +57,7 @@ public class ImageGeneration {
 		BufferedImage background = InteractiveChatDiscordSrvAddon.plugin.getGUITexture(rows + "_rows");
 		
 		BufferedImage target = new BufferedImage(background.getWidth(), background.getHeight(), BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g = (Graphics2D) target.getGraphics();
+		Graphics2D g = target.createGraphics();
 		g.drawImage(background, 0, 0, null);
 		
 		for (int i = 0; i < inventory.getSize(); i++) {
