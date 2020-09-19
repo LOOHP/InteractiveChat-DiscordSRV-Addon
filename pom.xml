@@ -41,6 +41,10 @@
 							<pattern>club.minnced.discord</pattern>
 							<shadedPattern>com.loohp.interactivechatdiscordsrvaddon.Utils</shadedPattern>
 						</relocation>
+						<relocation>
+							<pattern>net.md-5</pattern>
+							<shadedPattern>com.loohp.interactivechatdiscordsrvaddon.Utils</shadedPattern>
+						</relocation>
 					</relocations>
 				</configuration>
 				<executions>
@@ -99,11 +103,19 @@
 			<groupId>club.minnced</groupId>
 			<artifactId>discord-webhooks</artifactId>
 			<version>0.4.1</version>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.github.cryptomorin</groupId>
 			<artifactId>XSeries</artifactId>
 			<version>7.2.1.2</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.md-5</groupId>
+			<artifactId>bungeecord-chat</artifactId>
+			<version>1.16-R0.3</version>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>me.clip</groupId>
