@@ -15,8 +15,8 @@ public class ColorUtils {
 	    colors.put(ChatColor.DARK_BLUE, new Color(0x0000AA));
 	    colors.put(ChatColor.DARK_GREEN, new Color(0x00AA00));
 	    colors.put(ChatColor.DARK_AQUA, new Color(0x00AAAA));
-	    colors.put(ChatColor.DARK_RED, new Color( 0xAA0000));
-	    colors.put(ChatColor.DARK_PURPLE, new Color( 0xAA00AA));
+	    colors.put(ChatColor.DARK_RED, new Color(0xAA0000));
+	    colors.put(ChatColor.DARK_PURPLE, new Color(0xAA00AA));
 	    colors.put(ChatColor.GOLD, new Color(0xFFAA00));
 	    colors.put(ChatColor.GRAY, new Color(0xAAAAAA));
 	    colors.put(ChatColor.DARK_GRAY, new Color(0x555555));
@@ -38,5 +38,8 @@ public class ColorUtils {
 		return new Color(Integer.valueOf(colorStr.substring(1, 3), 16), Integer.valueOf(colorStr.substring(3, 5), 16),
 				Integer.valueOf(colorStr.substring(5, 7), 16));
 	}
-
+	
+	public static String rgb2Hex(Color color) {
+		return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+	}
 }

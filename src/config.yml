@@ -1,5 +1,8 @@
 InventoryImage:
   Item:
+    EmbedDisplay: 
+      Single: "{Item}"
+      Multiple: "{Item} x{Amount}"
     Enabled: true
   Inventory:
     EmbedColor: "#55FFFF"
@@ -10,7 +13,88 @@ InventoryImage:
 
 Messages:
   ReloadConfig: "&aICDiscordSRVAddon config has been reloaded!"
-  ReloadTexture: "&aICDiscordSRVAddon reloading textures... (See console for progress)"
+  ReloadTexture: "&aICDiscordSRVAddon reloading textures--- (See console for progress)"
 
 Options:
   Updater: true
+
+Translations:
+  Dye:
+    Color: "Color: %s"
+  Unbreakable: 
+    Name: Unbreakable
+  Effects:
+    NoEffect: "No Effects"
+    Mappings:
+      ABSORPTION: Absorption
+      BAD_OMEN: Bad Omen
+      BLINDNESS: Blindness
+      CONDUIT_POWER: Conduit Power
+      CONFUSION: Nausea
+      DAMAGE_RESISTANCE: Resistance
+      DOLPHINS_GRACE: "Dolphin\u0027s Grace"
+      FAST_DIGGING: Haste
+      FIRE_RESISTANCE: Fire Resistance
+      GLOWING: Glowing
+      HARM: Instant Damage
+      HEAL: Instant Health
+      HEALTH_BOOST: Health Boost
+      HERO_OF_THE_VILLAGE: Hero of the Village
+      HUNGER: Hunger
+      INCREASE_DAMAGE: Strength
+      INVISIBILITY: Invisibility
+      JUMP: Jump Boost
+      LEVITATION: Levitation
+      LUCK: Luck
+      NIGHT_VISION: Night Vision
+      POISON: Poison
+      REGENERATION: Regeneration
+      SATURATION: Saturation
+      SLOW: Slowness
+      SLOW_DIGGING: Mining Fatigue
+      SLOW_FALLING: Slow Falling
+      SPEED: Speed
+      UNLUCK: Bad Luck
+      WATER_BREATHING: Water Breathing
+      WEAKNESS: Weakness
+      WITHER: Wither
+  Enchantments:
+    Mappings:
+      PROTECTION_FIRE: Fire Protection
+      DAMAGE_ALL: Sharpness
+      ARROW_FIRE: Flame
+      WATER_WORKER: Aqua Affinity
+      ARROW_KNOCKBACK: Punch
+      LOYALTY: Loyalty
+      DEPTH_STRIDER: Depth Strider
+      VANISHING_CURSE: Vanishing Curse
+      DURABILITY: Unbreaking
+      KNOCKBACK: Knockback
+      LUCK: Luck Of The Sea
+      BINDING_CURSE: Binding Curse
+      LOOT_BONUS_BLOCKS: Fortune
+      PROTECTION_ENVIRONMENTAL: Protection
+      DIG_SPEED: Efficiency
+      MENDING: Mending
+      FROST_WALKER: Frost Walker
+      LURE: Lure
+      LOOT_BONUS_MOBS: Looting
+      PIERCING: Piercing
+      PROTECTION_EXPLOSIONS: Blast Protection
+      DAMAGE_UNDEAD: Smite
+      MULTISHOT: Multishot
+      FIRE_ASPECT: Fire Aspect
+      CHANNELING: Channeling
+      SWEEPING_EDGE: Sweeping Edge
+      THORNS: Thorns
+      DAMAGE_ARTHROPODS: Bane Of Arthropods
+      OXYGEN: Respiration
+      RIPTIDE: Riptide
+      SILK_TOUCH: Silk Touch
+      QUICK_CHARGE: Quick Charge
+      PROTECTION_PROJECTILE: Projectile Protection
+      IMPALING: Impaling
+      PROTECTION_FALL: Feather Falling
+      ARROW_DAMAGE: Power
+      ARROW_INFINITE: Infinity
+      SOUL_SPEED: Soul Speed

@@ -83,9 +83,4 @@ public class JarUtils {
     public interface PathTrimmer {
         String trim(String original);
     }
-
-    public static void main(String[] ar) throws IOException {
-        copyFolderFromJar("SomeFolder", new File(""), CopyOption.REPLACE_IF_EXIST);
-
-    }
 }

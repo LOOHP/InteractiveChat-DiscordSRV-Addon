@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.imageio.ImageIO;
 
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.loohp.interactivechat.InteractiveChat;
@@ -43,6 +44,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public boolean invImage = true;
 	public boolean enderImage = true;
 	
+	public String itemDisplaySingle = "";
+	public String itemDisplayMultiple = "";
 	public Color invColor = Color.black;
 	public Color enderColor = Color.black;
 	
@@ -50,6 +53,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public String reloadTextureMessage;
 	
 	public boolean UpdaterEnabled = true;
+	
+	private ConfigurationSection translations;
 	
 	private Map<String, BufferedImage> blocks = new HashMap<>();
 	private Map<String, BufferedImage> items = new HashMap<>();
@@ -104,8 +109,16 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		
 		UpdaterEnabled = getConfig().getBoolean("Options.UpdaterEnabled");
 		
+		itemDisplaySingle = getConfig().getString("InventoryImage.Item.EmbedDisplay.Single");
+		itemDisplayMultiple = getConfig().getString("InventoryImage.Item.EmbedDisplay.Multiple");		
 		invColor = ColorUtils.hex2Rgb(getConfig().getString("InventoryImage.Inventory.EmbedColor"));
 		enderColor = ColorUtils.hex2Rgb(getConfig().getString("InventoryImage.EnderChest.EmbedColor"));
+		
+		translations = getConfig().getConfigurationSection("Translations");
+	}
+	
+	public ConfigurationSection getTrans() {
+		return translations;
 	}
 	
 	public BufferedImage getBlockTexture(String str) {

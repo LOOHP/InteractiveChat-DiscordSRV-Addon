@@ -24,6 +24,7 @@ import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordSRVEvents.Image
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils.DiscordDescription;
 
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.send.WebhookEmbed.EmbedAuthor;
@@ -97,12 +98,12 @@ public class JDAEvents extends ListenerAdapter {
 					color = ColorUtils.getColor(RarityUtils.getRarityColor(item));
 				}
 				try {
-					String description = ItemStackUtils.getDiscordDescription(item);
+					DiscordDescription description = ItemStackUtils.getDiscordDescription(item);
 					BufferedImage image = ImageGeneration.getItemStackImage(item);					
 					ByteArrayOutputStream os = new ByteArrayOutputStream();
 					ImageIO.write(image, "png", os);
-					messagesToSend.add(new WebhookMessageBuilder().addEmbeds(new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(title, "attachment://Item.png", null)).setColor(color.getRGB()).setDescription(description).build()).addFile("Item.png", os.toByteArray()));
-				} catch (IOException e) {
+					messagesToSend.add(new WebhookMessageBuilder().addEmbeds(new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(description.getName(), "attachment://Item.png", null)).setColor(color.getRGB()).setDescription(description.getDescription().orElse(null)).build()).addFile("Item.png", os.toByteArray()));
+				} catch (Exception e) {
 					e.printStackTrace();
 				}	
 			} else if (iData.getInventory().isPresent()) {

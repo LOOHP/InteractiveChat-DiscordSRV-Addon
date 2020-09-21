@@ -153,7 +153,7 @@ public class ImageGeneration {
 			} catch (ParseException e) {
 				e.printStackTrace();
 			}
-		} else if (xMaterial.equals(XMaterial.LEATHER_HELMET) || xMaterial.equals(XMaterial.LEATHER_CHESTPLATE) || xMaterial.equals(XMaterial.LEATHER_LEGGINGS) || xMaterial.equals(XMaterial.LEATHER_BOOTS)) {
+		} else if (item.getItemMeta() instanceof LeatherArmorMeta) {
 			LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
 			Color color = new Color(meta.getColor().asRGB());
 			BufferedImage armorOverlay = InteractiveChatDiscordSrvAddon.plugin.getItemTexture(xMaterial.name().toLowerCase() + "_overlay");

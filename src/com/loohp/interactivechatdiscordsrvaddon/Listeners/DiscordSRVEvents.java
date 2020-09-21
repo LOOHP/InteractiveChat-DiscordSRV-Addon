@@ -38,6 +38,7 @@ import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils.DiscordDescription;
 
 import github.scarsz.discordsrv.api.Subscribe;
 import github.scarsz.discordsrv.api.events.DiscordGuildMessageSentEvent;
@@ -220,12 +221,12 @@ public class DiscordSRVEvents {
 						color = ColorUtils.getColor(RarityUtils.getRarityColor(item));
 					}
 					try {
-						String description = ItemStackUtils.getDiscordDescription(item);
+						DiscordDescription description = ItemStackUtils.getDiscordDescription(item);
 						BufferedImage image = ImageGeneration.getItemStackImage(item);					
 						ByteArrayOutputStream os = new ByteArrayOutputStream();
 						ImageIO.write(image, "png", os);
-						channel.sendMessage(new EmbedBuilder().setAuthor(title, null, "attachment://Item.png").setDescription(description).setColor(color).build()).addFile(os.toByteArray(), "Item.png").queue();
-					} catch (IOException e) {
+						channel.sendMessage(new EmbedBuilder().setAuthor(description.getName(), null, "attachment://Item.png").setDescription(description.getDescription().orElse(null)).setColor(color).build()).addFile(os.toByteArray(), "Item.png").queue();
+					} catch (Exception e) {
 						e.printStackTrace();
 					}	
 				} else if (iData.getInventory().isPresent()) {
