@@ -115,7 +115,7 @@ public class ItemStackUtils {
 			}
 		}
 		
-		if (!hasMeta || (hasMeta && item.getItemMeta() instanceof LeatherArmorMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_DYE))) {
+		if (hasMeta && item.getItemMeta() instanceof LeatherArmorMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_DYE)) {
 			LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
 			if (NBTUtils.contains(item, "display", "color")) {
 				if (!description.equals("")) {
