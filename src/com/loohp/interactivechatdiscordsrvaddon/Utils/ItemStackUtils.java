@@ -135,7 +135,7 @@ public class ItemStackUtils {
 				if (!description.equals("")) {
 					description += "\n";
 				}
-				description += ChatColorUtils.stripColor(String.join("\n", meta.getLore())); 
+				description += ChatColorUtils.stripColor(String.join("\n", meta.getLore())) + "\n"; 
 			}
 		}
 		
