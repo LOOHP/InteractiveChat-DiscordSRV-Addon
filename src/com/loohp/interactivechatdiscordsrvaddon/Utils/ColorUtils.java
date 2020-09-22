@@ -29,6 +29,21 @@ public class ColorUtils {
 	    colors.put(ChatColor.WHITE, new Color(0xFFFFFF));
 	}
 	
+	public static ChatColor toChatColor(String str) {
+		try {
+			if (str.length() < 2) {
+				return null;
+			}
+			if (str.charAt(1) == 'x' && str.length() > 13) {
+				return ChatColor.of("#" + String.valueOf(str.charAt(3)) + String.valueOf(str.charAt(5)) + String.valueOf(str.charAt(7)) + String.valueOf(str.charAt(9)) + String.valueOf(str.charAt(11)) + String.valueOf(str.charAt(13)));
+			} else {
+				return ChatColor.getByChar(str.charAt(1));
+			}
+		} catch (Throwable e) {
+			return null;
+		}
+	}
+	
 	public static Color getColor(ChatColor chatcolor) {
 		Color color = colors.get(chatcolor);
 		return color == null ? Color.white : color;
