@@ -16,11 +16,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import com.loohp.interactivechat.Utils.RarityUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordSRVEvents.ImageDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordSRVEvents.ImageDisplayType;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.ColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils.DiscordDescription;
@@ -90,12 +88,7 @@ public class JDAEvents extends ListenerAdapter {
 			player = iData.getPlayer();
 			if (iData.getItemStack().isPresent()) {
 				ItemStack item = iData.getItemStack().get();
-				Color color;
-				try {
-					color = RarityUtils.getRarityColor(item).getColor();
-				} catch (Throwable e) {
-					color = ColorUtils.getColor(RarityUtils.getRarityColor(item));
-				}
+				Color color = ItemStackUtils.getDiscordColor(item);
 				if (color.equals(Color.white)) {
 					color = new Color(0xFFFFFE);
 				}

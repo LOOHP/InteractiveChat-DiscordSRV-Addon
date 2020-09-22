@@ -21,19 +21,47 @@ import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.ChatColorUtils;
 import com.loohp.interactivechat.Utils.MaterialUtils;
 import com.loohp.interactivechat.Utils.NBTUtils;
+import com.loohp.interactivechat.Utils.RarityUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.TranslatableComponent;
 
 @SuppressWarnings("deprecation")
 public class ItemStackUtils {
+	
+	public static final String DISCORD_EMPTY = "\u200e";
+	
+	public static Color getDiscordColor(ItemStack item) {
+		if (item != null && item.hasItemMeta()) {
+			ItemMeta meta = item.getItemMeta();
+			if (meta.hasDisplayName() && !meta.getDisplayName().equals("")) {
+				String colorStr = ChatColorUtils.getFirstColors(meta.getDisplayName());
+				if (colorStr.length() > 1) {
+					ChatColor chatColor = ChatColor.getByChar(colorStr.charAt(1));
+					if (chatColor != null) {
+						try {
+							return chatColor.getColor();
+						} catch (Throwable e) {
+							return ColorUtils.getColor(chatColor);
+						}
+					}
+				}
+			}
+		}
+		try {
+			return RarityUtils.getRarityColor(item).getColor();
+		} catch (Throwable e) {
+			return ColorUtils.getColor(RarityUtils.getRarityColor(item));
+		}
+	}
 	
 	public static class DiscordDescription {
 		private String name;
 		private Optional<String> description;
 		
 		public DiscordDescription(String name, String description) {
-			this.name = name;
+			this.name = name.equals("") ? DISCORD_EMPTY : name;
 			this.description = Optional.ofNullable(description);
 		}
 

@@ -32,9 +32,7 @@ import com.loohp.interactivechat.Utils.CustomStringUtils;
 import com.loohp.interactivechat.Utils.MaterialUtils;
 import com.loohp.interactivechat.Utils.NBTUtils;
 import com.loohp.interactivechat.Utils.PlaceholderParser;
-import com.loohp.interactivechat.Utils.RarityUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.ColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils.DiscordDescription;
@@ -213,12 +211,7 @@ public class DiscordSRVEvents {
 				String title = iData.getTitle();
 				if (iData.getItemStack().isPresent()) {
 					ItemStack item = iData.getItemStack().get();
-					Color color;
-					try {
-						color = RarityUtils.getRarityColor(item).getColor();
-					} catch (Throwable e) {
-						color = ColorUtils.getColor(RarityUtils.getRarityColor(item));
-					}
+					Color color = ItemStackUtils.getDiscordColor(item);
 					if (color.equals(Color.white)) {
 						color = new Color(0xFFFFFE);
 					}

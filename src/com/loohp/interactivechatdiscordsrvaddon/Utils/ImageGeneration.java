@@ -33,7 +33,7 @@ import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 @SuppressWarnings("deprecation")
 public class ImageGeneration {
 	
-	private static final int spacing = 36;
+	private static final int SPACING = 36;
 	
 	public static BufferedImage getItemStackImage(ItemStack item) throws IOException {
 		BufferedImage background = new BufferedImage(36, 36, BufferedImage.TYPE_INT_ARGB);
@@ -72,7 +72,7 @@ public class ImageGeneration {
 			BufferedImage itemImage = getRawItemImage(item);
 			
 			if (itemImage != null) {
-				g.drawImage(itemImage, 18 + (spacing * (i % 9)), 18 + (spacing * (i / 9)), null);
+				g.drawImage(itemImage, 18 + (SPACING * (i % 9)), 18 + (SPACING * (i / 9)), null);
 			}
 		}
 		g.dispose();
@@ -100,7 +100,7 @@ public class ImageGeneration {
 			BufferedImage itemImage = getRawItemImage(item);
 			
 			if (itemImage != null) {
-				g.drawImage(itemImage, 18 + (spacing * (i % 9)), 286 + (spacing * (i / 9)), null);
+				g.drawImage(itemImage, 18 + (SPACING * (i % 9)), 286 + (SPACING * (i / 9)), null);
 			}
 		}
 		
@@ -114,18 +114,18 @@ public class ImageGeneration {
 			BufferedImage itemImage = getRawItemImage(item);
 			
 			if (itemImage != null) {
-				g.drawImage(itemImage, 18 + (spacing * (i % 9)), 170 + (spacing * ((i - 9) / 9)), null);
+				g.drawImage(itemImage, 18 + (SPACING * (i % 9)), 170 + (SPACING * ((i - 9) / 9)), null);
 			}
 		}
 		
 		//boots
 		ItemStack boots = inventory.getItem(i);
 		if (boots == null || boots.getType().equals(Material.AIR)) {
-			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("empty_armor_slot_boots"), 18, 126 - (spacing * (i - 36)), 32, 32, null);
+			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("empty_armor_slot_boots"), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
 		} else {
 			BufferedImage itemImage = getRawItemImage(boots);			
 			if (itemImage != null) {
-				g.drawImage(itemImage, 18, 126 - (spacing * (i - 36)), null);
+				g.drawImage(itemImage, 18, 126 - (SPACING * (i - 36)), null);
 			}
 		}
 		i++;
@@ -133,11 +133,11 @@ public class ImageGeneration {
 		//leggings
 		ItemStack leggings = inventory.getItem(i);
 		if (leggings == null || leggings.getType().equals(Material.AIR)) {
-			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("empty_armor_slot_leggings"), 18, 126 - (spacing * (i - 36)), 32, 32, null);
+			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("empty_armor_slot_leggings"), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
 		} else {
 			BufferedImage itemImage = getRawItemImage(leggings);			
 			if (itemImage != null) {
-				g.drawImage(itemImage, 18, 126 - (spacing * (i - 36)), null);
+				g.drawImage(itemImage, 18, 126 - (SPACING * (i - 36)), null);
 			}
 		}
 		i++;
@@ -145,11 +145,11 @@ public class ImageGeneration {
 		//chestplate
 		ItemStack chestplate = inventory.getItem(i);
 		if (chestplate == null || chestplate.getType().equals(Material.AIR)) {
-			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("empty_armor_slot_chestplate"), 18, 126 - (spacing * (i - 36)), 32, 32, null);
+			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("empty_armor_slot_chestplate"), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
 		} else {
 			BufferedImage itemImage = getRawItemImage(chestplate);			
 			if (itemImage != null) {
-				g.drawImage(itemImage, 18, 126 - (spacing * (i - 36)), null);
+				g.drawImage(itemImage, 18, 126 - (SPACING * (i - 36)), null);
 			}
 		}
 		i++;
@@ -157,11 +157,11 @@ public class ImageGeneration {
 		//helmet
 		ItemStack helmet = inventory.getItem(i);
 		if (helmet == null || helmet.getType().equals(Material.AIR)) {
-			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("empty_armor_slot_helmet"), 18, 126 - (spacing * (i - 36)), 32, 32, null);
+			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("empty_armor_slot_helmet"), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
 		} else {
 			BufferedImage itemImage = getRawItemImage(helmet);			
 			if (itemImage != null) {
-				g.drawImage(itemImage, 18, 126 - (spacing * (i - 36)), null);
+				g.drawImage(itemImage, 18, 126 - (SPACING * (i - 36)), null);
 			}
 		}
 		i++;
