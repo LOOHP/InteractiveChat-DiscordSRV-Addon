@@ -3,7 +3,6 @@ package com.loohp.interactivechatdiscordsrvaddon.Listeners;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -97,6 +96,9 @@ public class JDAEvents extends ListenerAdapter {
 				} catch (Throwable e) {
 					color = ColorUtils.getColor(RarityUtils.getRarityColor(item));
 				}
+				if (color.equals(Color.white)) {
+					color = new Color(0xFFFFFE);
+				}
 				try {
 					DiscordDescription description = ItemStackUtils.getDiscordDescription(item);
 					BufferedImage image = ImageGeneration.getItemStackImage(item);					
@@ -109,7 +111,16 @@ public class JDAEvents extends ListenerAdapter {
 			} else if (iData.getInventory().isPresent()) {
 				Inventory inv = iData.getInventory().get();
 				try {
-					BufferedImage image = ImageGeneration.getInventoryImage(inv);
+					BufferedImage image;
+					if (iData.isPlayerInventory()) {
+						if (InteractiveChatDiscordSrvAddon.plugin.usePlayerInvView) {
+							image = ImageGeneration.getPlayerInventoryImage(inv, iData.getPlayer());
+						} else {
+							image = ImageGeneration.getInventoryImage(inv);
+						}
+					} else {
+						image = ImageGeneration.getInventoryImage(inv);
+					}
 					ByteArrayOutputStream os = new ByteArrayOutputStream();
 					Color color;
 					switch (type) {
@@ -126,7 +137,7 @@ public class JDAEvents extends ListenerAdapter {
 					ImageIO.write(image, "png", os);
 					messagesToSend.add(new WebhookMessageBuilder().addEmbeds(new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(title, null, null)).setColor(color.getRGB()).setImageUrl("attachment://Inventory.png").build()).addFile("Inventory.png", os.toByteArray()));					
 					DiscordSRVEvents.data.remove(key);
-				} catch (IOException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}

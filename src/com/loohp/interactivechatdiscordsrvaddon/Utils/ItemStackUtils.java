@@ -10,12 +10,14 @@ import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 
 import com.cryptomorin.xseries.XMaterial;
+import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.ChatColorUtils;
 import com.loohp.interactivechat.Utils.MaterialUtils;
 import com.loohp.interactivechat.Utils.NBTUtils;
@@ -123,7 +125,7 @@ public class ItemStackUtils {
 				}
 				Color color = new Color(meta.getColor().asRGB());
 				String hex = ColorUtils.rgb2Hex(color).toUpperCase();
-				description += InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Dye.Color").replace("%s", hex) + "\n";
+				description += InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Dye.Color").replace("{Hex}", hex) + "\n";
 			}
 		}
 		
@@ -142,6 +144,17 @@ public class ItemStackUtils {
 				description += "\n";
 			}
 			description += "**" + InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Unbreakable.Name") + "**\n";
+		}
+		
+		if (xMaterial.isDamageable()) {
+			int durability = item.getType().getMaxDurability() - (InteractiveChat.version.isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
+			int maxDur = item.getType().getMaxDurability();
+			if (durability < maxDur) {
+				if (!description.equals("")) {
+					description += "\n";
+				}
+				description += "**" + InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Durability.ToolTip").replace("{Remaining}", String.valueOf(durability)).replace("{Max}", String.valueOf(maxDur)) + "**\n";
+			}
 		}
 		
 		return new DiscordDescription(name, description.equals("") ? null : description);

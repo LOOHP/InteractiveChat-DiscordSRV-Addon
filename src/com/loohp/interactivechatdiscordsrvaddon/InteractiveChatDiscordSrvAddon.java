@@ -6,7 +6,10 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -44,6 +47,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public boolean invImage = true;
 	public boolean enderImage = true;
 	
+	public boolean usePlayerInvView = true;
+	
 	public String itemDisplaySingle = "";
 	public String itemDisplayMultiple = "";
 	public Color invColor = Color.black;
@@ -55,6 +60,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public boolean UpdaterEnabled = true;
 	
 	private ConfigurationSection translations;
+	
+	private List<String> resourceOrder = new ArrayList<>();
 	
 	private Map<String, BufferedImage> blocks = new HashMap<>();
 	private Map<String, BufferedImage> items = new HashMap<>();
@@ -68,7 +75,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		plugin = this;
 		interactivechat = InteractiveChat.plugin;
 		discordsrv = DiscordSRV.getPlugin();
-		
+
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		reloadConfig();
@@ -84,9 +91,13 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		getCommand("interactivechatdiscordsrv").setExecutor(new Commands());
 		
 		try {
-			JarUtils.copyFolderFromJar("assets", getDataFolder(), CopyOption.COPY_IF_NOT_EXIST);
+			JarUtils.copyFolderFromJar("assets", getDataFolder(), CopyOption.REPLACE_IF_EXIST);
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+		File resources = new File(getDataFolder(), "resources");
+		if (!resources.exists()) {
+			resources.mkdirs();
 		}
 		
 		getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSRVAddon] InteractiveChat DiscordSRV Addon has been Enabled!");
@@ -103,9 +114,20 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		reloadConfigMessage = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("Messages.ReloadConfig"));
 		reloadTextureMessage = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("Messages.ReloadTexture"));
 		
+		resourceOrder.clear();
+		List<String> order = getConfig().getStringList("Resources.Order");
+		ListIterator<String> itr = order.listIterator(order.size());
+		resourceOrder.add("assets");
+		while (itr.hasPrevious()) {
+			String pack = itr.previous();
+			resourceOrder.add("resources/" + pack);
+		}
+		
 		itemImage = getConfig().getBoolean("InventoryImage.Item.Enabled");
 		invImage = getConfig().getBoolean("InventoryImage.Inventory.Enabled");
 		enderImage = getConfig().getBoolean("InventoryImage.EnderChest.Enabled");
+		
+		usePlayerInvView = getConfig().getBoolean("InventoryImage.Inventory.UsePlayerInventoryView");
 		
 		UpdaterEnabled = getConfig().getBoolean("Options.UpdaterEnabled");
 		
@@ -179,167 +201,169 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 			Map<String, BufferedImage> gui = new HashMap<>();
 			Map<String, BufferedImage> banner = new HashMap<>();
 			
-			for (File file : new File(getDataFolder() + "/assets/blocks/").listFiles()) {
-				if (file.isDirectory()) {
-					continue;
-				}
-				try {
-					BufferedImage item_ori = ImageIO.read(file);
-					
-					if (item_ori == null) {
+			for (String folder : resourceOrder) {
+				for (File file : new File(getDataFolder() + "/" + folder + "/blocks/").listFiles()) {
+					if (!file.exists() || file.isDirectory()) {
 						continue;
 					}
-					
-					item_ori = CustomImageUtils.squarify(item_ori);
-					
-					BufferedImage itemImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
-					Graphics2D g = itemImage.createGraphics();
-					g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-					g.drawImage(item_ori, 0, 0, 32, 32, null);
-					g.dispose();
-					
-					String name = file.getName();
-					int lastDot = name.lastIndexOf(".");
-					if (lastDot >= 0) {
-						name = name.substring(0, lastDot);
+					try {
+						BufferedImage item_ori = ImageIO.read(file);
+						
+						if (item_ori == null) {
+							continue;
+						}
+						
+						item_ori = CustomImageUtils.squarify(item_ori);
+						
+						BufferedImage itemImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+						Graphics2D g = itemImage.createGraphics();
+						g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+						g.drawImage(item_ori, 0, 0, 32, 32, null);
+						g.dispose();
+						
+						String name = file.getName();
+						int lastDot = name.lastIndexOf(".");
+						if (lastDot >= 0) {
+							name = name.substring(0, lastDot);
+						}
+						
+						blocks.put(name, itemImage);
+					} catch (IOException e) {
+						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
+						e.printStackTrace();
 					}
-					
-					blocks.put(name, itemImage);
-				} catch (IOException e) {
-					Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
-					e.printStackTrace();
 				}
-			}
-			
-			for (File file : new File(getDataFolder() + "/assets/items/").listFiles()) {
-				if (file.isDirectory()) {
-					continue;
-				}
-				try {
-					BufferedImage item_ori = ImageIO.read(file);
-					
-					if (item_ori == null) {
+				
+				for (File file : new File(getDataFolder() + "/" + folder + "/items/").listFiles()) {
+					if (!file.exists() || file.isDirectory()) {
 						continue;
 					}
-					
-					BufferedImage itemImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
-					Graphics2D g = itemImage.createGraphics();
-					g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-					g.drawImage(item_ori, 0, 0, 32, 32, null);
-					g.dispose();
-					
-					String name = file.getName();
-					int lastDot = name.lastIndexOf(".");
-					if (lastDot >= 0) {
-						name = name.substring(0, lastDot);
+					try {
+						BufferedImage item_ori = ImageIO.read(file);
+						
+						if (item_ori == null) {
+							continue;
+						}
+						
+						BufferedImage itemImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+						Graphics2D g = itemImage.createGraphics();
+						g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+						g.drawImage(item_ori, 0, 0, 32, 32, null);
+						g.dispose();
+						
+						String name = file.getName();
+						int lastDot = name.lastIndexOf(".");
+						if (lastDot >= 0) {
+							name = name.substring(0, lastDot);
+						}
+						
+						items.put(name, itemImage);
+					} catch (IOException e) {
+						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
+						e.printStackTrace();
 					}
-					
-					items.put(name, itemImage);
-				} catch (IOException e) {
-					Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
-					e.printStackTrace();
 				}
-			}
-			
-			for (File file : new File(getDataFolder() + "/assets/font/").listFiles()) {
-				if (file.isDirectory()) {
-					continue;
-				}
-				try {
-					BufferedImage font_ori = ImageIO.read(file);
-					
-					if (font_ori == null) {
+				
+				for (File file : new File(getDataFolder() + "/" + folder + "/font/").listFiles()) {
+					if (!file.exists() || file.isDirectory()) {
 						continue;
 					}
-					
-					BufferedImage fontImage = new BufferedImage(14, 14, BufferedImage.TYPE_INT_ARGB);
-					Graphics2D g = fontImage.createGraphics();
-					g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-					g.drawImage(font_ori, 0, 0, 14, 14, null);
-					g.dispose();
-					
-					String name = file.getName();
-					int lastDot = name.lastIndexOf(".");
-					if (lastDot >= 0) {
-						name = name.substring(0, lastDot);
+					try {
+						BufferedImage font_ori = ImageIO.read(file);
+						
+						if (font_ori == null) {
+							continue;
+						}
+						
+						BufferedImage fontImage = new BufferedImage(14, 14, BufferedImage.TYPE_INT_ARGB);
+						Graphics2D g = fontImage.createGraphics();
+						g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+						g.drawImage(font_ori, 0, 0, 14, 14, null);
+						g.dispose();
+						
+						String name = file.getName();
+						int lastDot = name.lastIndexOf(".");
+						if (lastDot >= 0) {
+							name = name.substring(0, lastDot);
+						}
+						
+						font.put(name, fontImage);
+					} catch (IOException e) {
+						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
+						e.printStackTrace();
 					}
-					
-					font.put(name, fontImage);
-				} catch (IOException e) {
-					Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
-					e.printStackTrace();
 				}
-			}
-			
-			for (File file : new File(getDataFolder() + "/assets/misc/").listFiles()) {
-				if (file.isDirectory()) {
-					continue;
-				}
-				try {
-					BufferedImage miscImage = ImageIO.read(file);
-					
-					if (miscImage == null) {
+				
+				for (File file : new File(getDataFolder() + "/" + folder + "/misc/").listFiles()) {
+					if (!file.exists() || file.isDirectory()) {
 						continue;
 					}
-					
-					String name = file.getName();
-					int lastDot = name.lastIndexOf(".");
-					if (lastDot >= 0) {
-						name = name.substring(0, lastDot);
+					try {
+						BufferedImage miscImage = ImageIO.read(file);
+						
+						if (miscImage == null) {
+							continue;
+						}
+						
+						String name = file.getName();
+						int lastDot = name.lastIndexOf(".");
+						if (lastDot >= 0) {
+							name = name.substring(0, lastDot);
+						}
+						
+						misc.put(name, miscImage);
+					} catch (IOException e) {
+						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
+						e.printStackTrace();
 					}
-					
-					misc.put(name, miscImage);
-				} catch (IOException e) {
-					Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
-					e.printStackTrace();
 				}
-			}
-			
-			for (File file : new File(getDataFolder() + "/assets/gui/").listFiles()) {
-				if (file.isDirectory()) {
-					continue;
-				}
-				try {
-					BufferedImage guiImage = ImageIO.read(file);
-					
-					if (guiImage == null) {
+				
+				for (File file : new File(getDataFolder() + "/" + folder + "/gui/").listFiles()) {
+					if (!file.exists() || file.isDirectory()) {
 						continue;
 					}
-					
-					String name = file.getName();
-					int lastDot = name.lastIndexOf(".");
-					if (lastDot >= 0) {
-						name = name.substring(0, lastDot);
+					try {
+						BufferedImage guiImage = ImageIO.read(file);
+						
+						if (guiImage == null) {
+							continue;
+						}
+						
+						String name = file.getName();
+						int lastDot = name.lastIndexOf(".");
+						if (lastDot >= 0) {
+							name = name.substring(0, lastDot);
+						}
+						
+						gui.put(name, guiImage);
+					} catch (IOException e) {
+						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
+						e.printStackTrace();
 					}
-					
-					gui.put(name, guiImage);
-				} catch (IOException e) {
-					Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
-					e.printStackTrace();
 				}
-			}
-			
-			for (File file : new File(getDataFolder() + "/assets/banner/").listFiles()) {
-				if (file.isDirectory()) {
-					continue;
-				}
-				try {
-					BufferedImage guiImage = ImageIO.read(file);
-					
-					if (guiImage == null) {
+				
+				for (File file : new File(getDataFolder() + "/" + folder + "/banner/").listFiles()) {
+					if (!file.exists() || file.isDirectory()) {
 						continue;
 					}
-					
-					String name = file.getName();
-					int lastDot = name.lastIndexOf(".");
-					if (lastDot >= 0) {
-						name = name.substring(0, lastDot);
+					try {
+						BufferedImage guiImage = ImageIO.read(file);
+						
+						if (guiImage == null) {
+							continue;
+						}
+						
+						String name = file.getName();
+						int lastDot = name.lastIndexOf(".");
+						if (lastDot >= 0) {
+							name = name.substring(0, lastDot);
+						}
+						
+						banner.put(name, guiImage);
+					} catch (IOException e) {
+						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
+						e.printStackTrace();
 					}
-					
-					banner.put(name, guiImage);
-				} catch (IOException e) {
-					Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
-					e.printStackTrace();
 				}
 			}
 			

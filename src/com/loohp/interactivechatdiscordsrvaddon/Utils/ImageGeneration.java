@@ -13,6 +13,7 @@ import java.util.Base64;
 import javax.imageio.ImageIO;
 
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
@@ -37,6 +38,7 @@ public class ImageGeneration {
 	public static BufferedImage getItemStackImage(ItemStack item) throws IOException {
 		BufferedImage background = new BufferedImage(36, 36, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = background.createGraphics();
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 		if (item == null || item.getType().equals(Material.AIR)) {
 			return background;
 		}
@@ -58,6 +60,7 @@ public class ImageGeneration {
 		
 		BufferedImage target = new BufferedImage(background.getWidth(), background.getHeight(), BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = target.createGraphics();
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 		g.drawImage(background, 0, 0, null);
 		
 		for (int i = 0; i < inventory.getSize(); i++) {
@@ -75,6 +78,120 @@ public class ImageGeneration {
 		g.dispose();
 		
 		return target;
+	}
+	
+	public static BufferedImage getPlayerInventoryImage(Inventory inventory, Player player) throws Exception {
+		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
+		BufferedImage background = InteractiveChatDiscordSrvAddon.plugin.getGUITexture("player_inventory");
+		
+		BufferedImage target = new BufferedImage(background.getWidth(), background.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = target.createGraphics();
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+		g.drawImage(background, 0, 0, null);
+		
+		int i = 0;
+		//hotbar
+		for (; i < 9; i++) {
+			ItemStack item = inventory.getItem(i);
+			if (item == null || item.getType().equals(Material.AIR)) {
+				continue;
+			}
+			
+			BufferedImage itemImage = getRawItemImage(item);
+			
+			if (itemImage != null) {
+				g.drawImage(itemImage, 18 + (spacing * (i % 9)), 286 + (spacing * (i / 9)), null);
+			}
+		}
+		
+		//inv
+		for (; i < 36; i++) {
+			ItemStack item = inventory.getItem(i);
+			if (item == null || item.getType().equals(Material.AIR)) {
+				continue;
+			}
+			
+			BufferedImage itemImage = getRawItemImage(item);
+			
+			if (itemImage != null) {
+				g.drawImage(itemImage, 18 + (spacing * (i % 9)), 170 + (spacing * ((i - 9) / 9)), null);
+			}
+		}
+		
+		//boots
+		ItemStack boots = inventory.getItem(i);
+		if (boots == null || boots.getType().equals(Material.AIR)) {
+			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("empty_armor_slot_boots"), 18, 126 - (spacing * (i - 36)), 32, 32, null);
+		} else {
+			BufferedImage itemImage = getRawItemImage(boots);			
+			if (itemImage != null) {
+				g.drawImage(itemImage, 18, 126 - (spacing * (i - 36)), null);
+			}
+		}
+		i++;
+		
+		//leggings
+		ItemStack leggings = inventory.getItem(i);
+		if (leggings == null || leggings.getType().equals(Material.AIR)) {
+			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("empty_armor_slot_leggings"), 18, 126 - (spacing * (i - 36)), 32, 32, null);
+		} else {
+			BufferedImage itemImage = getRawItemImage(leggings);			
+			if (itemImage != null) {
+				g.drawImage(itemImage, 18, 126 - (spacing * (i - 36)), null);
+			}
+		}
+		i++;
+		
+		//chestplate
+		ItemStack chestplate = inventory.getItem(i);
+		if (chestplate == null || chestplate.getType().equals(Material.AIR)) {
+			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("empty_armor_slot_chestplate"), 18, 126 - (spacing * (i - 36)), 32, 32, null);
+		} else {
+			BufferedImage itemImage = getRawItemImage(chestplate);			
+			if (itemImage != null) {
+				g.drawImage(itemImage, 18, 126 - (spacing * (i - 36)), null);
+			}
+		}
+		i++;
+		
+		//helmet
+		ItemStack helmet = inventory.getItem(i);
+		if (helmet == null || helmet.getType().equals(Material.AIR)) {
+			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("empty_armor_slot_helmet"), 18, 126 - (spacing * (i - 36)), 32, 32, null);
+		} else {
+			BufferedImage itemImage = getRawItemImage(helmet);			
+			if (itemImage != null) {
+				g.drawImage(itemImage, 18, 126 - (spacing * (i - 36)), null);
+			}
+		}
+		i++;
+		
+		//offhand
+		ItemStack offhand = inventory.getItem(i);
+		if (offhand == null || offhand.getType().equals(Material.AIR)) {
+			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("empty_armor_slot_shield"), 162, 126, 32, 32, null);
+		} else {				
+			BufferedImage itemImage = getRawItemImage(offhand);				
+			if (itemImage != null) {
+				g.drawImage(itemImage, 162, 126, null);
+			}
+		}
+		
+		//puppet
+		BufferedImage puppet = getFullBodyImage(player);
+		g.drawImage(puppet, 71, 28, null);
+		
+		g.dispose();
+		
+		return target;
+	}
+	
+	private static BufferedImage getFullBodyImage(Player player) throws Exception {
+		JSONObject json = (JSONObject) new JSONParser().parse(SkinUtils.getSkinJsonFromProfile(player));
+		String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace("http://textures.minecraft.net/texture/", "");
+		
+		String url = "https://mc-heads.net/player/" + value + "/61";
+		return ImageIO.read(new URL(url));
 	}
 	
 	private static BufferedImage getRawItemImage(ItemStack item) throws IOException {
@@ -138,7 +255,7 @@ public class ImageGeneration {
 				String base64 = SkullUtils.getSkinValue(item);
 				if (base64 != null) {
 					JSONObject json = (JSONObject) new JSONParser().parse(new String(Base64.getDecoder().decode(base64)));
-					String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace("http://textures.minecraft.net/texture/", "");					
+					String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace("http://textures.minecraft.net/texture/", "");
 					String url = "https://mc-heads.net/head/" + value + "/96";
 					BufferedImage newSkull = ImageIO.read(new URL(url));
 					

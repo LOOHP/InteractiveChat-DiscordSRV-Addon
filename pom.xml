@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.loohp</groupId>
 	<artifactId>InteractiveChatDiscordSrvAddon</artifactId>
-	<version>1.1.5</version>
+	<version>1.2.0</version>
 	<build>
 		<sourceDirectory>src</sourceDirectory>
 		<resources>
@@ -92,6 +92,10 @@
 			<id>bintray-jcenter</id>
 			<url>https://jcenter.bintray.com</url>
 		</repository>
+		<repository>
+			<id>codemc-snapshots</id>
+			<url>https://repo.codemc.org/repository/maven-snapshots/</url>
+		</repository>
 	</repositories>
 
 	<dependencies>
@@ -100,6 +104,12 @@
 			<artifactId>discord-webhooks</artifactId>
 			<version>0.4.1</version>
 			<scope>compile</scope>
+		</dependency>
+		<dependency>
+    		<groupId>com</groupId>
+    		<artifactId>skinsrestorer</artifactId>
+    		<version>13.8.4-SNAPSHOT</version>
+    		<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.github.cryptomorin</groupId>
@@ -119,15 +129,13 @@
 			<version>1.16.3-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
-		<!--
-		<dependency>
+		<dependency> 
 			<groupId>Spigot-1.16.3</groupId>
-			<artifactId>Spigot-1.16.3</artifactId>
-			<scope>system</scope>
+			<artifactId>Spigot-1.16.3</artifactId> 
 			<version>1.0</version>
-			<systemPath>${basedir}/lib/spigot-1.16.3.jar</systemPath>
-		</dependency>
-		-->
+			<systemPath>${basedir}/lib/spigot-1.16.3.jar</systemPath> 
+			<scope>system</scope>
+			</dependency> 
 		<dependency>
 			<groupId>com.discordsrv</groupId>
 			<artifactId>discordsrv</artifactId>

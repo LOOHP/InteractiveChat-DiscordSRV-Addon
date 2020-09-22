@@ -3,7 +3,6 @@ package com.loohp.interactivechatdiscordsrvaddon.Listeners;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -129,7 +128,7 @@ public class DiscordSRVEvents {
 							}
 						}
 						String title = PlaceholderParser.parse(wrappedSender, ChatColorUtils.stripColor(InteractiveChat.invTitle));
-						data.put(inventoryId, new ImageDisplayData(sender, title, ImageDisplayType.INVENTORY, inv));
+						data.put(inventoryId, new ImageDisplayData(sender, title, ImageDisplayType.INVENTORY, true, inv));
 						message += "<ICD=" + inventoryId + ">";
 					}
 				}
@@ -220,6 +219,9 @@ public class DiscordSRVEvents {
 					} catch (Throwable e) {
 						color = ColorUtils.getColor(RarityUtils.getRarityColor(item));
 					}
+					if (color.equals(Color.white)) {
+						color = new Color(0xFFFFFE);
+					}
 					try {
 						DiscordDescription description = ItemStackUtils.getDiscordDescription(item);
 						BufferedImage image = ImageGeneration.getItemStackImage(item);					
@@ -232,7 +234,16 @@ public class DiscordSRVEvents {
 				} else if (iData.getInventory().isPresent()) {
 					Inventory inv = iData.getInventory().get();
 					try {
-						BufferedImage image = ImageGeneration.getInventoryImage(inv);
+						BufferedImage image;
+						if (iData.isPlayerInventory()) {
+							if (InteractiveChatDiscordSrvAddon.plugin.usePlayerInvView) {
+								image = ImageGeneration.getPlayerInventoryImage(inv, iData.getPlayer());
+							} else {
+								image = ImageGeneration.getInventoryImage(inv);
+							}
+						} else {
+							image = ImageGeneration.getInventoryImage(inv);
+						}
 						ByteArrayOutputStream os = new ByteArrayOutputStream();
 						Color color;
 						switch (type) {
@@ -249,7 +260,7 @@ public class DiscordSRVEvents {
 						ImageIO.write(image, "png", os);
 						channel.sendMessage(new EmbedBuilder().setAuthor(title, null, null).setImage("attachment://Inventory.png").setColor(color).build()).addFile(os.toByteArray(), "Inventory.png").queue();
 						data.remove(key);
-					} catch (IOException e) {
+					} catch (Exception e) {
 						e.printStackTrace();
 					}			
 				}
@@ -269,22 +280,28 @@ public class DiscordSRVEvents {
 		private final String title;
 		private final ImageDisplayType type;
 		private final Optional<Inventory> inventory;
+		private final boolean isPlayerInventory;
 		private final Optional<ItemStack> item;
 		
-		public ImageDisplayData(Player player, String title, ImageDisplayType type, Inventory inventory, ItemStack item) {
+		public ImageDisplayData(Player player, String title, ImageDisplayType type, Inventory inventory, boolean isPlayerInventory, ItemStack item) {
 			this.type = type;
 			this.player = player;
 			this.title = title;
 			this.inventory = Optional.ofNullable(inventory);
+			this.isPlayerInventory = isPlayerInventory;
 			this.item = Optional.ofNullable(item);
 		}
 		
 		public ImageDisplayData(Player player, String title, ImageDisplayType type, Inventory inventory) {
-			this(player, title, type, inventory, null);
+			this(player, title, type, inventory, false, null);
+		}
+		
+		public ImageDisplayData(Player player, String title, ImageDisplayType type, boolean isPlayerInventory, Inventory inventory) {
+			this(player, title, type, inventory, isPlayerInventory, null);
 		}
 		
 		public ImageDisplayData(Player player, String title, ImageDisplayType type, ItemStack itemstack) {
-			this(player, title, type, null, itemstack);
+			this(player, title, type, null, false, itemstack);
 		}
 		
 		public Player getPlayer() {
@@ -299,6 +316,10 @@ public class DiscordSRVEvents {
 			return inventory;
 		}
 		
+		public boolean isPlayerInventory() {
+			return isPlayerInventory;
+		}
+
 		public Optional<ItemStack> getItemStack() {
 			return item;
 		}

@@ -5,6 +5,7 @@ InventoryImage:
       Multiple: "{Item} x{Amount}"
     Enabled: true
   Inventory:
+    UsePlayerInventoryView: true
     EmbedColor: "#55FFFF"
     Enabled: true
   EnderChest:
@@ -15,12 +16,17 @@ Messages:
   ReloadConfig: "&aICDiscordSRVAddon config has been reloaded!"
   ReloadTexture: "&aICDiscordSRVAddon reloading textures--- (See console for progress)"
 
+Resources:
+  Order: []
+
 Options:
   Updater: true
 
 Translations:
+  Durability:
+    ToolTip: "Durability: {Remaining} / {Max}"
   Dye:
-    Color: "Color: %s"
+    Color: "Color: {Hex}"
   Unbreakable: 
     Name: Unbreakable
   Effects:
