@@ -39,7 +39,7 @@ public class ItemStackUtils {
 				String colorStr = ChatColorUtils.getFirstColors(meta.getDisplayName());
 				if (colorStr.length() > 1) {
 					ChatColor chatColor = ChatColor.getByChar(colorStr.charAt(1));
-					if (chatColor != null) {
+					if (chatColor != null && ChatColorUtils.isColor(chatColor)) {
 						try {
 							return chatColor.getColor();
 						} catch (Throwable e) {
