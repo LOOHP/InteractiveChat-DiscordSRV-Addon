@@ -181,6 +181,9 @@ public class DiscordSRVEvents {
 		String text0 = message.getContentRaw();
 		TextChannel channel = event.getChannel();
 		
+		if (!InteractiveChatDiscordSrvAddon.plugin.isEnabled()) {
+			return;
+		}
 		Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
 			String text = text0;
 			
