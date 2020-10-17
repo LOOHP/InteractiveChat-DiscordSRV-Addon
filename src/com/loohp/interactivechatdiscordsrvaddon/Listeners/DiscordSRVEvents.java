@@ -160,7 +160,7 @@ public class DiscordSRVEvents {
 		for (ICPlaceholder placeholder : InteractiveChatAPI.getICPlaceholderList()) {
 			if (!placeholder.isBuildIn()) {
 				CustomPlaceholder customP = placeholder.getCustomPlaceholder().get();
-				if ((InteractiveChat.useCustomPlaceholderPermissions && sender.hasPermission("interactivechat.module.custom." + customP.getPosition())) && customP.getReplace().isEnabled()) {
+				if ((!InteractiveChat.useCustomPlaceholderPermissions || (InteractiveChat.useCustomPlaceholderPermissions && sender.hasPermission("interactivechat.module.custom." + customP.getPosition()))) && customP.getReplace().isEnabled()) {
 					long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, customP.getKeyword()) - now;
 					if (cooldown < 0 || cooldown + 100 > customP.getCooldown()) {
 						if (message.toLowerCase().contains(customP.getKeyword())) {

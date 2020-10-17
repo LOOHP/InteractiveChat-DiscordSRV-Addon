@@ -11,6 +11,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -138,10 +139,18 @@ public class ItemStackUtils {
 		}
 		
 		if (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ENCHANTS))) {
-			for (Entry<Enchantment, Integer> entry : CustomMapUtils.sortMapByValue(item.getEnchantments()).entrySet()) {
-				Enchantment ench = entry.getKey();
-				int level = entry.getValue();
-				description += "**" + InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Enchantments.Mappings." + ench.getName().toUpperCase()) + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRoman(level)) + "**\n";
+			if (hasMeta && item.getItemMeta() instanceof EnchantmentStorageMeta) {
+				for (Entry<Enchantment, Integer> entry : CustomMapUtils.sortMapByValue(((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants()).entrySet()) {
+					Enchantment ench = entry.getKey();
+					int level = entry.getValue();
+					description += "**" + InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Enchantments.Mappings." + ench.getName().toUpperCase()) + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRoman(level)) + "**\n";
+				}
+			} else {
+				for (Entry<Enchantment, Integer> entry : CustomMapUtils.sortMapByValue(item.getEnchantments()).entrySet()) {
+					Enchantment ench = entry.getKey();
+					int level = entry.getValue();
+					description += "**" + InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Enchantments.Mappings." + ench.getName().toUpperCase()) + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRoman(level)) + "**\n";
+				}
 			}
 		}
 		
