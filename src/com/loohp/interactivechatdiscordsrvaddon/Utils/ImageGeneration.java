@@ -252,7 +252,7 @@ public class ImageGeneration {
 			g4.dispose();
 		} else if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
 			try {
-				String base64 = SkullUtils.getSkinValue(item);
+				String base64 = SkullUtils.getSkinValue(item.getItemMeta());
 				if (base64 != null) {
 					JSONObject json = (JSONObject) new JSONParser().parse(new String(Base64.getDecoder().decode(base64)));
 					String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace("http://textures.minecraft.net/texture/", "");
@@ -332,7 +332,7 @@ public class ImageGeneration {
 			itemImage = CustomImageUtils.additionNonTransparent(itemImage, tintImage);
 		}
 		
-		if (xMaterial.isDamageable()) {
+		if (item.getType().getMaxDurability() > 0) {
 			int durability = item.getType().getMaxDurability() - (InteractiveChat.version.isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
 			int maxDur = item.getType().getMaxDurability();
 			double percentage = ((double) durability / (double) maxDur);

@@ -4,12 +4,10 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -33,6 +31,7 @@ import com.loohp.interactivechat.Utils.MaterialUtils;
 import com.loohp.interactivechat.Utils.NBTUtils;
 import com.loohp.interactivechat.Utils.PlaceholderParser;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.IDProvider;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils.DiscordDescription;
@@ -42,18 +41,20 @@ import github.scarsz.discordsrv.api.events.DiscordGuildMessageSentEvent;
 import github.scarsz.discordsrv.api.events.DiscordReadyEvent;
 import github.scarsz.discordsrv.api.events.GameChatMessagePreProcessEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.EmbedBuilder;
+import github.scarsz.discordsrv.dependencies.jda.api.JDA;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import net.md_5.bungee.api.chat.TranslatableComponent;
 
 public class DiscordSRVEvents {
 	
-	private static Random random = new Random();
+	private static IDProvider inventoryIdProvider = new IDProvider();
 	public static Map<Integer, ImageDisplayData> data = Collections.synchronizedMap(new LinkedHashMap<>());
 	
 	@Subscribe
 	public void onDiscordReady(DiscordReadyEvent event) {
-		 InteractiveChatDiscordSrvAddon.discordsrv.getJda().addEventListener(new JDAEvents());
+		JDA jda = InteractiveChatDiscordSrvAddon.discordsrv.getJda();
+		jda.addEventListener(new JDAEvents());
 	}
 	
 	@Subscribe
@@ -100,7 +101,7 @@ public class DiscordSRVEvents {
 					String replaceText = PlaceholderParser.parse(wrappedSender, ChatColorUtils.stripColor(InteractiveChat.itemReplaceText).replace("{Amount}", String.valueOf(amount)).replace("{Item}", itemStr));
 					message = message.replaceAll((InteractiveChat.itemCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.itemPlaceholder), replaceText);
 					if (InteractiveChatDiscordSrvAddon.plugin.itemImage && !item.getType().equals(Material.AIR)) {
-						int inventoryId = random.nextInt();
+						int inventoryId = inventoryIdProvider.getNext();
 						String title = PlaceholderParser.parse(wrappedSender, ChatColorUtils.stripColor(InteractiveChat.itemTitle));
 						data.put(inventoryId, new ImageDisplayData(sender, title, ImageDisplayType.ITEM, item.clone()));
 						message += "<ICD=" + inventoryId + ">";
@@ -116,7 +117,7 @@ public class DiscordSRVEvents {
 					String replaceText = PlaceholderParser.parse(wrappedSender, ChatColorUtils.stripColor(InteractiveChat.invReplaceText));
 					message = message.replaceAll((InteractiveChat.invCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.invPlaceholder), replaceText);
 					if (InteractiveChatDiscordSrvAddon.plugin.invImage) {
-						int inventoryId = random.nextInt();
+						int inventoryId = inventoryIdProvider.getNext();
 						Inventory inv = Bukkit.createInventory(null, 45);
 						for (int j = 0; j < sender.getInventory().getSize(); j = j + 1) {
 							if (sender.getInventory().getItem(j) != null) {
@@ -140,7 +141,7 @@ public class DiscordSRVEvents {
 					String replaceText = PlaceholderParser.parse(wrappedSender, ChatColorUtils.stripColor(InteractiveChat.enderReplaceText));
 					message = message.replaceAll((InteractiveChat.enderCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.enderPlaceholder), replaceText);
 					if (InteractiveChatDiscordSrvAddon.plugin.enderImage) {
-						int inventoryId = random.nextInt();
+						int inventoryId = inventoryIdProvider.getNext();
 						Inventory inv = Bukkit.createInventory(null, 27);
 						for (int j = 0; j < sender.getEnderChest().getSize(); j = j + 1) {
 							if (sender.getEnderChest().getItem(j) != null) {
@@ -193,9 +194,7 @@ public class DiscordSRVEvents {
 			
 			Set<Integer> matches = new LinkedHashSet<>();
 			
-			Iterator<Integer> itr = data.keySet().iterator();
-			while (itr.hasNext()) {
-				int key = itr.next();
+			for (int key : data.keySet()) {
 				if (text.contains("<ICD=" + key + ">")) {
 					text = text.replace("<ICD=" + key + ">", "");
 					matches.add(key);
@@ -209,7 +208,7 @@ public class DiscordSRVEvents {
 			message.editMessage(text).queue();
 			
 			for (int key : matches) {
-				ImageDisplayData iData = data.get(key);
+				ImageDisplayData iData = data.remove(key);
 				ImageDisplayType type = iData.getType();
 				String title = iData.getTitle();
 				if (iData.getItemStack().isPresent()) {
@@ -255,7 +254,6 @@ public class DiscordSRVEvents {
 						}
 						ImageIO.write(image, "png", os);
 						channel.sendMessage(new EmbedBuilder().setAuthor(title, null, null).setImage("attachment://Inventory.png").setColor(color).build()).addFile(os.toByteArray(), "Inventory.png").queue();
-						data.remove(key);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}			

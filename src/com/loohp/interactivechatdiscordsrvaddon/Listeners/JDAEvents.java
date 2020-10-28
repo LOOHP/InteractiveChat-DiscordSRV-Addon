@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -64,9 +63,7 @@ public class JDAEvents extends ListenerAdapter {
 		
 		Set<Integer> matches = new LinkedHashSet<>();
 		
-		Iterator<Integer> itr = DiscordSRVEvents.data.keySet().iterator();
-		while (itr.hasNext()) {
-			int key = itr.next();
+		for (int key : DiscordSRVEvents.data.keySet()) {
 			if (text.contains("<ICD=" + key + ">")) {
 				text = text.replace("<ICD=" + key + ">", "");
 				matches.add(key);
@@ -82,7 +79,7 @@ public class JDAEvents extends ListenerAdapter {
 		List<WebhookMessageBuilder> messagesToSend = new ArrayList<>();
 		
 		for (int key : matches) {
-			ImageDisplayData iData = DiscordSRVEvents.data.get(key);
+			ImageDisplayData iData = DiscordSRVEvents.data.remove(key);
 			ImageDisplayType type = iData.getType();
 			String title = iData.getTitle();
 			player = iData.getPlayer();
@@ -129,7 +126,6 @@ public class JDAEvents extends ListenerAdapter {
 					}
 					ImageIO.write(image, "png", os);
 					messagesToSend.add(new WebhookMessageBuilder().addEmbeds(new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(title, null, null)).setColor(color.getRGB()).setImageUrl("attachment://Inventory.png").build()).addFile("Inventory.png", os.toByteArray()));					
-					DiscordSRVEvents.data.remove(key);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

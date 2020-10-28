@@ -176,14 +176,14 @@ public class ItemStackUtils {
 			}
 		}
 		
-		if (hasMeta && item.getItemMeta().isUnbreakable() && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_UNBREAKABLE)) {
+		if (hasMeta && isUnbreakble(item) && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_UNBREAKABLE)) {
 			if (!description.equals("")) {
 				description += "\n";
 			}
 			description += "**" + InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Unbreakable.Name") + "**\n";
 		}
 		
-		if (xMaterial.isDamageable()) {
+		if (item.getType().getMaxDurability() > 0) {
 			int durability = item.getType().getMaxDurability() - (InteractiveChat.version.isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
 			int maxDur = item.getType().getMaxDurability();
 			if (durability < maxDur) {
@@ -195,6 +195,18 @@ public class ItemStackUtils {
 		}
 		
 		return new DiscordDescription(name, description.equals("") ? null : description);
+	}
+	
+	public static boolean isUnbreakble(ItemStack item) {
+		try {
+			if (item.hasItemMeta()) {
+				return item.getItemMeta().isUnbreakable();
+			} else {
+				return false;
+			}
+		} catch (Throwable e) {
+			return NBTUtils.getByte(item, "Unbreakable") > 0;
+		}
 	}
 
 }
