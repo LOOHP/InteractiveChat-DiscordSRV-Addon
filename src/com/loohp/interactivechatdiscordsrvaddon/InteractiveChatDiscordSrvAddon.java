@@ -69,6 +69,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	private Map<String, BufferedImage> gui = new HashMap<>();
 	private Map<String, BufferedImage> banner = new HashMap<>();	
 	private Map<String, BufferedImage> font = new HashMap<>();
+	private Map<String, BufferedImage> puppet = new HashMap<>();
 	
 	@Override
 	public void onEnable() {
@@ -79,7 +80,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		reloadConfig();
-		loadConfig();
 		
 		int pluginId = 8863;
 		metrics = new Metrics(this, pluginId);
@@ -110,7 +110,10 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] InteractiveChat DiscordSRV Addon has been Disabled!");
 	}
 	
-	public void loadConfig() {
+	@Override
+	public void reloadConfig() {
+		super.reloadConfig();
+		
 		reloadConfigMessage = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("Messages.ReloadConfig"));
 		reloadTextureMessage = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("Messages.ReloadTexture"));
 		
@@ -191,6 +194,14 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		return CustomImageUtils.copyImage(image);
 	}
 	
+	public BufferedImage getPuppetTexture(String str) {
+		BufferedImage image = puppet.get(str);
+		if (image == null) {
+			return null;
+		}
+		return CustomImageUtils.copyImage(image);
+	}
+	
 	public void reloadTextures() {
 		Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
 			Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSRVAddon] Loading textures...");
@@ -200,6 +211,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 			Map<String, BufferedImage> misc = new HashMap<>();
 			Map<String, BufferedImage> gui = new HashMap<>();
 			Map<String, BufferedImage> banner = new HashMap<>();
+			Map<String, BufferedImage> puppet = new HashMap<>();
 			
 			for (String folder : resourceOrder) {
 				for (File file : new File(getDataFolder() + "/" + folder + "/blocks/").listFiles()) {
@@ -365,6 +377,30 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 						e.printStackTrace();
 					}
 				}
+				
+				for (File file : new File(getDataFolder() + "/" + folder + "/puppet/").listFiles()) {
+					if (!file.exists() || file.isDirectory()) {
+						continue;
+					}
+					try {
+						BufferedImage guiImage = ImageIO.read(file);
+						
+						if (guiImage == null) {
+							continue;
+						}
+						
+						String name = file.getName();
+						int lastDot = name.lastIndexOf(".");
+						if (lastDot >= 0) {
+							name = name.substring(0, lastDot);
+						}
+						
+						puppet.put(name, guiImage);
+					} catch (IOException e) {
+						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
+						e.printStackTrace();
+					}
+				}
 			}
 			
 			Bukkit.getScheduler().runTask(plugin, () -> {
@@ -374,8 +410,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 				InteractiveChatDiscordSrvAddon.plugin.misc = misc;
 				InteractiveChatDiscordSrvAddon.plugin.gui = gui;
 				InteractiveChatDiscordSrvAddon.plugin.banner = banner;
+				InteractiveChatDiscordSrvAddon.plugin.puppet = puppet;
 				
-				int total = blocks.size() + items.size() + font.size() + misc.size() + gui.size() + banner.size();
+				int total = blocks.size() + items.size() + font.size() + misc.size() + gui.size() + banner.size() + puppet.size();
 				Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSRVAddon] Loaded " + total + " textures!");
 			});
 		});

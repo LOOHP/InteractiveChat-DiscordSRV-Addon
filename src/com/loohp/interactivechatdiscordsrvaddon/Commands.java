@@ -32,7 +32,6 @@ public class Commands implements CommandExecutor, TabCompleter {
 		if (args[0].equalsIgnoreCase("reloadconfig")) {
 			if (sender.hasPermission("interactivechatdiscordsrv.reloadconfig")) {
 				InteractiveChatDiscordSrvAddon.plugin.reloadConfig();
-				InteractiveChatDiscordSrvAddon.plugin.loadConfig();
 				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.reloadConfigMessage);
 			} else {
 				sender.sendMessage(InteractiveChat.NoPermission);

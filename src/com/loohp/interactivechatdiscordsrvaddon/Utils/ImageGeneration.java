@@ -186,12 +186,16 @@ public class ImageGeneration {
 		return target;
 	}
 	
-	private static BufferedImage getFullBodyImage(Player player) throws Exception {
-		JSONObject json = (JSONObject) new JSONParser().parse(SkinUtils.getSkinJsonFromProfile(player));
-		String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace("http://textures.minecraft.net/texture/", "");
-		
-		String url = "https://mc-heads.net/player/" + value + "/61";
-		return ImageIO.read(new URL(url));
+	private static BufferedImage getFullBodyImage(Player player) {
+		try {
+			JSONObject json = (JSONObject) new JSONParser().parse(SkinUtils.getSkinJsonFromProfile(player));
+			String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace("http://textures.minecraft.net/texture/", "");
+			
+			String url = "https://mc-heads.net/player/" + value + "/61";
+			return ImageIO.read(new URL(url));
+		} catch (Throwable e) {
+			return InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("default");
+		}
 	}
 	
 	private static BufferedImage getRawItemImage(ItemStack item) throws IOException {
