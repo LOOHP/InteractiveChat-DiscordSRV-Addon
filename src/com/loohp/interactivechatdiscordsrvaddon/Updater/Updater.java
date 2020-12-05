@@ -81,7 +81,7 @@ public class Updater implements Listener {
             Version spigotmc = new Version(spigotPluginVersion);
             Version devBuild = new Version(devBuildVersion);
             if (currentRelease.compareTo(spigotmc) < 0) {
-                return new UpdaterResponse(spigotPluginVersion, spigotPluginId, currentDevBuild.compareTo(devBuild) >= 0);
+                return new UpdaterResponse(spigotPluginVersion, spigotPluginId, currentDevBuild.compareTo(devBuild) > 0);
             } else {
             	return new UpdaterResponse("latest", spigotPluginId, currentDevBuild.compareTo(devBuild) > 0);
             }
