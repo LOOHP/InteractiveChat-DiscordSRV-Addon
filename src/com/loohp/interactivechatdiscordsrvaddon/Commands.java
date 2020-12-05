@@ -12,6 +12,7 @@ import org.bukkit.command.TabCompleter;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.ChatColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Updater.Updater;
+import com.loohp.interactivechatdiscordsrvaddon.Updater.Updater.UpdaterResponse;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -54,11 +55,15 @@ public class Commands implements CommandExecutor, TabCompleter {
 				sender.sendMessage(ChatColor.AQUA + "[ICDiscordSRVAddon] InteractiveChat DiscordSRV Addon written by LOOHP!");
 				sender.sendMessage(ChatColor.GOLD + "[ICDiscordSRVAddon] You are running ICDiscordSRVAddon version: " + InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion());
 				Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
-					String version = Updater.checkUpdate();
-					if (version.equals("latest")) {
-						sender.sendMessage(ChatColor.GREEN + "[ICDiscordSRVAddon] You are running the latest version!");
+					UpdaterResponse version = Updater.checkUpdate();
+					if (version.getResult().equals("latest")) {
+						if (version.isDevBuildLatest()) {
+							sender.sendMessage(ChatColor.GREEN + "[ICDiscordSRVAddon] You are running the latest version!");
+						} else {
+							Updater.sendUpdateMessage(sender, version.getResult(), version.getSpigotPluginId(), true);
+						}
 					} else {
-						Updater.sendUpdateMessage(sender, version);
+						Updater.sendUpdateMessage(sender, version.getResult(), version.getSpigotPluginId());
 					}
 				});
 			} else {

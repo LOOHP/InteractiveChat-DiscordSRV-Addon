@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.loohp</groupId>
 	<artifactId>InteractiveChatDiscordSrvAddon</artifactId>
-	<version>1.2.2</version>
+	<version>1.2.2.1</version>
 	<build>
 		<sourceDirectory>src</sourceDirectory>
 		<resources>
@@ -145,7 +145,7 @@
 		<dependency>
 			<groupId>com.loohp</groupId>
 			<artifactId>InteractiveChat</artifactId>
-			<version>3.1.1</version>
+			<version>3.2.3.0</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
