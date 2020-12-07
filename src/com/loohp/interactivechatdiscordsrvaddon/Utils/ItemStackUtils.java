@@ -26,6 +26,7 @@ import com.loohp.interactivechat.Utils.RarityUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.TranslatableComponent;
 
 @SuppressWarnings("deprecation")
 public class ItemStackUtils {
@@ -83,18 +84,14 @@ public class ItemStackUtils {
 		if (item.hasItemMeta() && item.getItemMeta().hasDisplayName() && !item.getItemMeta().getDisplayName().equals("")) {
 			name = item.getItemMeta().getDisplayName();
 		} else {
-			String itemKey = MaterialUtils.getMinecraftLangName(item);
-			if (InteractiveChat.version.isLegacy()) {
-				name = itemKey;
-			} else {
-				name = InteractiveChatDiscordSrvAddon.plugin.getModernItemTrans(itemKey);
-				if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
-					String owner = NBTUtils.getString(item, "SkullOwner", "Name");
-					if (owner != null) {
-						name = name.replaceFirst("%s", owner);
-					}
+			TranslatableComponent component = new TranslatableComponent(MaterialUtils.getMinecraftLangName(item));
+			if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
+				String owner = NBTUtils.getString(item, "SkullOwner", "Name");
+				if (owner != null) {
+					component.addWith(owner);
 				}
 			}
+			name = component.toLegacyText();
 		}
 		if (item.getAmount() == 1) {
 			name = InteractiveChatDiscordSrvAddon.plugin.itemDisplaySingle.replace("{Item}", ChatColorUtils.stripColor(name)).replace("{Amount}", String.valueOf(item.getAmount()));

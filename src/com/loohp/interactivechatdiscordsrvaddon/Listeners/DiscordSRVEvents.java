@@ -36,7 +36,6 @@ import com.loohp.interactivechatdiscordsrvaddon.Utils.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils.DiscordDescription;
 
-import github.scarsz.discordsrv.api.ListenerPriority;
 import github.scarsz.discordsrv.api.Subscribe;
 import github.scarsz.discordsrv.api.events.DiscordGuildMessageSentEvent;
 import github.scarsz.discordsrv.api.events.DiscordReadyEvent;
@@ -45,19 +44,20 @@ import github.scarsz.discordsrv.dependencies.jda.api.EmbedBuilder;
 import github.scarsz.discordsrv.dependencies.jda.api.JDA;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
+import net.md_5.bungee.api.chat.TranslatableComponent;
 
 public class DiscordSRVEvents {
 	
 	private static IDProvider inventoryIdProvider = new IDProvider();
 	public static Map<Integer, ImageDisplayData> data = Collections.synchronizedMap(new LinkedHashMap<>());
 	
-	@Subscribe(priority = ListenerPriority.HIGHEST)
+	@Subscribe
 	public void onDiscordReady(DiscordReadyEvent event) {
 		JDA jda = InteractiveChatDiscordSrvAddon.discordsrv.getJda();
 		jda.addEventListener(new JDAEvents());
 	}
 	
-	@Subscribe(priority = ListenerPriority.HIGHEST)
+	@Subscribe
 	public void onGameToDiscord(GameChatMessagePreProcessEvent event) {
 		InteractiveChatDiscordSrvAddon.plugin.messagesCounter.incrementAndGet();
 		Player sender = event.getPlayer();
@@ -85,18 +85,14 @@ public class DiscordSRVEvents {
 					if (item.hasItemMeta() && item.getItemMeta().hasDisplayName() && !item.getItemMeta().getDisplayName().equals("")) {
 						itemStr = item.getItemMeta().getDisplayName();
 					} else {
-						String itemKey = MaterialUtils.getMinecraftLangName(item);
-						if (InteractiveChat.version.isLegacy()) {
-							itemStr = itemKey;
-						} else {
-							itemStr = InteractiveChatDiscordSrvAddon.plugin.getModernItemTrans(itemKey);
-							if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
-								String owner = NBTUtils.getString(item, "SkullOwner", "Name");
-								if (owner != null) {
-									itemStr = itemStr.replaceFirst("%s", owner);
-								}
+						TranslatableComponent component = new TranslatableComponent(MaterialUtils.getMinecraftLangName(item));
+						if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
+							String owner = NBTUtils.getString(item, "SkullOwner", "Name");
+							if (owner != null) {
+								component.addWith(owner);
 							}
 						}
+						itemStr = component.toLegacyText();
 					}
 					itemStr = ChatColorUtils.stripColor(itemStr);
 					
@@ -180,7 +176,7 @@ public class DiscordSRVEvents {
 		event.setMessage(message);
 	}
 	
-	@Subscribe(priority = ListenerPriority.HIGHEST)
+	@Subscribe
 	public void discordMessageSent(DiscordGuildMessageSentEvent event) {
 		Message message = event.getMessage();
 		String text0 = message.getContentRaw();
@@ -209,7 +205,7 @@ public class DiscordSRVEvents {
 				return;
 			}
 			
-			message.delete().queue();
+			message.editMessage(text).queue();
 			
 			for (int key : matches) {
 				ImageDisplayData iData = data.remove(key);
@@ -226,7 +222,6 @@ public class DiscordSRVEvents {
 						BufferedImage image = ImageGeneration.getItemStackImage(item);					
 						ByteArrayOutputStream os = new ByteArrayOutputStream();
 						ImageIO.write(image, "png", os);
-						channel.sendMessage(text).queue();
 						channel.sendMessage(new EmbedBuilder().setAuthor(description.getName(), null, "attachment://Item.png").setDescription(description.getDescription().orElse(null)).setColor(color).build()).addFile(os.toByteArray(), "Item.png").queue();
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -258,7 +253,6 @@ public class DiscordSRVEvents {
 							break;
 						}
 						ImageIO.write(image, "png", os);
-						channel.sendMessage(text).queue();
 						channel.sendMessage(new EmbedBuilder().setAuthor(title, null, null).setImage("attachment://Inventory.png").setColor(color).build()).addFile(os.toByteArray(), "Inventory.png").queue();
 					} catch (Exception e) {
 						e.printStackTrace();

@@ -5,10 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,9 +18,6 @@ import javax.imageio.ImageIO;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.ChatColorUtils;
@@ -66,7 +60,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public boolean UpdaterEnabled = true;
 	
 	private ConfigurationSection translations;
-	private Map<String, String> modernItemTranslations = new HashMap<>();
 	
 	private List<String> resourceOrder = new ArrayList<>();
 	
@@ -86,16 +79,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 
 		getConfig().options().copyDefaults(true);
 		saveConfig();
-		
-		File file = new File(getDataFolder(), "lang.json"); 
-        if (!file.exists() && !InteractiveChat.version.isLegacy()) {
-            try (InputStream in = this.getClassLoader().getResourceAsStream("lang.json")) {
-                Files.copy(in, file.toPath());
-            } catch (IOException e) {
-                getLogger().severe("[ICDiscordSRVAddon] Unable to copy lang.json");
-            }
-        }
-		
 		reloadConfig();
 		
 		int pluginId = 8863;
@@ -157,26 +140,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		enderColor = ColorUtils.hex2Rgb(getConfig().getString("InventoryImage.EnderChest.EmbedColor"));
 		
 		translations = getConfig().getConfigurationSection("Translations");
-		
-		modernItemTranslations.clear();
-		
-		if (!InteractiveChat.version.isLegacy()) {
-			try {
-				JSONObject json = (JSONObject) new JSONParser().parse(new FileReader(new File(getDataFolder(), "lang.json")));
-				for (Object obj : json.keySet()) {
-					try {
-						String key = (String) obj;
-						modernItemTranslations.put(key, (String) json.get(key));
-					} catch (Exception e) {}
-				}
-			} catch (IOException | ParseException e) {
-				e.printStackTrace();
-			}
-		}		
-	}
-	
-	public String getModernItemTrans(String key) {
-		return modernItemTranslations.getOrDefault(key, key);
 	}
 	
 	public ConfigurationSection getTrans() {
