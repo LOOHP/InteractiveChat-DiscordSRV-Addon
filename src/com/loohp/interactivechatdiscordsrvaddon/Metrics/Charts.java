@@ -49,18 +49,10 @@ public class Charts {
             }
         }));
 		
-		metrics.addCustomChart(new Metrics.SingleLineChart("total_images_created_per_interval", new Callable<Integer>() {
-            @Override
-            public Integer call() throws Exception {
-            	long amount = InteractiveChatDiscordSrvAddon.plugin.imageCounter.getAndSet(0);
-                return amount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) amount;
-            }
-        }));
-		
 		metrics.addCustomChart(new Metrics.SingleLineChart("total_inventory_images_created_per_interval", new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
-            	long amount = InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.getAndSet(0);
+            	long amount = InteractiveChatDiscordSrvAddon.plugin.imageCounter.getAndSet(0);
                 return amount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) amount;
             }
         }));

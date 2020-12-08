@@ -33,7 +33,6 @@ import com.loohp.interactivechat.Utils.PlaceholderParser;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.IDProvider;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ImageGeneration;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemMapWrapper;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils.DiscordDescription;
 
@@ -46,7 +45,6 @@ import github.scarsz.discordsrv.dependencies.jda.api.EmbedBuilder;
 import github.scarsz.discordsrv.dependencies.jda.api.JDA;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
-import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.MessageAction;
 
 public class DiscordSRVEvents {
 	
@@ -225,22 +223,11 @@ public class DiscordSRVEvents {
 					}
 					try {
 						DiscordDescription description = ItemStackUtils.getDiscordDescription(item);
-						BufferedImage image = ImageGeneration.getItemStackImage(item);
+						BufferedImage image = ImageGeneration.getItemStackImage(item);					
 						ByteArrayOutputStream os = new ByteArrayOutputStream();
 						ImageIO.write(image, "png", os);
-						EmbedBuilder embed = new EmbedBuilder().setDescription(description.getDescription().orElse(null)).setColor(color).setAuthor(description.getName(), null, "attachment://Item.png");					
-						if (iData.isFilledMap()) {
-							embed.setImage("attachment://Map.png");
-						}
-						MessageAction messageToSend = channel.sendMessage(embed.build()).addFile(os.toByteArray(), "Item.png");
-						if (iData.isFilledMap()) {
-							BufferedImage map = ImageGeneration.getMapImage(item);
-							ByteArrayOutputStream out = new ByteArrayOutputStream();
-							ImageIO.write(map, "png", out);
-							messageToSend.addFile(out.toByteArray(), "Map.png");
-						}
 						channel.sendMessage(text).queue();
-						messageToSend.queue();
+						channel.sendMessage(new EmbedBuilder().setAuthor(description.getName(), null, "attachment://Item.png").setDescription(description.getDescription().orElse(null)).setColor(color).build()).addFile(os.toByteArray(), "Item.png").queue();
 					} catch (Exception e) {
 						e.printStackTrace();
 					}	
@@ -295,28 +282,26 @@ public class DiscordSRVEvents {
 		private final Optional<Inventory> inventory;
 		private final boolean isPlayerInventory;
 		private final Optional<ItemStack> item;
-		private final boolean isFilledMap;
 		
-		private ImageDisplayData(Player player, String title, ImageDisplayType type, Inventory inventory, boolean isPlayerInventory, ItemStack item, boolean isFilledMap) {
+		public ImageDisplayData(Player player, String title, ImageDisplayType type, Inventory inventory, boolean isPlayerInventory, ItemStack item) {
 			this.type = type;
 			this.player = player;
 			this.title = title;
 			this.inventory = Optional.ofNullable(inventory);
 			this.isPlayerInventory = isPlayerInventory;
 			this.item = Optional.ofNullable(item);
-			this.isFilledMap = isFilledMap;
 		}
 		
 		public ImageDisplayData(Player player, String title, ImageDisplayType type, Inventory inventory) {
-			this(player, title, type, inventory, false, null, false);
+			this(player, title, type, inventory, false, null);
 		}
 		
 		public ImageDisplayData(Player player, String title, ImageDisplayType type, boolean isPlayerInventory, Inventory inventory) {
-			this(player, title, type, inventory, isPlayerInventory, null, false);
+			this(player, title, type, inventory, isPlayerInventory, null);
 		}
 		
 		public ImageDisplayData(Player player, String title, ImageDisplayType type, ItemStack itemstack) {
-			this(player, title, type, null, false, itemstack, ItemMapWrapper.isFilledMap(itemstack));
+			this(player, title, type, null, false, itemstack);
 		}
 		
 		public Player getPlayer() {
@@ -337,10 +322,6 @@ public class DiscordSRVEvents {
 
 		public Optional<ItemStack> getItemStack() {
 			return item;
-		}
-		
-		public boolean isFilledMap() {
-			return isFilledMap;
 		}
 
 		public ImageDisplayType getType() {

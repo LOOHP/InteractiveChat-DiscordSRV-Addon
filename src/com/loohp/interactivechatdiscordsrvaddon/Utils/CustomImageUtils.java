@@ -110,22 +110,6 @@ public class CustomImageUtils {
 		return newImage;
 	}
 	
-	public static BufferedImage xor(BufferedImage bottom, BufferedImage top, int alpha) {
-		for (int y = 0; y < bottom.getHeight(); y++) {
-			for (int x = 0; x < bottom.getWidth(); x++) {
-				int bottomValue = bottom.getRGB(x, y);
-				Color bottomColor = new Color(bottomValue, true);
-				
-				int topValue = top.getRGB(x, y);
-				Color topColor = new Color(topValue, true);
-				
-				Color color = new Color(bottomColor.getRed() ^ topColor.getRed(), bottomColor.getGreen() ^ topColor.getGreen(), bottomColor.getBlue() ^ topColor.getBlue(), bottomColor.getAlpha() ^ (topColor.getAlpha() * alpha / 255));
-				bottom.setRGB(x, y, color.getRGB());
-			}
-		}
-		return bottom;
-	}
-	
 	public static BufferedImage copyImage(BufferedImage source){
 	    BufferedImage b = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
 	    Graphics2D g = b.createGraphics();
@@ -139,7 +123,6 @@ public class CustomImageUtils {
 		BufferedImage copyOfImage = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = copyOfImage.createGraphics();
 		g.drawImage(img, 0, 0, null);
-		g.dispose();
 		return copyOfImage;
 	}
 

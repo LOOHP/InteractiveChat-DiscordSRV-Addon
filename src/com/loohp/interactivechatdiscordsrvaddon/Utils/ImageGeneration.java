@@ -19,7 +19,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.map.MapPalette;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
 import org.json.simple.JSONObject;
@@ -30,18 +29,13 @@ import com.cryptomorin.xseries.SkullUtils;
 import com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemMapWrapper.MapIcon;
 
 @SuppressWarnings("deprecation")
 public class ImageGeneration {
 	
-	private static final int MAP_ICON_PER_ROLE = 16;
 	private static final int SPACING = 36;
-	private static final String FULL_BODY_IMAGE_KEY = "FullBodyImage";
-	private static final String PLAYER_HEAD_KEY = "PlayerHeadImage";
 	
 	public static BufferedImage getItemStackImage(ItemStack item) throws IOException {
-		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		BufferedImage background = new BufferedImage(36, 36, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = background.createGraphics();
 		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
@@ -61,7 +55,6 @@ public class ImageGeneration {
 	
 	public static BufferedImage getInventoryImage(Inventory inventory) throws IOException {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
-		InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();
 		int rows = inventory.getSize() / 9;
 		BufferedImage background = InteractiveChatDiscordSrvAddon.plugin.getGUITexture(rows + "_rows");
 		
@@ -89,7 +82,6 @@ public class ImageGeneration {
 	
 	public static BufferedImage getPlayerInventoryImage(Inventory inventory, Player player) throws Exception {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
-		InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();
 		BufferedImage background = InteractiveChatDiscordSrvAddon.plugin.getGUITexture("player_inventory");
 		
 		BufferedImage target = new BufferedImage(background.getWidth(), background.getHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -195,28 +187,18 @@ public class ImageGeneration {
 	}
 	
 	private static BufferedImage getFullBodyImage(Player player) {
-		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		try {
-			BufferedImage image;
-			Cache<?> cache = Cache.getCache(player.getUniqueId().toString() + FULL_BODY_IMAGE_KEY);
-			if (cache == null) {
-				JSONObject json = (JSONObject) new JSONParser().parse(SkinUtils.getSkinJsonFromProfile(player));
-				String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace("http://textures.minecraft.net/texture/", "");
-				
-				String url = "https://mc-heads.net/player/" + value + "/61";
-				image = ImageIO.read(new URL(url));
-				Cache.putCache(player.getUniqueId().toString() + FULL_BODY_IMAGE_KEY, image, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
-			} else {
-				image = (BufferedImage) cache.getObject();
-			}
-			return CustomImageUtils.copyImage(image);
+			JSONObject json = (JSONObject) new JSONParser().parse(SkinUtils.getSkinJsonFromProfile(player));
+			String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace("http://textures.minecraft.net/texture/", "");
+			
+			String url = "https://mc-heads.net/player/" + value + "/61";
+			return ImageIO.read(new URL(url));
 		} catch (Throwable e) {
 			return InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("default");
 		}
 	}
 	
 	private static BufferedImage getRawItemImage(ItemStack item) throws IOException {
-		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		int amount = item.getAmount();
 		XMaterial xMaterial = XMaterial.matchXMaterial(item);
 		String key = xMaterial.name().toLowerCase();
@@ -276,24 +258,18 @@ public class ImageGeneration {
 			try {
 				String base64 = SkullUtils.getSkinValue(item.getItemMeta());
 				if (base64 != null) {
-					Cache<?> cache = Cache.getCache(base64 + PLAYER_HEAD_KEY);
-					if (cache == null) {
-						JSONObject json = (JSONObject) new JSONParser().parse(new String(Base64.getDecoder().decode(base64)));
-						String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace("http://textures.minecraft.net/texture/", "");
-						String url = "https://mc-heads.net/head/" + value + "/96";
-						BufferedImage newSkull = ImageIO.read(new URL(url));
-						
-						BufferedImage newImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
-						Graphics2D g2 = newImage.createGraphics();
-						g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-						g2.drawImage(newSkull, 5, 3, 24, 28, null);
-						g2.dispose();
-						
-						Cache.putCache(base64 + PLAYER_HEAD_KEY, newImage, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
-						itemImage = CustomImageUtils.copyImage(newImage);
-					} else {
-						itemImage = CustomImageUtils.copyImage((BufferedImage) cache.getObject());
-					}
+					JSONObject json = (JSONObject) new JSONParser().parse(new String(Base64.getDecoder().decode(base64)));
+					String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace("http://textures.minecraft.net/texture/", "");
+					String url = "https://mc-heads.net/head/" + value + "/96";
+					BufferedImage newSkull = ImageIO.read(new URL(url));
+					
+					BufferedImage newImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+					Graphics2D g2 = newImage.createGraphics();
+					g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+					g2.drawImage(newSkull, 5, 3, 24, 28, null);
+					g2.dispose();
+					
+					itemImage = newImage;
 				}
 			} catch (ParseException e) {
 				e.printStackTrace();
@@ -315,9 +291,6 @@ public class ImageGeneration {
 			if (durability <= 1) {
 				itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("broken_elytra");
 			}
-		} else if (ItemMapWrapper.isFilledMap(item)) {
-			BufferedImage filled = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("filled_map_markings");
-			CustomImageUtils.xor(itemImage, filled, 200);
 		}
 		
 		boolean tintedPotion = false;
@@ -405,67 +378,6 @@ public class ImageGeneration {
 		}
 		
 		return itemImage;
-	}
-	
-	public static BufferedImage getMapImage(ItemStack item) throws Exception {
-		if (!ItemMapWrapper.isFilledMap(item)) {
-			throw new IllegalArgumentException("Provided item is not a filled map");
-		}
-		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
-		
-		BufferedImage image = new BufferedImage(280, 280, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g = image.createGraphics();
-		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-		g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getGUITexture("map_background"), 0, 0, 280, 280, null);
-		g.dispose();
-		
-		ItemMapWrapper data = new ItemMapWrapper(item);
-		for (int widthOffset = 0; widthOffset < 128; widthOffset++) {
-			for (int heightOffset = 0; heightOffset < 128; heightOffset++) {
-				byte index = data.getColors()[widthOffset + heightOffset * 128];
-				if (MapPalette.TRANSPARENT != index) {
-					Color color = MapPalette.getColor(index);
-					image.setRGB(widthOffset * 2 + 12, heightOffset * 2 + 12, color.getRGB());
-					image.setRGB(widthOffset * 2 + 13, heightOffset * 2 + 12, color.getRGB());
-					image.setRGB(widthOffset * 2 + 12, heightOffset * 2 + 13, color.getRGB());
-					image.setRGB(widthOffset * 2 + 13, heightOffset * 2 + 13, color.getRGB());
-				}
-			}
-		}
-		
-		Graphics2D g2 = image.createGraphics();
-		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-		
-		BufferedImage asset = InteractiveChatDiscordSrvAddon.plugin.getGUITexture("map_icons");
-		
-		for (MapIcon icon : data.getMapIcons()) {
-			int x = icon.getX() + 128 + 12;
-			int y = icon.getY() + 128 + 12;
-			double rotation = (360.0 / 16.0 * (double) icon.getRotation()) + 180.0;
-			int type = icon.getType().ordinal();
-			
-			//String name
-			BufferedImage iconImage = CustomImageUtils.copyAndGetSubImage(asset, type % MAP_ICON_PER_ROLE * 16, type / MAP_ICON_PER_ROLE * 16, 16, 16);
-			BufferedImage iconImageBig = new BufferedImage(24, 24, BufferedImage.TYPE_INT_ARGB);
-			Graphics2D g3 = iconImageBig.createGraphics();
-			g3.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-			g3.drawImage(iconImage, 4, 4, null);
-			g3.dispose();
-			iconImage = iconImageBig;
-			
-			BufferedImage iconCan = new BufferedImage(24, 24, BufferedImage.TYPE_INT_ARGB);
-			
-			AffineTransform at = new AffineTransform();
-            at.rotate(Math.toRadians(rotation), iconImage.getWidth() / 2, iconImage.getHeight() / 2);
-            Graphics2D g2d = iconCan.createGraphics();
-            g2d.drawImage(iconImage, at, null);
-            g2d.dispose();
-            
-            g2.drawImage(iconCan, x - (iconCan.getWidth() / 2), y - (iconCan.getHeight() / 2), 24, 24, null);
-		}
-		g2.dispose();
-		
-		return image;
 	}
 
 }
