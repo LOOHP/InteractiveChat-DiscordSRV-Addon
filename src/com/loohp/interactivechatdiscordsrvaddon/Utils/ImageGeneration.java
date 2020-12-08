@@ -197,15 +197,15 @@ public class ImageGeneration {
 	private static BufferedImage getFullBodyImage(Player player) {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		try {
+			JSONObject json = (JSONObject) new JSONParser().parse(SkinUtils.getSkinJsonFromProfile(player));
+			String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace("http://textures.minecraft.net/texture/", "");
+			
 			BufferedImage image;
-			Cache<?> cache = Cache.getCache(player.getUniqueId().toString() + FULL_BODY_IMAGE_KEY);
+			Cache<?> cache = Cache.getCache(player.getUniqueId().toString() + value + FULL_BODY_IMAGE_KEY);
 			if (cache == null) {
-				JSONObject json = (JSONObject) new JSONParser().parse(SkinUtils.getSkinJsonFromProfile(player));
-				String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace("http://textures.minecraft.net/texture/", "");
-				
 				String url = "https://mc-heads.net/player/" + value + "/61";
 				image = ImageIO.read(new URL(url));
-				Cache.putCache(player.getUniqueId().toString() + FULL_BODY_IMAGE_KEY, image, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+				Cache.putCache(player.getUniqueId().toString() + value + FULL_BODY_IMAGE_KEY, image, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
 			} else {
 				image = (BufferedImage) cache.getObject();
 			}
