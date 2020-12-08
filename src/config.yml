@@ -16,6 +16,9 @@ Messages:
   ReloadConfig: "&aICDiscordSRVAddon config has been reloaded!"
   ReloadTexture: "&aICDiscordSRVAddon reloading textures--- (See console for progress)"
 
+Settings:
+  CacheTimeout: 60
+
 Resources:
   Order: []
 
@@ -23,6 +26,10 @@ Options:
   Updater: true
 
 Translations:
+  FilledMap:
+    Id: "Id #{Id}"
+    Scale: "Scaling at 1:{Scale}"
+    Level: "(Level {Level}/4)"
   Durability:
     ToolTip: "Durability: {Remaining} / {Max}"
   Dye:

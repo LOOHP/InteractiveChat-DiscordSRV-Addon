@@ -48,6 +48,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public Metrics metrics;
 	public AtomicLong messagesCounter = new AtomicLong(0);
 	public AtomicLong imageCounter = new AtomicLong(0);
+	public AtomicLong inventoryImageCounter = new AtomicLong(0);
 	
 	public boolean itemImage = true;
 	public boolean invImage = true;
@@ -64,6 +65,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public String reloadTextureMessage;
 	
 	public boolean UpdaterEnabled = true;
+	
+	public int cacheTimeout = 1200;
 	
 	private ConfigurationSection translations;
 	private Map<String, String> modernItemTranslations = new HashMap<>();
@@ -150,6 +153,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		usePlayerInvView = getConfig().getBoolean("InventoryImage.Inventory.UsePlayerInventoryView");
 		
 		UpdaterEnabled = getConfig().getBoolean("Options.UpdaterEnabled");
+		
+		cacheTimeout = getConfig().getInt("Settings.CacheTimeout") * 20;
 		
 		itemDisplaySingle = getConfig().getString("InventoryImage.Item.EmbedDisplay.Single");
 		itemDisplayMultiple = getConfig().getString("InventoryImage.Item.EmbedDisplay.Multiple");		

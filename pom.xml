@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.loohp</groupId>
 	<artifactId>InteractiveChatDiscordSrvAddon</artifactId>
-	<version>1.2.2.2</version>
+	<version>1.2.3.0</version>
 	<build>
 		<sourceDirectory>src</sourceDirectory>
 		<resources>
@@ -126,16 +126,16 @@
 		<dependency>
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot-api</artifactId>
-			<version>1.16.3-R0.1-SNAPSHOT</version>
+			<version>1.16.4-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency> 
 			<groupId>Spigot-1.16.3</groupId>
 			<artifactId>Spigot-1.16.3</artifactId> 
 			<version>1.0</version>
-			<systemPath>${basedir}/lib/spigot-1.16.3.jar</systemPath> 
+			<systemPath>${basedir}/lib/spigot-1.16.4.jar</systemPath> 
 			<scope>system</scope>
-			</dependency> 
+		</dependency> 
 		<dependency>
 			<groupId>com.discordsrv</groupId>
 			<artifactId>discordsrv</artifactId>
