@@ -1,11 +1,13 @@
 package com.loohp.interactivechatdiscordsrvaddon.Utils;
 
 import java.awt.Color;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
@@ -14,12 +16,15 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
+import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.map.MapView;
 import org.bukkit.potion.PotionEffect;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.ChatColorUtils;
+import com.loohp.interactivechat.Utils.MCVersion;
 import com.loohp.interactivechat.Utils.MaterialUtils;
 import com.loohp.interactivechat.Utils.NBTUtils;
 import com.loohp.interactivechat.Utils.RarityUtils;
@@ -31,6 +36,26 @@ import net.md_5.bungee.api.ChatColor;
 public class ItemStackUtils {
 	
 	public static final String DISCORD_EMPTY = "\u200e";
+	
+	private static Method bukkitBukkitClassGetMapShortMethod;
+	private static Method bukkitMapViewClassGetIdMethod;
+	
+	static {
+		try {
+			try {
+				bukkitBukkitClassGetMapShortMethod = Bukkit.class.getMethod("getMap", short.class);
+			} catch (NoSuchMethodException e1) {
+				bukkitBukkitClassGetMapShortMethod = null;
+			}
+			try {
+				bukkitMapViewClassGetIdMethod = MapView.class.getMethod("getId");
+			} catch (NoSuchMethodException e1) {
+				bukkitMapViewClassGetIdMethod = null;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	
 	public static Color getDiscordColor(ItemStack item) {
 		if (item != null && item.hasItemMeta()) {
@@ -104,6 +129,29 @@ public class ItemStackUtils {
 		
 		boolean hasMeta = item.hasItemMeta();
 		String description = "";
+		
+		if (ItemMapWrapper.isFilledMap(item)) {
+			MapMeta map = (MapMeta) item.getItemMeta();
+			MapView mapView;
+			int id;
+			if (InteractiveChat.version.isPost1_14() || InteractiveChat.version.equals(MCVersion.V1_13_1)) {
+				mapView = map.getMapView();
+				id = mapView.getId();
+			} else if (InteractiveChat.version.equals(MCVersion.V1_13)) {
+				short shortId = (short) bukkitMapViewClassGetIdMethod.invoke(map);
+				mapView = (MapView) bukkitBukkitClassGetMapShortMethod.invoke(null, shortId);
+				id = shortId;
+			} else {
+				short shortId = item.getDurability();
+				mapView = (MapView) bukkitBukkitClassGetMapShortMethod.invoke(null, shortId);
+				id = shortId;
+			}
+			int scale = mapView.getScale().getValue();
+			description += InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("FilledMap.Id").replace("{Id}", id + "") + "\n";
+			description += InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("FilledMap.Scale").replace("{Scale}", (int) Math.pow(2, scale) + "") + "\n";
+			description += InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("FilledMap.Level").replace("{Level}", scale + "") + "\n";
+			description += "\n";
+		}
 		
 		if (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS))) {
 			if (item.getItemMeta() instanceof PotionMeta) {
