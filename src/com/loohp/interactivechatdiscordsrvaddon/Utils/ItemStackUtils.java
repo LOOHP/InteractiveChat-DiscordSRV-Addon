@@ -194,13 +194,19 @@ public class ItemStackUtils {
 				for (Entry<Enchantment, Integer> entry : CustomMapUtils.sortMapByValue(((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants()).entrySet()) {
 					Enchantment ench = entry.getKey();
 					int level = entry.getValue();
-					description += "**" + InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Enchantments.Mappings." + ench.getName().toUpperCase()) + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRoman(level)) + "**\n";
+					String enchName = InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Enchantments.Mappings." + ench.getName().toUpperCase());
+					if (enchName != null) {
+						description += "**" + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRoman(level)) + "**\n";
+					}
 				}
 			} else {
 				for (Entry<Enchantment, Integer> entry : CustomMapUtils.sortMapByValue(item.getEnchantments()).entrySet()) {
 					Enchantment ench = entry.getKey();
 					int level = entry.getValue();
-					description += "**" + InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Enchantments.Mappings." + ench.getName().toUpperCase()) + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRoman(level)) + "**\n";
+					String enchName = InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Enchantments.Mappings." + ench.getName().toUpperCase());
+					if (enchName != null) {
+						description += "**" + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRoman(level)) + "**\n";
+					}
 				}
 			}
 		}
