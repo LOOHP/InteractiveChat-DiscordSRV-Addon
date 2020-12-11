@@ -230,7 +230,12 @@ public class ItemStackUtils {
 				if (!description.equals("")) {
 					description += "\n";
 				}
-				description += ChatColorUtils.stripColor(String.join("\n", meta.getLore())) + "\n"; 
+				String lore = ChatColorUtils.stripColor(String.join("\n", meta.getLore()));
+				if (InteractiveChatDiscordSrvAddon.plugin.escapeDiscordMarkdownInItems) {
+					description += lore.replaceAll(DiscordDataRegistry.getMarkdownSpecialPattern(), "\\\\$1") + "\n";
+				} else {
+					description += lore + "\n";
+				}
 			}
 		}
 		
@@ -249,13 +254,6 @@ public class ItemStackUtils {
 					description += "\n";
 				}
 				description += "**" + InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Durability.ToolTip").replace("{Remaining}", String.valueOf(durability)).replace("{Max}", String.valueOf(maxDur)) + "**\n";
-			}
-		}
-		
-		if (InteractiveChatDiscordSrvAddon.plugin.escapeDiscordMarkdownInItems) {
-			name = name.replaceAll(DiscordDataRegistry.getMarkdownSpecialPattern(), "\\\\$1");
-			if (description != null) {
-				description = description.replaceAll(DiscordDataRegistry.getMarkdownSpecialPattern(), "\\\\$1");
 			}
 		}
 		
