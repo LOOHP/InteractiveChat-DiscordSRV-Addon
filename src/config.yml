@@ -18,6 +18,8 @@ Messages:
 
 Settings:
   CacheTimeout: 60
+  EscapePlaceholdersSentFromDiscord: true
+  EscapeDiscordMarkdownFormattingInItems: true
 
 Resources:
   Order: []

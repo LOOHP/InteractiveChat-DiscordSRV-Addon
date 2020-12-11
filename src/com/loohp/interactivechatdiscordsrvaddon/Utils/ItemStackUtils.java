@@ -29,6 +29,7 @@ import com.loohp.interactivechat.Utils.MaterialUtils;
 import com.loohp.interactivechat.Utils.NBTUtils;
 import com.loohp.interactivechat.Utils.RarityUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
+import com.loohp.interactivechatdiscordsrvaddon.Registies.DiscordDataRegistry;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -86,7 +87,7 @@ public class ItemStackUtils {
 		private Optional<String> description;
 		
 		public DiscordDescription(String name, String description) {
-			this.name = name.equals("") ? DISCORD_EMPTY : name;
+			this.name = name.isBlank() ? DISCORD_EMPTY : name;
 			this.description = Optional.ofNullable(description);
 		}
 
@@ -251,7 +252,14 @@ public class ItemStackUtils {
 			}
 		}
 		
-		return new DiscordDescription(name, description.equals("") ? null : description);
+		if (InteractiveChatDiscordSrvAddon.plugin.escapeDiscordMarkdownInItems) {
+			name = name.replaceAll(DiscordDataRegistry.getMarkdownSpecialPattern(), "\\\\$1");
+			if (description != null) {
+				description = description.replaceAll(DiscordDataRegistry.getMarkdownSpecialPattern(), "\\\\$1");
+			}
+		}
+		
+		return new DiscordDescription(name, description.isBlank() ? null : description);
 	}
 	
 	public static boolean isUnbreakble(ItemStack item) {

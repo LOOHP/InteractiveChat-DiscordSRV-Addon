@@ -126,6 +126,15 @@ public class CustomImageUtils {
 		return bottom;
 	}
 	
+	public static BufferedImage appendImageRight(BufferedImage source, BufferedImage append, int middleGap, int rightSpace) {
+	    BufferedImage b = new BufferedImage(source.getWidth() + append.getWidth() + middleGap + rightSpace, Math.max(source.getHeight(), append.getHeight()), BufferedImage.TYPE_INT_ARGB);
+	    Graphics2D g = b.createGraphics();
+	    g.drawImage(source, 0, 0, null);
+	    g.drawImage(append, source.getWidth() + middleGap, 0, null);
+	    g.dispose();
+	    return b;
+	}
+	
 	public static BufferedImage copyImage(BufferedImage source){
 	    BufferedImage b = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
 	    Graphics2D g = b.createGraphics();

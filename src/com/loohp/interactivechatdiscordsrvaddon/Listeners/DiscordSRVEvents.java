@@ -28,6 +28,7 @@ import com.loohp.interactivechat.ObjectHolders.PlayerWrapper;
 import com.loohp.interactivechat.Utils.ChatColorUtils;
 import com.loohp.interactivechat.Utils.CustomStringUtils;
 import com.loohp.interactivechat.Utils.MaterialUtils;
+import com.loohp.interactivechat.Utils.MessageUtils;
 import com.loohp.interactivechat.Utils.NBTUtils;
 import com.loohp.interactivechat.Utils.PlaceholderParser;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
@@ -37,16 +38,23 @@ import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemMapWrapper;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils.DiscordDescription;
 
+import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.api.ListenerPriority;
 import github.scarsz.discordsrv.api.Subscribe;
+import github.scarsz.discordsrv.api.events.DiscordGuildMessagePostProcessEvent;
 import github.scarsz.discordsrv.api.events.DiscordGuildMessageSentEvent;
 import github.scarsz.discordsrv.api.events.DiscordReadyEvent;
 import github.scarsz.discordsrv.api.events.GameChatMessagePreProcessEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.EmbedBuilder;
 import github.scarsz.discordsrv.dependencies.jda.api.JDA;
+import github.scarsz.discordsrv.dependencies.jda.api.Permission;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.Guild;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.GuildChannel;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.Member;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.MessageAction;
+import net.md_5.bungee.api.ChatColor;
 
 public class DiscordSRVEvents {
 	
@@ -55,8 +63,34 @@ public class DiscordSRVEvents {
 	
 	@Subscribe(priority = ListenerPriority.HIGHEST)
 	public void onDiscordReady(DiscordReadyEvent event) {
-		JDA jda = InteractiveChatDiscordSrvAddon.discordsrv.getJda();
+		DiscordSRV discordsrv = InteractiveChatDiscordSrvAddon.discordsrv;
+		
+		JDA jda = discordsrv.getJda();
 		jda.addEventListener(new JDAEvents());
+		
+		for (String channelId : discordsrv.getChannels().values()) {
+			GuildChannel channel = jda.getGuildChannelById(channelId);
+			Guild guild = channel.getGuild();
+			Member self = guild.getMember(jda.getSelfUser());
+			for (Permission permission : InteractiveChatDiscordSrvAddon.requiredPermissions) {
+				if (!self.hasPermission(channel, permission)) {
+					Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] DiscordSRV Bot is missing the \"" + permission.getName() + "\" permission in the channel \"" + channel.getName() + "\" (Id: " + channel.getId() + ")");
+				}
+			}
+		}
+	}
+	
+	@Subscribe(priority = ListenerPriority.LOW)
+	public void onDiscordToHame(DiscordGuildMessagePostProcessEvent event) {
+		InteractiveChatDiscordSrvAddon.plugin.messagesCounter.incrementAndGet();
+		String message = event.getProcessedMessage();
+		if (InteractiveChatDiscordSrvAddon.plugin.escapePlaceholdersFromDiscord) {
+			message = MessageUtils.preprocessMessage(message, InteractiveChat.placeholderList, InteractiveChat.aliasesMapping);
+			for (ICPlaceholder placeholder : InteractiveChat.placeholderList) {
+				message = message.replace(placeholder.getKeyword(), "\\" + placeholder.getKeyword());
+			}
+			event.setProcessedMessage(message);
+		}
 	}
 	
 	@Subscribe(priority = ListenerPriority.HIGHEST)

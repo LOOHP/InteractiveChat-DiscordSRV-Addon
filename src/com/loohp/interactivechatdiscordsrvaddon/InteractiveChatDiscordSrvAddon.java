@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -37,6 +38,7 @@ import com.loohp.interactivechatdiscordsrvaddon.Utils.JarUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.JarUtils.CopyOption;
 
 import github.scarsz.discordsrv.DiscordSRV;
+import github.scarsz.discordsrv.dependencies.jda.api.Permission;
 import net.md_5.bungee.api.ChatColor;
 
 public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
@@ -44,6 +46,19 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public static InteractiveChatDiscordSrvAddon plugin;
 	public static InteractiveChat interactivechat;
 	public static DiscordSRV discordsrv;
+	
+	public static List<Permission> requiredPermissions;
+	
+	static {
+		List<Permission> requiredPerms = new ArrayList<>();
+		requiredPerms.add(Permission.MESSAGE_READ);
+		requiredPerms.add(Permission.MESSAGE_WRITE);
+		requiredPerms.add(Permission.MESSAGE_MANAGE);
+		requiredPerms.add(Permission.MESSAGE_EMBED_LINKS);
+		requiredPerms.add(Permission.MESSAGE_ATTACH_FILES);
+		requiredPerms.add(Permission.MANAGE_WEBHOOKS);
+		requiredPermissions = Collections.unmodifiableList(requiredPerms);
+	}
 	
 	public Metrics metrics;
 	public AtomicLong messagesCounter = new AtomicLong(0);
@@ -67,6 +82,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public boolean UpdaterEnabled = true;
 	
 	public int cacheTimeout = 1200;
+	
+	public boolean escapePlaceholdersFromDiscord = true;
+	public boolean escapeDiscordMarkdownInItems = true;
 	
 	private ConfigurationSection translations;
 	private Map<String, String> modernItemTranslations = new HashMap<>();
@@ -155,6 +173,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		UpdaterEnabled = getConfig().getBoolean("Options.UpdaterEnabled");
 		
 		cacheTimeout = getConfig().getInt("Settings.CacheTimeout") * 20;
+		
+		escapePlaceholdersFromDiscord = getConfig().getBoolean("Settings.EscapePlaceholdersSentFromDiscord");
+		escapeDiscordMarkdownInItems = getConfig().getBoolean("Settings.EscapeDiscordMarkdownFormattingInItems");
 		
 		itemDisplaySingle = getConfig().getString("InventoryImage.Item.EmbedDisplay.Single");
 		itemDisplayMultiple = getConfig().getString("InventoryImage.Item.EmbedDisplay.Multiple");		
