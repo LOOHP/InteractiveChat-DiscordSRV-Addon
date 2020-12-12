@@ -1,10 +1,23 @@
 package com.loohp.interactivechatdiscordsrvaddon.Utils;
 
 import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.loohp.interactivechat.Utils.ChatColorUtils;
+
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.BaseComponent;
 
 public class CustomImageUtils {
+	
+	public static final Color TEXT_BACKGROUND_COLOR = new Color(0, 0, 0, 180);
 	
 	public static BufferedImage additionNonTransparent(BufferedImage image, BufferedImage imageToAdd) {
 		for (int y = 0; y < image.getHeight() && y < imageToAdd.getHeight(); y++) {
@@ -150,6 +163,165 @@ public class CustomImageUtils {
 		g.drawImage(img, 0, 0, null);
 		g.dispose();
 		return copyOfImage;
+	}
+	
+	public static BufferedImage resizeImage(BufferedImage source, int factor) {
+		int w = source.getWidth() * factor;
+		int h = source.getHeight() * factor;
+		BufferedImage b = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+	    Graphics2D g = b.createGraphics();
+	    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+	    g.drawImage(source, 0, 0, w, h, null);
+	    g.dispose();
+	    return b;
+	}
+	
+	public static BufferedImage printComponentNoShadow(BufferedImage image, BaseComponent baseComponent, int centerX, int topY, float fontSize, boolean dynamicFontSize) {
+		String text = ComponentStringUtils.toLegacyString(baseComponent);
+		String striped = ChatColorUtils.stripColor(text);
+		
+		fontSize = Math.round(Math.max(2, fontSize - (float) striped.length() / 3) * 10) / 10;
+		
+		BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = textImage.createGraphics();
+		g.setFont(MCFont.getFont(striped).deriveFont(fontSize));
+		FontMetrics metrics = g.getFontMetrics();
+		int x = 0;
+		int height = metrics.getHeight();
+		int y = height;
+		
+		boolean magic = false;
+		
+		int currentX = x;
+		while (!text.trim().isEmpty()) {
+			String current = text.substring(0, 1);
+			if (current.equals(String.valueOf(ChatColor.COLOR_CHAR)) && text.length() > 1) {
+				if (text.substring(1, 2).equals("x")) {
+					String formatting = text.substring(0, 14);
+					if (ChatColorUtils.isLegal(formatting)) {
+						switch (applyFormatting(g, formatting)) {
+						case APPLY:
+							magic = true;
+							break;
+						case KEEP:
+							break;
+						case RESET:
+							magic = false;
+							break;
+						}
+					}
+					text = text.substring(14);
+				} else {
+					String formatting = text.substring(0, 2);
+					if (ChatColorUtils.isLegal(formatting)) {
+						switch (applyFormatting(g, formatting)) {
+						case APPLY:
+							magic = true;
+							break;
+						case KEEP:
+							break;
+						case RESET:
+							magic = false;
+							break;
+						}
+					}
+					text = text.substring(2);
+				}
+			} else {
+				Map<TextAttribute, ?> attributes = g.getFont().getAttributes();
+				attributes.remove(TextAttribute.FONT);
+				g.setFont(MCFont.getFont(current).deriveFont(attributes).deriveFont(fontSize));
+				g.drawString(magic ? ComponentStringUtils.toMagic(current) : current, currentX, y);
+				currentX += g.getFontMetrics().stringWidth(current);
+				text = text.substring(1);
+			}
+		}
+		g.dispose();
+		
+		int width = currentX;
+		x = centerX - width / 2;
+		height = metrics.getHeight();
+		int border = (int) Math.ceil(height / 6);
+		y = topY + border;
+		
+		BufferedImage background = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g2 = background.createGraphics();
+		g2.setColor(TEXT_BACKGROUND_COLOR);
+		g2.fillRect(x - border, y - border, width + border * 2, height + border);
+		g2.setColor(Color.white);
+		g2.dispose();
+		
+		Graphics2D g3 = image.createGraphics();
+		g3.drawImage(background, 0, 0, null);
+		g3.drawImage(textImage, x, y - (height / 5), null);
+		g3.dispose();
+		
+		return image;
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private static MagicFormat applyFormatting(Graphics2D g, String color) {
+		MagicFormat magic = MagicFormat.KEEP;
+    	if (color.length() >= 2) {
+    		if (color.charAt(1) != 'r') {
+		    	if (color.length() == 2) {
+		    		char cha = color.charAt(1);
+		    		ChatColor chatColor = ChatColor.getByChar(cha);
+		    		if (chatColor != null) {
+			    		if (ChatColorUtils.isColor(chatColor)) {
+			    			Map attributes = g.getFont().getAttributes();
+							attributes.put(TextAttribute.STRIKETHROUGH, false);
+							attributes.put(TextAttribute.UNDERLINE, -1);
+							Font font = new Font(attributes);
+							g.setFont(font.deriveFont(font.getStyle() & ~Font.ITALIC & ~Font.BOLD));
+							magic = MagicFormat.RESET;
+			    			try {g.setColor(chatColor.getColor());} catch (Exception e) {}
+			    		} else {
+			    			if (chatColor.equals(ChatColor.BOLD)) {
+			    				g.setFont(g.getFont().deriveFont(g.getFont().getStyle() | Font.BOLD));
+				    		} else if (chatColor.equals(ChatColor.ITALIC)) {
+				    			g.setFont(g.getFont().deriveFont(g.getFont().getStyle() | Font.ITALIC));
+				    		} else if (chatColor.equals(ChatColor.MAGIC)) {
+				    			magic = MagicFormat.APPLY;
+				    		} else if (chatColor.equals(ChatColor.STRIKETHROUGH)) {
+				    			Map<TextAttribute, Object> attributes = new HashMap<TextAttribute, Object>();
+			    				attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
+			    				g.setFont(g.getFont().deriveFont(attributes));
+				    		} else if (chatColor.equals(ChatColor.UNDERLINE)) {
+				    			Map<TextAttribute, Object> attributes = new HashMap<TextAttribute, Object>();
+			    				attributes.put(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON);
+			    				g.setFont(g.getFont().deriveFont(attributes));
+							}
+		    			}
+		    		}
+		    	} else {
+		    		Map<TextAttribute, Object> attributes = new HashMap<TextAttribute, Object>();
+					attributes.put(TextAttribute.STRIKETHROUGH, false);
+					attributes.put(TextAttribute.UNDERLINE, -1);
+					Font font = g.getFont().deriveFont(attributes);
+					g.setFont(font.deriveFont(font.getStyle() & ~Font.ITALIC & ~Font.BOLD));
+					magic = MagicFormat.RESET;
+		    		if (color.charAt(1) == 'x') {
+		    			String hex = "#" + String.valueOf(color.charAt(3)) + String.valueOf(color.charAt(5)) + String.valueOf(color.charAt(7)) + String.valueOf(color.charAt(9)) + String.valueOf(color.charAt(11)) + String.valueOf(color.charAt(13));
+		    			try {g.setColor(ChatColor.of(hex).getColor());} catch (Exception e) {}
+		    		} else {
+		    			try {g.setColor(ChatColor.getByChar(color.charAt(1)).getColor());} catch (Exception e) {}
+		    		}
+		    	}
+    		} else {
+    			Map<TextAttribute, Object> attributes = new HashMap<TextAttribute, Object>();
+				attributes.put(TextAttribute.STRIKETHROUGH, false);
+				attributes.put(TextAttribute.UNDERLINE, -1);
+				Font font = g.getFont().deriveFont(attributes);
+				g.setFont(font.deriveFont(font.getStyle() & ~Font.ITALIC & ~Font.BOLD));
+				magic = MagicFormat.RESET;
+    		}
+    	}
+    	return magic;
+    }
+	
+	public static enum MagicFormat {
+		APPLY, KEEP, RESET;
 	}
 
 }

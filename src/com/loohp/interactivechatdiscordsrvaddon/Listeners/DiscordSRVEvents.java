@@ -25,13 +25,13 @@ import com.loohp.interactivechat.API.InteractiveChatAPI;
 import com.loohp.interactivechat.ObjectHolders.CustomPlaceholder;
 import com.loohp.interactivechat.ObjectHolders.ICPlaceholder;
 import com.loohp.interactivechat.ObjectHolders.PlayerWrapper;
-import com.loohp.interactivechat.Utils.ChatColorUtils;
 import com.loohp.interactivechat.Utils.CustomStringUtils;
 import com.loohp.interactivechat.Utils.MaterialUtils;
 import com.loohp.interactivechat.Utils.MessageUtils;
 import com.loohp.interactivechat.Utils.NBTUtils;
 import com.loohp.interactivechat.Utils.PlaceholderParser;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.ComponentStringUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.IDProvider;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemMapWrapper;
@@ -134,15 +134,15 @@ public class DiscordSRVEvents {
 							}
 						}
 					}
-					itemStr = ChatColorUtils.stripColor(itemStr);
+					itemStr = ComponentStringUtils.stripColorAndConvertMagic(itemStr);
 					
 					int amount = item.getAmount();
 				
-					String replaceText = PlaceholderParser.parse(wrappedSender, ChatColorUtils.stripColor(InteractiveChat.itemReplaceText).replace("{Amount}", String.valueOf(amount)).replace("{Item}", itemStr));
+					String replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemReplaceText).replace("{Amount}", String.valueOf(amount)).replace("{Item}", itemStr));
 					message = message.replaceAll((InteractiveChat.itemCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.itemPlaceholder), replaceText);
 					if (InteractiveChatDiscordSrvAddon.plugin.itemImage && !item.getType().equals(Material.AIR)) {
 						int inventoryId = inventoryIdProvider.getNext();
-						String title = PlaceholderParser.parse(wrappedSender, ChatColorUtils.stripColor(InteractiveChat.itemTitle));
+						String title = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemTitle));
 						data.put(inventoryId, new ImageDisplayData(sender, title, ImageDisplayType.ITEM, item.clone()));
 						message += "<ICD=" + inventoryId + ">";
 					}
@@ -154,7 +154,7 @@ public class DiscordSRVEvents {
 			long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, InteractiveChat.invPlaceholder) - now;
 			if (cooldown < 0 || cooldown + 100 > ConfigManager.getConfig().getLong("ItemDisplay.Inventory.Cooldown") * 1000) {
 				if (message.toLowerCase().contains(InteractiveChat.invPlaceholder.toLowerCase())) {
-					String replaceText = PlaceholderParser.parse(wrappedSender, ChatColorUtils.stripColor(InteractiveChat.invReplaceText));
+					String replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.invReplaceText));
 					message = message.replaceAll((InteractiveChat.invCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.invPlaceholder), replaceText);
 					if (InteractiveChatDiscordSrvAddon.plugin.invImage) {
 						int inventoryId = inventoryIdProvider.getNext();
@@ -166,7 +166,7 @@ public class DiscordSRVEvents {
 								}
 							}
 						}
-						String title = PlaceholderParser.parse(wrappedSender, ChatColorUtils.stripColor(InteractiveChat.invTitle));
+						String title = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.invTitle));
 						data.put(inventoryId, new ImageDisplayData(sender, title, ImageDisplayType.INVENTORY, true, inv));
 						message += "<ICD=" + inventoryId + ">";
 					}
@@ -178,7 +178,7 @@ public class DiscordSRVEvents {
 			long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, InteractiveChat.enderPlaceholder) - now;
 			if (cooldown < 0 || cooldown + 100 > ConfigManager.getConfig().getLong("ItemDisplay.EnderChest.Cooldown") * 1000) {
 				if (message.toLowerCase().contains(InteractiveChat.enderPlaceholder.toLowerCase())) {
-					String replaceText = PlaceholderParser.parse(wrappedSender, ChatColorUtils.stripColor(InteractiveChat.enderReplaceText));
+					String replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.enderReplaceText));
 					message = message.replaceAll((InteractiveChat.enderCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.enderPlaceholder), replaceText);
 					if (InteractiveChatDiscordSrvAddon.plugin.enderImage) {
 						int inventoryId = inventoryIdProvider.getNext();
@@ -190,7 +190,7 @@ public class DiscordSRVEvents {
 								}
 							}
 						}
-						String title = PlaceholderParser.parse(wrappedSender, ChatColorUtils.stripColor(InteractiveChat.enderTitle));
+						String title = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.enderTitle));
 						data.put(inventoryId, new ImageDisplayData(sender, title, ImageDisplayType.ENDERCHEST, inv));
 						message += "<ICD=" + inventoryId + ">";
 					}
@@ -205,7 +205,7 @@ public class DiscordSRVEvents {
 					long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, customP.getKeyword()) - now;
 					if (cooldown < 0 || cooldown + 100 > customP.getCooldown()) {
 						if (message.toLowerCase().contains(customP.getKeyword())) {
-							String replaceText = PlaceholderParser.parse(wrappedSender, ChatColorUtils.stripColor(customP.getReplace().getReplaceText()));
+							String replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
 							message = message.replaceAll((customP.isCaseSensitive() ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(customP.getKeyword()), replaceText);
 						}
 					}

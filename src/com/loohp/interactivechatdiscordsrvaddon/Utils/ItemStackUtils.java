@@ -87,7 +87,7 @@ public class ItemStackUtils {
 		private Optional<String> description;
 		
 		public DiscordDescription(String name, String description) {
-			this.name = name.isBlank() ? DISCORD_EMPTY : name;
+			this.name = name.trim().isEmpty() ? DISCORD_EMPTY : name;
 			this.description = Optional.ofNullable(description);
 		}
 
@@ -123,9 +123,9 @@ public class ItemStackUtils {
 			}
 		}
 		if (item.getAmount() == 1) {
-			name = InteractiveChatDiscordSrvAddon.plugin.itemDisplaySingle.replace("{Item}", ChatColorUtils.stripColor(name)).replace("{Amount}", String.valueOf(item.getAmount()));
+			name = InteractiveChatDiscordSrvAddon.plugin.itemDisplaySingle.replace("{Item}", ComponentStringUtils.stripColorAndConvertMagic(name)).replace("{Amount}", String.valueOf(item.getAmount()));
 		} else {
-			name = InteractiveChatDiscordSrvAddon.plugin.itemDisplayMultiple.replace("{Item}", ChatColorUtils.stripColor(name)).replace("{Amount}", String.valueOf(item.getAmount()));
+			name = InteractiveChatDiscordSrvAddon.plugin.itemDisplayMultiple.replace("{Item}", ComponentStringUtils.stripColorAndConvertMagic(name)).replace("{Amount}", String.valueOf(item.getAmount()));
 		}
 		
 		boolean hasMeta = item.hasItemMeta();
@@ -230,7 +230,7 @@ public class ItemStackUtils {
 				if (!description.equals("")) {
 					description += "\n";
 				}
-				String lore = ChatColorUtils.stripColor(String.join("\n", meta.getLore()));
+				String lore = ComponentStringUtils.stripColorAndConvertMagic(String.join("\n", meta.getLore()));
 				if (InteractiveChatDiscordSrvAddon.plugin.escapeDiscordMarkdownInItems) {
 					description += lore.replaceAll(DiscordDataRegistry.getMarkdownSpecialPattern(), "\\\\$1") + "\n";
 				} else {
@@ -257,7 +257,7 @@ public class ItemStackUtils {
 			}
 		}
 		
-		return new DiscordDescription(name, description.isBlank() ? null : description);
+		return new DiscordDescription(name, description.trim().isEmpty() ? null : description);
 	}
 	
 	public static boolean isUnbreakble(ItemStack item) {

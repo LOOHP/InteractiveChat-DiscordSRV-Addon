@@ -32,6 +32,8 @@ import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemMapWrapper.MapIcon;
 
+import net.md_5.bungee.api.chat.BaseComponent;
+
 @SuppressWarnings("deprecation")
 public class ImageGeneration {
 	
@@ -413,11 +415,16 @@ public class ImageGeneration {
 		}
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		
-		BufferedImage image = new BufferedImage(280, 280, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage background = InteractiveChatDiscordSrvAddon.plugin.getGUITexture("map_background");
+		
+		BufferedImage image = new BufferedImage(1120, 1120, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = image.createGraphics();
 		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-		g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getGUITexture("map_background"), 0, 0, 280, 280, null);
+		g.drawImage(background, 0, 0, 1120, 1120, null);
 		g.dispose();
+		
+		int borderOffset = (int) (image.getWidth() / 23.3333333333333333333);
+		int ratio = (image.getWidth() - borderOffset * 2) / 128;
 		
 		ItemMapWrapper data = new ItemMapWrapper(item);
 		for (int widthOffset = 0; widthOffset < 128; widthOffset++) {
@@ -425,10 +432,11 @@ public class ImageGeneration {
 				byte index = data.getColors()[widthOffset + heightOffset * 128];
 				if (MapPalette.TRANSPARENT != index) {
 					Color color = MapPalette.getColor(index);
-					image.setRGB(widthOffset * 2 + 12, heightOffset * 2 + 12, color.getRGB());
-					image.setRGB(widthOffset * 2 + 13, heightOffset * 2 + 12, color.getRGB());
-					image.setRGB(widthOffset * 2 + 12, heightOffset * 2 + 13, color.getRGB());
-					image.setRGB(widthOffset * 2 + 13, heightOffset * 2 + 13, color.getRGB());
+					for (int x = 0; x < ratio; x++) {
+						for (int y = 0; y < ratio; y++) {
+							image.setRGB(widthOffset * ratio + borderOffset + x, heightOffset * ratio + borderOffset + y, color.getRGB());
+						}
+					}
 				}
 			}
 		}
@@ -437,23 +445,25 @@ public class ImageGeneration {
 		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 		
 		BufferedImage asset = InteractiveChatDiscordSrvAddon.plugin.getGUITexture("map_icons");
+		int iconWidth = asset.getWidth() / MAP_ICON_PER_ROLE;
 		
 		for (MapIcon icon : data.getMapIcons()) {
-			int x = icon.getX() + 128 + 12;
-			int y = icon.getY() + 128 + 12;
+			int x = icon.getX() + 128;
+			int y = icon.getY() + 128;
 			double rotation = (360.0 / 16.0 * (double) icon.getRotation()) + 180.0;
 			int type = icon.getType().ordinal();
+			BaseComponent baseComponent = icon.getName();
 			
 			//String name
-			BufferedImage iconImage = CustomImageUtils.copyAndGetSubImage(asset, type % MAP_ICON_PER_ROLE * 16, type / MAP_ICON_PER_ROLE * 16, 16, 16);
-			BufferedImage iconImageBig = new BufferedImage(24, 24, BufferedImage.TYPE_INT_ARGB);
+			BufferedImage iconImage = CustomImageUtils.copyAndGetSubImage(asset, type % MAP_ICON_PER_ROLE * iconWidth, type / MAP_ICON_PER_ROLE * iconWidth, iconWidth, iconWidth);
+			BufferedImage iconImageBig = new BufferedImage(96, 96, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g3 = iconImageBig.createGraphics();
 			g3.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-			g3.drawImage(iconImage, 4, 4, null);
+			g3.drawImage(iconImage, iconImageBig.getWidth() / 6, iconImageBig.getHeight() / 6, 64, 64, null);
 			g3.dispose();
 			iconImage = iconImageBig;
 			
-			BufferedImage iconCan = new BufferedImage(24, 24, BufferedImage.TYPE_INT_ARGB);
+			BufferedImage iconCan = new BufferedImage(96, 96, BufferedImage.TYPE_INT_ARGB);
 			
 			AffineTransform at = new AffineTransform();
             at.rotate(Math.toRadians(rotation), iconImage.getWidth() / 2, iconImage.getHeight() / 2);
@@ -461,7 +471,14 @@ public class ImageGeneration {
             g2d.drawImage(iconImage, at, null);
             g2d.dispose();
             
-            g2.drawImage(iconCan, x - (iconCan.getWidth() / 2), y - (iconCan.getHeight() / 2), 24, 24, null);
+            int imageX = x * ratio / 2 + borderOffset;
+            int imageY = y * ratio / 2 + borderOffset;
+            
+            g2.drawImage(iconCan, imageX - (iconCan.getWidth() / 2), imageY - (iconCan.getHeight() / 2), 96, 96, null);
+            
+            if (baseComponent != null && MCFont.isWorking()) {
+            	CustomImageUtils.printComponentNoShadow(image, baseComponent, imageX, imageY + 32, 30, true);
+            }
 		}
 		g2.dispose();
 		
