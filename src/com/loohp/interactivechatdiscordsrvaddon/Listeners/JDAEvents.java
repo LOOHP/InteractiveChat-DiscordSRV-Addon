@@ -90,22 +90,37 @@ public class JDAEvents extends ListenerAdapter {
 					color = new Color(0xFFFFFE);
 				}
 				try {
-					DiscordDescription description = ItemStackUtils.getDiscordDescription(item);
-					BufferedImage image = ImageGeneration.getItemStackImage(item);
-					ByteArrayOutputStream os = new ByteArrayOutputStream();
-					ImageIO.write(image, "png", os);
-					WebhookEmbedBuilder embed = new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(description.getName(), "attachment://Item.png", null)).setColor(color.getRGB()).setDescription(description.getDescription().orElse(null));
-					if (iData.isFilledMap()) {
-						embed.setImageUrl("attachment://Map.png");
-					}
-					WebhookMessageBuilder webhookmessage = new WebhookMessageBuilder().addEmbeds(embed.build()).addFile("Item.png", os.toByteArray());
-					if (iData.isFilledMap()) {
-						BufferedImage map = ImageGeneration.getMapImage(item);
+					if (type.equals(ImageDisplayType.ITEM_CONTAINER)) {
+						DiscordDescription description = ItemStackUtils.getDiscordDescription(item);
+						BufferedImage image = ImageGeneration.getItemStackImage(item);
+						ByteArrayOutputStream os = new ByteArrayOutputStream();
+						ImageIO.write(image, "png", os);
+						WebhookEmbedBuilder embed = new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(description.getName(), "attachment://Item.png", null)).setColor(color.getRGB()).setDescription(description.getDescription().orElse(null));
+						embed.setImageUrl("attachment://Container.png");
+						WebhookMessageBuilder webhookmessage = new WebhookMessageBuilder().addEmbeds(embed.build()).addFile("Item.png", os.toByteArray());
+						BufferedImage map = ImageGeneration.getInventoryImage(iData.getInventory().get());
 						ByteArrayOutputStream out = new ByteArrayOutputStream();
 						ImageIO.write(map, "png", out);
-						webhookmessage.addFile("Map.png", out.toByteArray());
+						webhookmessage.addFile("Container.png", out.toByteArray());
+						messagesToSend.add(webhookmessage);
+					} else {
+						DiscordDescription description = ItemStackUtils.getDiscordDescription(item);
+						BufferedImage image = ImageGeneration.getItemStackImage(item);
+						ByteArrayOutputStream os = new ByteArrayOutputStream();
+						ImageIO.write(image, "png", os);
+						WebhookEmbedBuilder embed = new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(description.getName(), "attachment://Item.png", null)).setColor(color.getRGB()).setDescription(description.getDescription().orElse(null));
+						if (iData.isFilledMap()) {
+							embed.setImageUrl("attachment://Map.png");
+						}
+						WebhookMessageBuilder webhookmessage = new WebhookMessageBuilder().addEmbeds(embed.build()).addFile("Item.png", os.toByteArray());
+						if (iData.isFilledMap()) {
+							BufferedImage map = ImageGeneration.getMapImage(item);
+							ByteArrayOutputStream out = new ByteArrayOutputStream();
+							ImageIO.write(map, "png", out);
+							webhookmessage.addFile("Map.png", out.toByteArray());
+						}
+						messagesToSend.add(webhookmessage);
 					}
-					messagesToSend.add(webhookmessage);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}	
