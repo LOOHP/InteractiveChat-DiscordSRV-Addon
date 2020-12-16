@@ -16,15 +16,15 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
+import com.loohp.interactivechatdiscordsrvaddon.API.Events.DiscordImageEvent;
 import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordSRVEvents.ImageDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordSRVEvents.ImageDisplayType;
+import com.loohp.interactivechatdiscordsrvaddon.ObjectHolders.DiscordMessageContent;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.DiscordItemStackUtils;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.DiscordItemStackUtils.DiscordDescription;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ImageGeneration;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils.DiscordDescription;
 
 import club.minnced.discord.webhook.WebhookClient;
-import club.minnced.discord.webhook.send.WebhookEmbed.EmbedAuthor;
-import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.ChannelType;
@@ -55,7 +55,8 @@ public class JDAEvents extends ListenerAdapter {
 		
 		Message message = event.getMessage();
 		TextChannel channel = event.getTextChannel();
-		String text = message.getContentRaw();
+		String textOriginal = message.getContentRaw();
+		String text = textOriginal;
 		
 		if (!text.contains("<ICD=")) {
 			return;
@@ -75,51 +76,51 @@ public class JDAEvents extends ListenerAdapter {
 		}
 		
 		message.delete().queue();
-		Player player = null;
-		List<WebhookMessageBuilder> messagesToSend = new ArrayList<>();
+		Player player = DiscordSRVEvents.data.get(matches.iterator().next()).getPlayer();
+
+		List<DiscordMessageContent> contents = new ArrayList<>();
 		
 		for (int key : matches) {
 			ImageDisplayData iData = DiscordSRVEvents.data.remove(key);
 			ImageDisplayType type = iData.getType();
 			String title = iData.getTitle();
-			player = iData.getPlayer();
 			if (iData.getItemStack().isPresent()) {
 				ItemStack item = iData.getItemStack().get();
-				Color color = ItemStackUtils.getDiscordColor(item);
+				Color color = DiscordItemStackUtils.getDiscordColor(item);
 				if (color.equals(Color.white)) {
 					color = new Color(0xFFFFFE);
 				}
 				try {
 					if (type.equals(ImageDisplayType.ITEM_CONTAINER)) {
-						DiscordDescription description = ItemStackUtils.getDiscordDescription(item);
+						DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
 						BufferedImage image = ImageGeneration.getItemStackImage(item);
-						ByteArrayOutputStream os = new ByteArrayOutputStream();
-						ImageIO.write(image, "png", os);
-						WebhookEmbedBuilder embed = new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(description.getName(), "attachment://Item.png", null)).setColor(color.getRGB()).setDescription(description.getDescription().orElse(null));
-						embed.setImageUrl("attachment://Container.png");
-						WebhookMessageBuilder webhookmessage = new WebhookMessageBuilder().addEmbeds(embed.build()).addFile("Item.png", os.toByteArray());
-						BufferedImage map = ImageGeneration.getInventoryImage(iData.getInventory().get());
-						ByteArrayOutputStream out = new ByteArrayOutputStream();
-						ImageIO.write(map, "png", out);
-						webhookmessage.addFile("Container.png", out.toByteArray());
-						messagesToSend.add(webhookmessage);
+						ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
+						ImageIO.write(image, "png", itemOs);
+						BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get());
+						ByteArrayOutputStream contentOs = new ByteArrayOutputStream();
+						ImageIO.write(container, "png", contentOs);
+						DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), "attachment://Container.png", color);
+						content.addAttachment("Item.png", itemOs.toByteArray());
+						content.addAttachment("Container.png", contentOs.toByteArray());
+						contents.add(content);
 					} else {
-						DiscordDescription description = ItemStackUtils.getDiscordDescription(item);
+						DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
 						BufferedImage image = ImageGeneration.getItemStackImage(item);
-						ByteArrayOutputStream os = new ByteArrayOutputStream();
-						ImageIO.write(image, "png", os);
-						WebhookEmbedBuilder embed = new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(description.getName(), "attachment://Item.png", null)).setColor(color.getRGB()).setDescription(description.getDescription().orElse(null));
-						if (iData.isFilledMap()) {
-							embed.setImageUrl("attachment://Map.png");
-						}
-						WebhookMessageBuilder webhookmessage = new WebhookMessageBuilder().addEmbeds(embed.build()).addFile("Item.png", os.toByteArray());
+						ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
+						ImageIO.write(image, "png", itemOs);
 						if (iData.isFilledMap()) {
 							BufferedImage map = ImageGeneration.getMapImage(item);
-							ByteArrayOutputStream out = new ByteArrayOutputStream();
-							ImageIO.write(map, "png", out);
-							webhookmessage.addFile("Map.png", out.toByteArray());
+							ByteArrayOutputStream mapOs = new ByteArrayOutputStream();
+							ImageIO.write(map, "png", mapOs);
+							DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), "attachment://Map.png", color);
+							content.addAttachment("Item.png", itemOs.toByteArray());
+							content.addAttachment("Map.png", mapOs.toByteArray());
+							contents.add(content);
+						} else {
+							DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), null, color);
+							content.addAttachment("Item.png", itemOs.toByteArray());
+							contents.add(content);
 						}
-						messagesToSend.add(webhookmessage);
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -151,10 +152,27 @@ public class JDAEvents extends ListenerAdapter {
 						break;
 					}
 					ImageIO.write(image, "png", os);
-					messagesToSend.add(new WebhookMessageBuilder().addEmbeds(new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(title, null, null)).setColor(color.getRGB()).setImageUrl("attachment://Inventory.png").build()).addFile("Inventory.png", os.toByteArray()));					
+					DiscordMessageContent content = new DiscordMessageContent(title, null, null, "attachment://Inventory.png", color);
+					content.addAttachment("Inventory.png", os.toByteArray());
+					contents.add(content);
 				} catch (Exception e) {
 					e.printStackTrace();
-				}
+				}			
+			}
+		}
+		
+		List<WebhookMessageBuilder> messagesToSend = new ArrayList<>();
+		
+		DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
+		TextChannel textChannel = discordImageEvent.getChannel();
+		if (discordImageEvent.isCancelled()) {
+			String restore = discordImageEvent.getOriginalMessage();
+			messagesToSend.add(new WebhookMessageBuilder().setContent(restore));
+		} else {
+			text = discordImageEvent.getNewMessage();
+			messagesToSend.add(new WebhookMessageBuilder().setContent(text));
+			for (DiscordMessageContent content : discordImageEvent.getDiscordMessageContents()) {
+				messagesToSend.add(content.toWebhookMessageBuilder());
 			}
 		}
 		
@@ -186,14 +204,13 @@ public class JDAEvents extends ListenerAdapter {
                 .replace("{uuid-nodashes}", player.getUniqueId().toString().replace("-", ""))
                 .replace("{size}", "128");
 		
-		String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(channel, username);
+		String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(textChannel, username);
 		WebhookClient client = WebhookClient.withUrl(webHookUrl);
 		
-		if (client == null || player == null) {
-			return;
+		if (client == null) {
+			throw new NullPointerException("Unable to get the Webhook client URL for the TextChannel " + textChannel.getName());
 		}
 		
-		client.send(new WebhookMessageBuilder().setUsername(username).setAvatarUrl(avatarUrl).setContent(text).build());
 		for (WebhookMessageBuilder builder : messagesToSend) {
 			client.send(builder.setUsername(username).setAvatarUrl(avatarUrl).build());
 		}

@@ -29,5 +29,9 @@ public class RomanNumberUtils {
         }
         return map.get(l) + toRoman(number - l);
     }
+    
+    public static String toRomanIfUnder(int number, int under) {
+    	return Math.abs(number) < under ? toRoman(number) : String.valueOf(number);
+    }
 
 }

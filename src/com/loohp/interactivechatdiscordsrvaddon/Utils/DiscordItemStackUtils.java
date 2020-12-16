@@ -31,10 +31,13 @@ import com.loohp.interactivechat.Utils.RarityUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.Registies.DiscordDataRegistry;
 
+import github.scarsz.discordsrv.DiscordSRV;
+import github.scarsz.discordsrv.dependencies.dev.vankka.mcdiscordreserializer.discord.DiscordSerializer;
+import github.scarsz.discordsrv.dependencies.net.kyori.text.serializer.legacy.LegacyComponentSerializer;
 import net.md_5.bungee.api.ChatColor;
 
 @SuppressWarnings("deprecation")
-public class ItemStackUtils {
+public class DiscordItemStackUtils {
 	
 	public static final String DISCORD_EMPTY = "\u200e";
 	
@@ -122,7 +125,7 @@ public class ItemStackUtils {
 				}
 			}
 		}
-		if (item.getAmount() == 1) {
+		if (item.getAmount() == 1 || item == null || item.getType().equals(Material.AIR)) {
 			name = InteractiveChatDiscordSrvAddon.plugin.itemDisplaySingle.replace("{Item}", ComponentStringUtils.stripColorAndConvertMagic(name)).replace("{Amount}", String.valueOf(item.getAmount()));
 		} else {
 			name = InteractiveChatDiscordSrvAddon.plugin.itemDisplayMultiple.replace("{Item}", ComponentStringUtils.stripColorAndConvertMagic(name)).replace("{Amount}", String.valueOf(item.getAmount()));
@@ -197,7 +200,7 @@ public class ItemStackUtils {
 					int level = entry.getValue();
 					String enchName = InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Enchantments.Mappings." + ench.getName().toUpperCase());
 					if (enchName != null) {
-						description += "**" + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRoman(level)) + "**\n";
+						description += "**" + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRomanIfUnder(level, 11)) + "**\n";
 					}
 				}
 			} else {
@@ -206,7 +209,7 @@ public class ItemStackUtils {
 					int level = entry.getValue();
 					String enchName = InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Enchantments.Mappings." + ench.getName().toUpperCase());
 					if (enchName != null) {
-						description += "**" + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRoman(level)) + "**\n";
+						description += "**" + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRomanIfUnder(level, 11)) + "**\n";
 					}
 				}
 			}
@@ -230,12 +233,19 @@ public class ItemStackUtils {
 				if (!description.equals("")) {
 					description += "\n";
 				}
-				String lore = ComponentStringUtils.stripColorAndConvertMagic(String.join("\n", meta.getLore()));
-				if (InteractiveChatDiscordSrvAddon.plugin.escapeDiscordMarkdownInItems) {
-					description += lore.replaceAll(DiscordDataRegistry.getMarkdownSpecialPattern(), "\\\\$1") + "\n";
+				String lore = String.join("\n", meta.getLore());
+				if (DiscordSRV.config().getBoolean("Experiment_MCDiscordReserializer_ToDiscord")) {
+					if (InteractiveChatDiscordSrvAddon.plugin.escapeDiscordMarkdownInItems) {
+						lore = lore.replaceAll(DiscordDataRegistry.getMarkdownSpecialPattern(), "\\\\$1");
+					}
+					lore = DiscordSerializer.INSTANCE.serialize(LegacyComponentSerializer.INSTANCE.deserialize(String.join("\n", meta.getLore())));
 				} else {
-					description += lore + "\n";
+					lore = ComponentStringUtils.stripColorAndConvertMagic(String.join("\n", meta.getLore()));
+					if (InteractiveChatDiscordSrvAddon.plugin.escapeDiscordMarkdownInItems) {
+						lore = lore.replaceAll(DiscordDataRegistry.getMarkdownSpecialPattern(), "\\\\$1");
+					}
 				}
+				description += lore + "\n";
 			}
 		}
 		

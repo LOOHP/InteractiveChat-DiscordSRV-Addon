@@ -177,9 +177,9 @@ public class ItemMapWrapper {
 	public static class MapIcon {
 
 	    private final MapIcon.Type type;
-	    private byte x;
-	    private byte y;
-	    private byte rotation;
+	    private final byte x;
+	    private final byte y;
+	    private final byte rotation;
 	    private final BaseComponent name;
 
 	    public MapIcon(MapIcon.Type mapicon_type, byte b0, byte b1, byte b2, BaseComponent name) {
