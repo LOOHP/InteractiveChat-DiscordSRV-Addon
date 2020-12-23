@@ -28,6 +28,7 @@ import org.json.simple.parser.ParseException;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.ChatColorUtils;
+import com.loohp.interactivechatdiscordsrvaddon.Debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordSRVEvents;
 import com.loohp.interactivechatdiscordsrvaddon.Metrics.Charts;
 import com.loohp.interactivechatdiscordsrvaddon.Metrics.Metrics;
@@ -125,6 +126,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		
 		DiscordSRV.api.subscribe(new DiscordSRVEvents());
 		
+		getServer().getPluginManager().registerEvents(new Debug(), this);
 		getServer().getPluginManager().registerEvents(new Updater(), this);
 		getCommand("interactivechatdiscordsrv").setExecutor(new Commands());
 		
