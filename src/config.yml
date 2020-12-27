@@ -19,8 +19,10 @@ DiscordAttachments:
     ImageOriginal: " &a(Link)"
     Hover:
       Enabled: true
-      HoverText: "&bClick to View"
-      ImageOriginalHover: "&eOpen Original"
+      HoverText: 
+        - "&bClick to View"
+      ImageOriginalHover: 
+        - "&eOpen Original"
   ShowImageUsingMaps: true
   Timeout: 86400
 

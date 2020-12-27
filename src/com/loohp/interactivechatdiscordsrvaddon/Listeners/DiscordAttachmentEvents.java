@@ -227,7 +227,6 @@ public class DiscordAttachmentEvents implements Listener {
 		Player player = (Player) event.getWhoClicked();
 		boolean removed = MAP_VIEWERS.remove(player) != null;
 		
-		ItemStack heldItem = player.getInventory().getItemInHand();
 		int slot = event.getSlot();
 		
 		if (removed) {

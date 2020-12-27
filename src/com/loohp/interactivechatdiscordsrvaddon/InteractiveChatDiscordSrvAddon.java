@@ -10,12 +10,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
@@ -128,6 +130,16 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
                 getLogger().severe("[ICDiscordSRVAddon] Unable to copy lang.json");
             }
         }
+        
+        if (getConfig().get("DiscordAttachments.Formatting.Hover.HoverText") instanceof String) {
+        	getConfig().set("DiscordAttachments.Formatting.Hover.HoverText", Arrays.asList(getConfig().getString("DiscordAttachments.Formatting.Hover.HoverText")));
+        	saveConfig();
+        }
+        
+        if (getConfig().get("DiscordAttachments.Formatting.Hover.ImageOriginalHover") instanceof String) {
+        	getConfig().set("DiscordAttachments.Formatting.Hover.ImageOriginalHover", Arrays.asList(getConfig().getString("DiscordAttachments.Formatting.Hover.ImageOriginalHover")));
+        	saveConfig();
+        }
 		
 		reloadConfig();
 		
@@ -199,11 +211,11 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		convertDiscordAttachments = getConfig().getBoolean("DiscordAttachments.Convert");
 		discordAttachmentsFormattingText = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordAttachments.Formatting.Text"));
 		discordAttachmentsFormattingHoverEnabled = getConfig().getBoolean("DiscordAttachments.Formatting.Hover.Enabled");
-		discordAttachmentsFormattingHoverText = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordAttachments.Formatting.Hover.HoverText"));
+		discordAttachmentsFormattingHoverText = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getStringList("DiscordAttachments.Formatting.Hover.HoverText").stream().collect(Collectors.joining("\n")));
 		discordAttachmentsUseMaps = getConfig().getBoolean("DiscordAttachments.ShowImageUsingMaps");
 		discordAttachmentTimeout = getConfig().getInt("DiscordAttachments.Timeout") * 20;
 		discordAttachmentsFormattingImageAppend = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordAttachments.Formatting.ImageOriginal"));
-		discordAttachmentsFormattingImageAppendHover = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordAttachments.Formatting.Hover.ImageOriginalHover"));
+		discordAttachmentsFormattingImageAppendHover = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getStringList("DiscordAttachments.Formatting.Hover.ImageOriginalHover").stream().collect(Collectors.joining("\n")));
 		
 		UpdaterEnabled = getConfig().getBoolean("Options.UpdaterEnabled");
 		
