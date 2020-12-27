@@ -193,9 +193,11 @@ public class DiscordAttachmentEvents implements Listener {
 	@EventHandler
 	public void onInventory(InventoryOpenEvent event) {
 		Player player = (Player) event.getPlayer();
-		MAP_VIEWERS.remove(player);
+		boolean removed = MAP_VIEWERS.remove(player) != null;
 		
-		player.getInventory().setItemInHand(player.getInventory().getItemInHand());
+		if (removed) {
+			player.getInventory().setItemInHand(player.getInventory().getItemInHand());
+		}
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -204,14 +206,18 @@ public class DiscordAttachmentEvents implements Listener {
 		Player player = (Player) event.getWhoClicked();
 		if (player.getGameMode().equals(GameMode.CREATIVE)) {
 			Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> {
-				MAP_VIEWERS.remove(player);
+				boolean removed = MAP_VIEWERS.remove(player) != null;
 				
-				player.getInventory().setItemInHand(player.getInventory().getItemInHand());
+				if (removed) {
+					player.getInventory().setItemInHand(player.getInventory().getItemInHand());
+				}
 			}, 1);
 		} else {
-			MAP_VIEWERS.remove(player);
+			boolean removed = MAP_VIEWERS.remove(player) != null;
 		
-			player.getInventory().setItemInHand(player.getInventory().getItemInHand());
+			if (removed) {
+				player.getInventory().setItemInHand(player.getInventory().getItemInHand());
+			}
 		}
 	}
 	
@@ -233,7 +239,9 @@ public class DiscordAttachmentEvents implements Listener {
 			}
 		}
 		
-		player.getInventory().setItemInHand(heldItem);
+		if (removed) {
+			player.getInventory().setItemInHand(player.getInventory().getItemInHand());
+		}
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -244,9 +252,11 @@ public class DiscordAttachmentEvents implements Listener {
 		}
 		
 		Player player = event.getPlayer();
-		MAP_VIEWERS.remove(player);
+		boolean removed = MAP_VIEWERS.remove(player) != null;
 		
-		player.getInventory().setItemInHand(player.getInventory().getItemInHand());
+		if (removed) {
+			player.getInventory().setItemInHand(player.getInventory().getItemInHand());
+		}
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -256,12 +266,21 @@ public class DiscordAttachmentEvents implements Listener {
 			return;
 		}
 		Player player = event.getPlayer();
-		MAP_VIEWERS.remove(player);
 		
 		if (player.getGameMode().equals(GameMode.CREATIVE)) {
-			Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> player.getInventory().setItemInHand(player.getInventory().getItemInHand()), 1);
+			Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> {
+				boolean removed = MAP_VIEWERS.remove(player) != null;
+				
+				if (removed) {
+					player.getInventory().setItemInHand(player.getInventory().getItemInHand());
+				}
+			}, 1);
 		} else {
-			player.getInventory().setItemInHand(player.getInventory().getItemInHand());
+			boolean removed = MAP_VIEWERS.remove(player) != null;
+			
+			if (removed) {
+				player.getInventory().setItemInHand(player.getInventory().getItemInHand());
+			}
 		}
 	}
 	
@@ -271,9 +290,11 @@ public class DiscordAttachmentEvents implements Listener {
 		Entity entity = event.getDamager();
 		if (entity instanceof Player) {
 			Player player = (Player) entity;
-			MAP_VIEWERS.remove(player);
+			boolean removed = MAP_VIEWERS.remove(player) != null;
 			
-			player.getInventory().setItemInHand(player.getInventory().getItemInHand());
+			if (removed) {
+				player.getInventory().setItemInHand(player.getInventory().getItemInHand());
+			}
 		}
 	}
 	
