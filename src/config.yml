@@ -12,9 +12,22 @@ InventoryImage:
     EmbedColor: "#FF55FF"
     Enabled: true
 
+DiscordAttachments:
+  Convert: true
+  Formatting: 
+    Text: "&e[&b{FileName}&e]"
+    ImageOriginal: " &a(Link)"
+    Hover:
+      Enabled: true
+      HoverText: "&bClick to View"
+      ImageOriginalHover: "&eOpen Original"
+  ShowImageUsingMaps: true
+  Timeout: 86400
+
 Messages:
   ReloadConfig: "&aICDiscordSRVAddon config has been reloaded!"
   ReloadTexture: "&aICDiscordSRVAddon reloading textures--- (See console for progress)"
+  LinkExpired: "&cThis link has been expired! To view this link, please head over to the linked discord channel!"
 
 Settings:
   CacheTimeout: 60

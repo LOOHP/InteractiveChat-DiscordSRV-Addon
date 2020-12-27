@@ -176,6 +176,15 @@ public class CustomImageUtils {
 	    return b;
 	}
 	
+	public static BufferedImage resizeImageQuality(BufferedImage source, int width, int height) {
+		BufferedImage b = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+	    Graphics2D g = b.createGraphics();
+	    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+	    g.drawImage(source, 0, 0, width, height, null);
+	    g.dispose();
+	    return b;
+	}
+	
 	public static BufferedImage printComponentNoShadow(BufferedImage image, BaseComponent baseComponent, int centerX, int topY, float fontSize, boolean dynamicFontSize) {
 		String text = ComponentStringUtils.toLegacyString(baseComponent);
 		String striped = ChatColorUtils.stripColor(text);

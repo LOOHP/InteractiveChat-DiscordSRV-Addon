@@ -29,7 +29,8 @@ import org.json.simple.parser.ParseException;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.ChatColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Debug.Debug;
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordSRVEvents;
+import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordAttachmentEvents;
+import com.loohp.interactivechatdiscordsrvaddon.Listeners.PlaceholderImageEvents;
 import com.loohp.interactivechatdiscordsrvaddon.Metrics.Charts;
 import com.loohp.interactivechatdiscordsrvaddon.Metrics.Metrics;
 import com.loohp.interactivechatdiscordsrvaddon.Updater.Updater;
@@ -79,6 +80,16 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	
 	public String reloadConfigMessage;
 	public String reloadTextureMessage;
+	public String linkExpired;
+	
+	public boolean convertDiscordAttachments = true;
+	public String discordAttachmentsFormattingText;
+	public boolean discordAttachmentsFormattingHoverEnabled = true;
+	public String discordAttachmentsFormattingHoverText;
+	public boolean discordAttachmentsUseMaps = true;
+	public int discordAttachmentTimeout = 0;
+	public String discordAttachmentsFormattingImageAppend;
+	public String discordAttachmentsFormattingImageAppendHover;
 	
 	public boolean UpdaterEnabled = true;
 	
@@ -124,8 +135,10 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		metrics = new Metrics(this, pluginId);
 		Charts.setup(metrics);
 		
-		DiscordSRV.api.subscribe(new DiscordSRVEvents());
+		DiscordSRV.api.subscribe(new PlaceholderImageEvents());
+		DiscordSRV.api.subscribe(new DiscordAttachmentEvents());
 		
+		getServer().getPluginManager().registerEvents(new DiscordAttachmentEvents(), this);
 		getServer().getPluginManager().registerEvents(new Debug(), this);
 		getServer().getPluginManager().registerEvents(new Updater(), this);
 		getCommand("interactivechatdiscordsrv").setExecutor(new Commands());
@@ -143,6 +156,16 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSRVAddon] InteractiveChat DiscordSRV Addon has been Enabled!");
 		
 		reloadTextures();
+		/*
+		ProtocolLibrary.getProtocolManager().addPacketListener(new PacketAdapter(this, ListenerPriority.HIGHEST, PacketType.Play.Server.ENTITY_EQUIPMENT) {
+			public void onPacketSending(PacketEvent event) {
+				PacketContainer packet2 = event.getPacket();
+				System.out.println(packet2.getIntegers().read(0));
+				System.out.println(packet2.getIntegers().read(1));
+				System.out.println(packet2.getItemModifier().read(0));
+			}
+		});
+		*/
 	}
 	
 	@Override
@@ -156,6 +179,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		
 		reloadConfigMessage = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("Messages.ReloadConfig"));
 		reloadTextureMessage = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("Messages.ReloadTexture"));
+		linkExpired = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("Messages.LinkExpired"));
 		
 		resourceOrder.clear();
 		List<String> order = getConfig().getStringList("Resources.Order");
@@ -171,6 +195,15 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		enderImage = getConfig().getBoolean("InventoryImage.EnderChest.Enabled");
 		
 		usePlayerInvView = getConfig().getBoolean("InventoryImage.Inventory.UsePlayerInventoryView");
+		
+		convertDiscordAttachments = getConfig().getBoolean("DiscordAttachments.Convert");
+		discordAttachmentsFormattingText = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordAttachments.Formatting.Text"));
+		discordAttachmentsFormattingHoverEnabled = getConfig().getBoolean("DiscordAttachments.Formatting.Hover.Enabled");
+		discordAttachmentsFormattingHoverText = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordAttachments.Formatting.Hover.HoverText"));
+		discordAttachmentsUseMaps = getConfig().getBoolean("DiscordAttachments.ShowImageUsingMaps");
+		discordAttachmentTimeout = getConfig().getInt("DiscordAttachments.Timeout") * 20;
+		discordAttachmentsFormattingImageAppend = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordAttachments.Formatting.ImageOriginal"));
+		discordAttachmentsFormattingImageAppendHover = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordAttachments.Formatting.Hover.ImageOriginalHover"));
 		
 		UpdaterEnabled = getConfig().getBoolean("Options.UpdaterEnabled");
 		

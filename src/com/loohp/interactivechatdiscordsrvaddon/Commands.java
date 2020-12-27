@@ -2,15 +2,19 @@ package com.loohp.interactivechatdiscordsrvaddon;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.ChatColorUtils;
+import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordAttachmentEvents;
+import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordAttachmentEvents.DiscordAttachmentData;
 import com.loohp.interactivechatdiscordsrvaddon.Updater.Updater;
 import com.loohp.interactivechatdiscordsrvaddon.Updater.Updater.UpdaterResponse;
 
@@ -68,6 +72,20 @@ public class Commands implements CommandExecutor, TabCompleter {
 				});
 			} else {
 				sender.sendMessage(InteractiveChat.NoPermission);
+			}
+			return true;
+		}
+		
+		if (args[0].equalsIgnoreCase("imagemap")) {
+			if (args.length > 1 && sender instanceof Player) {
+				Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+					Optional<DiscordAttachmentData> opt = DiscordAttachmentEvents.DATA.values().stream().filter(each -> each.getUniqueId().toString().equalsIgnoreCase(args[1])).findFirst();
+					if (opt.isPresent()) {
+						Bukkit.getScheduler().runTask(InteractiveChatDiscordSrvAddon.plugin, () -> opt.get().getImageMap().show((Player) sender));
+					} else {
+						sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.linkExpired);
+					}
+				});
 			}
 			return true;
 		}
