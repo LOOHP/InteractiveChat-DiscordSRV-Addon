@@ -258,7 +258,11 @@ public class DiscordAttachmentEvents implements Listener {
 		Player player = event.getPlayer();
 		MAP_VIEWERS.remove(player);
 		
-		player.getInventory().setItemInHand(player.getInventory().getItemInHand());
+		if (player.getGameMode().equals(GameMode.CREATIVE)) {
+			Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> player.getInventory().setItemInHand(player.getInventory().getItemInHand()), 1);
+		} else {
+			player.getInventory().setItemInHand(player.getInventory().getItemInHand());
+		}
 	}
 	
 	@SuppressWarnings("deprecation")
