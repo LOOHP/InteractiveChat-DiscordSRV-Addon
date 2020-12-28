@@ -42,13 +42,13 @@ import com.loohp.interactivechatdiscordsrvaddon.API.Events.GameMessagePreProcess
 import com.loohp.interactivechatdiscordsrvaddon.API.Events.GameMessageProcessInventoryEvent;
 import com.loohp.interactivechatdiscordsrvaddon.API.Events.GameMessageProcessItemEvent;
 import com.loohp.interactivechatdiscordsrvaddon.API.Events.GameMessageProcessPlayerInventoryEvent;
+import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.ObjectHolders.DiscordMessageContent;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ComponentStringUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.DiscordItemStackUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.DiscordItemStackUtils.DiscordDescription;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.FilledMapUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.IDProvider;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.ImageGeneration;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemMapWrapper;
 
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
@@ -645,11 +645,11 @@ public class PlaceholderImageEvents {
 		}
 		
 		public ImageDisplayData(Player player, String title, ImageDisplayType type, ItemStack itemstack) {
-			this(player, title, type, null, false, itemstack, ItemMapWrapper.isFilledMap(itemstack));
+			this(player, title, type, null, false, itemstack, FilledMapUtils.isFilledMap(itemstack));
 		}
 		
 		public ImageDisplayData(Player player, String title, ImageDisplayType type, ItemStack itemstack, Inventory inventory) {
-			this(player, title, type, inventory, false, itemstack, ItemMapWrapper.isFilledMap(itemstack));
+			this(player, title, type, inventory, false, itemstack, FilledMapUtils.isFilledMap(itemstack));
 		}
 		
 		public Player getPlayer() {

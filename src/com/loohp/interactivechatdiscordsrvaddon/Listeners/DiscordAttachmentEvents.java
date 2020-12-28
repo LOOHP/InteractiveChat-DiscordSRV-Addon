@@ -37,9 +37,10 @@ import com.loohp.interactivechat.API.Events.PrePacketComponentProcessEvent;
 import com.loohp.interactivechat.Utils.CustomStringUtils;
 import com.loohp.interactivechat.Utils.MCVersion;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.GifUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.GifUtils.ImageFrame;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.PacketMapWrapper;
+import com.loohp.interactivechatdiscordsrvaddon.API.Events.DiscordAttachmentConversionEvent;
+import com.loohp.interactivechatdiscordsrvaddon.Graphics.GifReader;
+import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageFrame;
+import com.loohp.interactivechatdiscordsrvaddon.Wrappers.GraphicsToPacketMapWrapper;
 
 import github.scarsz.discordsrv.api.ListenerPriority;
 import github.scarsz.discordsrv.api.Subscribe;
@@ -54,9 +55,8 @@ import net.md_5.bungee.api.chat.TextComponent;
 public class DiscordAttachmentEvents implements Listener {
 	
 	public static final Pattern IMAGE_URL_PATTERN = Pattern.compile("https?:/(?:/[^/]+)+\\.(?:jpg|jpeg|gif|png)");
-	public static final Map<String, DiscordAttachmentData> DATA = new ConcurrentHashMap<>();
-	
-	public static final Map<Player, PacketMapWrapper> MAP_VIEWERS = new ConcurrentHashMap<>();
+	public static final Map<String, DiscordAttachmentData> DATA = new ConcurrentHashMap<>();	
+	public static final Map<Player, GraphicsToPacketMapWrapper> MAP_VIEWERS = new ConcurrentHashMap<>();
 	
 	@Subscribe(priority = ListenerPriority.MONITOR)
 	public void onRecieveMessageFromDiscord(DiscordGuildMessagePostProcessEvent event) {
@@ -70,27 +70,33 @@ public class DiscordAttachmentEvents implements Listener {
 					if (attachment.isImage()) {
 						try {
 							InputStream stream = attachment.retrieveInputStream().get();
-							PacketMapWrapper map;
+							GraphicsToPacketMapWrapper map;
 							if (url.toLowerCase().endsWith(".gif")) {
-								ImageFrame[] frames = GifUtils.readGif(stream);
+								ImageFrame[] frames = GifReader.readGif(stream);
 								stream.close();
-								map = new PacketMapWrapper(frames);
+								map = new GraphicsToPacketMapWrapper(frames);
 							} else {
 								BufferedImage image = ImageIO.read(stream);
 								stream.close();
-								map = new PacketMapWrapper(image);
+								map = new GraphicsToPacketMapWrapper(image);
 							}
 							DiscordAttachmentData data = new DiscordAttachmentData(attachment.getFileName(), url, map);
+							DiscordAttachmentConversionEvent dace = new DiscordAttachmentConversionEvent(url, data);
+							Bukkit.getPluginManager().callEvent(dace);
 							DATA.put(url, data);
 							Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(url, data), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
 						} catch (IOException | InterruptedException | ExecutionException e) {
 							e.printStackTrace();
 							DiscordAttachmentData data = new DiscordAttachmentData(attachment.getFileName(), url);
+							DiscordAttachmentConversionEvent dace = new DiscordAttachmentConversionEvent(url, data);
+							Bukkit.getPluginManager().callEvent(dace);
 							DATA.put(url, data);
 							Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(url, data), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
 						}
 					} else {
 						DiscordAttachmentData data = new DiscordAttachmentData(attachment.getFileName(), url);
+						DiscordAttachmentConversionEvent dace = new DiscordAttachmentConversionEvent(url, data);
+						Bukkit.getPluginManager().callEvent(dace);
 						DATA.put(url, data);
 						Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(url, data), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
 					}
@@ -103,18 +109,20 @@ public class DiscordAttachmentEvents implements Listener {
 				if (!DATA.containsKey(url)) {
 					try {
 						InputStream stream = new URL(url).openStream();
-						PacketMapWrapper map;
+						GraphicsToPacketMapWrapper map;
 						if (url.toLowerCase().endsWith(".gif")) {
-							ImageFrame[] frames = GifUtils.readGif(stream);
+							ImageFrame[] frames = GifReader.readGif(stream);
 							stream.close();
-							map = new PacketMapWrapper(frames);
+							map = new GraphicsToPacketMapWrapper(frames);
 						} else {
 							BufferedImage image = ImageIO.read(stream);
 							stream.close();
-							map = new PacketMapWrapper(image);
+							map = new GraphicsToPacketMapWrapper(image);
 						}
 						String name = url.lastIndexOf("/") < 0 ? url : url.substring(url.lastIndexOf("/") + 1);
 						DiscordAttachmentData data = new DiscordAttachmentData(name, url, map);
+						DiscordAttachmentConversionEvent dace = new DiscordAttachmentConversionEvent(url, data);
+						Bukkit.getPluginManager().callEvent(dace);
 						DATA.put(url, data);
 						Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(url, data), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
 					} catch (IOException e) {}
@@ -306,10 +314,10 @@ public class DiscordAttachmentEvents implements Listener {
 		
 		private final String fileName;
 		private final String url;
-		private final PacketMapWrapper imageMap;
+		private final GraphicsToPacketMapWrapper imageMap;
 		private final UUID uuid;
 		
-		public DiscordAttachmentData(String fileName, String url, PacketMapWrapper imageMap) {
+		public DiscordAttachmentData(String fileName, String url, GraphicsToPacketMapWrapper imageMap) {
 			this.fileName = fileName;
 			this.url = url;
 			this.imageMap = imageMap;
@@ -332,7 +340,7 @@ public class DiscordAttachmentEvents implements Listener {
 			return imageMap != null;
 		}
 
-		public PacketMapWrapper getImageMap() {
+		public GraphicsToPacketMapWrapper getImageMap() {
 			return imageMap;
 		}
 		

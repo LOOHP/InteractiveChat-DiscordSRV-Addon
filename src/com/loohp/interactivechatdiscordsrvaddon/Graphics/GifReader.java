@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Utils;
+package com.loohp.interactivechatdiscordsrvaddon.Graphics;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -17,7 +17,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public class GifUtils {
+public class GifReader {
 
 	public static ImageFrame[] readGif(InputStream stream) throws IOException {
 		ArrayList<ImageFrame> frames = new ArrayList<ImageFrame>(2);
@@ -165,49 +165,6 @@ public class GifUtils {
 		reader.dispose();
 
 		return frames.toArray(new ImageFrame[frames.size()]);
-	}
-
-	public static class ImageFrame {
-		private final int delay;
-		private final BufferedImage image;
-		private final String disposal;
-		private final int width, height;
-
-		public ImageFrame(BufferedImage image, int delay, String disposal, int width, int height) {
-			this.image = image;
-			this.delay = delay;
-			this.disposal = disposal;
-			this.width = width;
-			this.height = height;
-		}
-
-		public ImageFrame(BufferedImage image) {
-			this.image = image;
-			this.delay = -1;
-			this.disposal = null;
-			this.width = -1;
-			this.height = -1;
-		}
-
-		public BufferedImage getImage() {
-			return image;
-		}
-
-		public int getDelay() {
-			return delay;
-		}
-
-		public String getDisposal() {
-			return disposal;
-		}
-
-		public int getWidth() {
-			return width;
-		}
-
-		public int getHeight() {
-			return height;
-		}
 	}
 
 }

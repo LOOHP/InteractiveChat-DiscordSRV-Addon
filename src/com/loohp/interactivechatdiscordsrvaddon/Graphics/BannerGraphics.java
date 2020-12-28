@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Utils;
+package com.loohp.interactivechatdiscordsrvaddon.Graphics;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -14,7 +14,7 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 
-public class BannerUtils {
+public class BannerGraphics {
 	
 	public static BufferedImage generateBannerImage(ItemStack item) {		
 		BufferedImage banner = new BufferedImage(20, 40, BufferedImage.TYPE_INT_ARGB);
@@ -41,10 +41,10 @@ public class BannerUtils {
 		for (Pattern pattern : patterns) {
 			PatternType type = pattern.getPattern();
 			Color color = new Color(pattern.getColor().getColor().asRGB());
-			BufferedImage image = CustomImageUtils.copyAndGetSubImage(InteractiveChatDiscordSrvAddon.plugin.getBannerTexture(type.name().toLowerCase()), 1, 1, 20, 40);
-			BufferedImage colored = CustomImageUtils.changeColorTo(CustomImageUtils.copyImage(image), color);
+			BufferedImage image = ImageUtils.copyAndGetSubImage(InteractiveChatDiscordSrvAddon.plugin.getBannerTexture(type.name().toLowerCase()), 1, 1, 20, 40);
+			BufferedImage colored = ImageUtils.changeColorTo(ImageUtils.copyImage(image), color);
 			
-			BufferedImage output = CustomImageUtils.multiply(image, colored);
+			BufferedImage output = ImageUtils.multiply(image, colored);
 			g.drawImage(output, 0, 0, null);
 		}
 		g.dispose();
@@ -83,10 +83,10 @@ public class BannerUtils {
 		for (Pattern pattern : patterns) {
 			PatternType type = pattern.getPattern();
 			Color color = new Color(pattern.getColor().getColor().asRGB());
-			BufferedImage image = CustomImageUtils.copyAndGetSubImage(InteractiveChatDiscordSrvAddon.plugin.getBannerTexture(type.name().toLowerCase()), 1, 1, 20, 40);
-			BufferedImage colored = CustomImageUtils.changeColorTo(CustomImageUtils.copyImage(image), color);
+			BufferedImage image = ImageUtils.copyAndGetSubImage(InteractiveChatDiscordSrvAddon.plugin.getBannerTexture(type.name().toLowerCase()), 1, 1, 20, 40);
+			BufferedImage colored = ImageUtils.changeColorTo(ImageUtils.copyImage(image), color);
 			
-			BufferedImage output = CustomImageUtils.multiply(image, colored);
+			BufferedImage output = ImageUtils.multiply(image, colored);
 			g.drawImage(output, 0, 0, null);
 		}
 		g.dispose();

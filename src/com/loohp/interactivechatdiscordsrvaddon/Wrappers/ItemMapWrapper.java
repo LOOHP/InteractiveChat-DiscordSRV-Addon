@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Utils;
+package com.loohp.interactivechatdiscordsrvaddon.Wrappers;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -20,6 +20,7 @@ import org.bukkit.map.MapView;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.MCVersion;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.FilledMapUtils;
 
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
@@ -108,10 +109,6 @@ public class ItemMapWrapper {
         return Class.forName(name);
     }
 	
-	public static boolean isFilledMap(ItemStack itemStack) {
-		return (itemStack.getItemMeta() != null) && (itemStack.getItemMeta() instanceof MapMeta);
-	}
-	
 	private ItemStack itemStack;
 	private byte[] colors;
 	private List<MapIcon> icons;
@@ -124,7 +121,7 @@ public class ItemMapWrapper {
 	
 	@SuppressWarnings("deprecation")
 	public void update() throws Exception {
-		if (!isFilledMap(itemStack)) {
+		if (!FilledMapUtils.isFilledMap(itemStack)) {
 			throw new IllegalArgumentException("Provided item is not a filled map");
 		}
 		MapMeta map = (MapMeta) itemStack.getItemMeta();

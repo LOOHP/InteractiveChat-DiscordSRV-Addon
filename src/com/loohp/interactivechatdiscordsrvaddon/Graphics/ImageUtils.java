@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Utils;
+package com.loohp.interactivechatdiscordsrvaddon.Graphics;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -11,11 +11,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.loohp.interactivechat.Utils.ChatColorUtils;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.ComponentStringUtils;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 
-public class CustomImageUtils {
+public class ImageUtils {
 	
 	public static final Color TEXT_BACKGROUND_COLOR = new Color(0, 0, 0, 180);
 	

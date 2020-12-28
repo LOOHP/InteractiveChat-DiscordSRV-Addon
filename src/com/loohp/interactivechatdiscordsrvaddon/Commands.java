@@ -80,7 +80,7 @@ public class Commands implements CommandExecutor, TabCompleter {
 			if (args.length > 1 && sender instanceof Player) {
 				Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
 					Optional<DiscordAttachmentData> opt = DiscordAttachmentEvents.DATA.values().stream().filter(each -> each.getUniqueId().toString().equalsIgnoreCase(args[1])).findFirst();
-					if (opt.isPresent()) {
+					if (opt.isPresent() && opt.get().isImage()) {
 						Bukkit.getScheduler().runTask(InteractiveChatDiscordSrvAddon.plugin, () -> opt.get().getImageMap().show((Player) sender));
 					} else {
 						sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.linkExpired);

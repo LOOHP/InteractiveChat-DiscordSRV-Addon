@@ -31,13 +31,13 @@ import org.json.simple.parser.ParseException;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.ChatColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Debug.Debug;
+import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordAttachmentEvents;
 import com.loohp.interactivechatdiscordsrvaddon.Listeners.PlaceholderImageEvents;
 import com.loohp.interactivechatdiscordsrvaddon.Metrics.Charts;
 import com.loohp.interactivechatdiscordsrvaddon.Metrics.Metrics;
 import com.loohp.interactivechatdiscordsrvaddon.Updater.Updater;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ColorUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.CustomImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.JarUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.JarUtils.CopyOption;
 
@@ -266,7 +266,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		if (image == null) {
 			return null;
 		}
-		return CustomImageUtils.copyImage(image);
+		return ImageUtils.copyImage(image);
 	}
 	
 	public BufferedImage getItemTexture(String str) {
@@ -274,7 +274,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		if (image == null) {
 			return null;
 		}
-		return CustomImageUtils.copyImage(image);
+		return ImageUtils.copyImage(image);
 	}
 	
 	public BufferedImage getFontTexture(String str) {
@@ -282,7 +282,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		if (image == null) {
 			return null;
 		}
-		return CustomImageUtils.copyImage(image);
+		return ImageUtils.copyImage(image);
 	}
 	
 	public BufferedImage getMiscTexture(String str) {
@@ -290,7 +290,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		if (image == null) {
 			return null;
 		}
-		return CustomImageUtils.copyImage(image);
+		return ImageUtils.copyImage(image);
 	}
 	
 	public BufferedImage getGUITexture(String str) {
@@ -298,7 +298,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		if (image == null) {
 			return null;
 		}
-		return CustomImageUtils.copyImage(image);
+		return ImageUtils.copyImage(image);
 	}
 	
 	public BufferedImage getBannerTexture(String str) {
@@ -306,7 +306,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		if (image == null) {
 			return null;
 		}
-		return CustomImageUtils.copyImage(image);
+		return ImageUtils.copyImage(image);
 	}
 	
 	public BufferedImage getPuppetTexture(String str) {
@@ -314,7 +314,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		if (image == null) {
 			return null;
 		}
-		return CustomImageUtils.copyImage(image);
+		return ImageUtils.copyImage(image);
 	}
 	
 	public void reloadTextures() {
@@ -340,7 +340,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 							continue;
 						}
 						
-						item_ori = CustomImageUtils.squarify(item_ori);
+						item_ori = ImageUtils.squarify(item_ori);
 						
 						BufferedImage itemImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
 						Graphics2D g = itemImage.createGraphics();

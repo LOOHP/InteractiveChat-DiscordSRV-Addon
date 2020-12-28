@@ -1,11 +1,9 @@
-package com.loohp.interactivechatdiscordsrvaddon.Utils;
+package com.loohp.interactivechatdiscordsrvaddon;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Bukkit;
-
-import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 
 public class Cache<T> {
 	

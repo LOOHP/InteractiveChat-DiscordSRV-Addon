@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Utils;
+package com.loohp.interactivechatdiscordsrvaddon.Graphics;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -29,8 +29,13 @@ import org.json.simple.parser.ParseException;
 import com.cryptomorin.xseries.SkullUtils;
 import com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemMapWrapper.MapIcon;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.FilledMapUtils;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.PotionUtils;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.SkinUtils;
+import com.loohp.interactivechatdiscordsrvaddon.Wrappers.ItemMapWrapper;
+import com.loohp.interactivechatdiscordsrvaddon.Wrappers.ItemMapWrapper.MapIcon;
 
 import net.md_5.bungee.api.chat.BaseComponent;
 
@@ -211,7 +216,7 @@ public class ImageGeneration {
 			} else {
 				image = (BufferedImage) cache.getObject();
 			}
-			return CustomImageUtils.copyImage(image);
+			return ImageUtils.copyImage(image);
 		} catch (Throwable e) {
 			return InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("default");
 		}
@@ -232,7 +237,7 @@ public class ImageGeneration {
 		}
 		
 		if (xMaterial.isOneOf(Arrays.asList("CONTAINS:Banner"))) {
-			BufferedImage banner = BannerUtils.generateBannerImage(item);
+			BufferedImage banner = BannerGraphics.generateBannerImage(item);
 			
 			BufferedImage sizedBanner = new BufferedImage(13, 24, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g2 = sizedBanner.createGraphics();
@@ -253,7 +258,7 @@ public class ImageGeneration {
 			g4.drawImage(shearBanner, 10, 2, null);
 			g4.dispose();
 		} else if (xMaterial.equals(XMaterial.SHIELD)) {
-			BufferedImage banner = BannerUtils.generateShieldImage(item);
+			BufferedImage banner = BannerGraphics.generateShieldImage(item);
 			itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("shield_banner");
 			
 			BufferedImage sizedBanner = new BufferedImage(11, 24, BufferedImage.TYPE_INT_ARGB);
@@ -292,9 +297,9 @@ public class ImageGeneration {
 						g2.dispose();
 						
 						Cache.putCache(base64 + PLAYER_HEAD_KEY, newImage, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
-						itemImage = CustomImageUtils.copyImage(newImage);
+						itemImage = ImageUtils.copyImage(newImage);
 					} else {
-						itemImage = CustomImageUtils.copyImage((BufferedImage) cache.getObject());
+						itemImage = ImageUtils.copyImage((BufferedImage) cache.getObject());
 					}
 				}
 			} catch (ParseException e) {
@@ -304,9 +309,9 @@ public class ImageGeneration {
 			LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
 			Color color = new Color(meta.getColor().asRGB());
 			BufferedImage armorOverlay = InteractiveChatDiscordSrvAddon.plugin.getItemTexture(xMaterial.name().toLowerCase() + "_overlay");
-			BufferedImage colorOverlay = CustomImageUtils.changeColorTo(CustomImageUtils.copyImage(itemImage), color);
+			BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
 			
-			itemImage = CustomImageUtils.multiply(itemImage, colorOverlay);
+			itemImage = ImageUtils.multiply(itemImage, colorOverlay);
 			
 			Graphics2D g2 = itemImage.createGraphics();
 			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
@@ -317,9 +322,9 @@ public class ImageGeneration {
 			if (durability <= 1) {
 				itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("broken_elytra");
 			}
-		} else if (ItemMapWrapper.isFilledMap(item)) {
+		} else if (FilledMapUtils.isFilledMap(item)) {
 			BufferedImage filled = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("filled_map_markings");
-			CustomImageUtils.xor(itemImage, filled, 200);
+			ImageUtils.xor(itemImage, filled, 200);
 		}
 		
 		boolean tintedPotion = false;
@@ -339,8 +344,8 @@ public class ImageGeneration {
 				color = PotionUtils.getPotionBaseColor(PotionType.WATER);
 			}
 			
-			BufferedImage colorOverlay = CustomImageUtils.changeColorTo(CustomImageUtils.copyImage(potionOverlay), color);
-			potionOverlay = CustomImageUtils.multiply(potionOverlay, colorOverlay);
+			BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(potionOverlay), color);
+			potionOverlay = ImageUtils.multiply(potionOverlay, colorOverlay);
 			
 			Graphics2D g2 = itemImage.createGraphics();
 			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
@@ -362,7 +367,7 @@ public class ImageGeneration {
 			g3.drawImage(tint_ori, 0, 0, 128, 128, null);
 			g3.dispose();
 			
-			itemImage = CustomImageUtils.additionNonTransparent(itemImage, tintImage);
+			itemImage = ImageUtils.additionNonTransparent(itemImage, tintImage);
 		}
 		
 		if (item.getType().getMaxDurability() > 0) {
@@ -396,10 +401,10 @@ public class ImageGeneration {
 			g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 			g4.drawImage(itemImage, 0, 0, null);
 			if (amount > 9) {
-				g4.drawImage(CustomImageUtils.darken(CustomImageUtils.copyImage(firstChar_ori), 180), 10, 21, null);
+				g4.drawImage(ImageUtils.darken(ImageUtils.copyImage(firstChar_ori), 180), 10, 21, null);
 				g4.drawImage(firstChar_ori, 8, 19, null);
 			}
-			g4.drawImage(CustomImageUtils.darken(CustomImageUtils.copyImage(secondChar_ori), 180), 22, 21, null);
+			g4.drawImage(ImageUtils.darken(ImageUtils.copyImage(secondChar_ori), 180), 22, 21, null);
 			g4.drawImage(secondChar_ori, 20, 19, null);
 			g4.dispose();
 			
@@ -410,7 +415,7 @@ public class ImageGeneration {
 	}
 	
 	public static BufferedImage getMapImage(ItemStack item) throws Exception {
-		if (!ItemMapWrapper.isFilledMap(item)) {
+		if (!FilledMapUtils.isFilledMap(item)) {
 			throw new IllegalArgumentException("Provided item is not a filled map");
 		}
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
@@ -455,7 +460,7 @@ public class ImageGeneration {
 			BaseComponent baseComponent = icon.getName();
 			
 			//String name
-			BufferedImage iconImage = CustomImageUtils.copyAndGetSubImage(asset, type % MAP_ICON_PER_ROLE * iconWidth, type / MAP_ICON_PER_ROLE * iconWidth, iconWidth, iconWidth);
+			BufferedImage iconImage = ImageUtils.copyAndGetSubImage(asset, type % MAP_ICON_PER_ROLE * iconWidth, type / MAP_ICON_PER_ROLE * iconWidth, iconWidth, iconWidth);
 			BufferedImage iconImageBig = new BufferedImage(96, 96, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g3 = iconImageBig.createGraphics();
 			g3.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
@@ -477,7 +482,7 @@ public class ImageGeneration {
             g2.drawImage(iconCan, imageX - (iconCan.getWidth() / 2), imageY - (iconCan.getHeight() / 2), 96, 96, null);
             
             if (baseComponent != null && MCFont.isWorking()) {
-            	CustomImageUtils.printComponentNoShadow(image, baseComponent, imageX, imageY + 32, 30, true);
+            	ImageUtils.printComponentNoShadow(image, baseComponent, imageX, imageY + 32, 30, true);
             }
 		}
 		g2.dispose();

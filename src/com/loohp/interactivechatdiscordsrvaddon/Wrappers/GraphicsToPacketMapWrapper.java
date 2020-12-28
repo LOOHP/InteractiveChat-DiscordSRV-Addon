@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Utils;
+package com.loohp.interactivechatdiscordsrvaddon.Wrappers;
 
 import java.awt.image.BufferedImage;
 import java.lang.reflect.Array;
@@ -22,20 +22,19 @@ import com.comphenix.protocol.wrappers.Pair;
 import com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
+import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageFrame;
+import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordAttachmentEvents;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.GifUtils.ImageFrame;
 
 @SuppressWarnings("deprecation")
-public class PacketMapWrapper {
+public class GraphicsToPacketMapWrapper {
 	
 	private static Class<?> nmsMapIconClass;
 	
 	static {
 		try {
 			nmsMapIconClass = getNMSClass("net.minecraft.server.", "MapIcon");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		} catch (Exception e) {}
 	}
 	
 	private static Class<?> getNMSClass(String prefix, String nmsClassString) throws ClassNotFoundException {
@@ -50,12 +49,12 @@ public class PacketMapWrapper {
 	private short mapId = Short.MAX_VALUE;
 	private int totalTime;
 	
-	public PacketMapWrapper(ImageFrame[] frames) {
+	public GraphicsToPacketMapWrapper(ImageFrame[] frames) {
 		this.frames = frames;
 		update();
 	}
 	
-	public PacketMapWrapper(BufferedImage image) {
+	public GraphicsToPacketMapWrapper(BufferedImage image) {
 		this.frames = new ImageFrame[] {new ImageFrame(image)};
 		update();
 	}
@@ -73,7 +72,7 @@ public class PacketMapWrapper {
 		int totalTime = 0;
 		for (int i = 0; i < frames.length; i++) {
 			ImageFrame frame = frames[i];
-			this.colors[i] = MapPalette.imageToBytes(CustomImageUtils.resizeImageQuality(CustomImageUtils.squarify(frame.getImage()), 128, 128));
+			this.colors[i] = MapPalette.imageToBytes(ImageUtils.resizeImageQuality(ImageUtils.squarify(frame.getImage()), 128, 128));
 			totalTime += frame.getDelay() * 10;
 		}
 		this.totalTime = totalTime;
@@ -92,7 +91,7 @@ public class PacketMapWrapper {
 		for (int i = 0; i < frames.length; i++) {
 			ImageFrame frame = frames[i];
 			current += frame.getDelay() * 10;
-			if (current > ms) {
+			if (current >= ms) {
 				return i;
 			}
 		}
@@ -146,12 +145,12 @@ public class PacketMapWrapper {
 			e.printStackTrace();
 		}
 		
-		PacketMapWrapper ref = this;
+		GraphicsToPacketMapWrapper ref = this;
 		new BukkitRunnable() {
 			int frameTime = 0;
 			@Override
 			public void run() {
-				PacketMapWrapper wrapper = DiscordAttachmentEvents.MAP_VIEWERS.get(player);
+				GraphicsToPacketMapWrapper wrapper = DiscordAttachmentEvents.MAP_VIEWERS.get(player);
 				if (wrapper != null && wrapper.equals(ref)) {
 					int current = getFrameAt(frameTime);
 					if (current < 0) {

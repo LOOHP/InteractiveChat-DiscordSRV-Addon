@@ -134,7 +134,7 @@ public class DiscordItemStackUtils {
 		boolean hasMeta = item.hasItemMeta();
 		String description = "";
 		
-		if (ItemMapWrapper.isFilledMap(item)) {
+		if (FilledMapUtils.isFilledMap(item)) {
 			MapMeta map = (MapMeta) item.getItemMeta();
 			MapView mapView;
 			int id;

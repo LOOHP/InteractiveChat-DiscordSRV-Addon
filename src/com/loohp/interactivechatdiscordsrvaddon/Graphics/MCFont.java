@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Utils;
+package com.loohp.interactivechatdiscordsrvaddon.Graphics;
 
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
