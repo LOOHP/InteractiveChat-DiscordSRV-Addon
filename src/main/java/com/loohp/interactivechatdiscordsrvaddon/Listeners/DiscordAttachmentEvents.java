@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +55,7 @@ import net.md_5.bungee.api.chat.TextComponent;
 
 public class DiscordAttachmentEvents implements Listener {
 	
-	public static final Pattern IMAGE_URL_PATTERN = Pattern.compile("https?:/(?:/[^/]+)+\\.(?:jpg|jpeg|gif|png)");
+	public static final Pattern IMAGE_URL_PATTERN = Pattern.compile("https?:\\/(?:\\/[^\\/]+)+\\.(?:jpg|jpeg|gif|png)");
 	public static final Map<String, DiscordAttachmentData> DATA = new ConcurrentHashMap<>();	
 	public static final Map<Player, GraphicsToPacketMapWrapper> MAP_VIEWERS = new ConcurrentHashMap<>();
 	
@@ -108,7 +109,13 @@ public class DiscordAttachmentEvents implements Listener {
 				String url = matcher.group();
 				if (!DATA.containsKey(url)) {
 					try {
-						InputStream stream = new URL(url).openStream();
+						URLConnection connection = new URL(url).openConnection();
+						connection.setUseCaches(false);
+			            connection.setDefaultUseCaches(false);
+			            connection.addRequestProperty("User-Agent", "Mozilla/5.0");
+			            connection.addRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
+			            connection.addRequestProperty("Pragma", "no-cache");
+			            InputStream stream = connection.getInputStream();
 						GraphicsToPacketMapWrapper map;
 						if (url.toLowerCase().endsWith(".gif")) {
 							ImageFrame[] frames = GifReader.readGif(stream);
@@ -125,7 +132,9 @@ public class DiscordAttachmentEvents implements Listener {
 						Bukkit.getPluginManager().callEvent(dace);
 						DATA.put(url, data);
 						Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(url, data), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
-					} catch (IOException e) {}
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		}
