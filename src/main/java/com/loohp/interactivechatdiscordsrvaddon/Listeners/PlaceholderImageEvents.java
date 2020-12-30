@@ -78,9 +78,25 @@ public class PlaceholderImageEvents {
 	
 	private static final IDProvider INVENTORY_ID_PROVIDER = new IDProvider();
 	public static final Map<Integer, ImageDisplayData> DATA = Collections.synchronizedMap(new LinkedHashMap<>());
+	private volatile boolean init;
+	
+	public PlaceholderImageEvents() {
+		init = false;
+		if (DiscordSRV.isReady) {
+			init = true;
+			ready();
+		}
+	}
 	
 	@Subscribe(priority = ListenerPriority.HIGHEST)
 	public void onDiscordReady(DiscordReadyEvent event) {
+		if (!init) {
+			init = true;
+			ready();
+		}
+	}
+	
+	public void ready() {
 		DiscordSRV discordsrv = InteractiveChatDiscordSrvAddon.discordsrv;
 		
 		JDA jda = discordsrv.getJda();
@@ -119,21 +135,20 @@ public class PlaceholderImageEvents {
 		Player sender = event.getPlayer();
 		PlayerWrapper wrappedSender = new PlayerWrapper(sender);
 		String message = event.getMessage();
-		
 		long now = System.currentTimeMillis();
 		long uniCooldown = InteractiveChatAPI.getPlayerUniversalCooldown(sender) - now;
 		
 		if (!(uniCooldown < 0 || uniCooldown + 100 > InteractiveChat.universalCooldown)) {
 			return;
 		}
-		
+
 		GameMessagePreProcessEvent gameMessagePreProcessEvent = new GameMessagePreProcessEvent(sender, message, false);
 		Bukkit.getPluginManager().callEvent(gameMessagePreProcessEvent);
 		if (gameMessagePreProcessEvent.isCancelled()) {
 			return;
 		}
 		message = gameMessagePreProcessEvent.getMessage();
-		
+
 		if (InteractiveChat.useItem && sender.hasPermission("interactivechat.module.item")) {
 			long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, InteractiveChat.itemPlaceholder) - now;
 			if (cooldown < 0 || cooldown + 100 > ConfigManager.getConfig().getLong("ItemDisplay.Item.Cooldown") * 1000) {
@@ -427,27 +442,23 @@ public class PlaceholderImageEvents {
 		});
 	}
 	
-	public class JDAEvents extends ListenerAdapter {
+	public static class JDAEvents extends ListenerAdapter {
 		
 		@Override
 		public void onMessageReceived(MessageReceivedEvent event) {
 			if (event.getAuthor().equals(event.getJDA().getSelfUser())) {
 				return;
 			}
-			
 			if (!event.getChannelType().equals(ChannelType.TEXT)) {
 				return;
 			}
-			
 			if (!event.isWebhookMessage()) {
 				return;
 			}
-			
 			Message message = event.getMessage();
 			TextChannel channel = event.getTextChannel();
 			String textOriginal = message.getContentRaw();
 			String text = textOriginal;
-			
 			if (!text.contains("<ICD=")) {
 				return;
 			}
@@ -460,7 +471,6 @@ public class PlaceholderImageEvents {
 					matches.add(key);
 				}
 			}
-			
 			if (matches.isEmpty()) {
 				return;
 			}
@@ -469,7 +479,6 @@ public class PlaceholderImageEvents {
 			Player player = PlaceholderImageEvents.DATA.get(matches.iterator().next()).getPlayer();
 
 			List<DiscordMessageContent> contents = new ArrayList<>();
-			
 			for (int key : matches) {
 				ImageDisplayData iData = PlaceholderImageEvents.DATA.remove(key);
 				ImageDisplayType type = iData.getType();
@@ -550,7 +559,6 @@ public class PlaceholderImageEvents {
 					}			
 				}
 			}
-			
 			List<WebhookMessageBuilder> messagesToSend = new ArrayList<>();
 			
 			DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
@@ -604,7 +612,6 @@ public class PlaceholderImageEvents {
 			for (WebhookMessageBuilder builder : messagesToSend) {
 				client.send(builder.setUsername(username).setAvatarUrl(avatarUrl).build());
 			}
-			
 			client.close();
 		}
 	}
