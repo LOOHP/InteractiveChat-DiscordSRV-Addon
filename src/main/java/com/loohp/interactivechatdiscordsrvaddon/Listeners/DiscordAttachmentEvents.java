@@ -183,7 +183,7 @@ public class DiscordAttachmentEvents implements Listener {
 			 	        	} else {
 			 	        		trailing.copyFormatting(each);
 			 	        	}
-							if (InteractiveChat.version.isPost1_16()) {
+							if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
 								trailing.setFont(each.getFont());
 							}
 							newlist.add(trailing);

@@ -138,7 +138,7 @@ public class DiscordItemStackUtils {
 			MapMeta map = (MapMeta) item.getItemMeta();
 			MapView mapView;
 			int id;
-			if (InteractiveChat.version.isPost1_14() || InteractiveChat.version.equals(MCVersion.V1_13_1)) {
+			if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_13_1)) {
 				mapView = map.getMapView();
 				id = mapView.getId();
 			} else if (InteractiveChat.version.equals(MCVersion.V1_13)) {

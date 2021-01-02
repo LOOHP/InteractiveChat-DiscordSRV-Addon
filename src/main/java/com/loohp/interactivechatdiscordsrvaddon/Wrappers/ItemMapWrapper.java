@@ -126,7 +126,7 @@ public class ItemMapWrapper {
 		}
 		MapMeta map = (MapMeta) itemStack.getItemMeta();
 		MapView mapView;
-		if (InteractiveChat.version.isPost1_14() || InteractiveChat.version.equals(MCVersion.V1_13_1)) {
+		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_13_1)) {
 			mapView = map.getMapView();
 		} else if (InteractiveChat.version.equals(MCVersion.V1_13)) {
 			mapView = (MapView) bukkitBukkitClassGetMapShortMethod.invoke(null, bukkitMapViewClassGetIdMethod.invoke(map));

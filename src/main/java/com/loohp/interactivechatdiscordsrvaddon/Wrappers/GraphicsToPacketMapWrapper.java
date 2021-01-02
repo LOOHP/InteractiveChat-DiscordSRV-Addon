@@ -21,6 +21,7 @@ import com.comphenix.protocol.wrappers.EnumWrappers.ItemSlot;
 import com.comphenix.protocol.wrappers.Pair;
 import com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechat.Utils.MCVersion;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageFrame;
 import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageUtils;
@@ -111,7 +112,7 @@ public class GraphicsToPacketMapWrapper {
 		} else {
 			packet1 = protocollib.createPacket(PacketType.Play.Server.ENTITY_EQUIPMENT);
 			packet1.getIntegers().write(0, player.getEntityId());
-			if (InteractiveChat.version.isPost1_16()) {
+			if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
 				List<Pair<ItemSlot, ItemStack>> list = new ArrayList<>();
 				list.add(new Pair<ItemSlot, ItemStack>(ItemSlot.MAINHAND, mapItem));
 				packet1.getSlotStackPairLists().write(0, list);
@@ -129,7 +130,7 @@ public class GraphicsToPacketMapWrapper {
 			packet2.getBooleans().write(0, false);
 			mapIconFieldPos++;
 		}
-		if (InteractiveChat.version.isPost1_14()) {
+		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_14)) {
 			packet2.getBooleans().write(1, false);
 			mapIconFieldPos++;
 		}
