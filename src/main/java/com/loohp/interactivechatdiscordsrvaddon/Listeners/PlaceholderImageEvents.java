@@ -104,11 +104,13 @@ public class PlaceholderImageEvents {
 		
 		for (String channelId : discordsrv.getChannels().values()) {
 			GuildChannel channel = jda.getGuildChannelById(channelId);
-			Guild guild = channel.getGuild();
-			Member self = guild.getMember(jda.getSelfUser());
-			for (Permission permission : InteractiveChatDiscordSrvAddon.requiredPermissions) {
-				if (!self.hasPermission(channel, permission)) {
-					Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] DiscordSRV Bot is missing the \"" + permission.getName() + "\" permission in the channel \"" + channel.getName() + "\" (Id: " + channel.getId() + ")");
+			if (channel != null) {
+				Guild guild = channel.getGuild();
+				Member self = guild.getMember(jda.getSelfUser());
+				for (Permission permission : InteractiveChatDiscordSrvAddon.requiredPermissions) {
+					if (!self.hasPermission(channel, permission)) {
+						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] DiscordSRV Bot is missing the \"" + permission.getName() + "\" permission in the channel \"" + channel.getName() + "\" (Id: " + channel.getId() + ")");
+					}
 				}
 			}
 		}
