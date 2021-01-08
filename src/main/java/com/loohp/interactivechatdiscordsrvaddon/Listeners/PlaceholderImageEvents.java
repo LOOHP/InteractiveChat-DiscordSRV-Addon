@@ -14,7 +14,6 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
-import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
@@ -596,7 +595,7 @@ public class PlaceholderImageEvents {
 	            }
 	        }
 
-	        if (StringUtils.isBlank(avatarUrl)) avatarUrl = "https://minotar.net/helm/{uuid-nodashes}/{size}";
+	        if (avatarUrl == null || avatarUrl.trim().isEmpty()) avatarUrl = "https://minotar.net/helm/{uuid-nodashes}/{size}";
 	        avatarUrl = avatarUrl
 	                .replace("{timestamp}", String.valueOf(System.currentTimeMillis() / 1000))
 	                .replace("{username}", player.getName())
