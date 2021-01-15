@@ -56,13 +56,8 @@ import github.scarsz.discordsrv.api.ListenerPriority;
 import github.scarsz.discordsrv.api.Subscribe;
 import github.scarsz.discordsrv.api.events.DiscordGuildMessagePostProcessEvent;
 import github.scarsz.discordsrv.api.events.DiscordGuildMessageSentEvent;
-import github.scarsz.discordsrv.api.events.DiscordReadyEvent;
 import github.scarsz.discordsrv.api.events.GameChatMessagePreProcessEvent;
-import github.scarsz.discordsrv.dependencies.jda.api.JDA;
-import github.scarsz.discordsrv.dependencies.jda.api.Permission;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.ChannelType;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.Guild;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.GuildChannel;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Member;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
@@ -71,49 +66,11 @@ import github.scarsz.discordsrv.dependencies.jda.api.hooks.ListenerAdapter;
 import github.scarsz.discordsrv.util.DiscordUtil;
 import github.scarsz.discordsrv.util.PlaceholderUtil;
 import github.scarsz.discordsrv.util.WebhookUtil;
-import net.md_5.bungee.api.ChatColor;
 
 public class PlaceholderImageEvents {
 	
 	private static final IDProvider INVENTORY_ID_PROVIDER = new IDProvider();
 	public static final Map<Integer, ImageDisplayData> DATA = Collections.synchronizedMap(new LinkedHashMap<>());
-	private volatile boolean init;
-	
-	public PlaceholderImageEvents() {
-		init = false;
-		if (DiscordSRV.isReady) {
-			init = true;
-			ready();
-		}
-	}
-	
-	@Subscribe(priority = ListenerPriority.HIGHEST)
-	public void onDiscordReady(DiscordReadyEvent event) {
-		if (!init) {
-			init = true;
-			ready();
-		}
-	}
-	
-	public void ready() {
-		DiscordSRV discordsrv = InteractiveChatDiscordSrvAddon.discordsrv;
-		
-		JDA jda = discordsrv.getJda();
-		jda.addEventListener(new JDAEvents());
-		
-		for (String channelId : discordsrv.getChannels().values()) {
-			GuildChannel channel = jda.getGuildChannelById(channelId);
-			if (channel != null) {
-				Guild guild = channel.getGuild();
-				Member self = guild.getMember(jda.getSelfUser());
-				for (Permission permission : InteractiveChatDiscordSrvAddon.requiredPermissions) {
-					if (!self.hasPermission(channel, permission)) {
-						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] DiscordSRV Bot is missing the \"" + permission.getName() + "\" permission in the channel \"" + channel.getName() + "\" (Id: " + channel.getId() + ")");
-					}
-				}
-			}
-		}
-	}
 	
 	@Subscribe(priority = ListenerPriority.LOW)
 	public void onDiscordToGame(DiscordGuildMessagePostProcessEvent event) {
@@ -575,33 +532,23 @@ public class PlaceholderImageEvents {
 				}
 			}
 			
-			String avatarUrl = DiscordSRV.config().getString("Experiment_EmbedAvatarUrl");
-	        avatarUrl = PlaceholderUtil.replacePlaceholders(avatarUrl, player);
+			String avatarUrl = DiscordSRV.getAvatarUrl(player);
+            String username = DiscordSRV.config().getString("Experiment_WebhookChatMessageUsernameFormat")
+                    .replace("%displayname%", DiscordUtil.strip(player.getDisplayName()))
+                    .replace("%username%", player.getName());
+            username = PlaceholderUtil.replacePlaceholders(username, player);
+            username = DiscordUtil.strip(username);
 
-	        String username = DiscordSRV.config().getString("Experiment_WebhookChatMessageUsernameFormat")
-	                .replace("%displayname%", DiscordUtil.strip(player.getDisplayName()))
-	                .replace("%username%", player.getName());
-	        username = PlaceholderUtil.replacePlaceholders(username, player);
-	        username = DiscordUtil.strip(username);
-
-	        String userId = DiscordSRV.getPlugin().getAccountLinkManager().getDiscordId(player.getUniqueId());
-	        if (userId != null) {
-	            Member member = DiscordUtil.getMemberById(userId);
-	            if (member != null) {
-	                if (DiscordSRV.config().getBoolean("Experiment_WebhookChatMessageAvatarFromDiscord"))
-	                    avatarUrl = member.getUser().getEffectiveAvatarUrl();
-	                if (DiscordSRV.config().getBoolean("Experiment_WebhookChatMessageUsernameFromDiscord"))
-	                    username = member.getEffectiveName();
-	            }
-	        }
-
-	        if (avatarUrl == null || avatarUrl.trim().isEmpty()) avatarUrl = "https://minotar.net/helm/{uuid-nodashes}/{size}";
-	        avatarUrl = avatarUrl
-	                .replace("{timestamp}", String.valueOf(System.currentTimeMillis() / 1000))
-	                .replace("{username}", player.getName())
-	                .replace("{uuid}", player.getUniqueId().toString())
-	                .replace("{uuid-nodashes}", player.getUniqueId().toString().replace("-", ""))
-	                .replace("{size}", "128");
+            String userId = DiscordSRV.getPlugin().getAccountLinkManager().getDiscordId(player.getUniqueId());
+            if (userId != null) {
+                Member member = DiscordUtil.getMemberById(userId);
+                if (member != null) {
+                    if (DiscordSRV.config().getBoolean("Experiment_WebhookChatMessageAvatarFromDiscord"))
+                        avatarUrl = member.getUser().getEffectiveAvatarUrl();
+                    if (DiscordSRV.config().getBoolean("Experiment_WebhookChatMessageUsernameFromDiscord"))
+                        username = member.getEffectiveName();
+                }
+            }
 			
 			String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(textChannel, username);
 			WebhookClient client = WebhookClient.withUrl(webHookUrl);

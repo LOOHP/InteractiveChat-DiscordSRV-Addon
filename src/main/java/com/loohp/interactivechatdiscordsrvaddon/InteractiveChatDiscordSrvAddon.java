@@ -33,6 +33,7 @@ import com.loohp.interactivechat.Utils.ChatColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordAttachmentEvents;
+import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordReadyEvents;
 import com.loohp.interactivechatdiscordsrvaddon.Listeners.PlaceholderImageEvents;
 import com.loohp.interactivechatdiscordsrvaddon.Metrics.Charts;
 import com.loohp.interactivechatdiscordsrvaddon.Metrics.Metrics;
@@ -147,6 +148,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		metrics = new Metrics(this, pluginId);
 		Charts.setup(metrics);
 		
+		DiscordSRV.api.subscribe(new DiscordReadyEvents());
 		DiscordSRV.api.subscribe(new PlaceholderImageEvents());
 		DiscordSRV.api.subscribe(new DiscordAttachmentEvents());
 		
