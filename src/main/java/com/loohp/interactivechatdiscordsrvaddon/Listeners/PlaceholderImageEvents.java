@@ -30,6 +30,7 @@ import com.loohp.interactivechat.API.InteractiveChatAPI;
 import com.loohp.interactivechat.ObjectHolders.CustomPlaceholder;
 import com.loohp.interactivechat.ObjectHolders.ICPlaceholder;
 import com.loohp.interactivechat.ObjectHolders.PlayerWrapper;
+import com.loohp.interactivechat.ObjectHolders.WebData;
 import com.loohp.interactivechat.Utils.CustomStringUtils;
 import com.loohp.interactivechat.Utils.MaterialUtils;
 import com.loohp.interactivechat.Utils.NBTUtils;
@@ -252,10 +253,23 @@ public class PlaceholderImageEvents {
 				if ((!InteractiveChat.useCustomPlaceholderPermissions || (InteractiveChat.useCustomPlaceholderPermissions && sender.hasPermission("interactivechat.module.custom." + customP.getPosition()))) && customP.getReplace().isEnabled()) {
 					long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, customP.getKeyword()) - now;
 					if (cooldown < 0 || cooldown + 100 > customP.getCooldown()) {
-						if (message.toLowerCase().contains(customP.getKeyword())) {
+						if (message.toLowerCase().contains(customP.getKeyword().toLowerCase())) {
 							String replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
 							message = message.replaceAll((customP.isCaseSensitive() ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(customP.getKeyword()), replaceText);
 						}
+					}
+				}
+			}
+		}
+		
+		if (InteractiveChat.t) {
+			for (CustomPlaceholder customP : WebData.getInstance().getSpecialPlaceholders()) {
+				long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, customP.getKeyword()) - now;
+				if (cooldown < 0 || cooldown + 100 > customP.getCooldown()) {
+					System.out.println(message.toLowerCase() + " " + customP.getKeyword());
+					if (message.toLowerCase().contains(customP.getKeyword().toLowerCase())) {
+						String replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
+						message = message.replaceAll((customP.isCaseSensitive() ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(customP.getKeyword()), replaceText);
 					}
 				}
 			}
