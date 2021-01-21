@@ -532,7 +532,7 @@ public class PlaceholderImageEvents {
 				}
 			}
 			
-			String avatarUrl = DiscordSRV.getAvatarUrl(player);
+			String avatarUrl = DiscordSRV.getAvatarUrl((Player) player);
             String username = DiscordSRV.config().getString("Experiment_WebhookChatMessageUsernameFormat")
                     .replace("%displayname%", DiscordUtil.strip(player.getDisplayName()))
                     .replace("%username%", player.getName());
