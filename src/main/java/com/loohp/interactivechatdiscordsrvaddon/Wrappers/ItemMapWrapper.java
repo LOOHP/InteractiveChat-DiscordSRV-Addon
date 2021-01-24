@@ -19,8 +19,8 @@ import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.MapView;
 
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechat.Utils.FilledMapUtils;
 import com.loohp.interactivechat.Utils.MCVersion;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.FilledMapUtils;
 
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.chat.ComponentSerializer;

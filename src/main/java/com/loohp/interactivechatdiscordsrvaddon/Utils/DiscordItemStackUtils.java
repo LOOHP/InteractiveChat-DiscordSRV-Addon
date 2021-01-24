@@ -24,6 +24,7 @@ import org.bukkit.potion.PotionEffect;
 import com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.ChatColorUtils;
+import com.loohp.interactivechat.Utils.FilledMapUtils;
 import com.loohp.interactivechat.Utils.MCVersion;
 import com.loohp.interactivechat.Utils.MaterialUtils;
 import com.loohp.interactivechat.Utils.NBTUtils;
