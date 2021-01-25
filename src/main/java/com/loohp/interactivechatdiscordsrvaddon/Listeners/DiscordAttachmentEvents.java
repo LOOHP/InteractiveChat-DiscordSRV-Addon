@@ -6,9 +6,11 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -56,7 +58,7 @@ import net.md_5.bungee.api.chat.TextComponent;
 public class DiscordAttachmentEvents implements Listener {
 	
 	public static final Pattern IMAGE_URL_PATTERN = Pattern.compile("https?:\\/(?:\\/[^\\/]+)+\\.(?:jpg|jpeg|gif|png)");
-	public static final Map<String, DiscordAttachmentData> DATA = new ConcurrentHashMap<>();	
+	public static final Map<UUID, DiscordAttachmentData> DATA = new ConcurrentHashMap<>();	
 	public static final Map<Player, GraphicsToPacketMapWrapper> MAP_VIEWERS = new ConcurrentHashMap<>();
 	
 	@Subscribe(priority = ListenerPriority.MONITOR)
@@ -64,10 +66,11 @@ public class DiscordAttachmentEvents implements Listener {
 		if (InteractiveChatDiscordSrvAddon.plugin.convertDiscordAttachments) {
 			Message message = event.getMessage();
 			String processedMessage = event.getProcessedMessage();
-			
+			Set<String> processedUrl = new HashSet<>();
 			for (Attachment attachment : message.getAttachments()) {
 				String url = attachment.getUrl();
 				if (processedMessage.contains(url)) {
+					processedUrl.add(url);
 					if (attachment.isImage()) {
 						try {
 							InputStream stream = attachment.retrieveInputStream().get();
@@ -84,22 +87,22 @@ public class DiscordAttachmentEvents implements Listener {
 							DiscordAttachmentData data = new DiscordAttachmentData(attachment.getFileName(), url, map);
 							DiscordAttachmentConversionEvent dace = new DiscordAttachmentConversionEvent(url, data);
 							Bukkit.getPluginManager().callEvent(dace);
-							DATA.put(url, data);
-							Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(url, data), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
+							DATA.put(data.getUniqueId(), data);
+							Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(data.getUniqueId()), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
 						} catch (IOException | InterruptedException | ExecutionException e) {
 							e.printStackTrace();
 							DiscordAttachmentData data = new DiscordAttachmentData(attachment.getFileName(), url);
 							DiscordAttachmentConversionEvent dace = new DiscordAttachmentConversionEvent(url, data);
 							Bukkit.getPluginManager().callEvent(dace);
-							DATA.put(url, data);
-							Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(url, data), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
+							DATA.put(data.getUniqueId(), data);
+							Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(data.getUniqueId()), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
 						}
 					} else {
 						DiscordAttachmentData data = new DiscordAttachmentData(attachment.getFileName(), url);
 						DiscordAttachmentConversionEvent dace = new DiscordAttachmentConversionEvent(url, data);
 						Bukkit.getPluginManager().callEvent(dace);
-						DATA.put(url, data);
-						Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(url, data), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
+						DATA.put(data.getUniqueId(), data);
+						Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(data.getUniqueId()), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
 					}
 				}
 			}
@@ -107,7 +110,7 @@ public class DiscordAttachmentEvents implements Listener {
 			Matcher matcher = IMAGE_URL_PATTERN.matcher(message.getContentRaw());
 			while (matcher.find()) {
 				String url = matcher.group();
-				if (!DATA.containsKey(url)) {
+				if (!processedUrl.contains(url)) {
 					try {
 						URLConnection connection = new URL(url).openConnection();
 						connection.setUseCaches(false);
@@ -130,8 +133,8 @@ public class DiscordAttachmentEvents implements Listener {
 						DiscordAttachmentData data = new DiscordAttachmentData(name, url, map);
 						DiscordAttachmentConversionEvent dace = new DiscordAttachmentConversionEvent(url, data);
 						Bukkit.getPluginManager().callEvent(dace);
-						DATA.put(url, data);
-						Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(url, data), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
+						DATA.put(data.getUniqueId(), data);
+						Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(data.getUniqueId()), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -144,8 +147,9 @@ public class DiscordAttachmentEvents implements Listener {
 	@EventHandler
 	public void onChatPacket(PrePacketComponentProcessEvent event) {
 		if (InteractiveChatDiscordSrvAddon.plugin.convertDiscordAttachments) {
-			for (Entry<String, DiscordAttachmentData> entry : DATA.entrySet()) {
-				String url = entry.getKey();
+			for (Entry<UUID, DiscordAttachmentData> entry : DATA.entrySet()) {
+				DiscordAttachmentData data = entry.getValue();
+				String url = data.getUrl();
 				BaseComponent baseComponent = event.getBaseComponent();
 	
 				List<BaseComponent> newlist = new ArrayList<>();
@@ -155,7 +159,6 @@ public class DiscordAttachmentEvents implements Listener {
 						if (text.contains(url)) {
 							((TextComponent) each).setText(text.substring(0, text.indexOf(url)));
 							newlist.add(each);
-							DiscordAttachmentData data = entry.getValue();
 							String replacement = InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsFormattingText.replace("{FileName}", data.getFileName());
 							TextComponent textComponent = new TextComponent(replacement);
 							if (InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsFormattingHoverEnabled) {

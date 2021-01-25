@@ -13,7 +13,7 @@ import com.loohp.interactivechatdiscordsrvaddon.Wrappers.GraphicsToPacketMapWrap
 
 public class InteractiveChatDiscordSrvAddonAPI {
 	
-	public static Map<String, DiscordAttachmentData> getActiveDiscordAttachments() {
+	public static Map<UUID, DiscordAttachmentData> getActiveDiscordAttachments() {
 		return Collections.unmodifiableMap(DiscordAttachmentEvents.DATA);
 	}
 	

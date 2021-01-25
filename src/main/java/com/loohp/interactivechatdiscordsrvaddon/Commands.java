@@ -2,7 +2,7 @@ package com.loohp.interactivechatdiscordsrvaddon;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -39,7 +39,7 @@ public class Commands implements CommandExecutor, TabCompleter {
 				InteractiveChatDiscordSrvAddon.plugin.reloadConfig();
 				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.reloadConfigMessage);
 			} else {
-				sender.sendMessage(InteractiveChat.NoPermission);
+				sender.sendMessage(InteractiveChat.noPermissionMessage);
 			}
 			return true;
 		}
@@ -49,7 +49,7 @@ public class Commands implements CommandExecutor, TabCompleter {
 				InteractiveChatDiscordSrvAddon.plugin.reloadTextures();
 				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.reloadTextureMessage);
 			} else {
-				sender.sendMessage(InteractiveChat.NoPermission);
+				sender.sendMessage(InteractiveChat.noPermissionMessage);
 			}
 			return true;
 		}
@@ -71,21 +71,21 @@ public class Commands implements CommandExecutor, TabCompleter {
 					}
 				});
 			} else {
-				sender.sendMessage(InteractiveChat.NoPermission);
+				sender.sendMessage(InteractiveChat.noPermissionMessage);
 			}
 			return true;
 		}
 		
 		if (args[0].equalsIgnoreCase("imagemap")) {
 			if (args.length > 1 && sender instanceof Player) {
-				Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
-					Optional<DiscordAttachmentData> opt = DiscordAttachmentEvents.DATA.values().stream().filter(each -> each.getUniqueId().toString().equalsIgnoreCase(args[1])).findFirst();
-					if (opt.isPresent() && opt.get().isImage()) {
-						Bukkit.getScheduler().runTask(InteractiveChatDiscordSrvAddon.plugin, () -> opt.get().getImageMap().show((Player) sender));
-					} else {
-						sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.linkExpired);
+				try {
+					DiscordAttachmentData data = DiscordAttachmentEvents.DATA.get(UUID.fromString(args[1]));
+					if (data != null && data.isImage()) {
+						data.getImageMap().show((Player) sender);
 					}
-				});
+				} catch (Exception e) {
+					sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.linkExpired);
+				}
 			}
 			return true;
 		}
