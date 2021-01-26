@@ -6,8 +6,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.apache.commons.lang.RandomStringUtils;
 
 import com.google.common.base.CharMatcher;
-import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.CustomStringUtils;
+import com.loohp.interactivechat.Utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 
 import net.md_5.bungee.api.ChatColor;
@@ -21,15 +21,11 @@ public class ComponentStringUtils {
 		for (BaseComponent each : CustomStringUtils.loadExtras(baseComponent)) {
 			if (each instanceof TranslatableComponent) {
 				TranslatableComponent trans = (TranslatableComponent) each;
-				if (InteractiveChat.version.isLegacy()) {
-					sb.append(trans.toLegacyText());
-				} else {
-					String translated = InteractiveChatDiscordSrvAddon.plugin.getModernItemTrans(trans.getTranslate());
-					for (BaseComponent with : trans.getWith()) {
-						translated = translated.replaceFirst("%s", toLegacyString(with));
-					}
-					sb.append(translated);
+				String translated = LanguageUtils.getTranslation(trans.getTranslate(), InteractiveChatDiscordSrvAddon.plugin.language);
+				for (BaseComponent with : trans.getWith()) {
+					translated = translated.replaceFirst("%s", toLegacyString(with));
 				}
+				sb.append(translated);
 			} else {
 				sb.append(each.toLegacyText());
 			}

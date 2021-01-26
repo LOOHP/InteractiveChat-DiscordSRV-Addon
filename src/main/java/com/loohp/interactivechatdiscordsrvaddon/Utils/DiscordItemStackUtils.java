@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+import org.apache.commons.text.WordUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -25,8 +26,8 @@ import com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.ChatColorUtils;
 import com.loohp.interactivechat.Utils.FilledMapUtils;
+import com.loohp.interactivechat.Utils.LanguageUtils;
 import com.loohp.interactivechat.Utils.MCVersion;
-import com.loohp.interactivechat.Utils.MaterialUtils;
 import com.loohp.interactivechat.Utils.NBTUtils;
 import com.loohp.interactivechat.Utils.RarityUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
@@ -105,6 +106,8 @@ public class DiscordItemStackUtils {
 	}
 	
 	public static DiscordDescription getDiscordDescription(ItemStack item) throws Exception {
+		String language = InteractiveChatDiscordSrvAddon.plugin.language;
+		
 		if (item == null) {
 			item = new ItemStack(Material.AIR);
 		}
@@ -113,16 +116,12 @@ public class DiscordItemStackUtils {
 		if (item.hasItemMeta() && item.getItemMeta().hasDisplayName() && !item.getItemMeta().getDisplayName().equals("")) {
 			name = item.getItemMeta().getDisplayName();
 		} else {
-			String itemKey = MaterialUtils.getMinecraftLangName(item);
-			if (InteractiveChat.version.isLegacy()) {
-				name = itemKey;
-			} else {
-				name = InteractiveChatDiscordSrvAddon.plugin.getModernItemTrans(itemKey);
-				if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
-					String owner = NBTUtils.getString(item, "SkullOwner", "Name");
-					if (owner != null) {
-						name = name.replaceFirst("%s", owner);
-					}
+			String itemKey = LanguageUtils.getTranslationKey(item);
+			name = LanguageUtils.getTranslation(itemKey, InteractiveChatDiscordSrvAddon.plugin.language);
+			if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
+				String owner = NBTUtils.getString(item, "SkullOwner", "Name");
+				if (owner != null) {
+					name = name.replaceFirst("%s", owner);
 				}
 			}
 		}
@@ -152,9 +151,13 @@ public class DiscordItemStackUtils {
 				id = shortId;
 			}
 			int scale = mapView.getScale().getValue();
-			description += InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("FilledMap.Id").replace("{Id}", id + "") + "\n";
-			description += InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("FilledMap.Scale").replace("{Scale}", (int) Math.pow(2, scale) + "") + "\n";
-			description += InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("FilledMap.Level").replace("{Level}", scale + "") + "\n";
+			if (!InteractiveChat.version.isLegacy()) {
+				description += LanguageUtils.getTranslation(TranslationUtils.getFilledMapId(), language).replaceFirst("%s", id + "") + "\n";
+			} else {
+				name += " (#" + id + ")";
+			}
+			description += LanguageUtils.getTranslation(TranslationUtils.getFilledMapScale(), language).replaceFirst("%s", (int) Math.pow(2, scale) + "") + "\n";
+			description += LanguageUtils.getTranslation(TranslationUtils.getFilledMapLevel(), language).replaceFirst("%s", scale + "").replaceFirst("%s", "4") + "\n";
 			description += "\n";
 		}
 		
@@ -169,10 +172,16 @@ public class DiscordItemStackUtils {
 				effects.addAll(meta.getCustomEffects());
 				
 				if (effects.isEmpty()) {
-					description += "**" + InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Effects.NoEffect") + "**\n";
+					description += "**" + LanguageUtils.getTranslation(TranslationUtils.getNoEffect(), language) + "**\n";
 				} else {
 					for (PotionEffect effect : effects) {
-						description += "**" + InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Effects.Mappings." + effect.getType().getName().toUpperCase());
+						String key = TranslationUtils.getEffect(effect.getType());
+						String translation = LanguageUtils.getTranslation(key, language);
+						if (key.equals(translation)) {
+							description += "**" + WordUtils.capitalize(effect.getType().getName().toLowerCase().replace("_", " "));
+						} else {
+							description += "**" + translation;
+						}
 						int amplifier = effect.getAmplifier();
 						if (amplifier > 0) {
 							description += " " + RomanNumberUtils.toRoman(amplifier + 1);
@@ -199,7 +208,14 @@ public class DiscordItemStackUtils {
 				for (Entry<Enchantment, Integer> entry : CustomMapUtils.sortMapByValue(((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants()).entrySet()) {
 					Enchantment ench = entry.getKey();
 					int level = entry.getValue();
-					String enchName = InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Enchantments.Mappings." + ench.getName().toUpperCase());
+					String key = TranslationUtils.getEnchantment(ench);
+					String translation = LanguageUtils.getTranslation(key, language);
+					String enchName;
+					if (key.equals(translation)) {
+						enchName = WordUtils.capitalize(ench.getName().toLowerCase().replace("_", " "));
+					} else {
+						enchName = translation;
+					}
 					if (enchName != null) {
 						description += "**" + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRomanIfUnder(level, 11)) + "**\n";
 					}
@@ -208,7 +224,14 @@ public class DiscordItemStackUtils {
 				for (Entry<Enchantment, Integer> entry : CustomMapUtils.sortMapByValue(item.getEnchantments()).entrySet()) {
 					Enchantment ench = entry.getKey();
 					int level = entry.getValue();
-					String enchName = InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Enchantments.Mappings." + ench.getName().toUpperCase());
+					String key = TranslationUtils.getEnchantment(ench);
+					String translation = LanguageUtils.getTranslation(key, language);
+					String enchName;
+					if (key.equals(translation)) {
+						enchName = WordUtils.capitalize(ench.getName().toLowerCase().replace("_", " "));
+					} else {
+						enchName = translation;
+					}
 					if (enchName != null) {
 						description += "**" + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRomanIfUnder(level, 11)) + "**\n";
 					}
@@ -224,7 +247,7 @@ public class DiscordItemStackUtils {
 				}
 				Color color = new Color(meta.getColor().asRGB());
 				String hex = ColorUtils.rgb2Hex(color).toUpperCase();
-				description += InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Dye.Color").replace("{Hex}", hex) + "\n";
+				description += LanguageUtils.getTranslation(TranslationUtils.getDyeColor(), language).replaceFirst("%s", hex) + "\n";
 			}
 		}
 		
@@ -254,7 +277,7 @@ public class DiscordItemStackUtils {
 			if (!description.equals("")) {
 				description += "\n";
 			}
-			description += "**" + InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Unbreakable.Name") + "**\n";
+			description += "**" + LanguageUtils.getTranslation(TranslationUtils.getUnbreakable(), language) + "**\n";
 		}
 		
 		if (item.getType().getMaxDurability() > 0) {
@@ -264,7 +287,7 @@ public class DiscordItemStackUtils {
 				if (!description.equals("")) {
 					description += "\n";
 				}
-				description += "**" + InteractiveChatDiscordSrvAddon.plugin.getTrans().getString("Durability.ToolTip").replace("{Remaining}", String.valueOf(durability)).replace("{Max}", String.valueOf(maxDur)) + "**\n";
+				description += "**" + LanguageUtils.getTranslation(TranslationUtils.getDurability(), language).replaceFirst("%s", String.valueOf(durability)).replaceFirst("%s", String.valueOf(maxDur)) + "**\n";
 			}
 		}
 		

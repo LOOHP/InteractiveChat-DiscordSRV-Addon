@@ -5,10 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,11 +18,7 @@ import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.ChatColorUtils;
@@ -93,15 +86,14 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public String discordAttachmentsFormattingImageAppend;
 	public String discordAttachmentsFormattingImageAppendHover;
 	
-	public boolean UpdaterEnabled = true;
+	public boolean updaterEnabled = true;
 	
 	public int cacheTimeout = 1200;
 	
 	public boolean escapePlaceholdersFromDiscord = true;
 	public boolean escapeDiscordMarkdownInItems = true;
 	
-	private ConfigurationSection translations;
-	private Map<String, String> modernItemTranslations = new HashMap<>();
+	public String language = "en_us";
 	
 	private List<String> resourceOrder = new ArrayList<>();
 	
@@ -121,15 +113,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 
 		getConfig().options().copyDefaults(true);
 		saveConfig();
-		
-		File file = new File(getDataFolder(), "lang.json"); 
-        if (!file.exists() && !InteractiveChat.version.isLegacy()) {
-            try (InputStream in = this.getClassLoader().getResourceAsStream("lang.json")) {
-                Files.copy(in, file.toPath());
-            } catch (IOException e) {
-                getLogger().severe("[ICDiscordSRVAddon] Unable to copy lang.json");
-            }
-        }
 		
 		reloadConfig();
 		
@@ -208,7 +191,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		discordAttachmentsFormattingImageAppend = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordAttachments.Formatting.ImageOriginal"));
 		discordAttachmentsFormattingImageAppendHover = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getStringList("DiscordAttachments.Formatting.Hover.ImageOriginalHover").stream().collect(Collectors.joining("\n")));
 		
-		UpdaterEnabled = getConfig().getBoolean("Options.UpdaterEnabled");
+		updaterEnabled = getConfig().getBoolean("Options.UpdaterEnabled");
 		
 		cacheTimeout = getConfig().getInt("Settings.CacheTimeout") * 20;
 		
@@ -220,36 +203,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		invColor = ColorUtils.hex2Rgb(getConfig().getString("InventoryImage.Inventory.EmbedColor"));
 		enderColor = ColorUtils.hex2Rgb(getConfig().getString("InventoryImage.EnderChest.EmbedColor"));
 		
-		translations = getConfig().getConfigurationSection("Translations");
-		
-		modernItemTranslations.clear();
-		
-		File lang = new File(getDataFolder(), "lang.json");
-		if (!InteractiveChat.version.isLegacy() && lang.exists()) {
-			try {
-				JSONObject json = (JSONObject) new JSONParser().parse(new FileReader(lang));
-				for (Object obj : json.keySet()) {
-					try {
-						String key = (String) obj;
-						modernItemTranslations.put(key, (String) json.get(key));
-					} catch (Exception e) {}
-				}
-			} catch (IOException | ParseException e) {
-				try (InputStream in = this.getClassLoader().getResourceAsStream("lang.json")) {
-	                Files.copy(in, lang.toPath());
-	            } catch (IOException e1) {
-	                getLogger().severe("[ICDiscordSRVAddon] Unable to copy lang.json");
-	            }
-			}
-		}		
-	}
-	
-	public String getModernItemTrans(String key) {
-		return modernItemTranslations.getOrDefault(key, key);
-	}
-	
-	public ConfigurationSection getTrans() {
-		return translations;
+		language = getConfig().getString("Resources.Language");
 	}
 	
 	public BufferedImage getBlockTexture(String str) {

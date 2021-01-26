@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Utils;
+package com.loohp.interactivechatdiscordsrvaddon.ObjectHolders;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

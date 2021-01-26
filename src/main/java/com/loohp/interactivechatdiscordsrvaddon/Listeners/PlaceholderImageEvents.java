@@ -33,7 +33,7 @@ import com.loohp.interactivechat.ObjectHolders.PlayerWrapper;
 import com.loohp.interactivechat.ObjectHolders.WebData;
 import com.loohp.interactivechat.Utils.CustomStringUtils;
 import com.loohp.interactivechat.Utils.FilledMapUtils;
-import com.loohp.interactivechat.Utils.MaterialUtils;
+import com.loohp.interactivechat.Utils.LanguageUtils;
 import com.loohp.interactivechat.Utils.NBTUtils;
 import com.loohp.interactivechat.Utils.PlaceholderParser;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
@@ -45,10 +45,10 @@ import com.loohp.interactivechatdiscordsrvaddon.API.Events.GameMessageProcessIte
 import com.loohp.interactivechatdiscordsrvaddon.API.Events.GameMessageProcessPlayerInventoryEvent;
 import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.ObjectHolders.DiscordMessageContent;
+import com.loohp.interactivechatdiscordsrvaddon.ObjectHolders.IDProvider;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ComponentStringUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.DiscordItemStackUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.DiscordItemStackUtils.DiscordDescription;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.IDProvider;
 
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
@@ -122,16 +122,12 @@ public class PlaceholderImageEvents {
 					if (item.hasItemMeta() && item.getItemMeta().hasDisplayName() && !item.getItemMeta().getDisplayName().equals("")) {
 						itemStr = item.getItemMeta().getDisplayName();
 					} else {
-						String itemKey = MaterialUtils.getMinecraftLangName(item);
-						if (InteractiveChat.version.isLegacy()) {
-							itemStr = itemKey;
-						} else {
-							itemStr = InteractiveChatDiscordSrvAddon.plugin.getModernItemTrans(itemKey);
-							if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
-								String owner = NBTUtils.getString(item, "SkullOwner", "Name");
-								if (owner != null) {
-									itemStr = itemStr.replaceFirst("%s", owner);
-								}
+						String itemKey = LanguageUtils.getTranslationKey(item);
+						itemStr = LanguageUtils.getTranslation(itemKey, InteractiveChatDiscordSrvAddon.plugin.language);
+						if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
+							String owner = NBTUtils.getString(item, "SkullOwner", "Name");
+							if (owner != null) {
+								itemStr = itemStr.replaceFirst("%s", owner);
 							}
 						}
 					}
