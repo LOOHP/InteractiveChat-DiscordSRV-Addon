@@ -105,6 +105,11 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	private Map<String, BufferedImage> font = new HashMap<>();
 	private Map<String, BufferedImage> puppet = new HashMap<>();
 	
+	/*
+	public Set<String> discordMainCommands = new HashSet<>();
+	public String discordListSubCommand = "list";
+	*/
+	
 	@Override
 	public void onEnable() {
 		plugin = this;
@@ -204,6 +209,11 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		enderColor = ColorUtils.hex2Rgb(getConfig().getString("InventoryImage.EnderChest.EmbedColor"));
 		
 		language = getConfig().getString("Resources.Language");
+		
+		/*
+		discordMainCommands = getConfig().getStringList("DiscordCommands.MainCommand").stream().collect(Collectors.toSet());
+		discordListSubCommand = getConfig().getString("DiscordCommands.SubCommands.ListPlaceholders");
+		*/
 	}
 	
 	public BufferedImage getBlockTexture(String str) {

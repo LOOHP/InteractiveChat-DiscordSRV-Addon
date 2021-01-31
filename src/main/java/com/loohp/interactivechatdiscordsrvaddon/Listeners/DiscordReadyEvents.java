@@ -3,7 +3,6 @@ package com.loohp.interactivechatdiscordsrvaddon.Listeners;
 import org.bukkit.Bukkit;
 
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.PlaceholderImageEvents.JDAEvents;
 
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.api.ListenerPriority;
@@ -40,7 +39,7 @@ public class DiscordReadyEvents {
 		DiscordSRV discordsrv = InteractiveChatDiscordSrvAddon.discordsrv;
 		
 		JDA jda = discordsrv.getJda();
-		jda.addEventListener(new JDAEvents());
+		jda.addEventListener(new PlaceholderImageEvents.JDAEvents());
 		
 		for (String channelId : discordsrv.getChannels().values()) {
 			GuildChannel channel = jda.getGuildChannelById(channelId);

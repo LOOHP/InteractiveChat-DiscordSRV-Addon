@@ -4,6 +4,8 @@ import java.util.concurrent.Callable;
 
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 
+import github.scarsz.discordsrv.dependencies.jda.api.JDA;
+
 public class Charts {
 	
 	public static void setup(Metrics metrics) {
@@ -62,6 +64,39 @@ public class Charts {
             public Integer call() throws Exception {
             	long amount = InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.getAndSet(0);
                 return amount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) amount;
+            }
+        }));
+		
+		metrics.addCustomChart(new Metrics.SingleLineChart("discord_servers_present", new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+            	JDA jda = InteractiveChatDiscordSrvAddon.discordsrv.getJda();
+            	if (jda == null) {
+            		return 0;
+            	}
+                return jda.getGuilds().size();
+            }
+        }));
+		
+		metrics.addCustomChart(new Metrics.SingleLineChart("discord_channels_present", new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+            	JDA jda = InteractiveChatDiscordSrvAddon.discordsrv.getJda();
+            	if (jda == null) {
+            		return 0;
+            	}
+                return jda.getGuilds().stream().mapToInt(each -> each.getChannels().size()).sum();
+            }
+        }));
+		
+		metrics.addCustomChart(new Metrics.SingleLineChart("total_discord_members", new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+            	JDA jda = InteractiveChatDiscordSrvAddon.discordsrv.getJda();
+            	if (jda == null) {
+            		return 0;
+            	}
+                return jda.getUsers().size();
             }
         }));
 		

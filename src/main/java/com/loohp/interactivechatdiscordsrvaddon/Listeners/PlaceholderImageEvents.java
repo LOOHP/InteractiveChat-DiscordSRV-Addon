@@ -29,7 +29,7 @@ import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.API.InteractiveChatAPI;
 import com.loohp.interactivechat.ObjectHolders.CustomPlaceholder;
 import com.loohp.interactivechat.ObjectHolders.ICPlaceholder;
-import com.loohp.interactivechat.ObjectHolders.PlayerWrapper;
+import com.loohp.interactivechat.ObjectHolders.ICPlayer;
 import com.loohp.interactivechat.ObjectHolders.WebData;
 import com.loohp.interactivechat.Utils.CustomStringUtils;
 import com.loohp.interactivechat.Utils.FilledMapUtils;
@@ -92,7 +92,7 @@ public class PlaceholderImageEvents {
 	public void onGameToDiscord(GameChatMessagePreProcessEvent event) {
 		InteractiveChatDiscordSrvAddon.plugin.messagesCounter.incrementAndGet();
 		Player sender = event.getPlayer();
-		PlayerWrapper wrappedSender = new PlayerWrapper(sender);
+		ICPlayer wrappedSender = new ICPlayer(sender);
 		String message = event.getMessage();
 		long now = System.currentTimeMillis();
 		long uniCooldown = InteractiveChatAPI.getPlayerUniversalCooldown(sender) - now;
@@ -246,7 +246,7 @@ public class PlaceholderImageEvents {
 		for (ICPlaceholder placeholder : InteractiveChatAPI.getICPlaceholderList()) {
 			if (!placeholder.isBuildIn()) {
 				CustomPlaceholder customP = placeholder.getCustomPlaceholder().get();
-				if ((!InteractiveChat.useCustomPlaceholderPermissions || (InteractiveChat.useCustomPlaceholderPermissions && sender.hasPermission("interactivechat.module.custom." + customP.getPosition()))) && customP.getReplace().isEnabled()) {
+				if ((!InteractiveChat.useCustomPlaceholderPermissions || (InteractiveChat.useCustomPlaceholderPermissions && sender.hasPermission(customP.getPermission()))) && customP.getReplace().isEnabled()) {
 					long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, customP.getKeyword()) - now;
 					if (cooldown < 0 || cooldown + 100 > customP.getCooldown()) {
 						if (message.toLowerCase().contains(customP.getKeyword().toLowerCase())) {
