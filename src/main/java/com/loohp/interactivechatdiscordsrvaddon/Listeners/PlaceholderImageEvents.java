@@ -150,7 +150,7 @@ public class PlaceholderImageEvents {
 							if (bsm instanceof InventoryHolder) {
 								Inventory container = ((InventoryHolder) bsm).getInventory();
 								if (!container.isEmpty()) {
-									inv = Bukkit.createInventory(null, container.getSize());
+									inv = Bukkit.createInventory(null, container.getSize() + (container.getSize() % 9));
 									for (int j = 0; j < container.getSize(); j++) {
 										if (container.getItem(j) != null) {
 											if (!container.getItem(j).getType().equals(Material.AIR)) {

@@ -1,6 +1,6 @@
 package com.loohp.interactivechatdiscordsrvaddon;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -96,7 +96,7 @@ public class Commands implements CommandExecutor, TabCompleter {
 
 	@Override
 	public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
-		List<String> tab = new ArrayList<String>();
+		List<String> tab = new LinkedList<>();
 		if (!label.equalsIgnoreCase("interactivechatdiscordsrv") && !label.equalsIgnoreCase("icd")) {
 			return tab;
 		}
