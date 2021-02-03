@@ -1,18 +1,23 @@
 InventoryImage:
+  #Whether or not to generate images for the item placeholder
   Item:
     EmbedDisplay: 
       Single: "{Item}"
       Multiple: "{Item} x{Amount}"
     Enabled: true
+  #Whether or not to generate images for the inventory placeholder
   Inventory:
+    #Use the player inventory gui template instead of the normal inventory template
     UsePlayerInventoryView: true
     EmbedColor: "#55FFFF"
     Enabled: true
+  #Whether or not to generate images for the enderchest placeholder
   EnderChest:
     EmbedColor: "#FF55FF"
     Enabled: true
 
 DiscordAttachments:
+  #Whether or not to convert discord attachments from diguesting urls into clickable text in chat
   Convert: true
   Formatting: 
     Text: "&e[&b{FileName}&e]"
@@ -23,6 +28,7 @@ DiscordAttachments:
         - "&bClick to View"
       ImageOriginalHover: 
         - "&eOpen Original"
+  #Whether or not to allow previwing images in game using maps
   ShowImageUsingMaps: true
   Timeout: 86400
 

@@ -68,10 +68,12 @@ public class DiscordAttachmentEvents implements Listener {
 			String processedMessage = event.getProcessedMessage();
 			Set<String> processedUrl = new HashSet<>();
 			for (Attachment attachment : message.getAttachments()) {
+				InteractiveChatDiscordSrvAddon.plugin.attachmentCounter.incrementAndGet();
 				String url = attachment.getUrl();
 				if (processedMessage.contains(url)) {
 					processedUrl.add(url);
 					if (attachment.isImage()) {
+						InteractiveChatDiscordSrvAddon.plugin.attachmentImageCounter.incrementAndGet();
 						try {
 							InputStream stream = attachment.retrieveInputStream().get();
 							GraphicsToPacketMapWrapper map;
@@ -111,6 +113,7 @@ public class DiscordAttachmentEvents implements Listener {
 			while (matcher.find()) {
 				String url = matcher.group();
 				if (!processedUrl.contains(url)) {
+					InteractiveChatDiscordSrvAddon.plugin.attachmentImageCounter.incrementAndGet();
 					try {
 						URLConnection connection = new URL(url).openConnection();
 						connection.setUseCaches(false);

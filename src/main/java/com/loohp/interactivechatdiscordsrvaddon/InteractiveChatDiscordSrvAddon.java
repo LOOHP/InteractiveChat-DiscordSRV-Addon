@@ -61,6 +61,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public AtomicLong messagesCounter = new AtomicLong(0);
 	public AtomicLong imageCounter = new AtomicLong(0);
 	public AtomicLong inventoryImageCounter = new AtomicLong(0);
+	public AtomicLong attachmentCounter = new AtomicLong(0);
+	public AtomicLong attachmentImageCounter = new AtomicLong(0);
+	public AtomicLong imagesViewedCounter = new AtomicLong(0);
 	
 	public boolean itemImage = true;
 	public boolean invImage = true;

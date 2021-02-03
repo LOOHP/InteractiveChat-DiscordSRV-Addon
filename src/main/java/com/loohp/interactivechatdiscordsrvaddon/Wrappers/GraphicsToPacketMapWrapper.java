@@ -100,6 +100,7 @@ public class GraphicsToPacketMapWrapper {
 	}
 	
 	public void show(Player player) {
+		InteractiveChatDiscordSrvAddon.plugin.imagesViewedCounter.incrementAndGet();
 		DiscordAttachmentEvents.MAP_VIEWERS.put(player, this);
 		
 		ProtocolManager protocollib = ProtocolLibrary.getProtocolManager();
