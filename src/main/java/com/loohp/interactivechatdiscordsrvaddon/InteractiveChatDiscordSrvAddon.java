@@ -22,6 +22,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.ChatColorUtils;
+import com.loohp.interactivechat.Utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordAttachmentEvents;
@@ -217,6 +218,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		discordMainCommands = getConfig().getStringList("DiscordCommands.MainCommand").stream().collect(Collectors.toSet());
 		discordListSubCommand = getConfig().getString("DiscordCommands.SubCommands.ListPlaceholders");
 		*/
+		LanguageUtils.loadTranslations(language);
 	}
 	
 	public BufferedImage getBlockTexture(String str) {
