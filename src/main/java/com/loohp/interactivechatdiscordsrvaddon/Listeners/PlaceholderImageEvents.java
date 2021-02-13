@@ -258,7 +258,7 @@ public class PlaceholderImageEvents {
 			}
 		}
 		
-		if (InteractiveChat.t) {
+		if (InteractiveChat.t && WebData.getInstance() != null) {
 			for (CustomPlaceholder customP : WebData.getInstance().getSpecialPlaceholders()) {
 				long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, customP.getKeyword()) - now;
 				if (cooldown < 0 || cooldown + 100 > customP.getCooldown()) {

@@ -53,6 +53,8 @@ public class ItemMapWrapper {
 	private static Class<?> nmsChatSerializerSubclass;
 	private static Method nmsChatSerializerSubclassAMethod;
 	
+	private static Object nmsItemWorldMapInstance;
+	
 	private static final Comparator<MapIcon> ICON_ORDER = Comparator.comparing(each -> each.getType().ordinal());
 	
 	static {
@@ -70,10 +72,20 @@ public class ItemMapWrapper {
 			
 			nmsItemWorldMapClass = getNMSClass("net.minecraft.server.", "ItemWorldMap");
 			try {
-				nmsItemWorldMapClassContructor = nmsItemWorldMapClass.getDeclaredConstructor();
+				if (InteractiveChat.version.isLegacy()) {
+					nmsItemWorldMapClassContructor = nmsItemWorldMapClass.getDeclaredConstructor();
+					nmsItemWorldMapClassContructor.setAccessible(true);
+					nmsItemWorldMapInstance = nmsItemWorldMapClassContructor.newInstance();
+					nmsItemWorldMapClassContructor.setAccessible(false);
+				} else {
+					nmsItemWorldMapClassContructor = null;
+					nmsItemWorldMapInstance = null;
+				}
 			} catch (NoSuchMethodException e1) {
 				nmsItemWorldMapClassContructor = null;
+				nmsItemWorldMapInstance = null;
 			}
+			
 			nmsWorldClass = getNMSClass("net.minecraft.server.", "World");
 			nmsItemStackClass = getNMSClass("net.minecraft.server.", "ItemStack");
 			nmsItemWorldMapClassGetSavedMapMethod = nmsItemWorldMapClass.getMethod("getSavedMap", nmsItemStackClass, nmsWorldClass);
@@ -135,14 +147,7 @@ public class ItemMapWrapper {
 		}
 		Object nmsItemStackObject = craftItemStackClassAsNMSCopyMethod.invoke(null, itemStack);
 		Object nmsWorldServerObject = craftWorldClassGetHandleMethod.invoke(craftWorldClass.cast(mapView.getWorld()));
-		Object worldMapObject;
-		if (!InteractiveChat.version.isLegacy() || InteractiveChat.version.equals(MCVersion.V1_12) || InteractiveChat.version.equals(MCVersion.V1_11)) {
-			worldMapObject = nmsItemWorldMapClassGetSavedMapMethod.invoke(null, nmsItemStackObject, nmsWorldServerObject);
-		} else {
-			nmsItemWorldMapClassContructor.setAccessible(true);
-			worldMapObject = nmsItemWorldMapClassGetSavedMapMethod.invoke(nmsItemWorldMapClassContructor.newInstance(), nmsItemStackObject, nmsWorldServerObject);
-			nmsItemWorldMapClassContructor.setAccessible(false);
-		}
+		Object worldMapObject = nmsItemWorldMapClassGetSavedMapMethod.invoke(nmsItemWorldMapInstance, nmsItemStackObject, nmsWorldServerObject);
 		colors = (byte[]) nmsWorldMapClassColorsField.get(worldMapObject);
 		Collection<?> nmsMapIconsCollection = ((Map<?, ?>) nmsWorldMapClassDecorationsField.get(worldMapObject)).values();
 		icons.clear();
@@ -229,10 +234,13 @@ public class ItemMapWrapper {
 	    }
 
 	    public static enum Type {
+	    	
 	        PLAYER(), FRAME(), RED_MARKER(), BLUE_MARKER(), TARGET_X(), TARGET_POINT(), PLAYER_OFF_MAP(), PLAYER_OFF_LIMITS(), MANSION(), MONUMENT(), BANNER_WHITE(), BANNER_ORANGE(), BANNER_MAGENTA(), BANNER_LIGHT_BLUE(), BANNER_YELLOW(), BANNER_LIME(), BANNER_PINK(), BANNER_GRAY(), BANNER_LIGHT_GRAY(), BANNER_CYAN(), BANNER_PURPLE(), BANNER_BLUE(), BANNER_BROWN(), BANNER_GREEN(), BANNER_RED(), BANNER_BLACK(), RED_X();
 	    	
+	    	private static final Type[] VALUES = values();
+	    	
 	    	public static Type getByValue(int i) {
-	    		return values()[i];
+	    		return VALUES[i];
 	    	}
 	    }
 	}

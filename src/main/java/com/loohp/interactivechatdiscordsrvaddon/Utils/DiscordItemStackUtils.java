@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.commons.text.WordUtils;
 import org.bukkit.Bukkit;
@@ -43,21 +44,21 @@ public class DiscordItemStackUtils {
 	
 	public static final String DISCORD_EMPTY = "\u200e";
 	
-	private static Method bukkitBukkitClassGetMapShortMethod;
-	private static Method bukkitMapViewClassGetIdMethod;
+	private static Method bukkitBukkitClassGetMapShortMethod = null;
+	private static Method bukkitMapViewClassGetIdMethod = null;
+	private static boolean chatColorHasGetColor = false;
+	private static boolean itemMetaHasUnbreakable = false;
 	
 	static {
 		try {
 			try {
 				bukkitBukkitClassGetMapShortMethod = Bukkit.class.getMethod("getMap", short.class);
-			} catch (NoSuchMethodException e1) {
-				bukkitBukkitClassGetMapShortMethod = null;
-			}
+			} catch (NoSuchMethodException e1) {}
 			try {
 				bukkitMapViewClassGetIdMethod = MapView.class.getMethod("getId");
-			} catch (NoSuchMethodException e1) {
-				bukkitMapViewClassGetIdMethod = null;
-			}
+			} catch (NoSuchMethodException e1) {}
+			chatColorHasGetColor = Stream.of(ChatColor.class.getMethods()).anyMatch(each -> each.getName().equalsIgnoreCase("getColor") && each.getReturnType().equals(Color.class));
+			itemMetaHasUnbreakable = Stream.of(ItemMeta.class.getMethods()).anyMatch(each -> each.getName().equalsIgnoreCase("isUnbreakable") && each.getReturnType().equals(boolean.class));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -71,20 +72,12 @@ public class DiscordItemStackUtils {
 				if (colorStr.length() > 1) {
 					ChatColor chatColor = ColorUtils.toChatColor(colorStr);
 					if (chatColor != null && ChatColorUtils.isColor(chatColor)) {
-						try {
-							return chatColor.getColor();
-						} catch (Throwable e) {
-							return ColorUtils.getColor(chatColor);
-						}
+						return chatColorHasGetColor ? chatColor.getColor() : ColorUtils.getColor(chatColor);
 					}
 				}
 			}
 		}
-		try {
-			return RarityUtils.getRarityColor(item).getColor();
-		} catch (Throwable e) {
-			return ColorUtils.getColor(RarityUtils.getRarityColor(item));
-		}
+		return chatColorHasGetColor ? RarityUtils.getRarityColor(item).getColor() : ColorUtils.getColor(RarityUtils.getRarityColor(item));
 	}
 	
 	public static class DiscordDescription {
@@ -295,13 +288,15 @@ public class DiscordItemStackUtils {
 	}
 	
 	public static boolean isUnbreakble(ItemStack item) {
-		try {
+		if (itemMetaHasUnbreakable) {
 			if (item.hasItemMeta()) {
-				return item.getItemMeta().isUnbreakable();
-			} else {
-				return false;
+				ItemMeta meta = item.getItemMeta();
+				if (meta != null) {
+					return meta.isUnbreakable();
+				}
 			}
-		} catch (Throwable e) {
+			return false;
+		} else {
 			return NBTUtils.getByte(item, "Unbreakable") > 0;
 		}
 	}
