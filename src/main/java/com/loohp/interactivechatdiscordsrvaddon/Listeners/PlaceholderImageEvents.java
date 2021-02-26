@@ -320,7 +320,7 @@ public class PlaceholderImageEvents {
 				if (iData.getItemStack().isPresent()) {
 					ItemStack item = iData.getItemStack().get();
 					Color color = DiscordItemStackUtils.getDiscordColor(item);
-					if (color.equals(Color.white)) {
+					if (color == null || color.equals(Color.white)) {
 						color = new Color(0xFFFFFE);
 					}
 					try {
@@ -453,7 +453,7 @@ public class PlaceholderImageEvents {
 				if (iData.getItemStack().isPresent()) {
 					ItemStack item = iData.getItemStack().get();
 					Color color = DiscordItemStackUtils.getDiscordColor(item);
-					if (color.equals(Color.white)) {
+					if (color == null || color.equals(Color.white)) {
 						color = new Color(0xFFFFFE);
 					}
 					try {
