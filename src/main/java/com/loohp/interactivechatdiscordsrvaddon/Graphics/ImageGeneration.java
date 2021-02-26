@@ -227,7 +227,6 @@ public class ImageGeneration {
 		int amount = item.getAmount();
 		XMaterial xMaterial = XMaterial.matchXMaterial(item);
 		String key = xMaterial.name().toLowerCase();
-		
 		BufferedImage itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture(key);
 		if (itemImage == null) {
 			itemImage = InteractiveChatDiscordSrvAddon.plugin.getBlockTexture(key);
