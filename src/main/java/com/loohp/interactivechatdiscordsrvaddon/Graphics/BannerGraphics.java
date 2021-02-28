@@ -7,12 +7,12 @@ import java.util.List;
 
 import org.bukkit.block.Banner;
 import org.bukkit.block.banner.Pattern;
-import org.bukkit.block.banner.PatternType;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.BlockStateMeta;
 
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
+import com.loohp.interactivechatdiscordsrvaddon.Wrappers.PatternTypeWrapper;
 
 public class BannerGraphics {
 	
@@ -39,9 +39,9 @@ public class BannerGraphics {
 		Graphics2D g = banner.createGraphics();
 		
 		for (Pattern pattern : patterns) {
-			PatternType type = pattern.getPattern();
+			PatternTypeWrapper type = PatternTypeWrapper.fromPatternType(pattern.getPattern());
 			Color color = new Color(pattern.getColor().getColor().asRGB());
-			BufferedImage image = ImageUtils.copyAndGetSubImage(InteractiveChatDiscordSrvAddon.plugin.getBannerTexture(type.name().toLowerCase()), 1, 1, 20, 40);
+			BufferedImage image = ImageUtils.copyAndGetSubImage(InteractiveChatDiscordSrvAddon.plugin.getBannerTexture(type.getAssetName()), 1, 1, 20, 40);
 			BufferedImage colored = ImageUtils.changeColorTo(ImageUtils.copyImage(image), color);
 			
 			BufferedImage output = ImageUtils.multiply(image, colored);
@@ -81,9 +81,9 @@ public class BannerGraphics {
 		g.fillPolygon(new int[] {0, 20, 20, 0}, new int[] {0, 0, 40, 40}, 4);
 		
 		for (Pattern pattern : patterns) {
-			PatternType type = pattern.getPattern();
+			PatternTypeWrapper type = PatternTypeWrapper.fromPatternType(pattern.getPattern());
 			Color color = new Color(pattern.getColor().getColor().asRGB());
-			BufferedImage image = ImageUtils.copyAndGetSubImage(InteractiveChatDiscordSrvAddon.plugin.getBannerTexture(type.name().toLowerCase()), 1, 1, 20, 40);
+			BufferedImage image = ImageUtils.copyAndGetSubImage(InteractiveChatDiscordSrvAddon.plugin.getBannerTexture(type.getAssetName()), 1, 1, 20, 40);
 			BufferedImage colored = ImageUtils.changeColorTo(ImageUtils.copyImage(image), color);
 			
 			BufferedImage output = ImageUtils.multiply(image, colored);
