@@ -5,11 +5,11 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -32,7 +32,6 @@ import com.loohp.interactivechat.ObjectHolders.ICPlaceholder;
 import com.loohp.interactivechat.ObjectHolders.ICPlayer;
 import com.loohp.interactivechat.ObjectHolders.WebData;
 import com.loohp.interactivechat.Utils.CustomStringUtils;
-import com.loohp.interactivechat.Utils.FilledMapUtils;
 import com.loohp.interactivechat.Utils.LanguageUtils;
 import com.loohp.interactivechat.Utils.NBTUtils;
 import com.loohp.interactivechat.Utils.PlaceholderParser;
@@ -44,8 +43,14 @@ import com.loohp.interactivechatdiscordsrvaddon.API.Events.GameMessageProcessInv
 import com.loohp.interactivechatdiscordsrvaddon.API.Events.GameMessageProcessItemEvent;
 import com.loohp.interactivechatdiscordsrvaddon.API.Events.GameMessageProcessPlayerInventoryEvent;
 import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageGeneration;
+import com.loohp.interactivechatdiscordsrvaddon.ObjectHolders.DiscordDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.ObjectHolders.DiscordMessageContent;
+import com.loohp.interactivechatdiscordsrvaddon.ObjectHolders.HoverDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.ObjectHolders.IDProvider;
+import com.loohp.interactivechatdiscordsrvaddon.ObjectHolders.ImageDisplayData;
+import com.loohp.interactivechatdiscordsrvaddon.ObjectHolders.ImageDisplayType;
+import com.loohp.interactivechatdiscordsrvaddon.Registies.DiscordDataRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.ColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ComponentStringUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.DiscordItemStackUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.DiscordItemStackUtils.DiscordDescription;
@@ -70,8 +75,9 @@ import github.scarsz.discordsrv.util.WebhookUtil;
 
 public class PlaceholderImageEvents {
 	
-	private static final IDProvider INVENTORY_ID_PROVIDER = new IDProvider();
-	public static final Map<Integer, ImageDisplayData> DATA = Collections.synchronizedMap(new LinkedHashMap<>());
+	public static final Comparator<DiscordDisplayData> DISPLAY_DATA_COMPARATOR = Comparator.comparing(each -> each.getPosition());
+	private static final IDProvider DATA_ID_PROVIDER = new IDProvider();
+	public static final Map<Integer, DiscordDisplayData> DATA = Collections.synchronizedMap(new LinkedHashMap<>());
 	
 	@Subscribe(priority = ListenerPriority.LOW)
 	public void onDiscordToGame(DiscordGuildMessagePostProcessEvent event) {
@@ -88,12 +94,14 @@ public class PlaceholderImageEvents {
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	@Subscribe(priority = ListenerPriority.HIGHEST)
 	public void onGameToDiscord(GameChatMessagePreProcessEvent event) {
 		InteractiveChatDiscordSrvAddon.plugin.messagesCounter.incrementAndGet();
 		Player sender = event.getPlayer();
 		ICPlayer wrappedSender = new ICPlayer(sender);
 		String message = event.getMessage();
+		String originalMessage = message;
 		long now = System.currentTimeMillis();
 		long uniCooldown = InteractiveChatAPI.getPlayerUniversalCooldown(sender) - now;
 		
@@ -112,7 +120,6 @@ public class PlaceholderImageEvents {
 			long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, InteractiveChat.itemPlaceholder) - now;
 			if (cooldown < 0 || cooldown + 100 > ConfigManager.getConfig().getLong("ItemDisplay.Item.Cooldown") * 1000) {
 				if (message.toLowerCase().contains(InteractiveChat.itemPlaceholder.toLowerCase())) {
-					@SuppressWarnings("deprecation")
 					ItemStack item = sender.getEquipment().getItemInHand();
 					if (item == null) {
 						item = new ItemStack(Material.AIR);
@@ -141,7 +148,9 @@ public class PlaceholderImageEvents {
 					String replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemReplaceText).replace("{Amount}", String.valueOf(amount)).replace("{Item}", itemStr));
 					message = message.replaceAll((InteractiveChat.itemCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.itemPlaceholder), replaceText);
 					if (InteractiveChatDiscordSrvAddon.plugin.itemImage) {
-						int inventoryId = INVENTORY_ID_PROVIDER.getNext();
+						int inventoryId = DATA_ID_PROVIDER.getNext();
+						int position = InteractiveChat.itemCaseSensitive ? originalMessage.indexOf(InteractiveChat.itemPlaceholder) : originalMessage.toLowerCase().indexOf(InteractiveChat.itemPlaceholder.toLowerCase());
+						
 						String title = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemTitle));
 						
 						Inventory inv = null;
@@ -168,9 +177,9 @@ public class PlaceholderImageEvents {
 							message = gameMessageProcessItemEvent.getMessage();
 							title = gameMessageProcessItemEvent.getTitle();
 							if (gameMessageProcessItemEvent.hasInventory()) {
-								DATA.put(inventoryId, new ImageDisplayData(sender, title, ImageDisplayType.ITEM_CONTAINER, gameMessageProcessItemEvent.getItemStack().clone(), gameMessageProcessItemEvent.getInventory()));
+								DATA.put(inventoryId, new ImageDisplayData(sender, position, title, ImageDisplayType.ITEM_CONTAINER, gameMessageProcessItemEvent.getItemStack().clone(), gameMessageProcessItemEvent.getInventory()));
 							} else {
-								DATA.put(inventoryId, new ImageDisplayData(sender, title, ImageDisplayType.ITEM, gameMessageProcessItemEvent.getItemStack().clone()));
+								DATA.put(inventoryId, new ImageDisplayData(sender, position, title, ImageDisplayType.ITEM, gameMessageProcessItemEvent.getItemStack().clone()));
 							}
 						}
 						message += "<ICD=" + inventoryId + ">";
@@ -186,7 +195,9 @@ public class PlaceholderImageEvents {
 					String replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.invReplaceText));
 					message = message.replaceAll((InteractiveChat.invCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.invPlaceholder), replaceText);
 					if (InteractiveChatDiscordSrvAddon.plugin.invImage) {
-						int inventoryId = INVENTORY_ID_PROVIDER.getNext();
+						int inventoryId = DATA_ID_PROVIDER.getNext();
+						int position = InteractiveChat.invCaseSensitive ? originalMessage.indexOf(InteractiveChat.invPlaceholder) : originalMessage.toLowerCase().indexOf(InteractiveChat.invPlaceholder.toLowerCase());
+						
 						Inventory inv = Bukkit.createInventory(null, 45);
 						for (int j = 0; j < sender.getInventory().getSize(); j++) {
 							if (sender.getInventory().getItem(j) != null) {
@@ -202,7 +213,7 @@ public class PlaceholderImageEvents {
 						if (!gameMessageProcessPlayerInventoryEvent.isCancelled()) {
 							message = gameMessageProcessPlayerInventoryEvent.getMessage();
 							title = gameMessageProcessPlayerInventoryEvent.getTitle();
-							DATA.put(inventoryId, new ImageDisplayData(sender, title, ImageDisplayType.INVENTORY, true, gameMessageProcessPlayerInventoryEvent.getInventory()));
+							DATA.put(inventoryId, new ImageDisplayData(sender, position, title, ImageDisplayType.INVENTORY, true, gameMessageProcessPlayerInventoryEvent.getInventory()));
 						}
 						
 						message += "<ICD=" + inventoryId + ">";
@@ -218,7 +229,9 @@ public class PlaceholderImageEvents {
 					String replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.enderReplaceText));
 					message = message.replaceAll((InteractiveChat.enderCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.enderPlaceholder), replaceText);
 					if (InteractiveChatDiscordSrvAddon.plugin.enderImage) {
-						int inventoryId = INVENTORY_ID_PROVIDER.getNext();
+						int inventoryId = DATA_ID_PROVIDER.getNext();
+						int position = InteractiveChat.enderCaseSensitive ? originalMessage.indexOf(InteractiveChat.enderPlaceholder) : originalMessage.toLowerCase().indexOf(InteractiveChat.enderPlaceholder.toLowerCase());
+						
 						Inventory inv = Bukkit.createInventory(null, 27);
 						for (int j = 0; j < sender.getEnderChest().getSize(); j++) {
 							if (sender.getEnderChest().getItem(j) != null) {
@@ -234,7 +247,7 @@ public class PlaceholderImageEvents {
 						if (!gameMessageProcessInventoryEvent.isCancelled()) {
 							message = gameMessageProcessInventoryEvent.getMessage();
 							title = gameMessageProcessInventoryEvent.getTitle();
-							DATA.put(inventoryId, new ImageDisplayData(sender, title, ImageDisplayType.ENDERCHEST, gameMessageProcessInventoryEvent.getInventory()));
+							DATA.put(inventoryId, new ImageDisplayData(sender, position, title, ImageDisplayType.ENDERCHEST, gameMessageProcessInventoryEvent.getInventory()));
 						}
 						
 						message += "<ICD=" + inventoryId + ">";
@@ -246,12 +259,25 @@ public class PlaceholderImageEvents {
 		for (ICPlaceholder placeholder : InteractiveChatAPI.getICPlaceholderList()) {
 			if (!placeholder.isBuildIn()) {
 				CustomPlaceholder customP = placeholder.getCustomPlaceholder().get();
-				if ((!InteractiveChat.useCustomPlaceholderPermissions || (InteractiveChat.useCustomPlaceholderPermissions && sender.hasPermission(customP.getPermission()))) && customP.getReplace().isEnabled()) {
+				if (!InteractiveChat.useCustomPlaceholderPermissions || (InteractiveChat.useCustomPlaceholderPermissions && sender.hasPermission(customP.getPermission()))) {
 					long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, customP.getKeyword()) - now;
-					if (cooldown < 0 || cooldown + 100 > customP.getCooldown()) {
-						if (message.toLowerCase().contains(customP.getKeyword().toLowerCase())) {
-							String replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
+					if (message.toLowerCase().contains(customP.getKeyword().toLowerCase()) && (cooldown < 0 || cooldown + 100 > customP.getCooldown())) {
+						String replaceText = customP.getKeyword();
+						if (customP.getReplace().isEnabled()) {
+							replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
 							message = message.replaceAll((customP.isCaseSensitive() ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(customP.getKeyword()), replaceText);
+						}
+						if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && customP.getHover().isEnabled() && !InteractiveChatDiscordSrvAddon.plugin.hoverIngore.contains(customP.getPosition())) {
+							int hoverId = DATA_ID_PROVIDER.getNext();
+							int position = customP.isCaseSensitive() ? originalMessage.indexOf(customP.getKeyword()) : originalMessage.toLowerCase().indexOf(customP.getKeyword().toLowerCase());
+							
+							String hoverText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getHover().getText()));
+							Color color = ColorUtils.getFirstColor(customP.getHover().getText());
+							if (color == null) {
+								color = DiscordDataRegistry.DISCORD_HOVER_COLOR;
+							}
+							DATA.put(hoverId, new HoverDisplayData(sender, position, replaceText, hoverText, color));
+							message += "<ICD=" + hoverId + ">";
 						}
 					}
 				}
@@ -261,10 +287,23 @@ public class PlaceholderImageEvents {
 		if (InteractiveChat.t && WebData.getInstance() != null) {
 			for (CustomPlaceholder customP : WebData.getInstance().getSpecialPlaceholders()) {
 				long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, customP.getKeyword()) - now;
-				if (cooldown < 0 || cooldown + 100 > customP.getCooldown()) {
-					if (message.toLowerCase().contains(customP.getKeyword().toLowerCase())) {
-						String replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
+				if (message.toLowerCase().contains(customP.getKeyword().toLowerCase()) && (cooldown < 0 || cooldown + 100 > customP.getCooldown())) {
+					String replaceText = customP.getKeyword();
+					if (customP.getReplace().isEnabled()) {
+						replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
 						message = message.replaceAll((customP.isCaseSensitive() ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(customP.getKeyword()), replaceText);
+					}
+					if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && customP.getHover().isEnabled() && !InteractiveChatDiscordSrvAddon.plugin.hoverIngore.contains(customP.getPosition())) {
+						int hoverId = DATA_ID_PROVIDER.getNext();
+						int position = customP.isCaseSensitive() ? originalMessage.indexOf(customP.getKeyword()) : originalMessage.toLowerCase().indexOf(customP.getKeyword().toLowerCase());
+						
+						String hoverText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getHover().getText()));
+						Color color = ColorUtils.getFirstColor(customP.getHover().getText());
+						if (color == null) {
+							color = DiscordDataRegistry.DISCORD_HOVER_COLOR;
+						}
+						DATA.put(hoverId, new HoverDisplayData(sender, position, replaceText, hoverText, color));
+						message += "<ICD=" + hoverId + ">";
 					}
 				}
 			}
@@ -312,85 +351,115 @@ public class PlaceholderImageEvents {
 			message.delete().queue();
 			
 			List<DiscordMessageContent> contents = new ArrayList<>();
+			List<DiscordDisplayData> dataList = new ArrayList<>();
 			
 			for (int key : matches) {
-				ImageDisplayData iData = DATA.remove(key);
-				ImageDisplayType type = iData.getType();
-				String title = iData.getTitle();
-				if (iData.getItemStack().isPresent()) {
-					ItemStack item = iData.getItemStack().get();
-					Color color = DiscordItemStackUtils.getDiscordColor(item);
-					if (color == null || color.equals(Color.white)) {
-						color = new Color(0xFFFFFE);
-					}
-					try {
-						if (type.equals(ImageDisplayType.ITEM_CONTAINER)) {
-							DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
-							BufferedImage image = ImageGeneration.getItemStackImage(item);
-							ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
-							ImageIO.write(image, "png", itemOs);
-							BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get());
-							ByteArrayOutputStream contentOs = new ByteArrayOutputStream();
-							ImageIO.write(container, "png", contentOs);
-							DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), "attachment://Container.png", color);
-							content.addAttachment("Item.png", itemOs.toByteArray());
-							content.addAttachment("Container.png", contentOs.toByteArray());
-							contents.add(content);
-						} else {
-							DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
-							BufferedImage image = ImageGeneration.getItemStackImage(item);
-							ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
-							ImageIO.write(image, "png", itemOs);
-							if (iData.isFilledMap()) {
-								BufferedImage map = ImageGeneration.getMapImage(item);
-								ByteArrayOutputStream mapOs = new ByteArrayOutputStream();
-								ImageIO.write(map, "png", mapOs);
-								DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), "attachment://Map.png", color);
+				DiscordDisplayData data = DATA.remove(key); 
+				if (data != null) {
+					dataList.add(data);
+				}
+			}
+			
+			Collections.sort(dataList, DISPLAY_DATA_COMPARATOR);
+			
+			for (DiscordDisplayData data : dataList) {
+				if (data instanceof ImageDisplayData) {
+					ImageDisplayData iData = (ImageDisplayData) data;
+					ImageDisplayType type = iData.getType();
+					String title = iData.getTitle();
+					if (iData.getItemStack().isPresent()) {
+						ItemStack item = iData.getItemStack().get();
+						Color color = DiscordItemStackUtils.getDiscordColor(item);
+						if (color == null || color.equals(Color.white)) {
+							color = new Color(0xFFFFFE);
+						}
+						try {
+							if (type.equals(ImageDisplayType.ITEM_CONTAINER)) {
+								DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
+								BufferedImage image = ImageGeneration.getItemStackImage(item);
+								ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
+								ImageIO.write(image, "png", itemOs);
+								BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get());
+								ByteArrayOutputStream contentOs = new ByteArrayOutputStream();
+								ImageIO.write(container, "png", contentOs);
+								DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), "attachment://Container.png", color);
 								content.addAttachment("Item.png", itemOs.toByteArray());
-								content.addAttachment("Map.png", mapOs.toByteArray());
+								content.addAttachment("Container.png", contentOs.toByteArray());
 								contents.add(content);
 							} else {
-								DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), null, color);
-								content.addAttachment("Item.png", itemOs.toByteArray());
-								contents.add(content);
+								DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
+								BufferedImage image = ImageGeneration.getItemStackImage(item);
+								ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
+								ImageIO.write(image, "png", itemOs);
+								if (iData.isFilledMap()) {
+									BufferedImage map = ImageGeneration.getMapImage(item);
+									ByteArrayOutputStream mapOs = new ByteArrayOutputStream();
+									ImageIO.write(map, "png", mapOs);
+									DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), "attachment://Map.png", color);
+									content.addAttachment("Item.png", itemOs.toByteArray());
+									content.addAttachment("Map.png", mapOs.toByteArray());
+									contents.add(content);
+								} else {
+									DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), null, color);
+									content.addAttachment("Item.png", itemOs.toByteArray());
+									contents.add(content);
+								}
 							}
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-					}	
-				} else if (iData.getInventory().isPresent()) {
-					Inventory inv = iData.getInventory().get();
-					try {
-						BufferedImage image;
-						if (iData.isPlayerInventory()) {
-							if (InteractiveChatDiscordSrvAddon.plugin.usePlayerInvView) {
-								image = ImageGeneration.getPlayerInventoryImage(inv, iData.getPlayer());
+						} catch (Exception e) {
+							e.printStackTrace();
+						}	
+					} else if (iData.getInventory().isPresent()) {
+						Inventory inv = iData.getInventory().get();
+						try {
+							BufferedImage image;
+							if (iData.isPlayerInventory()) {
+								if (InteractiveChatDiscordSrvAddon.plugin.usePlayerInvView) {
+									image = ImageGeneration.getPlayerInventoryImage(inv, iData.getPlayer());
+								} else {
+									image = ImageGeneration.getInventoryImage(inv);
+								}
 							} else {
 								image = ImageGeneration.getInventoryImage(inv);
 							}
-						} else {
-							image = ImageGeneration.getInventoryImage(inv);
+							ByteArrayOutputStream os = new ByteArrayOutputStream();
+							Color color;
+							switch (type) {
+							case ENDERCHEST:
+								color = InteractiveChatDiscordSrvAddon.plugin.enderColor;
+								break;
+							case INVENTORY:
+								color = InteractiveChatDiscordSrvAddon.plugin.invColor;
+								break;
+							default:
+								color = Color.black;
+								break;
+							}
+							ImageIO.write(image, "png", os);
+							DiscordMessageContent content = new DiscordMessageContent(title, null, null, "attachment://Inventory.png", color);
+							content.addAttachment("Inventory.png", os.toByteArray());
+							contents.add(content);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}			
+					}
+				} else if (data instanceof HoverDisplayData) {
+					try {
+						HoverDisplayData hData = (HoverDisplayData) data;
+						String title = hData.getDisplayText();
+						String body = hData.getHoverText();
+						Color color = hData.getColor();
+						DiscordMessageContent content = new DiscordMessageContent(title, null, body, null, color);
+						if (InteractiveChatDiscordSrvAddon.plugin.hoverImage) {
+							BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.getMiscTexture("hover_cursor");
+							ByteArrayOutputStream os = new ByteArrayOutputStream();
+							ImageIO.write(image, "png", os);
+							content.setAuthorIconUrl("attachment://Hover.png");
+							content.addAttachment("Hover.png", os.toByteArray());
 						}
-						ByteArrayOutputStream os = new ByteArrayOutputStream();
-						Color color;
-						switch (type) {
-						case ENDERCHEST:
-							color = InteractiveChatDiscordSrvAddon.plugin.enderColor;
-							break;
-						case INVENTORY:
-							color = InteractiveChatDiscordSrvAddon.plugin.invColor;
-							break;
-						default:
-							color = Color.black;
-							break;
-						}
-						ImageIO.write(image, "png", os);
-						DiscordMessageContent content = new DiscordMessageContent(title, null, null, "attachment://Inventory.png", color);
-						content.addAttachment("Inventory.png", os.toByteArray());
 						contents.add(content);
 					} catch (Exception e) {
 						e.printStackTrace();
-					}			
+					}	
 				}
 			}
 			
@@ -446,84 +515,115 @@ public class PlaceholderImageEvents {
 			Player player = PlaceholderImageEvents.DATA.get(matches.iterator().next()).getPlayer();
 
 			List<DiscordMessageContent> contents = new ArrayList<>();
+			List<DiscordDisplayData> dataList = new ArrayList<>();
+			
 			for (int key : matches) {
-				ImageDisplayData iData = PlaceholderImageEvents.DATA.remove(key);
-				ImageDisplayType type = iData.getType();
-				String title = iData.getTitle();
-				if (iData.getItemStack().isPresent()) {
-					ItemStack item = iData.getItemStack().get();
-					Color color = DiscordItemStackUtils.getDiscordColor(item);
-					if (color == null || color.equals(Color.white)) {
-						color = new Color(0xFFFFFE);
-					}
-					try {
-						if (type.equals(ImageDisplayType.ITEM_CONTAINER)) {
-							DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
-							BufferedImage image = ImageGeneration.getItemStackImage(item);
-							ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
-							ImageIO.write(image, "png", itemOs);
-							BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get());
-							ByteArrayOutputStream contentOs = new ByteArrayOutputStream();
-							ImageIO.write(container, "png", contentOs);
-							DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), "attachment://Container.png", color);
-							content.addAttachment("Item.png", itemOs.toByteArray());
-							content.addAttachment("Container.png", contentOs.toByteArray());
-							contents.add(content);
-						} else {
-							DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
-							BufferedImage image = ImageGeneration.getItemStackImage(item);
-							ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
-							ImageIO.write(image, "png", itemOs);
-							if (iData.isFilledMap()) {
-								BufferedImage map = ImageGeneration.getMapImage(item);
-								ByteArrayOutputStream mapOs = new ByteArrayOutputStream();
-								ImageIO.write(map, "png", mapOs);
-								DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), "attachment://Map.png", color);
+				DiscordDisplayData data = DATA.remove(key); 
+				if (data != null) {
+					dataList.add(data);
+				}
+			}
+			
+			Collections.sort(dataList, DISPLAY_DATA_COMPARATOR);
+			
+			for (DiscordDisplayData data : dataList) {
+				if (data instanceof ImageDisplayData) {
+					ImageDisplayData iData = (ImageDisplayData) data;
+					ImageDisplayType type = iData.getType();
+					String title = iData.getTitle();
+					if (iData.getItemStack().isPresent()) {
+						ItemStack item = iData.getItemStack().get();
+						Color color = DiscordItemStackUtils.getDiscordColor(item);
+						if (color == null || color.equals(Color.white)) {
+							color = new Color(0xFFFFFE);
+						}
+						try {
+							if (type.equals(ImageDisplayType.ITEM_CONTAINER)) {
+								DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
+								BufferedImage image = ImageGeneration.getItemStackImage(item);
+								ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
+								ImageIO.write(image, "png", itemOs);
+								BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get());
+								ByteArrayOutputStream contentOs = new ByteArrayOutputStream();
+								ImageIO.write(container, "png", contentOs);
+								DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), "attachment://Container.png", color);
 								content.addAttachment("Item.png", itemOs.toByteArray());
-								content.addAttachment("Map.png", mapOs.toByteArray());
+								content.addAttachment("Container.png", contentOs.toByteArray());
 								contents.add(content);
 							} else {
-								DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), null, color);
-								content.addAttachment("Item.png", itemOs.toByteArray());
-								contents.add(content);
+								DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
+								BufferedImage image = ImageGeneration.getItemStackImage(item);
+								ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
+								ImageIO.write(image, "png", itemOs);
+								if (iData.isFilledMap()) {
+									BufferedImage map = ImageGeneration.getMapImage(item);
+									ByteArrayOutputStream mapOs = new ByteArrayOutputStream();
+									ImageIO.write(map, "png", mapOs);
+									DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), "attachment://Map.png", color);
+									content.addAttachment("Item.png", itemOs.toByteArray());
+									content.addAttachment("Map.png", mapOs.toByteArray());
+									contents.add(content);
+								} else {
+									DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), null, color);
+									content.addAttachment("Item.png", itemOs.toByteArray());
+									contents.add(content);
+								}
 							}
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-					}	
-				} else if (iData.getInventory().isPresent()) {
-					Inventory inv = iData.getInventory().get();
-					try {
-						BufferedImage image;
-						if (iData.isPlayerInventory()) {
-							if (InteractiveChatDiscordSrvAddon.plugin.usePlayerInvView) {
-								image = ImageGeneration.getPlayerInventoryImage(inv, iData.getPlayer());
+						} catch (Exception e) {
+							e.printStackTrace();
+						}	
+					} else if (iData.getInventory().isPresent()) {
+						Inventory inv = iData.getInventory().get();
+						try {
+							BufferedImage image;
+							if (iData.isPlayerInventory()) {
+								if (InteractiveChatDiscordSrvAddon.plugin.usePlayerInvView) {
+									image = ImageGeneration.getPlayerInventoryImage(inv, iData.getPlayer());
+								} else {
+									image = ImageGeneration.getInventoryImage(inv);
+								}
 							} else {
 								image = ImageGeneration.getInventoryImage(inv);
 							}
-						} else {
-							image = ImageGeneration.getInventoryImage(inv);
+							ByteArrayOutputStream os = new ByteArrayOutputStream();
+							Color color;
+							switch (type) {
+							case ENDERCHEST:
+								color = InteractiveChatDiscordSrvAddon.plugin.enderColor;
+								break;
+							case INVENTORY:
+								color = InteractiveChatDiscordSrvAddon.plugin.invColor;
+								break;
+							default:
+								color = Color.black;
+								break;
+							}
+							ImageIO.write(image, "png", os);
+							DiscordMessageContent content = new DiscordMessageContent(title, null, null, "attachment://Inventory.png", color);
+							content.addAttachment("Inventory.png", os.toByteArray());
+							contents.add(content);
+						} catch (Exception e) {
+							e.printStackTrace();
 						}
-						ByteArrayOutputStream os = new ByteArrayOutputStream();
-						Color color;
-						switch (type) {
-						case ENDERCHEST:
-							color = InteractiveChatDiscordSrvAddon.plugin.enderColor;
-							break;
-						case INVENTORY:
-							color = InteractiveChatDiscordSrvAddon.plugin.invColor;
-							break;
-						default:
-							color = Color.black;
-							break;
+					}
+				} else if (data instanceof HoverDisplayData) {
+					try {
+						HoverDisplayData hData = (HoverDisplayData) data;
+						String title = hData.getDisplayText();
+						String body = hData.getHoverText();
+						Color color = hData.getColor();
+						DiscordMessageContent content = new DiscordMessageContent(title, null, body, null, color);
+						if (InteractiveChatDiscordSrvAddon.plugin.hoverImage) {
+							BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.getMiscTexture("hover_cursor");
+							ByteArrayOutputStream os = new ByteArrayOutputStream();
+							ImageIO.write(image, "png", os);
+							content.setAuthorIconUrl("attachment://Hover.png");
+							content.addAttachment("Hover.png", os.toByteArray());
 						}
-						ImageIO.write(image, "png", os);
-						DiscordMessageContent content = new DiscordMessageContent(title, null, null, "attachment://Inventory.png", color);
-						content.addAttachment("Inventory.png", os.toByteArray());
 						contents.add(content);
 					} catch (Exception e) {
 						e.printStackTrace();
-					}			
+					}	
 				}
 			}
 			List<WebhookMessageBuilder> messagesToSend = new ArrayList<>();
@@ -570,78 +670,6 @@ public class PlaceholderImageEvents {
 				client.send(builder.setUsername(username).setAvatarUrl(avatarUrl).build());
 			}
 			client.close();
-		}
-	}
-	
-	public static enum ImageDisplayType {
-		ITEM,
-		ITEM_CONTAINER,
-		INVENTORY,
-		ENDERCHEST;
-	}
-	
-	public static class ImageDisplayData {
-		
-		private final Player player;
-		private final String title;
-		private final ImageDisplayType type;
-		private final Optional<Inventory> inventory;
-		private final boolean isPlayerInventory;
-		private final Optional<ItemStack> item;
-		private final boolean isFilledMap;
-		
-		private ImageDisplayData(Player player, String title, ImageDisplayType type, Inventory inventory, boolean isPlayerInventory, ItemStack item, boolean isFilledMap) {
-			this.type = type;
-			this.player = player;
-			this.title = title;
-			this.inventory = Optional.ofNullable(inventory);
-			this.isPlayerInventory = isPlayerInventory;
-			this.item = Optional.ofNullable(item);
-			this.isFilledMap = isFilledMap;
-		}
-		
-		public ImageDisplayData(Player player, String title, ImageDisplayType type, Inventory inventory) {
-			this(player, title, type, inventory, false, null, false);
-		}
-		
-		public ImageDisplayData(Player player, String title, ImageDisplayType type, boolean isPlayerInventory, Inventory inventory) {
-			this(player, title, type, inventory, isPlayerInventory, null, false);
-		}
-		
-		public ImageDisplayData(Player player, String title, ImageDisplayType type, ItemStack itemstack) {
-			this(player, title, type, null, false, itemstack, FilledMapUtils.isFilledMap(itemstack));
-		}
-		
-		public ImageDisplayData(Player player, String title, ImageDisplayType type, ItemStack itemstack, Inventory inventory) {
-			this(player, title, type, inventory, false, itemstack, FilledMapUtils.isFilledMap(itemstack));
-		}
-		
-		public Player getPlayer() {
-			return player;
-		}
-		
-		public String getTitle() {
-			return title;
-		}
-
-		public Optional<Inventory> getInventory() {
-			return inventory;
-		}
-		
-		public boolean isPlayerInventory() {
-			return isPlayerInventory;
-		}
-
-		public Optional<ItemStack> getItemStack() {
-			return item;
-		}
-		
-		public boolean isFilledMap() {
-			return isFilledMap;
-		}
-
-		public ImageDisplayType getType() {
-			return type;
 		}
 	}
 

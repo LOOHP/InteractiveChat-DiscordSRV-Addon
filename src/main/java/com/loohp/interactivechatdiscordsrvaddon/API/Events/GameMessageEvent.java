@@ -6,11 +6,12 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
+/**
+ * This is the base class of all GameMessageEvents
+ * @author LOOHP
+ *
+ */
 public class GameMessageEvent extends Event implements Cancellable {
-	
-	/*
-	 * This is the base class of all GameMessageEvents
-	 */
 
 	private Player sender;
 	private String message;

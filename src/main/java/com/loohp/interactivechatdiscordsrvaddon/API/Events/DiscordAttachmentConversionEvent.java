@@ -6,6 +6,11 @@ import org.bukkit.event.HandlerList;
 
 import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordAttachmentEvents.DiscordAttachmentData;
 
+/**
+ * This event is called when a discord attachment had been processed.
+ * @author LOOHP
+ *
+ */
 public class DiscordAttachmentConversionEvent extends Event {
 	
 	private final String url;

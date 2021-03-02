@@ -3,12 +3,17 @@ package com.loohp.interactivechatdiscordsrvaddon.Utils;
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
+
+import com.loohp.interactivechat.Utils.ChatColorUtils;
 
 import net.md_5.bungee.api.ChatColor;
 
 public class ColorUtils {
 	
 	private static Map<ChatColor, Color> colors = new HashMap<>();
+	
+	private static boolean chatColorHasGetColor = false;
 	
 	static {
 		colors.put(ChatColor.BLACK, new Color(0x000000));
@@ -27,6 +32,8 @@ public class ColorUtils {
 	    colors.put(ChatColor.LIGHT_PURPLE, new Color(0xFF55FF));
 	    colors.put(ChatColor.YELLOW, new Color(0xFFFF55));
 	    colors.put(ChatColor.WHITE, new Color(0xFFFFFF));
+	    
+	    chatColorHasGetColor = Stream.of(ChatColor.class.getMethods()).anyMatch(each -> each.getName().equalsIgnoreCase("getColor") && each.getReturnType().equals(Color.class));
 	}
 	
 	public static ChatColor toChatColor(String str) {
@@ -56,5 +63,16 @@ public class ColorUtils {
 	
 	public static String rgb2Hex(Color color) {
 		return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+	}
+	
+	public static Color getFirstColor(String str) {
+		String colorStr = ChatColorUtils.getFirstColors(str);
+		if (colorStr.length() > 1) {
+			ChatColor chatColor = toChatColor(colorStr);
+			if (chatColor != null && ChatColorUtils.isColor(chatColor)) {
+				return chatColorHasGetColor ? chatColor.getColor() : getColor(chatColor);
+			}
+		}
+		return null;
 	}
 }

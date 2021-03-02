@@ -5,7 +5,7 @@
 	<groupId>com.loohp.interactivechatdiscordsrvaddon</groupId>
 	<artifactId>InteractiveChatDiscordSrvAddon</artifactId>
 	<name>InteractiveChatDiscordSrvAddon</name>
-	<version>1.3.2.7</version>
+	<version>1.3.3.0</version>
 
 	<description>Have InteractiveChat Placeholders translated on DiscordSRV discord messages.</description>
 	<url>https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon</url>
@@ -229,8 +229,8 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>Spigot-1.16.3</groupId>
-			<artifactId>Spigot-1.16.3</artifactId>
+			<groupId>Spigot-1.16.4</groupId>
+			<artifactId>Spigot-1.16.4</artifactId>
 			<version>1.0</version>
 			<systemPath>${basedir}/lib/spigot-1.16.4.jar</systemPath>
 			<scope>system</scope>
@@ -244,13 +244,13 @@
 		<dependency>
 			<groupId>com.comphenix.protocol</groupId>
 			<artifactId>ProtocolLib</artifactId>
-			<version>4.6.0</version>
+			<version>4.6.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.loohp</groupId>
 			<artifactId>InteractiveChat</artifactId>
-			<version>3.2.9.19</version>
+			<version>3.2.10.3</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>

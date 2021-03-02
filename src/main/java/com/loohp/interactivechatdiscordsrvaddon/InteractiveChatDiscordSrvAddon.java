@@ -9,9 +9,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -76,6 +78,10 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public String itemDisplayMultiple = "";
 	public Color invColor = Color.black;
 	public Color enderColor = Color.black;
+	
+	public boolean hoverEnabled = true;
+	public boolean hoverImage = true;
+	public Set<Integer> hoverIngore = new HashSet<>();
 	
 	public String reloadConfigMessage;
 	public String reloadTextureMessage;
@@ -190,6 +196,11 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		enderImage = getConfig().getBoolean("InventoryImage.EnderChest.Enabled");
 		
 		usePlayerInvView = getConfig().getBoolean("InventoryImage.Inventory.UsePlayerInventoryView");
+		
+		hoverEnabled = getConfig().getBoolean("HoverEventDisplay.Enabled");
+		hoverImage = getConfig().getBoolean("HoverEventDisplay.ShowCursorImage");
+		hoverIngore.clear();
+		hoverIngore = getConfig().getIntegerList("HoverEventDisplay.IgnoredPlaceholderIndexes").stream().collect(Collectors.toSet());
 		
 		convertDiscordAttachments = getConfig().getBoolean("DiscordAttachments.Convert");
 		discordAttachmentsFormattingText = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordAttachments.Formatting.Text"));

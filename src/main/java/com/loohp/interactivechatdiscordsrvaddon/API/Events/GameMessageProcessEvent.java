@@ -2,11 +2,12 @@ package com.loohp.interactivechatdiscordsrvaddon.API.Events;
 
 import org.bukkit.entity.Player;
 
+/**
+ * This is the base class of all GameMessageProcessEvents
+ * @author LOOHP
+ *
+ */
 public class GameMessageProcessEvent extends GameMessageEvent {
-	
-	/*
-	 * This is the base class of all GameMessageProcessEvents
-	 */
 
 	private int processId;
 	private String title;

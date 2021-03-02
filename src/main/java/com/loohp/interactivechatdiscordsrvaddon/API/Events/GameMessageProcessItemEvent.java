@@ -6,15 +6,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+/**
+ * This event is called after the plugin translate an item placeholder.<br>
+ * hasInventory() is true if this item is a container (like a shulker box)<br>
+ * getInventory() is null if hasInventory() is false<br>
+ * setInventory() accepts null as value<br>
+ * You can change the contents of the inventory/item in this event.
+ * @author LOOHP
+ *
+ */
 public class GameMessageProcessItemEvent extends GameMessageProcessEvent {
-	
-	/*
-	 * This event is called after the plugin translate an item placeholder.
-	 * hasInventory() is true if this item is a container (like a shulker box)
-	 * getInventory() is null if hasInventory() is false
-	 * setInventory() accepts null as value
-	 * You can change the contents of the inventory/item in this event.
-	 */
 
 	private ItemStack itemstack;
 	private Optional<Inventory> inventory;

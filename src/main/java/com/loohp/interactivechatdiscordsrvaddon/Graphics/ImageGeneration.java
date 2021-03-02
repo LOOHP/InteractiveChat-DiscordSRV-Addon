@@ -30,6 +30,7 @@ import com.cryptomorin.xseries.SkullUtils;
 import com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.FilledMapUtils;
+import com.loohp.interactivechat.Utils.HashUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.PotionUtils;
@@ -46,6 +47,8 @@ public class ImageGeneration {
 	private static final int SPACING = 36;
 	private static final String FULL_BODY_IMAGE_KEY = "FullBodyImage";
 	private static final String PLAYER_HEAD_KEY = "PlayerHeadImage";
+	private static final String INVENTORY_KEY = "Inventory";
+	private static final String PLAYER_INVENTORY_KEY = "PlayerInventory";
 	
 	public static BufferedImage getItemStackImage(ItemStack item) throws IOException {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
@@ -66,9 +69,16 @@ public class ImageGeneration {
 		return background;
 	}
 	
-	public static BufferedImage getInventoryImage(Inventory inventory) throws IOException {
+	public static BufferedImage getInventoryImage(Inventory inventory) throws Exception {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();
+		
+		String key = INVENTORY_KEY + HashUtils.createSha1(inventory);
+		Cache<?> cache = Cache.getCache(key);
+		if (cache != null) {
+			return ImageUtils.copyImage((BufferedImage) cache.getObject());
+		}
+		
 		int rows = inventory.getSize() / 9;
 		BufferedImage background = InteractiveChatDiscordSrvAddon.plugin.getGUITexture(rows + "_rows");
 		
@@ -91,12 +101,21 @@ public class ImageGeneration {
 		}
 		g.dispose();
 		
+		Cache.putCache(key, target, 2400);
+		
 		return target;
 	}
 	
 	public static BufferedImage getPlayerInventoryImage(Inventory inventory, Player player) throws Exception {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();
+		
+		String key = PLAYER_INVENTORY_KEY + player.getUniqueId().toString() + HashUtils.createSha1(inventory);
+		Cache<?> cache = Cache.getCache(key);
+		if (cache != null) {
+			return ImageUtils.copyImage((BufferedImage) cache.getObject());
+		}
+		
 		BufferedImage background = InteractiveChatDiscordSrvAddon.plugin.getGUITexture("player_inventory");
 		
 		BufferedImage target = new BufferedImage(background.getWidth(), background.getHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -197,6 +216,8 @@ public class ImageGeneration {
 		g.drawImage(puppet, 71, 28, null);
 		
 		g.dispose();
+		
+		Cache.putCache(key, target, 2400);
 		
 		return target;
 	}

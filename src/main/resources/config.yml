@@ -16,6 +16,15 @@ InventoryImage:
     EmbedColor: "#FF55FF"
     Enabled: true
 
+HoverEventDisplay:
+  #Whether or not to show hover event text
+  Enabled: true
+  #Whether or not to show the cursor image
+  ShowCursorImage: true
+  #Which custom placeholder should have their hover event text ignored
+  #This is a list of integer by indexes
+  IgnoredPlaceholderIndexes: []
+
 DiscordAttachments:
   #Whether or not to convert discord attachments from diguesting urls into clickable text in chat
   Convert: true
