@@ -58,6 +58,24 @@ public class ImageUtils {
 		return image;
 	}
 	
+	public static BufferedImage multiply(BufferedImage image, double value) {
+		for (int y = 0; y < image.getHeight(); y++) {
+			for (int x = 0; x < image.getWidth(); x++) {
+				int colorValue = image.getRGB(x, y);
+				Color color = new Color(colorValue, true);
+				
+				if (color.getAlpha() != 0) {
+					int red = (int) (color.getRed() * value);
+					int green = (int) (color.getGreen() * value);
+					int blue = (int) (color.getBlue() * value);
+					color = new Color(red < 0 ? 0 : (red > 255 ? 255 : red), green < 0 ? 0 : (green > 255 ? 255 : green), blue < 0 ? 0 : (blue > 255 ? 255 : blue), color.getAlpha());
+					image.setRGB(x, y, color.getRGB());
+				}
+			}
+		}
+		return image;
+	}
+	
 	public static BufferedImage multiply(BufferedImage image, BufferedImage imageOnTop) {
 		for (int y = 0; y < image.getHeight() && y < imageOnTop.getHeight(); y++) {
 			for (int x = 0; x < image.getWidth() && x < imageOnTop.getWidth(); x++) {

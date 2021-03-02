@@ -114,6 +114,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	private Map<String, BufferedImage> banner = new HashMap<>();	
 	private Map<String, BufferedImage> font = new HashMap<>();
 	private Map<String, BufferedImage> puppet = new HashMap<>();
+	private Map<String, BufferedImage> armor = new HashMap<>();
 	
 	/*
 	public Set<String> discordMainCommands = new HashSet<>();
@@ -288,6 +289,14 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		return ImageUtils.copyImage(image);
 	}
 	
+	public BufferedImage getArmorTexture(String str) {
+		BufferedImage image = armor.get(str);
+		if (image == null) {
+			return null;
+		}
+		return ImageUtils.copyImage(image);
+	}
+	
 	public void reloadTextures() {
 		Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
 			Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSRVAddon] Loading textures...");
@@ -298,6 +307,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 			Map<String, BufferedImage> gui = new HashMap<>();
 			Map<String, BufferedImage> banner = new HashMap<>();
 			Map<String, BufferedImage> puppet = new HashMap<>();
+			Map<String, BufferedImage> armor = new HashMap<>();
 			
 			for (String folder : resourceOrder) {
 				for (File file : new File(getDataFolder() + "/" + folder + "/blocks/").listFiles()) {
@@ -487,6 +497,30 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 						e.printStackTrace();
 					}
 				}
+				
+				for (File file : new File(getDataFolder() + "/" + folder + "/armor/").listFiles()) {
+					if (!file.exists() || file.isDirectory()) {
+						continue;
+					}
+					try {
+						BufferedImage guiImage = ImageIO.read(file);
+						
+						if (guiImage == null) {
+							continue;
+						}
+						
+						String name = file.getName();
+						int lastDot = name.lastIndexOf(".");
+						if (lastDot >= 0) {
+							name = name.substring(0, lastDot);
+						}
+						
+						armor.put(name, guiImage);
+					} catch (IOException e) {
+						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
+						e.printStackTrace();
+					}
+				}
 			}
 			
 			Bukkit.getScheduler().runTask(plugin, () -> {
@@ -497,8 +531,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 				InteractiveChatDiscordSrvAddon.plugin.gui = gui;
 				InteractiveChatDiscordSrvAddon.plugin.banner = banner;
 				InteractiveChatDiscordSrvAddon.plugin.puppet = puppet;
+				InteractiveChatDiscordSrvAddon.plugin.armor = armor;
 				
-				int total = blocks.size() + items.size() + font.size() + misc.size() + gui.size() + banner.size() + puppet.size();
+				int total = blocks.size() + items.size() + font.size() + misc.size() + gui.size() + banner.size() + puppet.size() + armor.size();
 				Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSRVAddon] Loaded " + total + " textures!");
 			});
 		});

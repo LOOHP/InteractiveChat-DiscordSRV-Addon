@@ -14,6 +14,7 @@ import javax.imageio.ImageIO;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
@@ -43,8 +44,13 @@ import net.md_5.bungee.api.chat.BaseComponent;
 @SuppressWarnings("deprecation")
 public class ImageGeneration {
 	
+	private static final String TEXTURE_MINECRAFT_URL = "http://textures.minecraft.net/texture/";
+	private static final String PLAYER_RENDER_URL = "https://mc-heads.net/player/%s/64";
+	private static final String SKULL_RENDER_URL = "https://mc-heads.net/head/%s/96";
+	
 	private static final int MAP_ICON_PER_ROLE = 16;
 	private static final int SPACING = 36;
+	
 	private static final String FULL_BODY_IMAGE_KEY = "FullBodyImage";
 	private static final String PLAYER_HEAD_KEY = "PlayerHeadImage";
 	private static final String INVENTORY_KEY = "Inventory";
@@ -101,7 +107,7 @@ public class ImageGeneration {
 		}
 		g.dispose();
 		
-		Cache.putCache(key, target, 2400);
+		Cache.putCache(key, target, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
 		
 		return target;
 	}
@@ -212,35 +218,122 @@ public class ImageGeneration {
 		}
 		
 		//puppet
-		BufferedImage puppet = getFullBodyImage(player);
-		g.drawImage(puppet, 71, 28, null);
+		EntityEquipment equipment = player.getEquipment();
+		BufferedImage puppet = getFullBodyImage(player, equipment.getHelmet(), equipment.getChestplate(), equipment.getLeggings(), equipment.getBoots());
+		g.drawImage(puppet, 71, 26, null);
 		
 		g.dispose();
 		
-		Cache.putCache(key, target, 2400);
+		Cache.putCache(key, target, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
 		
 		return target;
 	}
 	
-	private static BufferedImage getFullBodyImage(Player player) {
+	private static BufferedImage getFullBodyImage(Player player, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots) {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
+		BufferedImage image;
 		try {
 			JSONObject json = (JSONObject) new JSONParser().parse(SkinUtils.getSkinJsonFromProfile(player));
-			String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace("http://textures.minecraft.net/texture/", "");
-			
-			BufferedImage image;
+			String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace(TEXTURE_MINECRAFT_URL, "");
+			boolean slim = false;
+			if (((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).containsKey("metadata")) {
+				slim = ((JSONObject) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("metadata")).get("model").toString().equals("slim");
+			}
 			Cache<?> cache = Cache.getCache(player.getUniqueId().toString() + value + FULL_BODY_IMAGE_KEY);
 			if (cache == null) {
-				String url = "https://mc-heads.net/player/" + value + "/61";
-				image = ImageIO.read(new URL(url));
+				String url = PLAYER_RENDER_URL.replaceFirst("%s", value);
+				image = ImageUtils.multiply(ImageIO.read(new URL(url)), 0.7);
 				Cache.putCache(player.getUniqueId().toString() + value + FULL_BODY_IMAGE_KEY, image, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
 			} else {
 				image = (BufferedImage) cache.getObject();
 			}
-			return ImageUtils.copyImage(image);
+			image = ImageUtils.copyImage(image);
+			if (slim) {
+				BufferedImage rightArm = ImageUtils.copyAndGetSubImage(image, 0, 32, 12, 48);
+				BufferedImage leftArm = ImageUtils.copyAndGetSubImage(image, 52, 32, 12, 48);
+				Color color = new Color(0, 0, 0, 255);
+				for (int x = 0; x < 16; x++) {
+					for (int y = 32; y < 80; y++) {
+						image.setRGB(x, y, color.getRGB());
+					}
+				}
+				for (int x = 48; x < 64; x++) {
+					for (int y = 32; y < 80; y++) {
+						image.setRGB(x, y, color.getRGB());
+					}
+				}
+				Graphics2D g = image.createGraphics();
+				g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+				g.drawImage(rightArm, 4, 32, null);
+				g.drawImage(leftArm, 48, 32, null);
+				g.dispose();
+			}
 		} catch (Throwable e) {
-			return InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("default");
+			image = ImageUtils.multiply(InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("default"), 0.7);
 		}
+		/*
+		if (ItemStackUtils.isWearable(helmet)) {
+			XMaterial type = XMaterial.matchXMaterial(helmet);
+			BufferedImage helmetImage = null;
+			int scale = 1;
+			switch (type) {
+			case LEATHER_HELMET:
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.getArmorTexture("leather_layer_1");
+				scale = (helmetImage.getWidth() / 8) / 8;
+				helmetImage = ImageUtils.copyAndGetSubImage(helmetImage, helmetImage.getWidth() / 8, helmetImage.getHeight() / 4, 8 * scale, 8 * scale);
+				LeatherArmorMeta meta = (LeatherArmorMeta) helmet.getItemMeta();
+				Color color = new Color(meta.getColor().asRGB());
+				BufferedImage armorOverlay = InteractiveChatDiscordSrvAddon.plugin.getArmorTexture("leather_layer_1_overlay");
+				BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(helmetImage), color);
+				
+				helmetImage = ImageUtils.multiply(helmetImage, colorOverlay);
+				
+				Graphics2D g = helmetImage.createGraphics();
+				g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+				g.drawImage(armorOverlay, 0, 0, null);
+				g.dispose();
+				break;
+			case CHAINMAIL_HELMET:
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.getArmorTexture("chainmail_layer_1");
+				scale = (helmetImage.getWidth() / 8) / 8;
+				helmetImage = ImageUtils.copyAndGetSubImage(helmetImage, helmetImage.getWidth() / 8, helmetImage.getHeight() / 4, 8 * scale, 8 * scale);
+				break;
+			case GOLDEN_HELMET:
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.getArmorTexture("gold_layer_1");
+				scale = (helmetImage.getWidth() / 8) / 8;
+				helmetImage = ImageUtils.copyAndGetSubImage(helmetImage, helmetImage.getWidth() / 8, helmetImage.getHeight() / 4, 8 * scale, 8 * scale);
+				break;
+			case IRON_HELMET:
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.getArmorTexture("iron_layer_1");
+				scale = (helmetImage.getWidth() / 8) / 8;
+				helmetImage = ImageUtils.copyAndGetSubImage(helmetImage, helmetImage.getWidth() / 8, helmetImage.getHeight() / 4, 8 * scale, 8 * scale);
+				break;
+			case DIAMOND_HELMET:
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.getArmorTexture("diamond_layer_1");
+				scale = (helmetImage.getWidth() / 8) / 8;
+				helmetImage = ImageUtils.copyAndGetSubImage(helmetImage, helmetImage.getWidth() / 8, helmetImage.getHeight() / 4, 8 * scale, 8 * scale);
+				break;
+			case NETHERITE_HELMET:
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.getArmorTexture("netherite_layer_1");
+				scale = (helmetImage.getWidth() / 8) / 8;
+				helmetImage = ImageUtils.copyAndGetSubImage(helmetImage, helmetImage.getWidth() / 8, helmetImage.getHeight() / 4, 8 * scale, 8 * scale);
+				break;
+			case TURTLE_HELMET:
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.getArmorTexture("turtle_layer_1");
+				scale = (helmetImage.getWidth() / 8) / 8;
+				helmetImage = ImageUtils.copyAndGetSubImage(helmetImage, helmetImage.getWidth() / 8, helmetImage.getHeight() / 4, 8 * scale, 8 * scale);
+				break;
+			default:
+				break;
+			}
+			
+			Graphics2D g = image.createGraphics();
+			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+			g.drawImage(helmetImage, 0, 0, null);
+			g.dispose();
+		}
+		*/
+		return image;
 	}
 	
 	private static BufferedImage getRawItemImage(ItemStack item) throws IOException {
@@ -306,9 +399,9 @@ public class ImageGeneration {
 					Cache<?> cache = Cache.getCache(base64 + PLAYER_HEAD_KEY);
 					if (cache == null) {
 						JSONObject json = (JSONObject) new JSONParser().parse(new String(Base64.getDecoder().decode(base64)));
-						String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace("http://textures.minecraft.net/texture/", "");
-						String url = "https://mc-heads.net/head/" + value + "/96";
-						BufferedImage newSkull = ImageIO.read(new URL(url));
+						String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace(TEXTURE_MINECRAFT_URL, "");
+						String url = SKULL_RENDER_URL.replaceFirst("%s", value);
+						BufferedImage newSkull = ImageUtils.multiply(ImageIO.read(new URL(url)), 0.9);
 						
 						BufferedImage newImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
 						Graphics2D g2 = newImage.createGraphics();
