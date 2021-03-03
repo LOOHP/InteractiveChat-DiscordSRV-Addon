@@ -20,7 +20,22 @@ public class ImageUtils {
 	
 	public static final Color TEXT_BACKGROUND_COLOR = new Color(0, 0, 0, 180);
 	
+	public static BufferedImage expandCenterAligned(BufferedImage image, int pixels) {
+		BufferedImage b = new BufferedImage(image.getWidth() + pixels + pixels, image.getHeight() + pixels + pixels, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = b.createGraphics();
+		g.drawImage(image, pixels, pixels, null);
+		g.dispose();
+		return b;
+	}
+	
 	public static BufferedImage additionNonTransparent(BufferedImage image, BufferedImage imageToAdd) {
+		return additionNonTransparent(image, imageToAdd, 1);
+	}
+	
+	public static BufferedImage additionNonTransparent(BufferedImage image, BufferedImage imageToAdd, double factor) {
+		if (factor < 0 || factor > 1) {
+			throw new IllegalArgumentException("factor cannot be smaller than 0 or greater than 1");
+		}
 		for (int y = 0; y < image.getHeight() && y < imageToAdd.getHeight(); y++) {
 			for (int x = 0; x < image.getWidth() && x < imageToAdd.getWidth(); x++) {
 				int value = image.getRGB(x, y);
@@ -29,9 +44,9 @@ public class ImageUtils {
 				int addValue = imageToAdd.getRGB(x, y);
 				Color addColor = new Color(addValue, true);
 				if (color.getAlpha() != 0) {
-					int red = color.getRed() + addColor.getRed();
-					int green = color.getGreen() + addColor.getGreen();
-					int blue = color.getBlue() + addColor.getBlue();
+					int red = color.getRed() + (int) (addColor.getRed() * factor);
+					int green = color.getGreen() + (int) (addColor.getGreen() * factor);
+					int blue = color.getBlue() + (int) (addColor.getBlue() * factor);
 					color = new Color(red > 255 ? 255 : red, green > 255 ? 255 : green, blue > 255 ? 255 : blue, color.getAlpha());
 					image.setRGB(x, y, color.getRGB());
 				}
@@ -184,9 +199,9 @@ public class ImageUtils {
 		return copyOfImage;
 	}
 	
-	public static BufferedImage resizeImage(BufferedImage source, int factor) {
-		int w = source.getWidth() * factor;
-		int h = source.getHeight() * factor;
+	public static BufferedImage resizeImage(BufferedImage source, double factor) {
+		int w = (int) (source.getWidth() * factor);
+		int h = (int) (source.getHeight() * factor);
 		BufferedImage b = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
 	    Graphics2D g = b.createGraphics();
 	    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
@@ -200,6 +215,26 @@ public class ImageUtils {
 	    Graphics2D g = b.createGraphics();
 	    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 	    g.drawImage(source, 0, 0, width, height, null);
+	    g.dispose();
+	    return b;
+	}
+	
+	public static BufferedImage resizeImageAbs(BufferedImage source, int width, int height) {
+		BufferedImage b = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+	    Graphics2D g = b.createGraphics();
+	    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+	    g.drawImage(source, 0, 0, width, height, null);
+	    g.dispose();
+	    return b;
+	}
+	
+	public static BufferedImage resizeImageStretch(BufferedImage source, int pixels) {
+		int w = source.getWidth() + pixels;
+		int h = source.getHeight() + pixels;
+		BufferedImage b = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+	    Graphics2D g = b.createGraphics();
+	    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+	    g.drawImage(source, 0, 0, w, h, null);
 	    g.dispose();
 	    return b;
 	}
