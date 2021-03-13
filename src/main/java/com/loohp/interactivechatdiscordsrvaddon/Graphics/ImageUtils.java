@@ -6,6 +6,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.font.TextAttribute;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,10 +21,59 @@ public class ImageUtils {
 	
 	public static final Color TEXT_BACKGROUND_COLOR = new Color(0, 0, 0, 180);
 	
+	public static BufferedImage rotateImageByDegrees(BufferedImage img, double angle) {
+	    double rads = Math.toRadians(angle);
+	    double sin = Math.abs(Math.sin(rads));
+	    double cos = Math.abs(Math.cos(rads));
+	    int w = img.getWidth();
+	    int h = img.getHeight();
+	    int newWidth = (int) Math.floor(w * cos + h * sin);
+	    int newHeight = (int) Math.floor(h * cos + w * sin);
+
+	    BufferedImage rotated = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+	    Graphics2D g = rotated.createGraphics();
+	    AffineTransform at = new AffineTransform();
+	    at.translate((newWidth - w) / 2, (newHeight - h) / 2);
+
+	    int x = w / 2;
+	    int y = h / 2;
+
+	    at.rotate(rads, x, y);
+	    g.setTransform(at);
+	    g.drawImage(img, 0, 0, null);
+	    g.dispose();
+
+	    return rotated;
+	}
+	
+	public static BufferedImage flipHorizontal(BufferedImage image) {
+		BufferedImage b = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = b.createGraphics();
+		g.drawImage(image, image.getWidth(), 0, -image.getWidth(), image.getHeight(), null);
+		g.dispose();
+		return b;
+	}
+	
+	public static BufferedImage flipVertically(BufferedImage image) {
+		BufferedImage b = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = b.createGraphics();
+		g.drawImage(image, 0, image.getHeight(), image.getWidth(), -image.getHeight(), null);
+		g.dispose();
+		return b;
+	}
+	
 	public static BufferedImage expandCenterAligned(BufferedImage image, int pixels) {
 		BufferedImage b = new BufferedImage(image.getWidth() + pixels + pixels, image.getHeight() + pixels + pixels, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = b.createGraphics();
 		g.drawImage(image, pixels, pixels, null);
+		g.dispose();
+		return b;
+	}
+	
+	public static BufferedImage expandCenterAligned(BufferedImage image, int up, int down, int left, int right) {
+		BufferedImage b = new BufferedImage(image.getWidth() + left + right, image.getHeight() + up + down, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = b.createGraphics();
+		g.drawImage(image, left, up, null);
 		g.dispose();
 		return b;
 	}
@@ -49,6 +99,25 @@ public class ImageUtils {
 					int blue = color.getBlue() + (int) (addColor.getBlue() * factor);
 					color = new Color(red > 255 ? 255 : red, green > 255 ? 255 : green, blue > 255 ? 255 : blue, color.getAlpha());
 					image.setRGB(x, y, color.getRGB());
+				}
+			}
+		}
+		return image;
+	}
+	
+	public static BufferedImage drawTransparent(BufferedImage image, BufferedImage imageToAdd, int posX, int posY) {
+		for (int y = 0; y + posY < image.getHeight() && y < imageToAdd.getHeight(); y++) {
+			for (int x = 0; x + posX < image.getWidth() && x < imageToAdd.getWidth(); x++) {
+				if (x + posX >= 0 && y + posY >= 0) {
+					int value = image.getRGB(x + posX, y + posY);
+					Color color = new Color(value, true);
+					
+					int addValue = imageToAdd.getRGB(x, y);
+					Color addColor = new Color(addValue, true);
+					if (color.getAlpha() == 0) {
+						color = new Color(addColor.getRed(), addColor.getGreen(), addColor.getBlue(), addColor.getAlpha());
+						image.setRGB(x + posX, y + posY, color.getRGB());
+					}
 				}
 			}
 		}
