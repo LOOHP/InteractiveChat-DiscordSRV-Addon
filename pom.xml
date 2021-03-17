@@ -225,14 +225,14 @@
 		<dependency>
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot-api</artifactId>
-			<version>1.16.4-R0.1-SNAPSHOT</version>
+			<version>1.16.5-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>Spigot-1.16.4</groupId>
-			<artifactId>Spigot-1.16.4</artifactId>
+			<groupId>Spigot-1.16.5</groupId>
+			<artifactId>Spigot-1.16.5</artifactId>
 			<version>1.0</version>
-			<systemPath>${basedir}/lib/spigot-1.16.4.jar</systemPath>
+			<systemPath>${basedir}/lib/spigot-1.16.5.jar</systemPath>
 			<scope>system</scope>
 		</dependency>
 		<dependency>
@@ -250,7 +250,7 @@
 		<dependency>
 			<groupId>com.loohp</groupId>
 			<artifactId>InteractiveChat</artifactId>
-			<version>3.2.10.3</version>
+			<version>3.2.10.11</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
