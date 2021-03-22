@@ -82,7 +82,7 @@ public class ImageGeneration {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();
 		
-		String key = INVENTORY_KEY + HashUtils.createSha1(inventory);
+		String key = INVENTORY_KEY + HashUtils.createSha1("Inventory", inventory);
 		Cache<?> cache = Cache.getCache(key);
 		if (cache != null) {
 			return ImageUtils.copyImage((BufferedImage) cache.getObject());
@@ -119,7 +119,7 @@ public class ImageGeneration {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();
 		
-		String key = PLAYER_INVENTORY_KEY + player.getUniqueId().toString() + HashUtils.createSha1(inventory);
+		String key = PLAYER_INVENTORY_KEY + HashUtils.createSha1(player.getUniqueId().toString(), inventory);
 		Cache<?> cache = Cache.getCache(key);
 		if (cache != null) {
 			return ImageUtils.copyImage((BufferedImage) cache.getObject());
