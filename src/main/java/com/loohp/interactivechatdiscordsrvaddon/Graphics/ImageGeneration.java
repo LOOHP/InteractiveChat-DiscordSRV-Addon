@@ -6,11 +6,8 @@ import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.Base64;
-
-import javax.imageio.ImageIO;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -245,7 +242,7 @@ public class ImageGeneration {
 			Cache<?> cache = Cache.getCache(player.getUniqueId().toString() + value + FULL_BODY_IMAGE_KEY);
 			if (cache == null) {
 				String url = PLAYER_RENDER_URL.replaceFirst("%s", value);
-				image = ImageIO.read(new URL(url));
+				image = ImageUtils.downloadImage(url);
 				Cache.putCache(player.getUniqueId().toString() + value + FULL_BODY_IMAGE_KEY, image, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
 			} else {
 				image = (BufferedImage) cache.getObject();
@@ -272,6 +269,7 @@ public class ImageGeneration {
 				g.dispose();
 			}
 		} catch (Throwable e) {
+			e.printStackTrace();
 			image = InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("default");
 		}
 		
@@ -648,7 +646,7 @@ public class ImageGeneration {
 						JSONObject json = (JSONObject) new JSONParser().parse(new String(Base64.getDecoder().decode(base64)));
 						String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace(TEXTURE_MINECRAFT_URL, "");
 						String url = SKULL_RENDER_URL.replaceFirst("%s", value);
-						BufferedImage newSkull = ImageUtils.multiply(ImageIO.read(new URL(url)), 0.9);
+						BufferedImage newSkull = ImageUtils.multiply(ImageUtils.downloadImage(url), 0.9);
 						
 						BufferedImage newImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
 						Graphics2D g2 = newImage.createGraphics();

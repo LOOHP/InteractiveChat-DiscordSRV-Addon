@@ -8,8 +8,14 @@ import java.awt.RenderingHints;
 import java.awt.font.TextAttribute;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
 
 import com.loohp.interactivechat.Utils.ChatColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ComponentStringUtils;
@@ -20,6 +26,20 @@ import net.md_5.bungee.api.chat.BaseComponent;
 public class ImageUtils {
 	
 	public static final Color TEXT_BACKGROUND_COLOR = new Color(0, 0, 0, 180);
+	
+	public static BufferedImage downloadImage(String link) throws IOException {
+		URL url = new URL(link);
+		URLConnection connection = url.openConnection();
+		connection.setUseCaches(false);
+		connection.setDefaultUseCaches(false);
+		connection.addRequestProperty("User-Agent", "Mozilla/5.0");
+		connection.addRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
+		connection.addRequestProperty("Pragma", "no-cache");
+		InputStream in = connection.getInputStream();
+		BufferedImage image = ImageIO.read(in);
+		in.close();
+		return image;
+	}
 	
 	public static BufferedImage rotateImageByDegrees(BufferedImage img, double angle) {
 	    double rads = Math.toRadians(angle);

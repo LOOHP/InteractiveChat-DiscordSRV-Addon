@@ -47,7 +47,7 @@ Messages:
   LinkExpired: "&cThis link has been expired! To view this link, please head over to the linked discord channel!"
 
 Settings:
-  CacheTimeout: 60
+  CacheTimeout: 300
   EscapePlaceholdersSentFromDiscord: true
   EscapeDiscordMarkdownFormattingInItems: true
 
