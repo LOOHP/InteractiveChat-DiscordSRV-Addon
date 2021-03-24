@@ -323,17 +323,23 @@ public class ImageGeneration {
 				break;
 			}
 			leggingsImage1 = ImageUtils.copyAndGetSubImage(leggingsImage, scale * 20, scale * 27, 8 * scale, 5 * scale);
-			leggingsImage2 = ImageUtils.copyAndGetSubImage(leggingsImage, scale * 4, scale * 20, 8 * scale, 9 * scale);
+			BufferedImage leggingsLeft = ImageUtils.copyAndGetSubImage(leggingsImage, scale * 4, scale * 20, 4 * scale, 9 * scale);
+			BufferedImage leggingsRight = ImageUtils.flipHorizontal(leggingsLeft);
+			leggingsImage2 = new BufferedImage(leggingsLeft.getWidth() + leggingsRight.getWidth(), leggingsLeft.getHeight(), BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g2 = leggingsImage2.createGraphics();
+			g2.drawImage(leggingsLeft, 0, 0, null);
+			g2.drawImage(leggingsRight, leggingsLeft.getWidth(), 0, null);
+			g2.dispose();
 			
 			leggingsImage1 = ImageUtils.multiply(ImageUtils.resizeImageStretch(ImageUtils.resizeImage(leggingsImage1, Math.pow(scale, -1) * 4), 4), 0.7);
 			leggingsImage2 = ImageUtils.multiply(ImageUtils.resizeImageStretch(ImageUtils.resizeImage(leggingsImage2, Math.pow(scale, -1) * 4), 4), 0.7);
 			if (leggings.getEnchantments().size() > 0) {
 				BufferedImage tint_ori = InteractiveChatDiscordSrvAddon.plugin.getMiscTexture("enchanted_item_glint");
 				BufferedImage tintImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);				
-				Graphics2D g2 = tintImage.createGraphics();
-				g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-				g2.drawImage(tint_ori, 0, 0, 512, 512, null);
-				g2.dispose();
+				Graphics2D g3 = tintImage.createGraphics();
+				g3.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+				g3.drawImage(tint_ori, 0, 0, 512, 512, null);
+				g3.dispose();
 				
 				leggingsImage1 = ImageUtils.additionNonTransparent(leggingsImage1, tintImage, ENCHANTMENT_GLINT_FACTOR);
 				leggingsImage2 = ImageUtils.additionNonTransparent(leggingsImage2, tintImage, ENCHANTMENT_GLINT_FACTOR);
@@ -386,16 +392,22 @@ public class ImageGeneration {
 			default:
 				break;
 			}
-			bootsImage = ImageUtils.copyAndGetSubImage(bootsImage, 4 * scale, 26 * scale, 8 * scale, 4 * scale);
+			BufferedImage bootsLeft = ImageUtils.copyAndGetSubImage(bootsImage, 4 * scale, 26 * scale, 4 * scale, 4 * scale);
+			BufferedImage bootsRight = ImageUtils.flipHorizontal(bootsLeft);
+			bootsImage = new BufferedImage(bootsLeft.getWidth() + bootsRight.getWidth(), bootsLeft.getHeight(), BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g2 = bootsImage.createGraphics();
+			g2.drawImage(bootsLeft, 0, 0, null);
+			g2.drawImage(bootsRight, bootsLeft.getWidth(), 0, null);
+			g2.dispose();
 			
 			bootsImage = ImageUtils.multiply(ImageUtils.resizeImageStretch(ImageUtils.resizeImage(bootsImage, Math.pow(scale, -1) * 4), 8), 0.7);
 			if (boots.getEnchantments().size() > 0) {
 				BufferedImage tint_ori = InteractiveChatDiscordSrvAddon.plugin.getMiscTexture("enchanted_item_glint");
 				BufferedImage tintImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);				
-				Graphics2D g2 = tintImage.createGraphics();
-				g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-				g2.drawImage(tint_ori, 0, 0, 512, 512, null);
-				g2.dispose();
+				Graphics2D g3 = tintImage.createGraphics();
+				g3.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+				g3.drawImage(tint_ori, 0, 0, 512, 512, null);
+				g3.dispose();
 				
 				bootsImage = ImageUtils.additionNonTransparent(bootsImage, tintImage, ENCHANTMENT_GLINT_FACTOR);
 			}
@@ -479,7 +491,7 @@ public class ImageGeneration {
 			if (isArmor) {
 				chestplateImage1 = ImageUtils.copyAndGetSubImage(chestplateImage, scale * 20, scale * 20, 8 * scale, 12 * scale);				
 				chestplateImage2 = ImageUtils.copyAndGetSubImage(chestplateImage, scale * 44, scale * 20, 4 * scale, 12 * scale);
-				chestplateImage3 = ImageUtils.copyAndGetSubImage(chestplateImage, scale * 52, scale * 20, 4 * scale, 12 * scale);
+				chestplateImage3 = ImageUtils.flipHorizontal(chestplateImage2);
 				
 				chestplateImage1 = ImageUtils.multiply(ImageUtils.resizeImageStretch(ImageUtils.resizeImage(chestplateImage1, Math.pow(scale, -1) * 4), 8), 0.7);
 				chestplateImage2 = ImageUtils.multiply(ImageUtils.resizeImageStretch(ImageUtils.resizeImage(chestplateImage2, Math.pow(scale, -1) * 4), 8), 0.7);
