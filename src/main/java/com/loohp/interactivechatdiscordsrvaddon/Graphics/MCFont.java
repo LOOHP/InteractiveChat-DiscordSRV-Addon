@@ -13,8 +13,8 @@ import net.md_5.bungee.api.ChatColor;
 public class MCFont {
 	
 	private static boolean working = false;
-    public static Font standardFont;
-    public static Font backupFont = new Font(Font.DIALOG, Font.PLAIN, 16);
+	private static Font standardFont;
+	private static Font backupFont = new Font(Font.DIALOG, Font.PLAIN, 16);
 
     static {
     	String path = InteractiveChatDiscordSrvAddon.plugin.getDataFolder() + "/assets/font/mcfont.ttf";
@@ -29,7 +29,15 @@ public class MCFont {
         }
     }
 
-    public static Font getFont(String text) {
+    public static Font getStandardFont() {
+		return standardFont;
+	}
+
+	public static Font getBackupFont() {
+		return backupFont;
+	}
+
+	public static Font getFont(String text) {
         if (standardFont.canDisplayUpTo(text) == -1) {
             return standardFont;
         } else {

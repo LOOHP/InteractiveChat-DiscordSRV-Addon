@@ -258,7 +258,7 @@
 		<dependency>
 			<groupId>com.loohp</groupId>
 			<artifactId>InteractiveChat</artifactId>
-			<version>3.2.11.4</version>
+			<version>3.2.12.0</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>
