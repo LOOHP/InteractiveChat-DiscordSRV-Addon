@@ -28,7 +28,11 @@ public class TranslationUtils {
 			try {
 				bukkitEnchantmentGetIdMethod = Enchantment.class.getMethod("getId");
 				nmsEnchantmentClass = getNMSClass("net.minecraft.server.", "Enchantment");
-				getEnchantmentByIdMethod = nmsEnchantmentClass.getMethod("c", int.class);
+				if (InteractiveChat.version.isOld()) {
+					getEnchantmentByIdMethod = nmsEnchantmentClass.getMethod("getById", int.class);
+				} else {
+					getEnchantmentByIdMethod = nmsEnchantmentClass.getMethod("c", int.class);
+				}
 				getEnchantmentKeyMethod = nmsEnchantmentClass.getMethod("a");
 				nmsMobEffectListClass = getNMSClass("net.minecraft.server.", "MobEffectList");
 				if (InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_8_4)) {
