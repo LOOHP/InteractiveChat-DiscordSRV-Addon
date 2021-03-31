@@ -27,9 +27,9 @@ import com.loohp.interactivechat.Utils.ChatColorUtils;
 import com.loohp.interactivechat.Utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordAttachmentEvents;
+import com.loohp.interactivechatdiscordsrvaddon.Listeners.InboundToGameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordReadyEvents;
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.PlaceholderImageEvents;
+import com.loohp.interactivechatdiscordsrvaddon.Listeners.OutboundToDiscordEvents;
 import com.loohp.interactivechatdiscordsrvaddon.Metrics.Charts;
 import com.loohp.interactivechatdiscordsrvaddon.Metrics.Metrics;
 import com.loohp.interactivechatdiscordsrvaddon.Updater.Updater;
@@ -96,6 +96,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public String discordAttachmentsFormattingImageAppend;
 	public String discordAttachmentsFormattingImageAppendHover;
 	
+	public boolean translateMentions = true;
+	public String mentionHighlight = "";
+	
 	public boolean updaterEnabled = true;
 	
 	public int cacheTimeout = 1200;
@@ -137,10 +140,10 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		Charts.setup(metrics);
 		
 		DiscordSRV.api.subscribe(new DiscordReadyEvents());
-		DiscordSRV.api.subscribe(new PlaceholderImageEvents());
-		DiscordSRV.api.subscribe(new DiscordAttachmentEvents());
+		DiscordSRV.api.subscribe(new OutboundToDiscordEvents());
+		DiscordSRV.api.subscribe(new InboundToGameEvents());
 		
-		getServer().getPluginManager().registerEvents(new DiscordAttachmentEvents(), this);
+		getServer().getPluginManager().registerEvents(new InboundToGameEvents(), this);
 		getServer().getPluginManager().registerEvents(new Debug(), this);
 		getServer().getPluginManager().registerEvents(new Updater(), this);
 		getCommand("interactivechatdiscordsrv").setExecutor(new Commands());
@@ -224,6 +227,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		invColor = ColorUtils.hex2Rgb(getConfig().getString("InventoryImage.Inventory.EmbedColor"));
 		enderColor = ColorUtils.hex2Rgb(getConfig().getString("InventoryImage.EnderChest.EmbedColor"));
 		
+		translateMentions = getConfig().getBoolean("DiscordMention.TranslateMentions");
+		mentionHighlight = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordMention.MentionHighlight"));
+		
 		language = getConfig().getString("Resources.Language");
 		
 		/*
@@ -231,6 +237,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		discordListSubCommand = getConfig().getString("DiscordCommands.SubCommands.ListPlaceholders");
 		*/
 		LanguageUtils.loadTranslations(language);
+		
+		discordsrv.reloadRegexes();
 	}
 	
 	public BufferedImage getBlockTexture(String str) {

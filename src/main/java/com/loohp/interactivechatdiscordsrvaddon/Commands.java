@@ -13,8 +13,8 @@ import org.bukkit.entity.Player;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.ChatColorUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordAttachmentEvents;
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordAttachmentEvents.DiscordAttachmentData;
+import com.loohp.interactivechatdiscordsrvaddon.Listeners.InboundToGameEvents;
+import com.loohp.interactivechatdiscordsrvaddon.Listeners.InboundToGameEvents.DiscordAttachmentData;
 import com.loohp.interactivechatdiscordsrvaddon.Updater.Updater;
 import com.loohp.interactivechatdiscordsrvaddon.Updater.Updater.UpdaterResponse;
 
@@ -79,7 +79,7 @@ public class Commands implements CommandExecutor, TabCompleter {
 		if (args[0].equalsIgnoreCase("imagemap")) {
 			if (args.length > 1 && sender instanceof Player) {
 				try {
-					DiscordAttachmentData data = DiscordAttachmentEvents.DATA.get(UUID.fromString(args[1]));
+					DiscordAttachmentData data = InboundToGameEvents.DATA.get(UUID.fromString(args[1]));
 					if (data != null && data.isImage()) {
 						data.getImageMap().show((Player) sender);
 					}

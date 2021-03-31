@@ -35,7 +35,7 @@ public class TranslationUtils {
 				}
 				getEnchantmentKeyMethod = nmsEnchantmentClass.getMethod("a");
 				nmsMobEffectListClass = getNMSClass("net.minecraft.server.", "MobEffectList");
-				if (InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_8_4)) {
+				if (InteractiveChat.version.isOld()) {
 					nmsMobEffectByIdField = nmsMobEffectListClass.getField("byId");
 				} else {
 					getEffectFromIdMethod = nmsMobEffectListClass.getMethod("fromId", int.class);

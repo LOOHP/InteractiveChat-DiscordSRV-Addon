@@ -3,10 +3,13 @@ package com.loohp.interactivechatdiscordsrvaddon.Listeners;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
@@ -43,29 +47,136 @@ import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.API.Events.DiscordAttachmentConversionEvent;
 import com.loohp.interactivechatdiscordsrvaddon.Graphics.GifReader;
 import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageFrame;
+import com.loohp.interactivechatdiscordsrvaddon.Modules.DiscordToGameMention;
 import com.loohp.interactivechatdiscordsrvaddon.Wrappers.GraphicsToPacketMapWrapper;
 
+import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.api.ListenerPriority;
 import github.scarsz.discordsrv.api.Subscribe;
 import github.scarsz.discordsrv.api.events.DiscordGuildMessagePostProcessEvent;
+import github.scarsz.discordsrv.api.events.DiscordGuildMessagePreProcessEvent;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.Guild;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.Member;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message.Attachment;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.Role;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.User;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 
-public class DiscordAttachmentEvents implements Listener {
+public class InboundToGameEvents implements Listener {
 	
 	public static final Pattern IMAGE_URL_PATTERN = Pattern.compile("https?:\\/(?:\\/[^\\/]+)+\\.(?:jpg|jpeg|gif|png)");
 	public static final Map<UUID, DiscordAttachmentData> DATA = new ConcurrentHashMap<>();	
 	public static final Map<Player, GraphicsToPacketMapWrapper> MAP_VIEWERS = new ConcurrentHashMap<>();
 	
-	@Subscribe(priority = ListenerPriority.MONITOR)
-	public void onRecieveMessageFromDiscord(DiscordGuildMessagePostProcessEvent event) {
+	private static Field discordRegexesField;
+	
+	protected static void ready(DiscordSRV srv) {
+		try {
+			discordRegexesField = srv.getClass().getDeclaredField("discordRegexes");
+		} catch (NoSuchFieldException | SecurityException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Subscribe(priority = ListenerPriority.LOWEST)
+	public void onRecieveMessageFromDiscordPre(DiscordGuildMessagePreProcessEvent event) {
+		DiscordSRV srv = InteractiveChatDiscordSrvAddon.discordsrv;
+		try {
+			discordRegexesField.setAccessible(true);
+			@SuppressWarnings("unchecked")
+			Map<Pattern, String> discordRegexes = (Map<Pattern, String>) discordRegexesField.get(srv);
+			Iterator<Pattern> itr = discordRegexes.keySet().iterator();
+			while (itr.hasNext()) {
+				Pattern pattern = itr.next();
+				if (pattern.pattern().equals("@+(everyone|here)")) {
+					itr.remove();
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Subscribe(priority = ListenerPriority.HIGHEST)
+	public void onRecieveMessageFromDiscordPost(DiscordGuildMessagePostProcessEvent event) {
+		Message message = event.getMessage();
+		
+		String processedMessage = event.getProcessedMessage();
+		
+		DiscordSRV srv = InteractiveChatDiscordSrvAddon.discordsrv;
+		User author = message.getAuthor();
+		
+		if (InteractiveChatDiscordSrvAddon.plugin.translateMentions) {
+			
+			Set<UUID> mentionTitleSent = new HashSet<>();
+			Map<Member, UUID> channelMembers = new HashMap<>();
+			
+			TextChannel channel = event.getChannel();
+			Guild guild = channel.getGuild();
+			Member authorAsMember = guild.getMember(author);
+			String senderDiscordName = authorAsMember == null ? author.getName() : authorAsMember.getEffectiveName();
+			UUID senderUUID = srv.getAccountLinkManager().getUuid(author.getId());
+			
+			for (Entry<UUID, String> entry : srv.getAccountLinkManager().getManyDiscordIds(Bukkit.getOnlinePlayers().stream().map(each -> each.getUniqueId()).collect(Collectors.toSet())).entrySet()) {
+				Member member = guild.getMemberById(entry.getValue());
+				if (member != null && member.hasAccess(channel)) {
+					channelMembers.put(member, entry.getKey());
+				}
+			}
+			
+			if (message.mentionsEveryone()) {
+				processedMessage = processedMessage.replace("@here", InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@here")).replace("@everyone", InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@everyone"));
+				for (UUID uuid : channelMembers.values()) {
+					mentionTitleSent.add(uuid);
+					Player player = Bukkit.getPlayer(uuid);
+					if (player != null) {
+						DiscordToGameMention.playTitleScreen(senderDiscordName, channel.getName(), guild.getName(), player);
+					}
+				}
+			}
+			
+			List<Role> mentionedRoles = message.getMentionedRoles();
+			for (Role role : mentionedRoles) {
+				processedMessage = processedMessage.replace("@" + role.getName(), InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@" + role.getName()));
+				for (Entry<Member, UUID> entry : channelMembers.entrySet()) {
+					UUID uuid = entry.getValue();
+					if (!mentionTitleSent.contains(uuid) && entry.getKey().getRoles().contains(role)) {
+						mentionTitleSent.add(uuid);
+						Player player = Bukkit.getPlayer(uuid);
+						if (player != null) {
+							DiscordToGameMention.playTitleScreen(senderDiscordName, channel.getName(), guild.getName(), player);
+						}
+					}
+				}
+			}
+			
+			List<User> mentionedUsers = message.getMentionedUsers();
+			if (!mentionedUsers.isEmpty()) {
+				for (User user : mentionedUsers) {
+					processedMessage = processedMessage.replace("@" + user.getName(), InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@" + user.getName()));
+					Member member = guild.getMember(user);
+					if (member != null) {
+						UUID uuid = channelMembers.get(member);
+						if (uuid != null && !mentionTitleSent.contains(uuid) && (senderUUID == null || !senderUUID.equals(uuid))) {
+							mentionTitleSent.add(uuid);
+							Player player = Bukkit.getPlayer(uuid);
+							if (player != null) {
+								DiscordToGameMention.playTitleScreen(senderDiscordName, channel.getName(), guild.getName(), player);
+							}
+						}
+					}
+				}
+			}
+			
+			event.setProcessedMessage(processedMessage);
+		}
+		
 		if (InteractiveChatDiscordSrvAddon.plugin.convertDiscordAttachments) {
-			Message message = event.getMessage();
-			String processedMessage = event.getProcessedMessage();
 			Set<String> processedUrl = new HashSet<>();
 			for (Attachment attachment : message.getAttachments()) {
 				InteractiveChatDiscordSrvAddon.plugin.attachmentCounter.incrementAndGet();

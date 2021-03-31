@@ -39,7 +39,7 @@ public class DiscordReadyEvents {
 		DiscordSRV discordsrv = InteractiveChatDiscordSrvAddon.discordsrv;
 		
 		JDA jda = discordsrv.getJda();
-		jda.addEventListener(new PlaceholderImageEvents.JDAEvents());
+		jda.addEventListener(new OutboundToDiscordEvents.JDAEvents());
 		
 		for (String channelId : discordsrv.getChannels().values()) {
 			GuildChannel channel = jda.getGuildChannelById(channelId);
@@ -53,6 +53,8 @@ public class DiscordReadyEvents {
 				}
 			}
 		}
+		
+		InboundToGameEvents.ready(discordsrv);
 	}
 
 }

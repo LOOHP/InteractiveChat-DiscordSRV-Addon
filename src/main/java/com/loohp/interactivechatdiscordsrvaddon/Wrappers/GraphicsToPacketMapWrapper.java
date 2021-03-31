@@ -25,7 +25,7 @@ import com.loohp.interactivechat.Utils.MCVersion;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageFrame;
 import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordAttachmentEvents;
+import com.loohp.interactivechatdiscordsrvaddon.Listeners.InboundToGameEvents;
 
 @SuppressWarnings("deprecation")
 public class GraphicsToPacketMapWrapper {
@@ -101,7 +101,7 @@ public class GraphicsToPacketMapWrapper {
 	
 	public void show(Player player) {
 		InteractiveChatDiscordSrvAddon.plugin.imagesViewedCounter.incrementAndGet();
-		DiscordAttachmentEvents.MAP_VIEWERS.put(player, this);
+		InboundToGameEvents.MAP_VIEWERS.put(player, this);
 		
 		ProtocolManager protocollib = ProtocolLibrary.getProtocolManager();
 		PacketContainer packet1;
@@ -152,7 +152,7 @@ public class GraphicsToPacketMapWrapper {
 			int frameTime = 0;
 			@Override
 			public void run() {
-				GraphicsToPacketMapWrapper wrapper = DiscordAttachmentEvents.MAP_VIEWERS.get(player);
+				GraphicsToPacketMapWrapper wrapper = InboundToGameEvents.MAP_VIEWERS.get(player);
 				if (wrapper != null && wrapper.equals(ref)) {
 					int current = getFrameAt(frameTime);
 					if (current < 0) {

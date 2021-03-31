@@ -41,6 +41,33 @@ DiscordAttachments:
   ShowImageUsingMaps: true
   Timeout: 86400
 
+DiscordMention:
+  #Link mentions through discordsrv linked accounts
+  TranslateMentions: true
+
+  #The sound to play when a player is mentioned
+  #https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+  MentionedSound: ENTITY_EXPERIENCE_ORB_PICKUP
+
+  #The title to show when mentioned
+  MentionedTitle: "&c&lMentioned"
+
+  #How long should the title be shown when mentioned
+  #Duration in seconds
+  MentionedTitleDuration: 1.5
+
+  #The subtitle and actionbar  to show when mentioned
+  #Note that actionbar might not work if your version of Minecraft does not support it
+  #Use {DiscordUser} for the ping-ers's discord name
+  #Use {TextChannel} for the pinged channel name
+  #Use {Guild} for the pinged guild name
+  DiscordMentionSubtitle: "&9{DiscordUser} &fmentioned you in &9{TextChannel}!"
+  DiscordMentionActionbar: ""
+
+  #Highlight the mentioned playername for the player mentioned
+  #Use {DiscordMention} for the highlighted player name
+  MentionHighlight: "&9{DiscordMention}"
+
 Messages:
   ReloadConfig: "&aICDiscordSRVAddon config has been reloaded!"
   ReloadTexture: "&aICDiscordSRVAddon reloading textures--- (See console for progress)"

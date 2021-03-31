@@ -6,11 +6,13 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.imageio.ImageIO;
 
@@ -30,7 +32,9 @@ import com.loohp.interactivechat.API.InteractiveChatAPI;
 import com.loohp.interactivechat.ObjectHolders.CustomPlaceholder;
 import com.loohp.interactivechat.ObjectHolders.ICPlaceholder;
 import com.loohp.interactivechat.ObjectHolders.ICPlayer;
+import com.loohp.interactivechat.ObjectHolders.MentionPair;
 import com.loohp.interactivechat.ObjectHolders.WebData;
+import com.loohp.interactivechat.Utils.ChatColorUtils;
 import com.loohp.interactivechat.Utils.CustomStringUtils;
 import com.loohp.interactivechat.Utils.LanguageUtils;
 import com.loohp.interactivechat.Utils.NBTUtils;
@@ -67,13 +71,14 @@ import github.scarsz.discordsrv.dependencies.jda.api.entities.ChannelType;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Member;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.User;
 import github.scarsz.discordsrv.dependencies.jda.api.events.message.MessageReceivedEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.hooks.ListenerAdapter;
 import github.scarsz.discordsrv.util.DiscordUtil;
 import github.scarsz.discordsrv.util.PlaceholderUtil;
 import github.scarsz.discordsrv.util.WebhookUtil;
 
-public class PlaceholderImageEvents {
+public class OutboundToDiscordEvents {
 	
 	public static final Comparator<DiscordDisplayData> DISPLAY_DATA_COMPARATOR = Comparator.comparing(each -> each.getPosition());
 	private static final IDProvider DATA_ID_PROVIDER = new IDProvider();
@@ -309,6 +314,44 @@ public class PlaceholderImageEvents {
 			}
 		}
 		
+		DiscordSRV srv = InteractiveChatDiscordSrvAddon.discordsrv;
+		if (InteractiveChatDiscordSrvAddon.plugin.translateMentions) {
+			for (MentionPair pair : InteractiveChat.mentionPair.values()) {
+				if (pair.getSender().equals(sender.getUniqueId())) {
+					UUID recieverUUID = pair.getReciever();
+					Set<String> names = new HashSet<>();
+					Player reciever = Bukkit.getPlayer(recieverUUID);
+					if (reciever != null) {
+						names.add(ChatColorUtils.stripColor(reciever.getName()));
+						if (!names.contains(ChatColorUtils.stripColor(reciever.getDisplayName()))) {
+							names.add(ChatColorUtils.stripColor(reciever.getDisplayName()));
+						}
+						List<String> list = InteractiveChatAPI.getNicknames(reciever.getUniqueId());
+						for (String name : list) {
+							names.add(ChatColorUtils.stripColor(name));
+						}
+					} else {
+						ICPlayer icplayer = InteractiveChat.remotePlayers.get(recieverUUID);
+						if (icplayer != null) {
+							names.add(icplayer.getDisplayName());
+						}
+					}
+					String userId = srv.getAccountLinkManager().getDiscordId(recieverUUID);
+					if (userId != null) {
+						User user = srv.getJda().getUserById(userId);
+						if (user != null) {
+							String discordMention = user.getAsMention();
+							for (String name : names) {
+								if (message.contains(InteractiveChat.mentionPrefix + name)) {
+									message = message.replace(InteractiveChat.mentionPrefix + name, discordMention);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
 		GameMessagePostProcessEvent gameMessagePostProcessEvent = new GameMessagePostProcessEvent(sender, message, false);
 		Bukkit.getPluginManager().callEvent(gameMessagePostProcessEvent);
 		if (gameMessagePostProcessEvent.isCancelled()) {
@@ -501,7 +544,7 @@ public class PlaceholderImageEvents {
 			
 			Set<Integer> matches = new LinkedHashSet<>();
 			
-			for (int key : PlaceholderImageEvents.DATA.keySet()) {
+			for (int key : OutboundToDiscordEvents.DATA.keySet()) {
 				if (text.contains("<ICD=" + key + ">")) {
 					text = text.replace("<ICD=" + key + ">", "");
 					matches.add(key);
@@ -512,7 +555,7 @@ public class PlaceholderImageEvents {
 			}
 			
 			message.delete().queue();
-			Player player = PlaceholderImageEvents.DATA.get(matches.iterator().next()).getPlayer();
+			Player player = OutboundToDiscordEvents.DATA.get(matches.iterator().next()).getPlayer();
 
 			List<DiscordMessageContent> contents = new ArrayList<>();
 			List<DiscordDisplayData> dataList = new ArrayList<>();

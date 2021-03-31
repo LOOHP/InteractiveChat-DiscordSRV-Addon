@@ -7,8 +7,8 @@ import java.util.UUID;
 
 import org.bukkit.entity.Player;
 
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordAttachmentEvents;
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordAttachmentEvents.DiscordAttachmentData;
+import com.loohp.interactivechatdiscordsrvaddon.Listeners.InboundToGameEvents;
+import com.loohp.interactivechatdiscordsrvaddon.Listeners.InboundToGameEvents.DiscordAttachmentData;
 import com.loohp.interactivechatdiscordsrvaddon.Wrappers.GraphicsToPacketMapWrapper;
 
 public class InteractiveChatDiscordSrvAddonAPI {
@@ -18,7 +18,7 @@ public class InteractiveChatDiscordSrvAddonAPI {
 	 * @return A mapping of the assigned UUID to the discord attachments
 	 */
 	public static Map<UUID, DiscordAttachmentData> getActiveDiscordAttachments() {
-		return Collections.unmodifiableMap(DiscordAttachmentEvents.DATA);
+		return Collections.unmodifiableMap(InboundToGameEvents.DATA);
 	}
 	
 	/**
@@ -26,7 +26,7 @@ public class InteractiveChatDiscordSrvAddonAPI {
 	 * @return A mapping of currently viewing players to the image preview maps
 	 */
 	public static Map<Player, GraphicsToPacketMapWrapper> getActivePlayerImageMapViews() {
-		return Collections.unmodifiableMap(DiscordAttachmentEvents.MAP_VIEWERS);
+		return Collections.unmodifiableMap(InboundToGameEvents.MAP_VIEWERS);
 	}
 	
 	/**
@@ -35,7 +35,7 @@ public class InteractiveChatDiscordSrvAddonAPI {
 	 * @return The image preview map (Could be null)
 	 */
 	public static GraphicsToPacketMapWrapper getDiscordImageWrapperByUUID(UUID uuid) {
-		Optional<DiscordAttachmentData> opt = DiscordAttachmentEvents.DATA.values().stream().filter(each -> each.getUniqueId().equals(uuid)).findFirst();
+		Optional<DiscordAttachmentData> opt = InboundToGameEvents.DATA.values().stream().filter(each -> each.getUniqueId().equals(uuid)).findFirst();
 		if (opt.isPresent() && opt.get().isImage()) {
 			return opt.get().getImageMap();
 		} else {
