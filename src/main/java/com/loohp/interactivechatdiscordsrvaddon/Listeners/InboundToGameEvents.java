@@ -4,8 +4,6 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,7 +14,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -48,6 +45,8 @@ import com.loohp.interactivechatdiscordsrvaddon.API.Events.DiscordAttachmentConv
 import com.loohp.interactivechatdiscordsrvaddon.Graphics.GifReader;
 import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageFrame;
 import com.loohp.interactivechatdiscordsrvaddon.Modules.DiscordToGameMention;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.ThrowingSupplier;
+import com.loohp.interactivechatdiscordsrvaddon.Utils.URLRequestUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Wrappers.GraphicsToPacketMapWrapper;
 
 import github.scarsz.discordsrv.DiscordSRV;
@@ -185,16 +184,18 @@ public class InboundToGameEvents implements Listener {
 					processedUrl.add(url);
 					if (attachment.isImage()) {
 						InteractiveChatDiscordSrvAddon.plugin.attachmentImageCounter.incrementAndGet();
-						try {
-							InputStream stream = attachment.retrieveInputStream().get();
+						List<ThrowingSupplier<InputStream>> methods = new ArrayList<>();
+						methods.add(() -> attachment.retrieveInputStream().get());
+						methods.add(() -> URLRequestUtils.getInputStream0(attachment.getUrl()));
+						methods.add(() -> URLRequestUtils.getInputStream0(attachment.getProxyUrl()));
+						
+						try (InputStream stream = URLRequestUtils.retrieveInputStreamUntilSuccessful(methods)) {
 							GraphicsToPacketMapWrapper map;
 							if (url.toLowerCase().endsWith(".gif")) {
 								ImageFrame[] frames = GifReader.readGif(stream);
-								stream.close();
 								map = new GraphicsToPacketMapWrapper(frames);
 							} else {
 								BufferedImage image = ImageIO.read(stream);
-								stream.close();
 								map = new GraphicsToPacketMapWrapper(image);
 							}
 							DiscordAttachmentData data = new DiscordAttachmentData(attachment.getFileName(), url, map);
@@ -202,7 +203,7 @@ public class InboundToGameEvents implements Listener {
 							Bukkit.getPluginManager().callEvent(dace);
 							DATA.put(data.getUniqueId(), data);
 							Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(data.getUniqueId()), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
-						} catch (IOException | InterruptedException | ExecutionException e) {
+						} catch (IOException e) {
 							e.printStackTrace();
 							DiscordAttachmentData data = new DiscordAttachmentData(attachment.getFileName(), url);
 							DiscordAttachmentConversionEvent dace = new DiscordAttachmentConversionEvent(url, data);
@@ -225,22 +226,13 @@ public class InboundToGameEvents implements Listener {
 				String url = matcher.group();
 				if (!processedUrl.contains(url)) {
 					InteractiveChatDiscordSrvAddon.plugin.attachmentImageCounter.incrementAndGet();
-					try {
-						URLConnection connection = new URL(url).openConnection();
-						connection.setUseCaches(false);
-			            connection.setDefaultUseCaches(false);
-			            connection.addRequestProperty("User-Agent", "Mozilla/5.0");
-			            connection.addRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
-			            connection.addRequestProperty("Pragma", "no-cache");
-			            InputStream stream = connection.getInputStream();
+					try (InputStream stream = URLRequestUtils.getInputStream(url)) {
 						GraphicsToPacketMapWrapper map;
 						if (url.toLowerCase().endsWith(".gif")) {
 							ImageFrame[] frames = GifReader.readGif(stream);
-							stream.close();
 							map = new GraphicsToPacketMapWrapper(frames);
 						} else {
 							BufferedImage image = ImageIO.read(stream);
-							stream.close();
 							map = new GraphicsToPacketMapWrapper(image);
 						}
 						String name = url.lastIndexOf("/") < 0 ? url : url.substring(url.lastIndexOf("/") + 1);
