@@ -27,15 +27,13 @@ import com.loohp.interactivechat.Utils.ChatColorUtils;
 import com.loohp.interactivechat.Utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.InboundToGameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordReadyEvents;
+import com.loohp.interactivechatdiscordsrvaddon.Listeners.InboundToGameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.Listeners.OutboundToDiscordEvents;
 import com.loohp.interactivechatdiscordsrvaddon.Metrics.Charts;
 import com.loohp.interactivechatdiscordsrvaddon.Metrics.Metrics;
 import com.loohp.interactivechatdiscordsrvaddon.Updater.Updater;
 import com.loohp.interactivechatdiscordsrvaddon.Utils.ColorUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.JarUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.JarUtils.CopyOption;
 
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.dependencies.jda.api.Permission;
@@ -149,11 +147,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(new Updater(), this);
 		getCommand("interactivechatdiscordsrv").setExecutor(new Commands());
 		
-		try {
-			JarUtils.copyFolderFromJar("assets", getDataFolder(), CopyOption.REPLACE_IF_EXIST);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 		File resources = new File(getDataFolder(), "resources");
 		if (!resources.exists()) {
 			resources.mkdirs();
@@ -308,6 +301,12 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	
 	public void reloadTextures() {
 		Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+			try {
+				AssetsDownloader.loadAssets(getDataFolder());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
 			Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSRVAddon] Loading textures...");
 			Map<String, BufferedImage> blocks = new HashMap<>();
 			Map<String, BufferedImage> items = new HashMap<>();
