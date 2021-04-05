@@ -130,6 +130,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		interactivechat = InteractiveChat.plugin;
 		discordsrv = DiscordSRV.getPlugin();
 
+		getConfig().options().header("For information on what each option does. Please refer to https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon/blob/master/src/main/resources/config.yml");
 		getConfig().options().copyDefaults(true);
 		saveConfig();
 		
