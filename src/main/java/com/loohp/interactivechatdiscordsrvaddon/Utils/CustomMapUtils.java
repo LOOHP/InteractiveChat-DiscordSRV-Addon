@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Utils;
+package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import java.util.ArrayList;
 import java.util.Collections;

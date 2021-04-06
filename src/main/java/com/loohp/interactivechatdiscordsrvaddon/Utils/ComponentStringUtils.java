@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Utils;
+package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
@@ -6,8 +6,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.apache.commons.lang.RandomStringUtils;
 
 import com.google.common.base.CharMatcher;
-import com.loohp.interactivechat.Utils.CustomStringUtils;
-import com.loohp.interactivechat.Utils.LanguageUtils;
+import com.loohp.interactivechat.utils.CustomStringUtils;
+import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 
 import net.md_5.bungee.api.ChatColor;

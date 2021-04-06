@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Wrappers;
+package com.loohp.interactivechatdiscordsrvaddon.wrappers;
 
 import java.util.HashMap;
 import java.util.Map;

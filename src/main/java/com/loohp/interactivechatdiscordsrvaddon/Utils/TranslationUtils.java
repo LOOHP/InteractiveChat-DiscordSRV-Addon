@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Utils;
+package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -10,7 +10,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.potion.PotionEffectType;
 
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.Utils.MCVersion;
+import com.loohp.interactivechat.utils.MCVersion;
 
 public class TranslationUtils {
 	

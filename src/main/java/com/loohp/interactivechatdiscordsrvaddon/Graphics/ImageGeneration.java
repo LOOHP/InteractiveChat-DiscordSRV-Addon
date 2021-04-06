@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Graphics;
+package com.loohp.interactivechatdiscordsrvaddon.graphics;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -27,15 +27,15 @@ import org.json.simple.parser.ParseException;
 import com.cryptomorin.xseries.SkullUtils;
 import com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.Utils.FilledMapUtils;
-import com.loohp.interactivechat.Utils.HashUtils;
+import com.loohp.interactivechat.utils.FilledMapUtils;
+import com.loohp.interactivechat.utils.HashUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.ItemStackUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.PotionUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.SkinUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Wrappers.ItemMapWrapper;
-import com.loohp.interactivechatdiscordsrvaddon.Wrappers.ItemMapWrapper.MapIcon;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ItemStackUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.PotionUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.SkinUtils;
+import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper;
+import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper.MapIcon;
 
 import net.md_5.bungee.api.chat.BaseComponent;
 

@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.API.Events;
+package com.loohp.interactivechatdiscordsrvaddon.api.events;
 
 import org.bukkit.entity.Player;
 

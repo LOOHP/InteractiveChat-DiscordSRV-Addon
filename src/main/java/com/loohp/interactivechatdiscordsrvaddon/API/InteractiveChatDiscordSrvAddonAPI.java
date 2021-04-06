@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.API;
+package com.loohp.interactivechatdiscordsrvaddon.api;
 
 import java.util.Collections;
 import java.util.Map;
@@ -7,9 +7,9 @@ import java.util.UUID;
 
 import org.bukkit.entity.Player;
 
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.InboundToGameEvents;
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.InboundToGameEvents.DiscordAttachmentData;
-import com.loohp.interactivechatdiscordsrvaddon.Wrappers.GraphicsToPacketMapWrapper;
+import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
+import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents.DiscordAttachmentData;
+import com.loohp.interactivechatdiscordsrvaddon.wrappers.GraphicsToPacketMapWrapper;
 
 public class InteractiveChatDiscordSrvAddonAPI {
 	

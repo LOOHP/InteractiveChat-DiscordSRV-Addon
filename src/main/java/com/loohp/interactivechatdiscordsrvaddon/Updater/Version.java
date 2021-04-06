@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Updater;
+package com.loohp.interactivechatdiscordsrvaddon.updater;
 
 public class Version implements Comparable<Version> {
 

@@ -1,10 +1,10 @@
-package com.loohp.interactivechatdiscordsrvaddon.API.Events;
+package com.loohp.interactivechatdiscordsrvaddon.api.events;
 
 import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.InboundToGameEvents.DiscordAttachmentData;
+import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents.DiscordAttachmentData;
 
 /**
  * This event is called when a discord attachment had been processed.

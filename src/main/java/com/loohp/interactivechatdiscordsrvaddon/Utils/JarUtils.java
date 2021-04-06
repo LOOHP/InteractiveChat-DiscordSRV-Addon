@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Utils;
+package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import java.io.File;
 import java.io.FileInputStream;

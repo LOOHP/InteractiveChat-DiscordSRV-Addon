@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.ObjectHolders;
+package com.loohp.interactivechatdiscordsrvaddon.objectholders;
 
 import java.awt.Color;
 

@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Debug;
+package com.loohp.interactivechatdiscordsrvaddon.debug;
 
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;

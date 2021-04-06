@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Listeners;
+package com.loohp.interactivechatdiscordsrvaddon.listeners;
 
 import org.bukkit.Bukkit;
 

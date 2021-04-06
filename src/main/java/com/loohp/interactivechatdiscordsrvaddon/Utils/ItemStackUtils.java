@@ -1,9 +1,9 @@
-package com.loohp.interactivechatdiscordsrvaddon.Utils;
+package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import org.bukkit.inventory.ItemStack;
 
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.Utils.MCVersion;
+import com.loohp.interactivechat.utils.MCVersion;
 
 public class ItemStackUtils {
 

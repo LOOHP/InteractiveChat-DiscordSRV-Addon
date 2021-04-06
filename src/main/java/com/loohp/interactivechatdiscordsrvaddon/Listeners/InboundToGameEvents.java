@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Listeners;
+package com.loohp.interactivechatdiscordsrvaddon.listeners;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -37,17 +37,17 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.API.Events.PrePacketComponentProcessEvent;
-import com.loohp.interactivechat.Utils.CustomStringUtils;
-import com.loohp.interactivechat.Utils.MCVersion;
+import com.loohp.interactivechat.api.events.PrePacketComponentProcessEvent;
+import com.loohp.interactivechat.utils.CustomStringUtils;
+import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import com.loohp.interactivechatdiscordsrvaddon.API.Events.DiscordAttachmentConversionEvent;
-import com.loohp.interactivechatdiscordsrvaddon.Graphics.GifReader;
-import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageFrame;
-import com.loohp.interactivechatdiscordsrvaddon.Modules.DiscordToGameMention;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.ThrowingSupplier;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.URLRequestUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Wrappers.GraphicsToPacketMapWrapper;
+import com.loohp.interactivechatdiscordsrvaddon.api.events.DiscordAttachmentConversionEvent;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.GifReader;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageFrame;
+import com.loohp.interactivechatdiscordsrvaddon.modules.DiscordToGameMention;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ThrowingSupplier;
+import com.loohp.interactivechatdiscordsrvaddon.utils.URLRequestUtils;
+import com.loohp.interactivechatdiscordsrvaddon.wrappers.GraphicsToPacketMapWrapper;
 
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.api.ListenerPriority;

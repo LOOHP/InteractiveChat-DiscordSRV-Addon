@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Graphics;
+package com.loohp.interactivechatdiscordsrvaddon.graphics;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -12,7 +12,7 @@ import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.BlockStateMeta;
 
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import com.loohp.interactivechatdiscordsrvaddon.Wrappers.PatternTypeWrapper;
+import com.loohp.interactivechatdiscordsrvaddon.wrappers.PatternTypeWrapper;
 
 public class BannerGraphics {
 	

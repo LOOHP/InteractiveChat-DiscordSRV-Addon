@@ -1,11 +1,11 @@
-package com.loohp.interactivechatdiscordsrvaddon.Utils;
+package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import com.loohp.interactivechat.Utils.ChatColorUtils;
+import com.loohp.interactivechat.utils.ChatColorUtils;
 
 import net.md_5.bungee.api.ChatColor;
 

@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Utils;
+package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import java.text.DecimalFormat;
 import java.time.Instant;

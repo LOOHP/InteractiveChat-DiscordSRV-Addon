@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Graphics;
+package com.loohp.interactivechatdiscordsrvaddon.graphics;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -17,8 +17,8 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
-import com.loohp.interactivechat.Utils.ChatColorUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.ComponentStringUtils;
+import com.loohp.interactivechat.utils.ChatColorUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -332,7 +332,9 @@ public class ImageUtils {
 		String text = ComponentStringUtils.toLegacyString(baseComponent);
 		String striped = ChatColorUtils.stripColor(text);
 		
-		fontSize = Math.round(Math.max(2, fontSize - (float) striped.length() / 3) * 10) / 10;
+		if (dynamicFontSize) {
+			fontSize = Math.round(Math.max(2, fontSize - (float) striped.length() / 3) * 10) / 10;
+		}
 		
 		BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = textImage.createGraphics();

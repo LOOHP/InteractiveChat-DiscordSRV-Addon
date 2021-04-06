@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Wrappers;
+package com.loohp.interactivechatdiscordsrvaddon.wrappers;
 
 import java.awt.image.BufferedImage;
 import java.lang.reflect.Array;
@@ -21,11 +21,11 @@ import com.comphenix.protocol.wrappers.EnumWrappers.ItemSlot;
 import com.comphenix.protocol.wrappers.Pair;
 import com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.Utils.MCVersion;
+import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageFrame;
-import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.InboundToGameEvents;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageFrame;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
 
 @SuppressWarnings("deprecation")
 public class GraphicsToPacketMapWrapper {

@@ -12,11 +12,11 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.Utils.ChatColorUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.InboundToGameEvents;
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.InboundToGameEvents.DiscordAttachmentData;
-import com.loohp.interactivechatdiscordsrvaddon.Updater.Updater;
-import com.loohp.interactivechatdiscordsrvaddon.Updater.Updater.UpdaterResponse;
+import com.loohp.interactivechat.utils.ChatColorUtils;
+import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
+import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents.DiscordAttachmentData;
+import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
+import com.loohp.interactivechatdiscordsrvaddon.updater.Updater.UpdaterResponse;
 
 import net.md_5.bungee.api.ChatColor;
 

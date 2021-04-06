@@ -20,8 +20,8 @@ import org.json.simple.parser.JSONParser;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
-import com.loohp.interactivechat.Utils.FileUtils;
-import com.loohp.interactivechat.Utils.HTTPRequestUtils;
+import com.loohp.interactivechat.utils.FileUtils;
+import com.loohp.interactivechat.utils.HTTPRequestUtils;
 
 import net.md_5.bungee.api.ChatColor;
 

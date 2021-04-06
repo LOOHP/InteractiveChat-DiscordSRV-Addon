@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Metrics;
+package com.loohp.interactivechatdiscordsrvaddon.metrics;
 
 import java.util.concurrent.Callable;
 

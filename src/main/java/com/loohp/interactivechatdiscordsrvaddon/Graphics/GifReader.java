@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Graphics;
+package com.loohp.interactivechatdiscordsrvaddon.graphics;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;

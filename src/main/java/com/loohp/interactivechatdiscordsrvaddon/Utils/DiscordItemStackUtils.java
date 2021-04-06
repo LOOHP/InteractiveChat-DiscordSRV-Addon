@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Utils;
+package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import java.awt.Color;
 import java.lang.reflect.Method;
@@ -25,14 +25,14 @@ import org.bukkit.potion.PotionEffect;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.Utils.ChatColorUtils;
-import com.loohp.interactivechat.Utils.FilledMapUtils;
-import com.loohp.interactivechat.Utils.LanguageUtils;
-import com.loohp.interactivechat.Utils.MCVersion;
-import com.loohp.interactivechat.Utils.NBTUtils;
-import com.loohp.interactivechat.Utils.RarityUtils;
+import com.loohp.interactivechat.utils.ChatColorUtils;
+import com.loohp.interactivechat.utils.FilledMapUtils;
+import com.loohp.interactivechat.utils.LanguageUtils;
+import com.loohp.interactivechat.utils.MCVersion;
+import com.loohp.interactivechat.utils.NBTUtils;
+import com.loohp.interactivechat.utils.RarityUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import com.loohp.interactivechatdiscordsrvaddon.Registies.DiscordDataRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.registies.DiscordDataRegistry;
 
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.dependencies.dev.vankka.mcdiscordreserializer.discord.DiscordSerializer;

@@ -23,17 +23,19 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.Utils.ChatColorUtils;
-import com.loohp.interactivechat.Utils.LanguageUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Debug.Debug;
-import com.loohp.interactivechatdiscordsrvaddon.Graphics.ImageUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.DiscordReadyEvents;
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.InboundToGameEvents;
-import com.loohp.interactivechatdiscordsrvaddon.Listeners.OutboundToDiscordEvents;
-import com.loohp.interactivechatdiscordsrvaddon.Metrics.Charts;
-import com.loohp.interactivechatdiscordsrvaddon.Metrics.Metrics;
-import com.loohp.interactivechatdiscordsrvaddon.Updater.Updater;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.ColorUtils;
+import com.loohp.interactivechat.registry.Registry;
+import com.loohp.interactivechat.utils.ChatColorUtils;
+import com.loohp.interactivechat.utils.LanguageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordReadyEvents;
+import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
+import com.loohp.interactivechatdiscordsrvaddon.listeners.OutboundToDiscordEvents;
+import com.loohp.interactivechatdiscordsrvaddon.metrics.Charts;
+import com.loohp.interactivechatdiscordsrvaddon.metrics.Metrics;
+import com.loohp.interactivechatdiscordsrvaddon.registies.InteractiveChatRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ColorUtils;
 
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.dependencies.jda.api.Permission;
@@ -152,7 +154,15 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 			resources.mkdirs();
 		}
 		
-		getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSRVAddon] InteractiveChat DiscordSRV Addon has been Enabled!");
+		if (!compatible()) {
+			getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] VERSION NOT COMPATIBLE WITH INTERACTIVECHAT, PLEASE UPDATE!!!!");
+			getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] VERSION NOT COMPATIBLE WITH INTERACTIVECHAT, PLEASE UPDATE!!!!");
+			getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] VERSION NOT COMPATIBLE WITH INTERACTIVECHAT, PLEASE UPDATE!!!!");
+			getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] VERSION NOT COMPATIBLE WITH INTERACTIVECHAT, PLEASE UPDATE!!!!");
+			getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] VERSION NOT COMPATIBLE WITH INTERACTIVECHAT, PLEASE UPDATE!!!!");
+		} else {
+			getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSRVAddon] InteractiveChat DiscordSRV Addon has been Enabled!");
+		}
 		
 		reloadTextures();
 		/*
@@ -170,6 +180,11 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	@Override
 	public void onDisable() {
 		getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] InteractiveChat DiscordSRV Addon has been Disabled!");
+	}
+	
+	@SuppressWarnings("all")
+	public boolean compatible() {
+		return Registry.INTERACTIVE_CHAT_DISCORD_SRV_ADDON_COMPATIBLE_VERSION == InteractiveChatRegistry.INTERACTIVE_CHAT_DISCORD_SRV_ADDON_COMPATIBLE_VERSION;
 	}
 	
 	@Override

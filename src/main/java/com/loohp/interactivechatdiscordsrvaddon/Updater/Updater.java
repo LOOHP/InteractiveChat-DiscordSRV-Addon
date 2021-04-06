@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Updater;
+package com.loohp.interactivechatdiscordsrvaddon.updater;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -8,7 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.json.simple.JSONObject;
 
-import com.loohp.interactivechat.Utils.HTTPRequestUtils;
+import com.loohp.interactivechat.utils.HTTPRequestUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 
 import net.md_5.bungee.api.ChatColor;

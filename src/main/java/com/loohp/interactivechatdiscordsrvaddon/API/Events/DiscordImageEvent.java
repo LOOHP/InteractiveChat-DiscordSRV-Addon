@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.API.Events;
+package com.loohp.interactivechatdiscordsrvaddon.api.events;
 
 import java.util.List;
 
@@ -6,7 +6,7 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-import com.loohp.interactivechatdiscordsrvaddon.ObjectHolders.DiscordMessageContent;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordMessageContent;
 
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 

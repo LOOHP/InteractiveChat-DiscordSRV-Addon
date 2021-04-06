@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Wrappers;
+package com.loohp.interactivechatdiscordsrvaddon.wrappers;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -19,8 +19,8 @@ import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.MapView;
 
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.Utils.FilledMapUtils;
-import com.loohp.interactivechat.Utils.MCVersion;
+import com.loohp.interactivechat.utils.FilledMapUtils;
+import com.loohp.interactivechat.utils.MCVersion;
 
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.chat.ComponentSerializer;

@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.Registies;
+package com.loohp.interactivechatdiscordsrvaddon.registies;
 
 import java.awt.Color;
 import java.util.Collections;
@@ -6,8 +6,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.loohp.interactivechat.Utils.CustomStringUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Utils.ColorUtils;
+import com.loohp.interactivechat.utils.CustomStringUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ColorUtils;
 
 public class DiscordDataRegistry {
 

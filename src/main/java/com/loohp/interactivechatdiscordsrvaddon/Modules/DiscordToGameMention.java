@@ -1,12 +1,12 @@
-package com.loohp.interactivechatdiscordsrvaddon.Modules;
+package com.loohp.interactivechatdiscordsrvaddon.modules;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
-import com.loohp.interactivechat.Utils.ChatColorUtils;
-import com.loohp.interactivechat.Utils.SoundUtils;
-import com.loohp.interactivechat.Utils.TitleUtils;
+import com.loohp.interactivechat.utils.ChatColorUtils;
+import com.loohp.interactivechat.utils.SoundUtils;
+import com.loohp.interactivechat.utils.TitleUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 
 import net.md_5.bungee.api.ChatColor;

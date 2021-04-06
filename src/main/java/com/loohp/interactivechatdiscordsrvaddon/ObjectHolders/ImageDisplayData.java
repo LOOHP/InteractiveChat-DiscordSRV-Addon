@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.ObjectHolders;
+package com.loohp.interactivechatdiscordsrvaddon.objectholders;
 
 import java.util.Optional;
 
@@ -6,7 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import com.loohp.interactivechat.Utils.FilledMapUtils;
+import com.loohp.interactivechat.utils.FilledMapUtils;
 
 public class ImageDisplayData extends DiscordDisplayData {
 	
