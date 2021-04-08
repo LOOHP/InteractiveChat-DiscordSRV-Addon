@@ -74,7 +74,10 @@ import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.User;
 import github.scarsz.discordsrv.dependencies.jda.api.events.message.MessageReceivedEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.hooks.ListenerAdapter;
+import github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component;
+import github.scarsz.discordsrv.dependencies.kyori.adventure.text.TextReplacementConfig;
 import github.scarsz.discordsrv.util.DiscordUtil;
+import github.scarsz.discordsrv.util.MessageUtil;
 import github.scarsz.discordsrv.util.PlaceholderUtil;
 import github.scarsz.discordsrv.util.WebhookUtil;
 
@@ -87,15 +90,12 @@ public class OutboundToDiscordEvents {
 	@Subscribe(priority = ListenerPriority.LOW)
 	public void onDiscordToGame(DiscordGuildMessagePostProcessEvent event) {
 		InteractiveChatDiscordSrvAddon.plugin.messagesCounter.incrementAndGet();
-		String message = event.getProcessedMessage();
+		Component component = event.getMinecraftMessage();
 		if (InteractiveChatDiscordSrvAddon.plugin.escapePlaceholdersFromDiscord) {
-			for (String placeholder : InteractiveChat.aliasesMapping.keySet()) {
-				message = message.replaceAll(placeholder, "\\" + placeholder);
-			}
 			for (ICPlaceholder placeholder : InteractiveChat.placeholderList) {
-				message = message.replace(placeholder.getKeyword(), "\\" + placeholder.getKeyword());
+				component = component.replaceText(TextReplacementConfig.builder().matchLiteral(placeholder.getKeyword()).replacement("\\" + placeholder.getKeyword()).build());
 			}
-			event.setProcessedMessage(message);
+			event.setMinecraftMessage(component);
 		}
 	}
 	
@@ -124,7 +124,9 @@ public class OutboundToDiscordEvents {
 		if (InteractiveChat.useItem && sender.hasPermission("interactivechat.module.item")) {
 			long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, InteractiveChat.itemPlaceholder) - now;
 			if (cooldown < 0 || cooldown + 100 > ConfigManager.getConfig().getLong("ItemDisplay.Item.Cooldown") * 1000) {
-				if (message.toLowerCase().contains(InteractiveChat.itemPlaceholder.toLowerCase())) {
+				String placeholder = InteractiveChat.itemPlaceholder;
+				int index = InteractiveChat.itemCaseSensitive ? message.indexOf(placeholder) : message.toLowerCase().indexOf(placeholder.toLowerCase());
+				if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\'))) {
 					ItemStack item = sender.getEquipment().getItemInHand();
 					if (item == null) {
 						item = new ItemStack(Material.AIR);
@@ -196,7 +198,9 @@ public class OutboundToDiscordEvents {
 		if (InteractiveChat.useInventory && sender.hasPermission("interactivechat.module.inventory")) {
 			long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, InteractiveChat.invPlaceholder) - now;
 			if (cooldown < 0 || cooldown + 100 > ConfigManager.getConfig().getLong("ItemDisplay.Inventory.Cooldown") * 1000) {
-				if (message.toLowerCase().contains(InteractiveChat.invPlaceholder.toLowerCase())) {
+				String placeholder = InteractiveChat.invPlaceholder;
+				int index = InteractiveChat.invCaseSensitive ? message.indexOf(placeholder) : message.toLowerCase().indexOf(placeholder.toLowerCase());
+				if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\'))) {
 					String replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.invReplaceText));
 					message = message.replaceAll((InteractiveChat.invCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.invPlaceholder), replaceText);
 					if (InteractiveChatDiscordSrvAddon.plugin.invImage) {
@@ -230,7 +234,9 @@ public class OutboundToDiscordEvents {
 		if (InteractiveChat.useEnder && sender.hasPermission("interactivechat.module.enderchest")) {
 			long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, InteractiveChat.enderPlaceholder) - now;
 			if (cooldown < 0 || cooldown + 100 > ConfigManager.getConfig().getLong("ItemDisplay.EnderChest.Cooldown") * 1000) {
-				if (message.toLowerCase().contains(InteractiveChat.enderPlaceholder.toLowerCase())) {
+				String placeholder = InteractiveChat.enderPlaceholder;
+				int index = InteractiveChat.enderCaseSensitive ? message.indexOf(placeholder) : message.toLowerCase().indexOf(placeholder.toLowerCase());
+				if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\'))) {
 					String replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.enderReplaceText));
 					message = message.replaceAll((InteractiveChat.enderCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.enderPlaceholder), replaceText);
 					if (InteractiveChatDiscordSrvAddon.plugin.enderImage) {
@@ -266,7 +272,8 @@ public class OutboundToDiscordEvents {
 				CustomPlaceholder customP = placeholder.getCustomPlaceholder().get();
 				if (!InteractiveChat.useCustomPlaceholderPermissions || (InteractiveChat.useCustomPlaceholderPermissions && sender.hasPermission(customP.getPermission()))) {
 					long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, customP.getKeyword()) - now;
-					if (message.toLowerCase().contains(customP.getKeyword().toLowerCase()) && (cooldown < 0 || cooldown + 100 > customP.getCooldown())) {
+					int index = placeholder.isCaseSensitive() ? message.indexOf(placeholder.getKeyword()) : message.toLowerCase().indexOf(placeholder.getKeyword().toLowerCase());
+					if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\')) && (cooldown < 0 || cooldown + 100 > customP.getCooldown())) {
 						String replaceText = customP.getKeyword();
 						if (customP.getReplace().isEnabled()) {
 							replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
@@ -292,7 +299,8 @@ public class OutboundToDiscordEvents {
 		if (InteractiveChat.t && WebData.getInstance() != null) {
 			for (CustomPlaceholder customP : WebData.getInstance().getSpecialPlaceholders()) {
 				long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, customP.getKeyword()) - now;
-				if (message.toLowerCase().contains(customP.getKeyword().toLowerCase()) && (cooldown < 0 || cooldown + 100 > customP.getCooldown())) {
+				int index = customP.isCaseSensitive() ? message.indexOf(customP.getKeyword()) : message.toLowerCase().indexOf(customP.getKeyword().toLowerCase());
+				if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\')) && (cooldown < 0 || cooldown + 100 > customP.getCooldown())) {
 					String replaceText = customP.getKeyword();
 					if (customP.getReplace().isEnabled()) {
 						replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
@@ -684,12 +692,12 @@ public class OutboundToDiscordEvents {
 				}
 			}
 			
-			String avatarUrl = DiscordSRV.getAvatarUrl((Player) player);
+			String avatarUrl = DiscordSRV.getAvatarUrl(player);
             String username = DiscordSRV.config().getString("Experiment_WebhookChatMessageUsernameFormat")
-                    .replace("%displayname%", DiscordUtil.strip(player.getDisplayName()))
+                    .replace("%displayname%", MessageUtil.strip(player.getDisplayName()))
                     .replace("%username%", player.getName());
             username = PlaceholderUtil.replacePlaceholders(username, player);
-            username = DiscordUtil.strip(username);
+            username = MessageUtil.strip(username);
 
             String userId = DiscordSRV.getPlugin().getAccountLinkManager().getDiscordId(player.getUniqueId());
             if (userId != null) {

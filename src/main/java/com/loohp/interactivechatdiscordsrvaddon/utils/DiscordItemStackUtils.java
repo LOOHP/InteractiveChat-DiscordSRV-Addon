@@ -35,14 +35,16 @@ import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.registies.DiscordDataRegistry;
 
 import github.scarsz.discordsrv.DiscordSRV;
-import github.scarsz.discordsrv.dependencies.dev.vankka.mcdiscordreserializer.discord.DiscordSerializer;
-import github.scarsz.discordsrv.dependencies.net.kyori.text.serializer.legacy.LegacyComponentSerializer;
+import github.scarsz.discordsrv.dependencies.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import github.scarsz.discordsrv.dependencies.mcdiscordreserializer.discord.DiscordSerializer;
 import net.md_5.bungee.api.ChatColor;
 
 @SuppressWarnings("deprecation")
 public class DiscordItemStackUtils {
 	
 	public static final String DISCORD_EMPTY = "\u200e";
+	
+	private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.builder().extractUrls().hexColors().useUnusualXRepeatedCharacterHexFormat().build();
 	
 	private static Method bukkitBukkitClassGetMapShortMethod = null;
 	private static Method bukkitMapViewClassGetIdMethod = null;
@@ -255,7 +257,7 @@ public class DiscordItemStackUtils {
 					if (InteractiveChatDiscordSrvAddon.plugin.escapeDiscordMarkdownInItems) {
 						lore = lore.replaceAll(DiscordDataRegistry.getMarkdownSpecialPattern(), "\\\\$1");
 					}
-					lore = DiscordSerializer.INSTANCE.serialize(LegacyComponentSerializer.INSTANCE.deserialize(String.join("\n", meta.getLore())));
+					lore = DiscordSerializer.INSTANCE.serialize(LEGACY_SERIALIZER.deserialize(String.join("\n", meta.getLore())));
 				} else {
 					lore = ComponentStringUtils.stripColorAndConvertMagic(String.join("\n", meta.getLore()));
 					if (InteractiveChatDiscordSrvAddon.plugin.escapeDiscordMarkdownInItems) {

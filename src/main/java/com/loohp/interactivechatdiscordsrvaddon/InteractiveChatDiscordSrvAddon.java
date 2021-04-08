@@ -98,6 +98,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	
 	public boolean translateMentions = true;
 	public String mentionHighlight = "";
+	//public String mentionHover = "";
 	
 	public boolean updaterEnabled = true;
 	
@@ -238,6 +239,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		
 		translateMentions = getConfig().getBoolean("DiscordMention.TranslateMentions");
 		mentionHighlight = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordMention.MentionHighlight"));
+		//mentionHover = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getStringList("DiscordMention.MentionHoverText").stream().collect(Collectors.joining("\n")));
 		
 		language = getConfig().getString("Resources.Language");
 		

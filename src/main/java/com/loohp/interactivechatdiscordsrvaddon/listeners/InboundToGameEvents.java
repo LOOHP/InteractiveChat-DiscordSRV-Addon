@@ -61,6 +61,9 @@ import github.scarsz.discordsrv.dependencies.jda.api.entities.Message.Attachment
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Role;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.User;
+import github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component;
+import github.scarsz.discordsrv.dependencies.kyori.adventure.text.TextReplacementConfig;
+import github.scarsz.discordsrv.util.MessageUtil;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -105,7 +108,7 @@ public class InboundToGameEvents implements Listener {
 	public void onRecieveMessageFromDiscordPost(DiscordGuildMessagePostProcessEvent event) {
 		Message message = event.getMessage();
 		
-		String processedMessage = event.getProcessedMessage();
+		Component component = event.getMinecraftMessage();
 		
 		DiscordSRV srv = InteractiveChatDiscordSrvAddon.discordsrv;
 		User author = message.getAuthor();
@@ -129,7 +132,8 @@ public class InboundToGameEvents implements Listener {
 			}
 			
 			if (message.mentionsEveryone()) {
-				processedMessage = processedMessage.replace("@here", InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@here")).replace("@everyone", InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@everyone"));
+				//github.scarsz.discordsrv.dependencies.kyori.adventure.text.event.HoverEvent<Component> hover = Component.text(InteractiveChatDiscordSrvAddon.plugin.mentionHover.replace("{DiscordUser}", senderDiscordName).replace("{TextChannel}", "#" + channel.getName()).replace("{Guild}", guild.getName())).asHoverEvent();
+				component = component.replaceText(TextReplacementConfig.builder().matchLiteral("@here").replacement(Component.text(InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@here"))).build()).replaceText(TextReplacementConfig.builder().matchLiteral("@everyone").replacement(Component.text(InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@everyone"))).build());
 				for (UUID uuid : channelMembers.values()) {
 					mentionTitleSent.add(uuid);
 					Player player = Bukkit.getPlayer(uuid);
@@ -141,7 +145,8 @@ public class InboundToGameEvents implements Listener {
 			
 			List<Role> mentionedRoles = message.getMentionedRoles();
 			for (Role role : mentionedRoles) {
-				processedMessage = processedMessage.replace("@" + role.getName(), InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@" + role.getName()));
+				//github.scarsz.discordsrv.dependencies.kyori.adventure.text.event.HoverEvent<Component> hover = Component.text(InteractiveChatDiscordSrvAddon.plugin.mentionHover.replace("{DiscordUser}", senderDiscordName).replace("{TextChannel}", "#" + channel.getName()).replace("{Guild}", guild.getName())).asHoverEvent();
+				component = component.replaceText(TextReplacementConfig.builder().matchLiteral("@" + role.getName()).replacement(Component.text(InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@" + role.getName()))).build());
 				for (Entry<Member, UUID> entry : channelMembers.entrySet()) {
 					UUID uuid = entry.getValue();
 					if (!mentionTitleSent.contains(uuid) && entry.getKey().getRoles().contains(role)) {
@@ -157,7 +162,8 @@ public class InboundToGameEvents implements Listener {
 			List<User> mentionedUsers = message.getMentionedUsers();
 			if (!mentionedUsers.isEmpty()) {
 				for (User user : mentionedUsers) {
-					processedMessage = processedMessage.replace("@" + user.getName(), InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@" + user.getName()));
+					//github.scarsz.discordsrv.dependencies.kyori.adventure.text.event.HoverEvent<Component> hover = Component.text(InteractiveChatDiscordSrvAddon.plugin.mentionHover.replace("{DiscordUser}", senderDiscordName).replace("{TextChannel}", "#" + channel.getName()).replace("{Guild}", guild.getName())).asHoverEvent();
+					component = component.replaceText(TextReplacementConfig.builder().matchLiteral("@" + user.getName()).replacement(Component.text(InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@" + user.getName()))).build());
 					Member member = guild.getMember(user);
 					if (member != null) {
 						UUID uuid = channelMembers.get(member);
@@ -172,8 +178,10 @@ public class InboundToGameEvents implements Listener {
 				}
 			}
 			
-			event.setProcessedMessage(processedMessage);
+			event.setMinecraftMessage(component);
 		}
+		
+		String processedMessage = MessageUtil.toLegacy(component);
 		
 		if (InteractiveChatDiscordSrvAddon.plugin.convertDiscordAttachments) {
 			Set<String> processedUrl = new HashSet<>();
