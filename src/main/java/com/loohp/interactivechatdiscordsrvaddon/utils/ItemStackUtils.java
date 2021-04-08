@@ -26,6 +26,9 @@ public class ItemStackUtils {
 		if (typeNameString.equals("ELYTRA")) {
 			return true;
 		}
+		if (typeNameString.contains("HEAD") || typeNameString.contains("SKULL")) {
+			return true;
+		}
 		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_13)) {
 			return typeNameString.equals("CARVED_PUMPKIN");
 		} else {

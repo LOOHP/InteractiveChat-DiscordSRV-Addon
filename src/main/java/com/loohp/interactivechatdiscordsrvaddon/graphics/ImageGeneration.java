@@ -55,6 +55,7 @@ public class ImageGeneration {
 	private static final String TEXTURE_MINECRAFT_URL = "http://textures.minecraft.net/texture/";
 	private static final String PLAYER_RENDER_URL = "https://mc-heads.net/player/%s/64";
 	private static final String SKULL_RENDER_URL = "https://mc-heads.net/head/%s/96";
+	private static final String HEAD_2D_RENDER_URL = "https://mc-heads.net/avatar/%s/32";
 	
 	private static final int MAP_ICON_PER_ROLE = 16;
 	private static final int SPACING = 36;
@@ -63,6 +64,7 @@ public class ImageGeneration {
 	
 	private static final String FULL_BODY_IMAGE_KEY = "FullBodyImage";
 	private static final String PLAYER_HEAD_KEY = "PlayerHeadImage";
+	private static final String PLAYER_HEAD_2D_KEY = "PlayerHead2DImage";
 	private static final String INVENTORY_KEY = "Inventory";
 	private static final String PLAYER_INVENTORY_KEY = "PlayerInventory";
 	
@@ -580,6 +582,56 @@ public class ImageGeneration {
 				break;
 			case CARVED_PUMPKIN:
 				helmetImage = InteractiveChatDiscordSrvAddon.plugin.getArmorTexture("carved_pumpkin");
+				scale = 1;
+				isArmor = false;
+				helmetImage = ImageUtils.resizeImageAbs(helmetImage, 32, 32);
+				break;
+			case PLAYER_HEAD:
+				try {
+					String base64 = SkullUtils.getSkinValue(helmet.getItemMeta());
+					if (base64 != null) {
+						Cache<?> cache = Cache.getCache(base64 + PLAYER_HEAD_2D_KEY);
+						if (cache == null) {
+							JSONObject json = (JSONObject) new JSONParser().parse(new String(Base64.getDecoder().decode(base64)));
+							String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace(TEXTURE_MINECRAFT_URL, "");
+							String url = HEAD_2D_RENDER_URL.replaceFirst("%s", value);
+							helmetImage = ImageUtils.multiply(ImageUtils.downloadImage(url), 0.9);
+							helmetImage = ImageUtils.resizeImageAbs(helmetImage, 32, 32);
+							Cache.putCache(base64 + PLAYER_HEAD_2D_KEY, helmetImage, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+							helmetImage = ImageUtils.copyImage(helmetImage);
+						} else {
+							helmetImage = ImageUtils.copyImage((BufferedImage) cache.getObject());
+						}
+					} else {
+						helmetImage = InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("default_head_2d");
+					}
+				} catch (ParseException | IOException e) {
+					helmetImage = InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("default_head_2d");
+				}								
+				scale = 1;
+				isArmor = false;
+				helmetImage = ImageUtils.resizeImageAbs(helmetImage, 32, 32);
+				break;
+			case SKELETON_SKULL:
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("skeleton_skull_2d");
+				scale = 1;
+				isArmor = false;
+				helmetImage = ImageUtils.resizeImageAbs(helmetImage, 32, 32);
+				break;
+			case CREEPER_HEAD:
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("creeper_head_2d");
+				scale = 1;
+				isArmor = false;
+				helmetImage = ImageUtils.resizeImageAbs(helmetImage, 32, 32);
+				break;
+			case ZOMBIE_HEAD:
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("zombie_head_2d");
+				scale = 1;
+				isArmor = false;
+				helmetImage = ImageUtils.resizeImageAbs(helmetImage, 32, 32);
+				break;
+			case WITHER_SKELETON_SKULL:
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("wither_skeleton_skull_2d");
 				scale = 1;
 				isArmor = false;
 				helmetImage = ImageUtils.resizeImageAbs(helmetImage, 32, 32);
