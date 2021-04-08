@@ -14,6 +14,7 @@ import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.CrossbowMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -23,8 +24,8 @@ import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.map.MapView;
 import org.bukkit.potion.PotionEffect;
 
-import com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechat.Utils.XMaterial;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
@@ -128,6 +129,16 @@ public class DiscordItemStackUtils {
 		
 		boolean hasMeta = item.hasItemMeta();
 		String description = "";
+		
+		if (xMaterial.equals(XMaterial.CROSSBOW)) {
+			CrossbowMeta meta = (CrossbowMeta) item.getItemMeta();
+			List<ItemStack> charged = meta.getChargedProjectiles();
+			if (charged != null && !charged.isEmpty()) {
+				ItemStack charge = charged.get(0);
+				String chargeItemName = getDiscordDescription(charge).getName();
+				description += LanguageUtils.getTranslation(TranslationUtils.getCrossbowProjectile(), language) + " [**" + chargeItemName + "**]\n\n";
+			}
+		}
 		
 		if (FilledMapUtils.isFilledMap(item)) {
 			MapMeta map = (MapMeta) item.getItemMeta();

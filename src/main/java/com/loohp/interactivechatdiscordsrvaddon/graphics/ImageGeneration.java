@@ -6,34 +6,44 @@ import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
+import java.util.Random;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World.Environment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.CompassMeta;
+import org.bukkit.inventory.meta.CrossbowMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.map.MapPalette;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
+import org.bukkit.util.Vector;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import com.cryptomorin.xseries.SkullUtils;
-import com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechat.Utils.SkullUtils;
+import com.loohp.interactivechat.Utils.XMaterial;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.HashUtils;
+import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemStackUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.PotionUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.SkinUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.VectorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper.MapIcon;
 
@@ -56,7 +66,10 @@ public class ImageGeneration {
 	private static final String INVENTORY_KEY = "Inventory";
 	private static final String PLAYER_INVENTORY_KEY = "PlayerInventory";
 	
-	public static BufferedImage getItemStackImage(ItemStack item) throws IOException {
+	private static final DecimalFormat PHASE_FORMAT = new DecimalFormat("00");
+	private static final Random RANDOM = new Random();
+	
+	public static BufferedImage getItemStackImage(ItemStack item, Player player) throws IOException {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		BufferedImage background = new BufferedImage(36, 36, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = background.createGraphics();
@@ -65,7 +78,7 @@ public class ImageGeneration {
 			return background;
 		}
 		
-		BufferedImage itemImage = getRawItemImage(item);
+		BufferedImage itemImage = getRawItemImage(item, player);
 		
 		if (itemImage != null) {
 			g.drawImage(itemImage, 0, 0, null);
@@ -75,14 +88,16 @@ public class ImageGeneration {
 		return background;
 	}
 	
-	public static BufferedImage getInventoryImage(Inventory inventory) throws Exception {
+	public static BufferedImage getInventoryImage(Inventory inventory, Player player) throws Exception {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();
 		
 		String key = INVENTORY_KEY + HashUtils.createSha1("Inventory", inventory);
-		Cache<?> cache = Cache.getCache(key);
-		if (cache != null) {
-			return ImageUtils.copyImage((BufferedImage) cache.getObject());
+		if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial())) {
+			Cache<?> cache = Cache.getCache(key);
+			if (cache != null) {
+				return ImageUtils.copyImage((BufferedImage) cache.getObject());
+			}
 		}
 		
 		int rows = inventory.getSize() / 9;
@@ -99,7 +114,7 @@ public class ImageGeneration {
 				continue;
 			}
 			
-			BufferedImage itemImage = getRawItemImage(item);
+			BufferedImage itemImage = getRawItemImage(item, player);
 			
 			if (itemImage != null) {
 				g.drawImage(itemImage, 18 + (SPACING * (i % 9)), 18 + (SPACING * (i / 9)), null);
@@ -117,9 +132,11 @@ public class ImageGeneration {
 		InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();
 		
 		String key = PLAYER_INVENTORY_KEY + HashUtils.createSha1(player.getUniqueId().toString(), inventory);
-		Cache<?> cache = Cache.getCache(key);
-		if (cache != null) {
-			return ImageUtils.copyImage((BufferedImage) cache.getObject());
+		if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial())) {
+			Cache<?> cache = Cache.getCache(key);
+			if (cache != null) {
+				return ImageUtils.copyImage((BufferedImage) cache.getObject());
+			}
 		}
 		
 		BufferedImage background = InteractiveChatDiscordSrvAddon.plugin.getGUITexture("player_inventory");
@@ -137,7 +154,7 @@ public class ImageGeneration {
 				continue;
 			}
 			
-			BufferedImage itemImage = getRawItemImage(item);
+			BufferedImage itemImage = getRawItemImage(item, player);
 			
 			if (itemImage != null) {
 				g.drawImage(itemImage, 18 + (SPACING * (i % 9)), 286 + (SPACING * (i / 9)), null);
@@ -151,7 +168,7 @@ public class ImageGeneration {
 				continue;
 			}
 			
-			BufferedImage itemImage = getRawItemImage(item);
+			BufferedImage itemImage = getRawItemImage(item, player);
 			
 			if (itemImage != null) {
 				g.drawImage(itemImage, 18 + (SPACING * (i % 9)), 170 + (SPACING * ((i - 9) / 9)), null);
@@ -163,7 +180,7 @@ public class ImageGeneration {
 		if (boots == null || boots.getType().equals(Material.AIR)) {
 			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("empty_armor_slot_boots"), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
 		} else {
-			BufferedImage itemImage = getRawItemImage(boots);			
+			BufferedImage itemImage = getRawItemImage(boots, player);			
 			if (itemImage != null) {
 				g.drawImage(itemImage, 18, 126 - (SPACING * (i - 36)), null);
 			}
@@ -175,7 +192,7 @@ public class ImageGeneration {
 		if (leggings == null || leggings.getType().equals(Material.AIR)) {
 			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("empty_armor_slot_leggings"), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
 		} else {
-			BufferedImage itemImage = getRawItemImage(leggings);			
+			BufferedImage itemImage = getRawItemImage(leggings, player);			
 			if (itemImage != null) {
 				g.drawImage(itemImage, 18, 126 - (SPACING * (i - 36)), null);
 			}
@@ -187,7 +204,7 @@ public class ImageGeneration {
 		if (chestplate == null || chestplate.getType().equals(Material.AIR)) {
 			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("empty_armor_slot_chestplate"), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
 		} else {
-			BufferedImage itemImage = getRawItemImage(chestplate);			
+			BufferedImage itemImage = getRawItemImage(chestplate, player);			
 			if (itemImage != null) {
 				g.drawImage(itemImage, 18, 126 - (SPACING * (i - 36)), null);
 			}
@@ -199,7 +216,7 @@ public class ImageGeneration {
 		if (helmet == null || helmet.getType().equals(Material.AIR)) {
 			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("empty_armor_slot_helmet"), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
 		} else {
-			BufferedImage itemImage = getRawItemImage(helmet);			
+			BufferedImage itemImage = getRawItemImage(helmet, player);			
 			if (itemImage != null) {
 				g.drawImage(itemImage, 18, 126 - (SPACING * (i - 36)), null);
 			}
@@ -211,7 +228,7 @@ public class ImageGeneration {
 		if (offhand == null || offhand.getType().equals(Material.AIR)) {
 			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("empty_armor_slot_shield"), 162, 126, 32, 32, null);
 		} else {				
-			BufferedImage itemImage = getRawItemImage(offhand);				
+			BufferedImage itemImage = getRawItemImage(offhand, player);				
 			if (itemImage != null) {
 				g.drawImage(itemImage, 162, 126, null);
 			}
@@ -593,7 +610,7 @@ public class ImageGeneration {
 		return image;
 	}
 	
-	private static BufferedImage getRawItemImage(ItemStack item) throws IOException {
+	private static BufferedImage getRawItemImage(ItemStack item, Player player) throws IOException {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		int amount = item.getAmount();
 		XMaterial xMaterial = XMaterial.matchXMaterial(item);
@@ -612,6 +629,8 @@ public class ImageGeneration {
 				return null;
 			}
 		}
+		
+		boolean requiresEnchantmentGlint = false;
 		
 		if (xMaterial.isOneOf(Arrays.asList("CONTAINS:Banner"))) {
 			BufferedImage banner = BannerGraphics.generateBannerImage(item);
@@ -702,9 +721,75 @@ public class ImageGeneration {
 		} else if (FilledMapUtils.isFilledMap(item)) {
 			BufferedImage filled = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("filled_map_markings");
 			ImageUtils.xor(itemImage, filled, 200);
+		} else if (xMaterial.equals(XMaterial.CROSSBOW)) {
+			CrossbowMeta meta = (CrossbowMeta) item.getItemMeta();
+			List<ItemStack> charged = meta.getChargedProjectiles();
+			if (charged != null && !charged.isEmpty()) {
+				ItemStack charge = charged.get(0);
+				XMaterial chargeType = XMaterial.matchXMaterial(charge);
+				if (chargeType.equals(XMaterial.FIREWORK_ROCKET)) {
+					itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("crossbow_firework");
+				} else {
+					itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("crossbow_arrow");
+				}
+			}
+		} else if (xMaterial.equals(XMaterial.CLOCK)) {
+			long time = (player.getPlayerTime() % 24000) - 6000;
+			if (time < 0) {
+				time += 18000;
+			}
+			int phase = (int) ((double) time / 24000 * 64);
+			itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("clock_" + PHASE_FORMAT.format(phase));
+		} else if (xMaterial.equals(XMaterial.COMPASS)) {
+			int phase;
+			if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
+				CompassMeta meta = (CompassMeta) item.getItemMeta();
+				Location target;
+				if (meta.hasLodestone()) {
+					Location lodestone = meta.getLodestone();
+					target = new Location(lodestone.getWorld(), lodestone.getBlockX() + 0.5, lodestone.getY(), lodestone.getZ() + 0.5, lodestone.getYaw(), lodestone.getPitch());
+					requiresEnchantmentGlint = true;
+				} else if (player.getWorld().getEnvironment().equals(Environment.NORMAL)) {
+					Location spawn = player.getWorld().getSpawnLocation();
+					target = new Location(spawn.getWorld(), spawn.getBlockX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, spawn.getYaw(), spawn.getPitch());
+				} else {
+					target = null;
+				}
+				if (target != null && target.getWorld().equals(player.getWorld())) {
+					Location playerLocation = player.getEyeLocation();
+					playerLocation.setPitch(0);
+					Vector looking = playerLocation.getDirection();
+					Vector pointing = target.toVector().subtract(playerLocation.toVector());
+					pointing.setY(0);
+					double degree = VectorUtils.getBearing(looking, pointing) - 180;
+					if (degree < 0) {
+						degree += 360;
+					}
+					phase = (int) (degree / 360 * 32);
+				} else {
+					phase = RANDOM.nextInt(32);
+				}
+			} else {
+				if (player.getWorld().getEnvironment().equals(Environment.NORMAL)) {
+					Location spawn = player.getWorld().getSpawnLocation();
+					Location target = new Location(spawn.getWorld(), spawn.getBlockX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, spawn.getYaw(), spawn.getPitch());
+					Location playerLocation = player.getEyeLocation();
+					playerLocation.setPitch(0);
+					Vector looking = playerLocation.getDirection();
+					Vector pointing = target.toVector().subtract(playerLocation.toVector());
+					pointing.setY(0);
+					double degree = VectorUtils.getBearing(looking, pointing) - 180;
+					if (degree < 0) {
+						degree += 360;
+					}
+					phase = (int) (degree / 360 * 32);
+				} else {
+					phase = RANDOM.nextInt(32);
+				}
+			}
+			itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("compass_" + PHASE_FORMAT.format(phase));
 		}
 		
-		boolean tintedPotion = false;
 		if (item.getItemMeta() instanceof PotionMeta) {
 			PotionMeta meta = (PotionMeta) item.getItemMeta();
 			PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
@@ -731,12 +816,12 @@ public class ImageGeneration {
 			
 			if (potiontype != null) {
 				if (!(potiontype.name().equals("WATER") || potiontype.name().equals("AWKWARD") || potiontype.name().equals("MUNDANE") || potiontype.name().equals("THICK") || potiontype.name().equals("UNCRAFTABLE"))) {
-					tintedPotion = true;
+					requiresEnchantmentGlint = true;
 				}
 			}
 		}
 		
-		if (xMaterial.equals(XMaterial.ENCHANTED_GOLDEN_APPLE) || xMaterial.equals(XMaterial.ENCHANTED_BOOK) || item.getEnchantments().size() > 0 || tintedPotion) {
+		if (requiresEnchantmentGlint || xMaterial.equals(XMaterial.ENCHANTED_GOLDEN_APPLE) || xMaterial.equals(XMaterial.ENCHANTED_BOOK) || item.getEnchantments().size() > 0) {
 			BufferedImage tint_ori = InteractiveChatDiscordSrvAddon.plugin.getMiscTexture("enchanted_item_glint");
 			BufferedImage tintImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);				
 			Graphics2D g3 = tintImage.createGraphics();

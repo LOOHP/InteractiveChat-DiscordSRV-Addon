@@ -148,5 +148,9 @@ public class TranslationUtils {
 	public static String getDurability() {
 		return "item.durability";
 	}
+	
+	public static String getCrossbowProjectile() {
+		return "item.minecraft.crossbow.projectile";
+	}
 
 }

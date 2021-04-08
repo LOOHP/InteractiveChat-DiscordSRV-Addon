@@ -25,9 +25,9 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 
-import com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.ConfigManager;
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechat.Utils.XMaterial;
 import com.loohp.interactivechat.api.InteractiveChatAPI;
 import com.loohp.interactivechat.objectholders.CustomPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlaceholder;
@@ -427,10 +427,10 @@ public class OutboundToDiscordEvents {
 						try {
 							if (type.equals(ImageDisplayType.ITEM_CONTAINER)) {
 								DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
-								BufferedImage image = ImageGeneration.getItemStackImage(item);
+								BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer());
 								ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
 								ImageIO.write(image, "png", itemOs);
-								BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get());
+								BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get(), data.getPlayer());
 								ByteArrayOutputStream contentOs = new ByteArrayOutputStream();
 								ImageIO.write(container, "png", contentOs);
 								DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), "attachment://Container.png", color);
@@ -439,7 +439,7 @@ public class OutboundToDiscordEvents {
 								contents.add(content);
 							} else {
 								DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
-								BufferedImage image = ImageGeneration.getItemStackImage(item);
+								BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer());
 								ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
 								ImageIO.write(image, "png", itemOs);
 								if (iData.isFilledMap()) {
@@ -467,10 +467,10 @@ public class OutboundToDiscordEvents {
 								if (InteractiveChatDiscordSrvAddon.plugin.usePlayerInvView) {
 									image = ImageGeneration.getPlayerInventoryImage(inv, iData.getPlayer());
 								} else {
-									image = ImageGeneration.getInventoryImage(inv);
+									image = ImageGeneration.getInventoryImage(inv, data.getPlayer());
 								}
 							} else {
-								image = ImageGeneration.getInventoryImage(inv);
+								image = ImageGeneration.getInventoryImage(inv, data.getPlayer());
 							}
 							ByteArrayOutputStream os = new ByteArrayOutputStream();
 							Color color;
@@ -591,10 +591,10 @@ public class OutboundToDiscordEvents {
 						try {
 							if (type.equals(ImageDisplayType.ITEM_CONTAINER)) {
 								DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
-								BufferedImage image = ImageGeneration.getItemStackImage(item);
+								BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer());
 								ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
 								ImageIO.write(image, "png", itemOs);
-								BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get());
+								BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get(), data.getPlayer());
 								ByteArrayOutputStream contentOs = new ByteArrayOutputStream();
 								ImageIO.write(container, "png", contentOs);
 								DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), "attachment://Container.png", color);
@@ -603,7 +603,7 @@ public class OutboundToDiscordEvents {
 								contents.add(content);
 							} else {
 								DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
-								BufferedImage image = ImageGeneration.getItemStackImage(item);
+								BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer());
 								ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
 								ImageIO.write(image, "png", itemOs);
 								if (iData.isFilledMap()) {
@@ -631,10 +631,10 @@ public class OutboundToDiscordEvents {
 								if (InteractiveChatDiscordSrvAddon.plugin.usePlayerInvView) {
 									image = ImageGeneration.getPlayerInventoryImage(inv, iData.getPlayer());
 								} else {
-									image = ImageGeneration.getInventoryImage(inv);
+									image = ImageGeneration.getInventoryImage(inv, data.getPlayer());
 								}
 							} else {
-								image = ImageGeneration.getInventoryImage(inv);
+								image = ImageGeneration.getInventoryImage(inv, data.getPlayer());
 							}
 							ByteArrayOutputStream os = new ByteArrayOutputStream();
 							Color color;
