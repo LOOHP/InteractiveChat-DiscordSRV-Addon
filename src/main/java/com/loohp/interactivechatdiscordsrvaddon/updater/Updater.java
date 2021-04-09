@@ -46,25 +46,25 @@ public class Updater implements Listener {
 			if (sender instanceof Player) {
 				Player player = (Player) sender;
 				if (!devbuild) {
-					player.sendMessage(ChatColor.YELLOW + "[ICDiscordSRVAddon] A new version is available on SpigotMC: " + version);
+					player.sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] A new version is available on SpigotMC: " + version);
 					TextComponent url = new TextComponent(ChatColor.GOLD + "https://www.spigotmc.org/resources/" + spigotPluginId);
 					url.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(ChatColor.AQUA + "Click me!").create()));
 					url.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://www.spigotmc.org/resources/" + spigotPluginId));
 					player.spigot().sendMessage(url);
 				} else {
-					sender.sendMessage(ChatColor.GREEN + "[ICDiscordSRVAddon] You are running the latest release!");
-					TextComponent url = new TextComponent(ChatColor.YELLOW + "[ICDiscordSRVAddon] However, a new Development Build is available if you want to try that!");
+					sender.sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] You are running the latest release!");
+					TextComponent url = new TextComponent(ChatColor.YELLOW + "[ICDiscordSrvAddon] However, a new Development Build is available if you want to try that!");
 					url.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(ChatColor.AQUA + "Click me!").create()));
 					url.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://ci.loohpjames.com/job/" + PLUGIN_NAME));
 					player.spigot().sendMessage(url);
 				}
 			} else {
 				if (!devbuild) {
-					sender.sendMessage(ChatColor.YELLOW + "[ICDiscordSRVAddon] A new version is available on SpigotMC: " + version);
+					sender.sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] A new version is available on SpigotMC: " + version);
 					sender.sendMessage(ChatColor.GOLD + "Download: https://www.spigotmc.org/resources/" + spigotPluginId);
 				} else {
-					sender.sendMessage(ChatColor.GREEN + "[ICDiscordSRVAddon] You are running the latest release!");
-					sender.sendMessage(ChatColor.YELLOW + "[ICDiscordSRVAddon] However, a new Development Build is available if you want to try that!");
+					sender.sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] You are running the latest release!");
+					sender.sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] However, a new Development Build is available if you want to try that!");
 				}
 			}
 		}
@@ -88,7 +88,7 @@ public class Updater implements Listener {
             	return new UpdaterResponse("latest", spigotPluginId, currentDevBuild.compareTo(devBuild) >= 0);
             }
         } catch (Exception e) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] Failed to check against \"api.loohpjames.com\" for the latest version.. It could be an internet issue or \"api.loohpjames.com\" is down. If you want disable the update checker, you can disable in config.yml, but we still highly-recommend you to keep your plugin up to date!");
+            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Failed to check against \"api.loohpjames.com\" for the latest version.. It could be an internet issue or \"api.loohpjames.com\" is down. If you want disable the update checker, you can disable in config.yml, but we still highly-recommend you to keep your plugin up to date!");
         }
         return new UpdaterResponse("error", -1, false);
     }

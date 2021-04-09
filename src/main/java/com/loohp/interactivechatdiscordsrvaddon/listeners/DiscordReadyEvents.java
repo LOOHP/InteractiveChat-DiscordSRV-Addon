@@ -48,7 +48,7 @@ public class DiscordReadyEvents {
 				Member self = guild.getMember(jda.getSelfUser());
 				for (Permission permission : InteractiveChatDiscordSrvAddon.requiredPermissions) {
 					if (!self.hasPermission(channel, permission)) {
-						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] DiscordSRV Bot is missing the \"" + permission.getName() + "\" permission in the channel \"" + channel.getName() + "\" (Id: " + channel.getId() + ")");
+						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] DiscordSRV Bot is missing the \"" + permission.getName() + "\" permission in the channel \"" + channel.getName() + "\" (Id: " + channel.getId() + ")");
 					}
 				}
 			}

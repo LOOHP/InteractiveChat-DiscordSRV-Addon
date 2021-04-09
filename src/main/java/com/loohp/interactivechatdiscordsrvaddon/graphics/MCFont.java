@@ -24,7 +24,7 @@ public class MCFont {
             GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(standardFont);
             working = true;
         } catch (Exception e) {
-        	Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] Unable to import font from " + path);
+        	Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to import font from " + path);
             e.printStackTrace();
         }
     }

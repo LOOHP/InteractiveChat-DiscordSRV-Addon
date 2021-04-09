@@ -56,13 +56,13 @@ public class Commands implements CommandExecutor, TabCompleter {
 		
 		if (args[0].equalsIgnoreCase("update")) {
 			if (sender.hasPermission("interactivechatdiscordsrv.update")) {
-				sender.sendMessage(ChatColor.AQUA + "[ICDiscordSRVAddon] InteractiveChat DiscordSRV Addon written by LOOHP!");
-				sender.sendMessage(ChatColor.GOLD + "[ICDiscordSRVAddon] You are running ICDiscordSRVAddon version: " + InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion());
+				sender.sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon written by LOOHP!");
+				sender.sendMessage(ChatColor.GOLD + "[ICDiscordSrvAddon] You are running ICDiscordSRVAddon version: " + InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion());
 				Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
 					UpdaterResponse version = Updater.checkUpdate();
 					if (version.getResult().equals("latest")) {
 						if (version.isDevBuildLatest()) {
-							sender.sendMessage(ChatColor.GREEN + "[ICDiscordSRVAddon] You are running the latest version!");
+							sender.sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] You are running the latest version!");
 						} else {
 							Updater.sendUpdateMessage(sender, version.getResult(), version.getSpigotPluginId(), true);
 						}

@@ -1,4 +1,4 @@
-name: InteractiveChatDiscordSRVAddon
+name: InteractiveChatDiscordSrvAddon
 author: loohp
 version: ${project.version}
 main: com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon

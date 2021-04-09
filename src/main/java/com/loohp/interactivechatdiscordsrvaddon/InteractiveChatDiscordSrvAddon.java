@@ -135,6 +135,16 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		plugin = this;
 		interactivechat = InteractiveChat.plugin;
 		discordsrv = DiscordSRV.getPlugin();
+		
+		//Rename old folder
+		File pluginFolder = new File(Bukkit.getWorldContainer(), "plugins");
+		if (pluginFolder.exists() && pluginFolder.isDirectory()) {
+			for (File file : pluginFolder.listFiles()) {
+				if (file.isDirectory() && file.getName().equals("InteractiveChatDiscordSRVAddon")) {
+					file.renameTo(new File(pluginFolder, getName()));
+				}
+			}
+		}
 
 		getConfig().options().header("For information on what each option does. Please refer to https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon/blob/master/src/main/resources/config.yml");
 		getConfig().options().copyDefaults(true);
@@ -161,13 +171,13 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		}
 		
 		if (!compatible()) {
-			getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] VERSION NOT COMPATIBLE WITH INTERACTIVECHAT, PLEASE UPDATE!!!!");
-			getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] VERSION NOT COMPATIBLE WITH INTERACTIVECHAT, PLEASE UPDATE!!!!");
-			getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] VERSION NOT COMPATIBLE WITH INTERACTIVECHAT, PLEASE UPDATE!!!!");
-			getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] VERSION NOT COMPATIBLE WITH INTERACTIVECHAT, PLEASE UPDATE!!!!");
-			getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] VERSION NOT COMPATIBLE WITH INTERACTIVECHAT, PLEASE UPDATE!!!!");
+			getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] VERSION NOT COMPATIBLE WITH INTERACTIVECHAT, PLEASE UPDATE!!!!");
+			getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] VERSION NOT COMPATIBLE WITH INTERACTIVECHAT, PLEASE UPDATE!!!!");
+			getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] VERSION NOT COMPATIBLE WITH INTERACTIVECHAT, PLEASE UPDATE!!!!");
+			getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] VERSION NOT COMPATIBLE WITH INTERACTIVECHAT, PLEASE UPDATE!!!!");
+			getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] VERSION NOT COMPATIBLE WITH INTERACTIVECHAT, PLEASE UPDATE!!!!");
 		} else {
-			getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSRVAddon] InteractiveChat DiscordSRV Addon has been Enabled!");
+			getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon has been Enabled!");
 		}
 		
 		reloadTextures();
@@ -185,7 +195,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	
 	@Override
 	public void onDisable() {
-		getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSRVAddon] InteractiveChat DiscordSRV Addon has been Disabled!");
+		getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon has been Disabled!");
 	}
 	
 	@SuppressWarnings("all")
@@ -333,7 +343,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 				e.printStackTrace();
 			}
 			
-			Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSRVAddon] Loading textures...");
+			Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] Loading textures...");
 			Map<String, BufferedImage> blocks = new HashMap<>();
 			Map<String, BufferedImage> items = new HashMap<>();
 			Map<String, BufferedImage> font = new HashMap<>();
@@ -568,7 +578,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 				InteractiveChatDiscordSrvAddon.plugin.armor = armor;
 				
 				int total = blocks.size() + items.size() + font.size() + misc.size() + gui.size() + banner.size() + puppet.size() + armor.size();
-				Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSRVAddon] Loaded " + total + " textures!");
+				Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] Loaded " + total + " textures!");
 			});
 		});
 	}
