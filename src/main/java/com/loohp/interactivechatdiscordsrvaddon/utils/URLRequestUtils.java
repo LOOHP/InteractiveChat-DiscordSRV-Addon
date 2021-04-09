@@ -7,6 +7,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
 
+import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
+
 public class URLRequestUtils {
 	
 	public static InputStream getInputStream(String link) {
@@ -44,6 +46,18 @@ public class URLRequestUtils {
 			i++;
 		}
 		return stream;
+	}
+	
+	public static boolean isAllowed(String url) {
+		if (!InteractiveChatDiscordSrvAddon.plugin.imageWhitelistEnabled) {
+			return true;
+		}
+		for (String possiblyAllowedUrl : InteractiveChatDiscordSrvAddon.plugin.whitelistedImageUrls) {
+			if (url.startsWith(possiblyAllowedUrl)) {
+                return true;
+            }
+		}
+		return false;
 	}
 
 }

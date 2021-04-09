@@ -27,6 +27,7 @@ import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordReadyEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
@@ -96,6 +97,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public String discordAttachmentsFormattingImageAppend;
 	public String discordAttachmentsFormattingImageAppendHover;
 	
+	public boolean imageWhitelistEnabled = false;
+	public List<String> whitelistedImageUrls = new ArrayList<>();
+	
 	public boolean translateMentions = true;
 	public String mentionHighlight = "";
 	//public String mentionHover = "";
@@ -106,6 +110,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	
 	public boolean escapePlaceholdersFromDiscord = true;
 	public boolean escapeDiscordMarkdownInItems = true;
+	public boolean reducedAssetsDownloadInfo = false;
 	
 	public String language = "en_us";
 	
@@ -225,12 +230,16 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		discordAttachmentsFormattingImageAppend = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordAttachments.Formatting.ImageOriginal"));
 		discordAttachmentsFormattingImageAppendHover = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getStringList("DiscordAttachments.Formatting.Hover.ImageOriginalHover").stream().collect(Collectors.joining("\n")));
 		
+		imageWhitelistEnabled = getConfig().getBoolean("DiscordAttachments.RestrictImageUrl.Enabled");
+		whitelistedImageUrls = getConfig().getStringList("DiscordAttachments.RestrictImageUrl.Whitelist");
+		
 		updaterEnabled = getConfig().getBoolean("Options.UpdaterEnabled");
 		
 		cacheTimeout = getConfig().getInt("Settings.CacheTimeout") * 20;
 		
 		escapePlaceholdersFromDiscord = getConfig().getBoolean("Settings.EscapePlaceholdersSentFromDiscord");
 		escapeDiscordMarkdownInItems = getConfig().getBoolean("Settings.EscapeDiscordMarkdownFormattingInItems");
+		reducedAssetsDownloadInfo = getConfig().getBoolean("Settings.ReducedAssetsDownloadInfo");
 		
 		itemDisplaySingle = getConfig().getString("InventoryImage.Item.EmbedDisplay.Single");
 		itemDisplayMultiple = getConfig().getString("InventoryImage.Item.EmbedDisplay.Multiple");		
@@ -255,7 +264,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public BufferedImage getBlockTexture(String str) {
 		BufferedImage image = blocks.get(str);
 		if (image == null) {
-			return null;
+			return ImageGeneration.getMissingImage();
 		}
 		return ImageUtils.copyImage(image);
 	}
@@ -263,7 +272,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public BufferedImage getItemTexture(String str) {
 		BufferedImage image = items.get(str);
 		if (image == null) {
-			return null;
+			return ImageGeneration.getMissingImage();
 		}
 		return ImageUtils.copyImage(image);
 	}
@@ -271,7 +280,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public BufferedImage getFontTexture(String str) {
 		BufferedImage image = font.get(str);
 		if (image == null) {
-			return null;
+			return ImageGeneration.getMissingImage();
 		}
 		return ImageUtils.copyImage(image);
 	}
@@ -279,7 +288,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public BufferedImage getMiscTexture(String str) {
 		BufferedImage image = misc.get(str);
 		if (image == null) {
-			return null;
+			return ImageGeneration.getMissingImage();
 		}
 		return ImageUtils.copyImage(image);
 	}
@@ -287,7 +296,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public BufferedImage getGUITexture(String str) {
 		BufferedImage image = gui.get(str);
 		if (image == null) {
-			return null;
+			return ImageGeneration.getMissingImage();
 		}
 		return ImageUtils.copyImage(image);
 	}
@@ -295,7 +304,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public BufferedImage getBannerTexture(String str) {
 		BufferedImage image = banner.get(str);
 		if (image == null) {
-			return null;
+			return ImageGeneration.getMissingImage();
 		}
 		return ImageUtils.copyImage(image);
 	}
@@ -303,7 +312,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public BufferedImage getPuppetTexture(String str) {
 		BufferedImage image = puppet.get(str);
 		if (image == null) {
-			return null;
+			return ImageGeneration.getMissingImage();
 		}
 		return ImageUtils.copyImage(image);
 	}
@@ -311,7 +320,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public BufferedImage getArmorTexture(String str) {
 		BufferedImage image = armor.get(str);
 		if (image == null) {
-			return null;
+			return ImageGeneration.getMissingImage();
 		}
 		return ImageUtils.copyImage(image);
 	}

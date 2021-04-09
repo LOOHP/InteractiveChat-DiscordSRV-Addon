@@ -56,14 +56,16 @@ public class AssetsDownloader {
 		String hash = data.get("hash").toString();
 		
 		if (!hash.equals(oldHash)) {
-			Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSRVAddon] Hash changed! Re-downloading assets! (" + oldHash + " -> " + hash + ")");
+			Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSRVAddon] Hash changed! Re-downloading assets! Please wait... (" + oldHash + " -> " + hash + ")");
 			
 			JSONObject client = (JSONObject) data.get("client-entries");
 			
 			String clientUrl = client.get("url").toString();
 			JSONObject clientEntries = (JSONObject) client.get("entries");
 			
-			Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSRVAddon] Downloading client jar");
+			if (!InteractiveChatDiscordSrvAddon.plugin.reducedAssetsDownloadInfo) {
+				Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSRVAddon] Downloading client jar");
+			}
 			try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(HTTPRequestUtils.download(clientUrl)))) {
 				while (true) {
 					ZipEntry entry = zip.getNextEntry();
@@ -75,7 +77,9 @@ public class AssetsDownloader {
 					if (outputObj != null) {
 						String output = outputObj.toString();
 						String fileName = getEntryName(name);
-						Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSRVAddon] Extracting " + output + "/" + fileName);
+						if (!InteractiveChatDiscordSrvAddon.plugin.reducedAssetsDownloadInfo) {
+							Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSRVAddon] Extracting " + output + "/" + fileName);
+						}
 						
 						ByteArrayOutputStream baos = new ByteArrayOutputStream();
 						byte[] byteChunk = new byte[4096];
@@ -105,8 +109,10 @@ public class AssetsDownloader {
 				String key = obj.toString();
 				String value = downloadedEntries.get(key).toString();
 				String fileName = getEntryName(key);
-				double percentage = ((double) ++i / (double) size ) * 100;
-				Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSRVAddon] Downloading " + value + "/" + fileName + " (" + FORMAT.format(percentage) + "%)");
+				if (!InteractiveChatDiscordSrvAddon.plugin.reducedAssetsDownloadInfo) {
+					double percentage = ((double) ++i / (double) size ) * 100;
+					Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSRVAddon] Downloading " + value + "/" + fileName + " (" + FORMAT.format(percentage) + "%)");
+				}
 				File folder = new File(rootFolder, value);
 				folder.mkdirs();
 				File file = new File(folder, fileName);

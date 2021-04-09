@@ -71,6 +71,16 @@ public class ImageGeneration {
 	private static final DecimalFormat PHASE_FORMAT = new DecimalFormat("00");
 	private static final Random RANDOM = new Random();
 	
+	public static BufferedImage getMissingImage() {
+		BufferedImage image = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = image.createGraphics();
+		g.setColor(new Color(198, 0, 198));
+		g.fillRect(0, 0, 256, 256);
+		g.fillRect(256, 256, 256, 256);
+		g.dispose();
+		return image;
+	}
+	
 	public static BufferedImage getItemStackImage(ItemStack item, Player player) throws IOException {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		BufferedImage background = new BufferedImage(36, 36, BufferedImage.TYPE_INT_ARGB);

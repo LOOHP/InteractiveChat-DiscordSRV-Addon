@@ -39,6 +39,20 @@ DiscordAttachments:
         - "&eOpen Original"
   #Whether or not to allow previwing images in game using maps
   ShowImageUsingMaps: true
+  # When enabled, Only websites from the list below is allowed to be shown through in game maps
+  RestrictImageUrl:
+    Enabled: false
+    Whitelist:
+      - https://i.imgur.com
+      - http://i.imgur.com
+      - https://storage.googleapis.com
+      - http://storage.googleapis.com
+      - https://cdn.discordapp.com
+      - http://cdn.discordapp.com
+      - https://media.discordapp.net
+      - http://media.discordapp.net
+      - https://textures.minecraft.net
+      - http://textures.minecraft.net
   Timeout: 86400
 
 DiscordMention:
@@ -77,6 +91,7 @@ Settings:
   CacheTimeout: 300
   EscapePlaceholdersSentFromDiscord: true
   EscapeDiscordMarkdownFormattingInItems: true
+  ReducedAssetsDownloadInfo: false
 
 Resources:
   Language: en_us

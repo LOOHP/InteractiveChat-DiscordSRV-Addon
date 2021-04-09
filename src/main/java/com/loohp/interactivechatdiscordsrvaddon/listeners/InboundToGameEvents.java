@@ -194,8 +194,12 @@ public class InboundToGameEvents implements Listener {
 						InteractiveChatDiscordSrvAddon.plugin.attachmentImageCounter.incrementAndGet();
 						List<ThrowingSupplier<InputStream>> methods = new ArrayList<>();
 						methods.add(() -> attachment.retrieveInputStream().get());
-						methods.add(() -> URLRequestUtils.getInputStream0(attachment.getUrl()));
-						methods.add(() -> URLRequestUtils.getInputStream0(attachment.getProxyUrl()));
+						if (URLRequestUtils.isAllowed(attachment.getUrl())) {
+							methods.add(() -> URLRequestUtils.getInputStream0(attachment.getUrl()));
+						}
+						if (URLRequestUtils.isAllowed(attachment.getProxyUrl())) {
+							methods.add(() -> URLRequestUtils.getInputStream0(attachment.getProxyUrl()));
+						}
 						
 						try (InputStream stream = URLRequestUtils.retrieveInputStreamUntilSuccessful(methods)) {
 							GraphicsToPacketMapWrapper map;
@@ -232,7 +236,7 @@ public class InboundToGameEvents implements Listener {
 			Matcher matcher = IMAGE_URL_PATTERN.matcher(message.getContentRaw());
 			while (matcher.find()) {
 				String url = matcher.group();
-				if (!processedUrl.contains(url)) {
+				if (!processedUrl.contains(url) && URLRequestUtils.isAllowed(url)) {
 					InteractiveChatDiscordSrvAddon.plugin.attachmentImageCounter.incrementAndGet();
 					try (InputStream stream = URLRequestUtils.getInputStream(url)) {
 						GraphicsToPacketMapWrapper map;
