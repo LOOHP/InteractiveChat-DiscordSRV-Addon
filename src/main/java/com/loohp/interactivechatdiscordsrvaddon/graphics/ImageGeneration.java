@@ -71,12 +71,12 @@ public class ImageGeneration {
 	private static final DecimalFormat PHASE_FORMAT = new DecimalFormat("00");
 	private static final Random RANDOM = new Random();
 	
-	public static BufferedImage getMissingImage() {
-		BufferedImage image = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
+	public static BufferedImage getMissingImage(int width, int length) {
+		BufferedImage image = new BufferedImage(width, length, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = image.createGraphics();
 		g.setColor(new Color(198, 0, 198));
-		g.fillRect(0, 0, 256, 256);
-		g.fillRect(256, 256, 256, 256);
+		g.fillRect(0, 0, width / 2, length / 2);
+		g.fillRect(width / 2, length / 2, width / 2, length / 2);
 		g.dispose();
 		return image;
 	}
@@ -685,7 +685,7 @@ public class ImageGeneration {
 			key = "compass_00";
 		}
 		BufferedImage itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture(key);
-		if (itemImage == null) {
+		if (!InteractiveChatDiscordSrvAddon.plugin.hasItemTexture(key)) {
 			itemImage = InteractiveChatDiscordSrvAddon.plugin.getBlockTexture(key);
 			if (itemImage == null) {
 				return null;
@@ -853,32 +853,58 @@ public class ImageGeneration {
 		}
 		
 		if (item.getItemMeta() instanceof PotionMeta) {
-			PotionMeta meta = (PotionMeta) item.getItemMeta();
-			PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
-			BufferedImage potionOverlay = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("potion_overlay");
-			
-			Color color;
-			try {
-				if (meta.hasColor()) {
-					color = new Color(meta.getColor().asRGB());
-				} else {
-					color = PotionUtils.getPotionBaseColor(potiontype);
+			if (xMaterial.equals(XMaterial.TIPPED_ARROW)) {
+				itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("tipped_arrow_base");
+				PotionMeta meta = (PotionMeta) item.getItemMeta();
+				PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
+				BufferedImage tippedArrowHead = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("tipped_arrow_head");
+				
+				Color color;
+				try {
+					if (meta.hasColor()) {
+						color = new Color(meta.getColor().asRGB());
+					} else {
+						color = PotionUtils.getPotionBaseColor(potiontype);
+					}
+				} catch (Throwable e) {
+					color = PotionUtils.getPotionBaseColor(PotionType.WATER);
 				}
-			} catch (Throwable e) {
-				color = PotionUtils.getPotionBaseColor(PotionType.WATER);
-			}
-			
-			BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(potionOverlay), color);
-			potionOverlay = ImageUtils.multiply(potionOverlay, colorOverlay);
-			
-			Graphics2D g2 = itemImage.createGraphics();
-			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-			g2.drawImage(potionOverlay, 0, 0, null);
-			g2.dispose();
-			
-			if (potiontype != null) {
-				if (!(potiontype.name().equals("WATER") || potiontype.name().equals("AWKWARD") || potiontype.name().equals("MUNDANE") || potiontype.name().equals("THICK") || potiontype.name().equals("UNCRAFTABLE"))) {
-					requiresEnchantmentGlint = true;
+				
+				BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(tippedArrowHead), color);
+				tippedArrowHead = ImageUtils.multiply(tippedArrowHead, colorOverlay);
+				
+				Graphics2D g2 = itemImage.createGraphics();
+				g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+				g2.drawImage(tippedArrowHead, 0, 0, null);
+				g2.dispose();
+			} else {
+				PotionMeta meta = (PotionMeta) item.getItemMeta();
+				PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
+				BufferedImage potionOverlay = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("potion_overlay");
+				
+				Color color;
+				try {
+					if (meta.hasColor()) {
+						color = new Color(meta.getColor().asRGB());
+					} else {
+						color = PotionUtils.getPotionBaseColor(potiontype);
+					}
+				} catch (Throwable e) {
+					color = PotionUtils.getPotionBaseColor(PotionType.WATER);
+				}
+				
+				BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(potionOverlay), color);
+				potionOverlay = ImageUtils.multiply(potionOverlay, colorOverlay);
+				
+				Graphics2D g2 = itemImage.createGraphics();
+				g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+				g2.drawImage(potionOverlay, 0, 0, null);
+				g2.dispose();
+				
+				if (potiontype != null) {
+					if (!(potiontype.name().equals("WATER") || potiontype.name().equals("AWKWARD") || potiontype.name().equals("MUNDANE") || potiontype.name().equals("THICK") || potiontype.name().equals("UNCRAFTABLE"))) {
+						requiresEnchantmentGlint = true;
+					}
 				}
 			}
 		}

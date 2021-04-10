@@ -27,6 +27,7 @@ import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordReadyEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
@@ -270,66 +271,98 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		discordsrv.reloadRegexes();
 	}
 	
+	public boolean hasBlockTexture(String str) {
+		return blocks.get(str) != null;
+	}
+	
 	public BufferedImage getBlockTexture(String str) {
 		BufferedImage image = blocks.get(str);
 		if (image == null) {
-			return null;
+			return ImageGeneration.getMissingImage(32, 32);
 		}
 		return ImageUtils.copyImage(image);
+	}
+	
+	public boolean hasItemTexture(String str) {
+		return items.get(str) != null;
 	}
 	
 	public BufferedImage getItemTexture(String str) {
 		BufferedImage image = items.get(str);
 		if (image == null) {
-			return null;
+			return ImageGeneration.getMissingImage(32, 32);
 		}
 		return ImageUtils.copyImage(image);
+	}
+	
+	public boolean hasFontTexture(String str) {
+		return font.get(str) != null;
 	}
 	
 	public BufferedImage getFontTexture(String str) {
 		BufferedImage image = font.get(str);
 		if (image == null) {
-			return null;
+			return ImageGeneration.getMissingImage(14, 14);
 		}
 		return ImageUtils.copyImage(image);
+	}
+	
+	public boolean hasMiscTexture(String str) {
+		return misc.get(str) != null;
 	}
 	
 	public BufferedImage getMiscTexture(String str) {
 		BufferedImage image = misc.get(str);
 		if (image == null) {
-			return null;
+			return ImageGeneration.getMissingImage(512, 512);
 		}
 		return ImageUtils.copyImage(image);
+	}
+	
+	public boolean hasGUITexture(String str) {
+		return gui.get(str) != null;
 	}
 	
 	public BufferedImage getGUITexture(String str) {
 		BufferedImage image = gui.get(str);
 		if (image == null) {
-			return null;
+			return ImageGeneration.getMissingImage(512, 512);
 		}
 		return ImageUtils.copyImage(image);
+	}
+	
+	public boolean hasBannerTexture(String str) {
+		return banner.get(str) != null;
 	}
 	
 	public BufferedImage getBannerTexture(String str) {
 		BufferedImage image = banner.get(str);
 		if (image == null) {
-			return null;
+			return ImageGeneration.getMissingImage(512, 512);
 		}
 		return ImageUtils.copyImage(image);
+	}
+	
+	public boolean hasPuppetTexture(String str) {
+		return puppet.get(str) != null;
 	}
 	
 	public BufferedImage getPuppetTexture(String str) {
 		BufferedImage image = puppet.get(str);
 		if (image == null) {
-			return null;
+			return ImageGeneration.getMissingImage(512, 512);
 		}
 		return ImageUtils.copyImage(image);
+	}
+	
+	public boolean hasArmorTexture(String str) {
+		return armor.get(str) != null;
 	}
 	
 	public BufferedImage getArmorTexture(String str) {
 		BufferedImage image = armor.get(str);
 		if (image == null) {
-			return null;
+			return ImageGeneration.getMissingImage(512, 512);
 		}
 		return ImageUtils.copyImage(image);
 	}
