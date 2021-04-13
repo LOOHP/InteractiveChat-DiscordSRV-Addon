@@ -49,7 +49,7 @@ import com.loohp.interactivechatdiscordsrvaddon.api.events.GameMessageProcessPla
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordMessageContent;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.HoverDisplayData;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.HoverClickDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.IDProvider;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayType;
@@ -58,6 +58,8 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.ColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordDescription;
+import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.URLRequestUtils;
 
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
@@ -279,17 +281,31 @@ public class OutboundToDiscordEvents {
 							replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
 							message = message.replaceAll((customP.isCaseSensitive() ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(customP.getKeyword()), replaceText);
 						}
-						if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && customP.getHover().isEnabled() && !InteractiveChatDiscordSrvAddon.plugin.hoverIngore.contains(customP.getPosition())) {
-							int hoverId = DATA_ID_PROVIDER.getNext();
+						if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && !InteractiveChatDiscordSrvAddon.plugin.hoverIngore.contains(customP.getPosition())) {
 							int position = customP.isCaseSensitive() ? originalMessage.indexOf(customP.getKeyword()) : originalMessage.toLowerCase().indexOf(customP.getKeyword().toLowerCase());
+							HoverClickDisplayData.Builder hoverClick = new HoverClickDisplayData.Builder().player(sender).postion(position).color(DiscordDataRegistry.DISCORD_HOVER_COLOR).displayText(replaceText);
+							boolean usingHoverClick = false;
 							
-							String hoverText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getHover().getText()));
-							Color color = ColorUtils.getFirstColor(customP.getHover().getText());
-							if (color == null) {
-								color = DiscordDataRegistry.DISCORD_HOVER_COLOR;
+							if (customP.getHover().isEnabled()) {
+								usingHoverClick = true;
+								String hoverText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getHover().getText()));
+								Color color = ColorUtils.getFirstColor(customP.getHover().getText());
+								hoverClick.hoverText(hoverText);
+								if (color != null) {
+									hoverClick.color(color);
+								}
 							}
-							DATA.put(hoverId, new HoverDisplayData(sender, position, replaceText, hoverText, color));
-							message += "<ICD=" + hoverId + ">";
+							
+							if (customP.getClick().isEnabled()) {
+								usingHoverClick = true;
+								hoverClick.clickAction(customP.getClick().getAction()).clickValue(customP.getClick().getValue());
+							}
+							
+							if (usingHoverClick) {
+								int hoverId = DATA_ID_PROVIDER.getNext();
+								DATA.put(hoverId, hoverClick.build());
+								message += "<ICD=" + hoverId + ">";
+							}
 						}
 					}
 				}
@@ -306,17 +322,31 @@ public class OutboundToDiscordEvents {
 						replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
 						message = message.replaceAll((customP.isCaseSensitive() ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(customP.getKeyword()), replaceText);
 					}
-					if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && customP.getHover().isEnabled() && !InteractiveChatDiscordSrvAddon.plugin.hoverIngore.contains(customP.getPosition())) {
-						int hoverId = DATA_ID_PROVIDER.getNext();
+					if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && !InteractiveChatDiscordSrvAddon.plugin.hoverIngore.contains(customP.getPosition())) {
 						int position = customP.isCaseSensitive() ? originalMessage.indexOf(customP.getKeyword()) : originalMessage.toLowerCase().indexOf(customP.getKeyword().toLowerCase());
+						HoverClickDisplayData.Builder hoverClick = new HoverClickDisplayData.Builder().player(sender).postion(position).color(DiscordDataRegistry.DISCORD_HOVER_COLOR).displayText(replaceText);
+						boolean usingHoverClick = false;
 						
-						String hoverText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getHover().getText()));
-						Color color = ColorUtils.getFirstColor(customP.getHover().getText());
-						if (color == null) {
-							color = DiscordDataRegistry.DISCORD_HOVER_COLOR;
+						if (customP.getHover().isEnabled()) {
+							usingHoverClick = true;
+							String hoverText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getHover().getText()));
+							Color color = ColorUtils.getFirstColor(customP.getHover().getText());
+							hoverClick.hoverText(hoverText);
+							if (color != null) {
+								hoverClick.color(color);
+							}
 						}
-						DATA.put(hoverId, new HoverDisplayData(sender, position, replaceText, hoverText, color));
-						message += "<ICD=" + hoverId + ">";
+						
+						if (customP.getClick().isEnabled()) {
+							usingHoverClick = true;
+							hoverClick.clickAction(customP.getClick().getAction()).clickValue(customP.getClick().getValue());
+						}
+						
+						if (usingHoverClick) {
+							int hoverId = DATA_ID_PROVIDER.getNext();
+							DATA.put(hoverId, hoverClick.build());
+							message += "<ICD=" + hoverId + ">";
+						}
 					}
 				}
 			}
@@ -493,12 +523,38 @@ public class OutboundToDiscordEvents {
 							e.printStackTrace();
 						}			
 					}
-				} else if (data instanceof HoverDisplayData) {
+				} else if (data instanceof HoverClickDisplayData) {
 					try {
-						HoverDisplayData hData = (HoverDisplayData) data;
+						HoverClickDisplayData hData = (HoverClickDisplayData) data;
 						String title = hData.getDisplayText();
-						String body = hData.getHoverText();
 						Color color = hData.getColor();
+						String body = "";
+						String preview = null;
+						if (hData.hasHover()) {
+							body += hData.getHoverText();
+						}
+						if (hData.hasClick()) {
+							switch (hData.getClickAction()) {
+							case COPY_TO_CLIPBOARD:
+								if (body.length() > 0) {
+									body += "\n\n";
+								}
+								body += LanguageUtils.getTranslation(TranslationUtils.getCopyToClipboard(), InteractiveChatDiscordSrvAddon.plugin.language) + ": " + hData.getClickValue();
+								break;
+							case OPEN_URL:
+								if (body.length() > 0) {
+									body += "\n\n";
+								}
+								String url = hData.getClickValue();
+								body += LanguageUtils.getTranslation(TranslationUtils.getOpenUrl(), InteractiveChatDiscordSrvAddon.plugin.language) + ": " + url;
+								if (URLRequestUtils.IMAGE_URL_PATTERN.matcher(url).matches() && URLRequestUtils.isAllowed(url)) {
+									preview = url;
+								}
+								break;
+							default:
+								break;							
+							}
+						}						
 						DiscordMessageContent content = new DiscordMessageContent(title, null, body, null, color);
 						if (InteractiveChatDiscordSrvAddon.plugin.hoverImage) {
 							BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.getMiscTexture("hover_cursor");
@@ -507,10 +563,13 @@ public class OutboundToDiscordEvents {
 							content.setAuthorIconUrl("attachment://Hover.png");
 							content.addAttachment("Hover.png", os.toByteArray());
 						}
+						if (preview != null) {
+							content.setImageUrl(preview);
+						}
 						contents.add(content);
 					} catch (Exception e) {
 						e.printStackTrace();
-					}	
+					}
 				}
 			}
 			
@@ -657,12 +716,38 @@ public class OutboundToDiscordEvents {
 							e.printStackTrace();
 						}
 					}
-				} else if (data instanceof HoverDisplayData) {
+				} else if (data instanceof HoverClickDisplayData) {
 					try {
-						HoverDisplayData hData = (HoverDisplayData) data;
+						HoverClickDisplayData hData = (HoverClickDisplayData) data;
 						String title = hData.getDisplayText();
-						String body = hData.getHoverText();
 						Color color = hData.getColor();
+						String body = "";
+						String preview = null;
+						if (hData.hasHover()) {
+							body += hData.getHoverText();
+						}
+						if (hData.hasClick()) {
+							switch (hData.getClickAction()) {
+							case COPY_TO_CLIPBOARD:
+								if (body.length() > 0) {
+									body += "\n\n";
+								}
+								body += LanguageUtils.getTranslation(TranslationUtils.getCopyToClipboard(), InteractiveChatDiscordSrvAddon.plugin.language) + ": __" + hData.getClickValue() + "__";
+								break;
+							case OPEN_URL:
+								if (body.length() > 0) {
+									body += "\n\n";
+								}
+								String url = hData.getClickValue();
+								body += LanguageUtils.getTranslation(TranslationUtils.getOpenUrl(), InteractiveChatDiscordSrvAddon.plugin.language) + ": __" + url + "__";
+								if (URLRequestUtils.IMAGE_URL_PATTERN.matcher(url).matches() && URLRequestUtils.isAllowed(url)) {
+									preview = url;
+								}
+								break;
+							default:
+								break;							
+							}
+						}						
 						DiscordMessageContent content = new DiscordMessageContent(title, null, body, null, color);
 						if (InteractiveChatDiscordSrvAddon.plugin.hoverImage) {
 							BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.getMiscTexture("hover_cursor");
@@ -671,10 +756,13 @@ public class OutboundToDiscordEvents {
 							content.setAuthorIconUrl("attachment://Hover.png");
 							content.addAttachment("Hover.png", os.toByteArray());
 						}
+						if (preview != null) {
+							content.setImageUrl(preview);
+						}
 						contents.add(content);
 					} catch (Exception e) {
 						e.printStackTrace();
-					}	
+					}
 				}
 			}
 			List<WebhookMessageBuilder> messagesToSend = new ArrayList<>();

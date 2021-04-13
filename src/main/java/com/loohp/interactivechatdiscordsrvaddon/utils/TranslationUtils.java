@@ -152,5 +152,13 @@ public class TranslationUtils {
 	public static String getCrossbowProjectile() {
 		return "item.minecraft.crossbow.projectile";
 	}
+	
+	public static String getCopyToClipboard() {
+		return "chat.copy";
+	}
+	
+	public static String getOpenUrl() {
+		return "chat.link.open";
+	}
 
 }

@@ -71,7 +71,6 @@ import net.md_5.bungee.api.chat.TextComponent;
 
 public class InboundToGameEvents implements Listener {
 	
-	public static final Pattern IMAGE_URL_PATTERN = Pattern.compile("https?:\\/(?:\\/[^\\/]+)+\\.(?:jpg|jpeg|gif|png)");
 	public static final Map<UUID, DiscordAttachmentData> DATA = new ConcurrentHashMap<>();	
 	public static final Map<Player, GraphicsToPacketMapWrapper> MAP_VIEWERS = new ConcurrentHashMap<>();
 	
@@ -233,7 +232,7 @@ public class InboundToGameEvents implements Listener {
 				}
 			}
 			
-			Matcher matcher = IMAGE_URL_PATTERN.matcher(message.getContentRaw());
+			Matcher matcher = URLRequestUtils.IMAGE_URL_PATTERN.matcher(message.getContentRaw());
 			while (matcher.find()) {
 				String url = matcher.group();
 				if (!processedUrl.contains(url) && URLRequestUtils.isAllowed(url)) {

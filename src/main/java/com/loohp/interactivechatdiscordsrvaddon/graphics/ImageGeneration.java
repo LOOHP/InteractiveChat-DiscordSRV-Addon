@@ -74,6 +74,8 @@ public class ImageGeneration {
 	public static BufferedImage getMissingImage(int width, int length) {
 		BufferedImage image = new BufferedImage(width, length, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = image.createGraphics();
+		g.setColor(new Color(0, 0, 0));
+		g.fillRect(0, 0, width, length);
 		g.setColor(new Color(198, 0, 198));
 		g.fillRect(0, 0, width / 2, length / 2);
 		g.fillRect(width / 2, length / 2, width / 2, length / 2);
