@@ -29,6 +29,7 @@ import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.MCFont;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordReadyEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.OutboundToDiscordEvents;
@@ -612,6 +613,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 				InteractiveChatDiscordSrvAddon.plugin.banner = banner;
 				InteractiveChatDiscordSrvAddon.plugin.puppet = puppet;
 				InteractiveChatDiscordSrvAddon.plugin.armor = armor;
+				
+				MCFont.reloadFonts();
 				
 				int total = blocks.size() + items.size() + font.size() + misc.size() + gui.size() + banner.size() + puppet.size() + armor.size();
 				Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] Loaded " + total + " textures!");

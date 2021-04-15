@@ -21,6 +21,10 @@ public class MCFont {
 	private static double uniFontOffsetY = -3.5 / 16.0;
 
     static {
+    	reloadFonts();
+    }
+    
+    public synchronized static void reloadFonts() {
     	String mcfontPath = InteractiveChatDiscordSrvAddon.plugin.getDataFolder() + "/assets/font/mcfont.ttf";
     	String unifontPath = InteractiveChatDiscordSrvAddon.plugin.getDataFolder() + "/assets/font/unifont.ttf";
     	
