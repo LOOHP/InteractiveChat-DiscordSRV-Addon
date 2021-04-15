@@ -26,6 +26,7 @@ import net.md_5.bungee.api.chat.BaseComponent;
 public class ImageUtils {
 	
 	public static final Color TEXT_BACKGROUND_COLOR = new Color(0, 0, 0, 180);
+	public static final double CHAT_COLOR_BACKGROUND_FACTOR = 0.19;
 	
 	public static BufferedImage downloadImage(String link) throws IOException {
 		URL url = new URL(link);
@@ -338,7 +339,7 @@ public class ImageUtils {
 		
 		BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = textImage.createGraphics();
-		g.setFont(MCFont.getFont(striped).deriveFont(fontSize));
+		g.setFont(MCFont.getFont(striped, fontSize));
 		FontMetrics metrics = g.getFontMetrics();
 		int x = 0;
 		int height = metrics.getHeight();
@@ -353,7 +354,7 @@ public class ImageUtils {
 				if (text.substring(1, 2).equals("x")) {
 					String formatting = text.substring(0, 14);
 					if (ChatColorUtils.isLegal(formatting)) {
-						switch (applyFormatting(g, formatting)) {
+						switch (applyFormatting(g, formatting, 1)) {
 						case APPLY:
 							magic = true;
 							break;
@@ -368,7 +369,7 @@ public class ImageUtils {
 				} else {
 					String formatting = text.substring(0, 2);
 					if (ChatColorUtils.isLegal(formatting)) {
-						switch (applyFormatting(g, formatting)) {
+						switch (applyFormatting(g, formatting, 1)) {
 						case APPLY:
 							magic = true;
 							break;
@@ -383,9 +384,11 @@ public class ImageUtils {
 				}
 			} else {
 				Map<TextAttribute, ?> attributes = g.getFont().getAttributes();
-				attributes.remove(TextAttribute.FONT);
-				g.setFont(MCFont.getFont(current).deriveFont(attributes).deriveFont(fontSize));
-				g.drawString(magic ? ComponentStringUtils.toMagic(current) : current, currentX, y);
+				attributes.remove(TextAttribute.FAMILY);
+				attributes.remove(TextAttribute.TRANSFORM);
+				attributes.remove(TextAttribute.SIZE);
+				g.setFont(MCFont.getFont(current, fontSize).deriveFont(attributes));
+				g.drawString(magic ? ComponentStringUtils.toMagic(current) : current, currentX, g.getFontMetrics().getHeight());
 				currentX += g.getFontMetrics().stringWidth(current);
 				text = text.substring(1);
 			}
@@ -413,8 +416,87 @@ public class ImageUtils {
 		return image;
 	}
 	
+	public static BufferedImage printComponent(BufferedImage image, BaseComponent baseComponent, int topX, int topY, float fontSize) {
+		image = printComponent(image, baseComponent, (int) (topX + (fontSize * 0.15)), (int) (topY + (fontSize * 0.15)), fontSize, CHAT_COLOR_BACKGROUND_FACTOR);
+		return printComponent(image, baseComponent, topX, topY, fontSize, 1);
+	}
+	
+	private static BufferedImage printComponent(BufferedImage image, BaseComponent baseComponent, int topX, int topY, float fontSize, double factor) {
+		String text = ComponentStringUtils.toLegacyString(baseComponent);
+		String striped = ChatColorUtils.stripColor(text);
+		
+		BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = textImage.createGraphics();
+		g.setFont(MCFont.getFont(striped, fontSize));
+		FontMetrics metrics = g.getFontMetrics();
+		int x = 0;
+		int height = metrics.getHeight();
+		int y = height;
+		
+		boolean magic = false;
+		
+		int currentX = x;
+		while (!text.trim().isEmpty()) {
+			String current = text.substring(0, 1);
+			if (current.equals(String.valueOf(ChatColor.COLOR_CHAR)) && text.length() > 1) {
+				if (text.substring(1, 2).equals("x")) {
+					String formatting = text.substring(0, 14);
+					if (ChatColorUtils.isLegal(formatting)) {
+						switch (applyFormatting(g, formatting, factor)) {
+						case APPLY:
+							magic = true;
+							break;
+						case KEEP:
+							break;
+						case RESET:
+							magic = false;
+							break;
+						}
+					}
+					text = text.substring(14);
+				} else {
+					String formatting = text.substring(0, 2);
+					if (ChatColorUtils.isLegal(formatting)) {
+						switch (applyFormatting(g, formatting, factor)) {
+						case APPLY:
+							magic = true;
+							break;
+						case KEEP:
+							break;
+						case RESET:
+							magic = false;
+							break;
+						}
+					}
+					text = text.substring(2);
+				}
+			} else {
+				Map<TextAttribute, ?> attributes = g.getFont().getAttributes();
+				attributes.remove(TextAttribute.FAMILY);
+				attributes.remove(TextAttribute.TRANSFORM);
+				attributes.remove(TextAttribute.SIZE);
+				g.setFont(MCFont.getFont(current, fontSize).deriveFont(attributes));
+				g.drawString(magic ? ComponentStringUtils.toMagic(current) : current, currentX, g.getFontMetrics().getHeight());
+				currentX += g.getFontMetrics().stringWidth(current);
+				text = text.substring(1);
+			}
+		}
+		g.dispose();
+		
+		x = topX;
+		height = metrics.getHeight();
+		int border = (int) Math.ceil(height / 6);
+		y = topY + border;
+		
+		Graphics2D g3 = image.createGraphics();
+		g3.drawImage(textImage, x, y - (height / 5), null);
+		g3.dispose();
+		
+		return image;
+	}
+	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private static MagicFormat applyFormatting(Graphics2D g, String color) {
+	private static MagicFormat applyFormatting(Graphics2D g, String color, double factor) {
 		MagicFormat magic = MagicFormat.KEEP;
     	if (color.length() >= 2) {
     		if (color.charAt(1) != 'r') {
@@ -429,7 +511,7 @@ public class ImageUtils {
 							Font font = new Font(attributes);
 							g.setFont(font.deriveFont(font.getStyle() & ~Font.ITALIC & ~Font.BOLD));
 							magic = MagicFormat.RESET;
-			    			try {g.setColor(chatColor.getColor());} catch (Exception e) {}
+			    			try {g.setColor(darker(chatColor.getColor(), factor));} catch (Exception e) {}
 			    		} else {
 			    			if (chatColor.equals(ChatColor.BOLD)) {
 			    				g.setFont(g.getFont().deriveFont(g.getFont().getStyle() | Font.BOLD));
@@ -457,9 +539,9 @@ public class ImageUtils {
 					magic = MagicFormat.RESET;
 		    		if (color.charAt(1) == 'x') {
 		    			String hex = "#" + String.valueOf(color.charAt(3)) + String.valueOf(color.charAt(5)) + String.valueOf(color.charAt(7)) + String.valueOf(color.charAt(9)) + String.valueOf(color.charAt(11)) + String.valueOf(color.charAt(13));
-		    			try {g.setColor(ChatColor.of(hex).getColor());} catch (Exception e) {}
+		    			try {g.setColor(darker(ChatColor.of(hex).getColor(), factor));} catch (Exception e) {}
 		    		} else {
-		    			try {g.setColor(ChatColor.getByChar(color.charAt(1)).getColor());} catch (Exception e) {}
+		    			try {g.setColor(darker(ChatColor.getByChar(color.charAt(1)).getColor(), factor));} catch (Exception e) {}
 		    		}
 		    	}
     		} else {
@@ -472,6 +554,13 @@ public class ImageUtils {
     		}
     	}
     	return magic;
+    }
+	
+	private static Color darker(Color color, double factor) {
+        return new Color(Math.max((int)(color.getRed()  *factor), 0),
+                         Math.max((int)(color.getGreen()*factor), 0),
+                         Math.max((int)(color.getBlue() *factor), 0),
+                         color.getAlpha());
     }
 	
 	public static enum MagicFormat {

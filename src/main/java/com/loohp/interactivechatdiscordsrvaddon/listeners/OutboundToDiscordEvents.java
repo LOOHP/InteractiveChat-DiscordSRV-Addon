@@ -82,6 +82,7 @@ import github.scarsz.discordsrv.util.DiscordUtil;
 import github.scarsz.discordsrv.util.MessageUtil;
 import github.scarsz.discordsrv.util.PlaceholderUtil;
 import github.scarsz.discordsrv.util.WebhookUtil;
+import net.md_5.bungee.api.chat.BaseComponent;
 
 public class OutboundToDiscordEvents {
 	
@@ -455,40 +456,53 @@ public class OutboundToDiscordEvents {
 							color = new Color(0xFFFFFE);
 						}
 						try {
+							BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer());
+							ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
+							ImageIO.write(image, "png", itemOs);
+							
+							DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
+							
+							DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", null, color);
+							content.addAttachment("Item.png", itemOs.toByteArray());
+							contents.add(content);
+							
+							if (InteractiveChatDiscordSrvAddon.plugin.useTooltipImage) {
+								List<BaseComponent> prints = DiscordItemStackUtils.getToolTip(item);
+								BufferedImage tooltip = ImageGeneration.getToolTipImage(prints);
+								ByteArrayOutputStream tooltipOs = new ByteArrayOutputStream();
+								ImageIO.write(tooltip, "png", tooltipOs);
+								content.addAttachment("ToolTip.png", tooltipOs.toByteArray());
+								content.addImageUrl("attachment://ToolTip.png");
+							} else {
+								content.setDescription(description.getDescription().orElse(null));
+							}
+							
 							if (type.equals(ImageDisplayType.ITEM_CONTAINER)) {
-								DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
-								BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer());
-								ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
-								ImageIO.write(image, "png", itemOs);
+								if (!description.getDescription().isPresent()) {
+									content.getImageUrls().remove("attachment://ToolTip.png");
+									content.getAttachments().remove("ToolTip.png");
+								}
 								BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get(), data.getPlayer());
 								ByteArrayOutputStream contentOs = new ByteArrayOutputStream();
 								ImageIO.write(container, "png", contentOs);
-								DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), "attachment://Container.png", color);
-								content.addAttachment("Item.png", itemOs.toByteArray());
 								content.addAttachment("Container.png", contentOs.toByteArray());
-								contents.add(content);
+								content.addImageUrl("attachment://Container.png");
 							} else {
-								DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
-								BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer());
-								ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
-								ImageIO.write(image, "png", itemOs);
 								if (iData.isFilledMap()) {
+									if (!description.getDescription().isPresent()) {
+										content.getImageUrls().remove("attachment://ToolTip.png");
+										content.getAttachments().remove("ToolTip.png");
+									}
 									BufferedImage map = ImageGeneration.getMapImage(item);
 									ByteArrayOutputStream mapOs = new ByteArrayOutputStream();
 									ImageIO.write(map, "png", mapOs);
-									DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), "attachment://Map.png", color);
-									content.addAttachment("Item.png", itemOs.toByteArray());
 									content.addAttachment("Map.png", mapOs.toByteArray());
-									contents.add(content);
-								} else {
-									DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), null, color);
-									content.addAttachment("Item.png", itemOs.toByteArray());
-									contents.add(content);
+									content.addImageUrl("attachment://Map.png");
 								}
 							}
 						} catch (Exception e) {
 							e.printStackTrace();
-						}	
+						}
 					} else if (iData.getInventory().isPresent()) {
 						Inventory inv = iData.getInventory().get();
 						try {
@@ -555,7 +569,7 @@ public class OutboundToDiscordEvents {
 								break;							
 							}
 						}						
-						DiscordMessageContent content = new DiscordMessageContent(title, null, body, null, color);
+						DiscordMessageContent content = new DiscordMessageContent(title, null, body, color);
 						if (InteractiveChatDiscordSrvAddon.plugin.hoverImage) {
 							BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.getMiscTexture("hover_cursor");
 							ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -564,7 +578,7 @@ public class OutboundToDiscordEvents {
 							content.addAttachment("Hover.png", os.toByteArray());
 						}
 						if (preview != null) {
-							content.setImageUrl(preview);
+							content.addImageUrl(preview);
 						}
 						contents.add(content);
 					} catch (Exception e) {
@@ -648,40 +662,53 @@ public class OutboundToDiscordEvents {
 							color = new Color(0xFFFFFE);
 						}
 						try {
+							BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer());
+							ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
+							ImageIO.write(image, "png", itemOs);
+							
+							DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
+							
+							DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", null, color);
+							content.addAttachment("Item.png", itemOs.toByteArray());
+							contents.add(content);
+							
+							if (InteractiveChatDiscordSrvAddon.plugin.useTooltipImage) {
+								List<BaseComponent> prints = DiscordItemStackUtils.getToolTip(item);
+								BufferedImage tooltip = ImageGeneration.getToolTipImage(prints);
+								ByteArrayOutputStream tooltipOs = new ByteArrayOutputStream();
+								ImageIO.write(tooltip, "png", tooltipOs);
+								content.addAttachment("ToolTip.png", tooltipOs.toByteArray());
+								content.addImageUrl("attachment://ToolTip.png");
+							} else {
+								content.setDescription(description.getDescription().orElse(null));
+							}
+							
 							if (type.equals(ImageDisplayType.ITEM_CONTAINER)) {
-								DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
-								BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer());
-								ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
-								ImageIO.write(image, "png", itemOs);
+								if (!description.getDescription().isPresent()) {
+									content.getImageUrls().remove("attachment://ToolTip.png");
+									content.getAttachments().remove("ToolTip.png");
+								}
 								BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get(), data.getPlayer());
 								ByteArrayOutputStream contentOs = new ByteArrayOutputStream();
 								ImageIO.write(container, "png", contentOs);
-								DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), "attachment://Container.png", color);
-								content.addAttachment("Item.png", itemOs.toByteArray());
 								content.addAttachment("Container.png", contentOs.toByteArray());
-								contents.add(content);
+								content.addImageUrl("attachment://Container.png");
 							} else {
-								DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
-								BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer());
-								ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
-								ImageIO.write(image, "png", itemOs);
 								if (iData.isFilledMap()) {
+									if (!description.getDescription().isPresent()) {
+										content.getImageUrls().remove("attachment://ToolTip.png");
+										content.getAttachments().remove("ToolTip.png");
+									}
 									BufferedImage map = ImageGeneration.getMapImage(item);
 									ByteArrayOutputStream mapOs = new ByteArrayOutputStream();
 									ImageIO.write(map, "png", mapOs);
-									DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), "attachment://Map.png", color);
-									content.addAttachment("Item.png", itemOs.toByteArray());
 									content.addAttachment("Map.png", mapOs.toByteArray());
-									contents.add(content);
-								} else {
-									DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", description.getDescription().orElse(null), null, color);
-									content.addAttachment("Item.png", itemOs.toByteArray());
-									contents.add(content);
+									content.addImageUrl("attachment://Map.png");
 								}
 							}
 						} catch (Exception e) {
 							e.printStackTrace();
-						}	
+						}
 					} else if (iData.getInventory().isPresent()) {
 						Inventory inv = iData.getInventory().get();
 						try {
@@ -748,7 +775,7 @@ public class OutboundToDiscordEvents {
 								break;							
 							}
 						}						
-						DiscordMessageContent content = new DiscordMessageContent(title, null, body, null, color);
+						DiscordMessageContent content = new DiscordMessageContent(title, null, body, color);
 						if (InteractiveChatDiscordSrvAddon.plugin.hoverImage) {
 							BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.getMiscTexture("hover_cursor");
 							ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -757,7 +784,7 @@ public class OutboundToDiscordEvents {
 							content.addAttachment("Hover.png", os.toByteArray());
 						}
 						if (preview != null) {
-							content.setImageUrl(preview);
+							content.addImageUrl(preview);
 						}
 						contents.add(content);
 					} catch (Exception e) {

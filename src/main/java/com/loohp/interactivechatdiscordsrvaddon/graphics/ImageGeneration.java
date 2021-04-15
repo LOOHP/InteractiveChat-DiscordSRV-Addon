@@ -1042,4 +1042,39 @@ public class ImageGeneration {
 		return image;
 	}
 
+	public static BufferedImage getToolTipImage(List<BaseComponent> prints) throws Exception {
+		BufferedImage image = new BufferedImage(1120, prints.size() * 20 + 15, BufferedImage.TYPE_INT_ARGB);
+		
+		for (int i = 0; i < prints.size(); i++) {
+			BaseComponent text = prints.get(i);
+			ImageUtils.printComponent(image, text, 8, 8 + 20 * i, 16);
+		}
+		
+		int lastX = 0;
+		for (int x = 0; x < image.getWidth() - 9; x++) {
+			for (int y = 0; y < image.getHeight(); y++) {
+				if (image.getRGB(x, y) != 0) {
+					lastX = x;
+					break;
+				}
+			}
+		}
+		
+		BufferedImage background = new BufferedImage(lastX + 9, image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		
+		Graphics2D g = background.createGraphics();
+		g.setColor(new Color(36, 1, 92));
+		g.fillRect(2, 2, background.getWidth() - 4, background.getHeight() - 4);
+		g.setColor(new Color(16, 1, 16));
+		g.fillRect(4, 4, background.getWidth() - 8, background.getHeight() - 8);
+		g.fillRect(0, 2, 2, background.getHeight() - 4);
+		g.fillRect(background.getWidth() - 2, 2, 2, background.getHeight() - 4);
+		g.fillRect(2, 0, background.getWidth() - 4, 2);
+		g.fillRect(2, background.getHeight() - 2, background.getWidth() - 4, 2);
+		g.drawImage(image, 0, 0, null);
+		g.dispose();
+		
+		return background;
+	}
+	
 }

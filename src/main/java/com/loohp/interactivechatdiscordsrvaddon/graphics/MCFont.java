@@ -2,6 +2,7 @@ package com.loohp.interactivechatdiscordsrvaddon.graphics;
 
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
+import java.awt.geom.AffineTransform;
 import java.io.File;
 
 import org.bukkit.Bukkit;
@@ -14,7 +15,10 @@ public class MCFont {
 	
 	private static boolean working = false;
 	private static Font standardFont;
-	private static Font backupFont = new Font(Font.DIALOG, Font.PLAIN, 16);
+	private static Font backupFont = new Font(Font.MONOSPACED, Font.PLAIN, 16);
+	
+	private static double backupOffsetX = -1.0 / 16.0;
+	private static double backupOffsetY = -9.0 / 16.0;
 
     static {
     	String path = InteractiveChatDiscordSrvAddon.plugin.getDataFolder() + "/assets/font/mcfont.ttf";
@@ -37,11 +41,11 @@ public class MCFont {
 		return backupFont;
 	}
 
-	public static Font getFont(String text) {
+	public static Font getFont(String text, float fontSize) {
         if (standardFont.canDisplayUpTo(text) == -1) {
-            return standardFont;
+            return standardFont.deriveFont(fontSize);
         } else {
-            return backupFont;
+            return backupFont.deriveFont(fontSize).deriveFont(AffineTransform.getTranslateInstance(backupOffsetX * fontSize, backupOffsetY * fontSize));
         }
     }
     

@@ -3,6 +3,7 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 import java.awt.Color;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -27,7 +28,9 @@ import org.bukkit.potion.PotionEffect;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.XMaterial;
 import com.loohp.interactivechat.utils.ChatColorUtils;
+import com.loohp.interactivechat.utils.ChatComponentUtils;
 import com.loohp.interactivechat.utils.FilledMapUtils;
+import com.loohp.interactivechat.utils.JsonUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NBTUtils;
@@ -39,6 +42,9 @@ import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.dependencies.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import github.scarsz.discordsrv.dependencies.mcdiscordreserializer.discord.DiscordSerializer;
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.chat.ComponentSerializer;
 
 @SuppressWarnings("deprecation")
 public class DiscordItemStackUtils {
@@ -298,6 +304,206 @@ public class DiscordItemStackUtils {
 		}
 		
 		return new DiscordDescription(name, description.trim().isEmpty() ? null : description);
+	}
+	
+	public static List<BaseComponent> getToolTip(ItemStack item) throws Exception {
+		String language = InteractiveChatDiscordSrvAddon.plugin.language;
+		
+		List<BaseComponent> prints = new ArrayList<>();
+		
+		if (item == null) {
+			item = new ItemStack(Material.AIR);
+		}
+		XMaterial xMaterial = XMaterial.matchXMaterial(item);
+		
+		BaseComponent name = null;
+		
+		String rawDisplayName = NBTUtils.getString(item, "display", "Name");
+	    if (rawDisplayName != null && JsonUtils.isValid(rawDisplayName)) {
+	    	try {
+	    		if (item.getEnchantments().isEmpty()) {
+	    			name = ChatComponentUtils.join(ComponentSerializer.parse(rawDisplayName));								    			
+	    		} else {							
+	    			TextComponent coloring = new TextComponent(ChatColor.AQUA + "");
+	    			coloring.setColor(ChatColor.AQUA);
+	    			coloring.setExtra(Arrays.asList(ComponentSerializer.parse(rawDisplayName)));
+	    			name = ChatComponentUtils.cleanUpLegacyText(coloring, null);
+	    		}
+	    	} catch (Throwable e) {
+	    		name = null;
+	    	}
+	    }
+	    
+	    if (name == null) {
+		    if (item.hasItemMeta() && item.getItemMeta().hasDisplayName() && !item.getItemMeta().getDisplayName().equals("")) {
+		    	if (item.getEnchantments().isEmpty()) {
+		    		name = new TextComponent(ChatColorUtils.filterIllegalColorCodes(item.getItemMeta().getDisplayName()));
+		    	} else {
+		    		name = new TextComponent(ChatColorUtils.filterIllegalColorCodes(ChatColor.AQUA + item.getItemMeta().getDisplayName()));
+		    	}
+		    } else {
+		    	String str = LanguageUtils.getTranslation(LanguageUtils.getTranslationKey(item), InteractiveChatDiscordSrvAddon.plugin.language);
+				if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
+					String owner = NBTUtils.getString(item, "SkullOwner", "Name");
+					if (owner != null) {
+						str = str.replaceFirst("%s", owner);
+					}
+				}
+				if (item.getEnchantments().isEmpty()) {
+		    		name = new TextComponent(ChatColorUtils.filterIllegalColorCodes(str));
+		    	} else {
+		    		name = new TextComponent(ChatColorUtils.filterIllegalColorCodes(ChatColor.AQUA + str));
+		    	}
+		    }
+	    }
+	    
+	    prints.add(name);
+		
+		boolean hasMeta = item.hasItemMeta();
+		
+		if (xMaterial.equals(XMaterial.CROSSBOW)) {
+			CrossbowMeta meta = (CrossbowMeta) item.getItemMeta();
+			List<ItemStack> charged = meta.getChargedProjectiles();
+			if (charged != null && !charged.isEmpty()) {
+				ItemStack charge = charged.get(0);
+				BaseComponent chargeItemName = getToolTip(charge).get(0);
+				prints.add(new TextComponent(ChatColor.WHITE + LanguageUtils.getTranslation(TranslationUtils.getCrossbowProjectile(), language) + " [" + chargeItemName.toLegacyText() + ChatColor.WHITE + "]"));
+			}
+		}
+		
+		if (FilledMapUtils.isFilledMap(item)) {
+			MapMeta map = (MapMeta) item.getItemMeta();
+			MapView mapView;
+			int id;
+			if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_13_1)) {
+				mapView = map.getMapView();
+				id = mapView.getId();
+			} else if (InteractiveChat.version.equals(MCVersion.V1_13)) {
+				short shortId = (short) bukkitMapViewClassGetIdMethod.invoke(map);
+				mapView = (MapView) bukkitBukkitClassGetMapShortMethod.invoke(null, shortId);
+				id = shortId;
+			} else {
+				short shortId = item.getDurability();
+				mapView = (MapView) bukkitBukkitClassGetMapShortMethod.invoke(null, shortId);
+				id = shortId;
+			}
+			int scale = mapView.getScale().getValue();
+			if (!InteractiveChat.version.isLegacy()) {
+				prints.add(new TextComponent(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationUtils.getFilledMapId(), language).replaceFirst("%s", id + "")));
+			} else {
+				prints.get(0).addExtra(new TextComponent(ChatColor.WHITE + " (#" + id + ")"));
+			}
+			prints.add(new TextComponent(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationUtils.getFilledMapScale(), language).replaceFirst("%s", (int) Math.pow(2, scale) + "")));
+			prints.add(new TextComponent(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationUtils.getFilledMapLevel(), language).replaceFirst("%s", scale + "").replaceFirst("%s", "4")));
+		}
+		
+		if (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS))) {
+			if (item.getItemMeta() instanceof PotionMeta) {
+				PotionMeta meta = (PotionMeta) item.getItemMeta();
+				List<PotionEffect> effects = new ArrayList<>();
+				List<PotionEffect> base = PotionUtils.getBasePotionEffect(item);
+				if (base != null) {
+					effects.addAll(base);
+				}
+				effects.addAll(meta.getCustomEffects());
+				
+				if (effects.isEmpty()) {
+					prints.add(new TextComponent(LanguageUtils.getTranslation(TranslationUtils.getNoEffect(), language)));
+				} else {
+					for (PotionEffect effect : effects) {
+						String key = TranslationUtils.getEffect(effect.getType());
+						String translation = LanguageUtils.getTranslation(key, language);
+						String description = "";
+						if (key.equals(translation)) {
+							description += WordUtils.capitalize(effect.getType().getName().toLowerCase().replace("_", " "));
+						} else {
+							description += translation;
+						}
+						int amplifier = effect.getAmplifier();
+						if (amplifier > 0) {
+							description += " " + RomanNumberUtils.toRoman(amplifier + 1);
+						}
+						if (!effect.getType().isInstant()) {
+							if (xMaterial.equals(XMaterial.LINGERING_POTION)) {
+								description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() / 4 * 50) + ")";
+							} else {
+								description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() * 50) + ")";
+							}
+						}
+						ChatColor color = PotionUtils.isPositive(effect.getType()) ? ChatColor.BLUE : ChatColor.RED;
+						prints.add(new TextComponent(color + description));
+					}
+				}
+			}
+		}
+		
+		if (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ENCHANTS))) {
+			if (hasMeta && item.getItemMeta() instanceof EnchantmentStorageMeta) {
+				for (Entry<Enchantment, Integer> entry : CustomMapUtils.sortMapByValue(((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants()).entrySet()) {
+					Enchantment ench = entry.getKey();
+					int level = entry.getValue();
+					String key = TranslationUtils.getEnchantment(ench);
+					String translation = LanguageUtils.getTranslation(key, language);
+					String enchName;
+					if (key.equals(translation)) {
+						enchName = WordUtils.capitalize(ench.getName().toLowerCase().replace("_", " "));
+					} else {
+						enchName = translation;
+					}
+					if (enchName != null) {
+						prints.add(new TextComponent(ChatColor.GRAY + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRomanIfUnder(level, 11))));
+					}
+				}
+			} else {
+				for (Entry<Enchantment, Integer> entry : CustomMapUtils.sortMapByValue(item.getEnchantments()).entrySet()) {
+					Enchantment ench = entry.getKey();
+					int level = entry.getValue();
+					String key = TranslationUtils.getEnchantment(ench);
+					String translation = LanguageUtils.getTranslation(key, language);
+					String enchName;
+					if (key.equals(translation)) {
+						enchName = WordUtils.capitalize(ench.getName().toLowerCase().replace("_", " "));
+					} else {
+						enchName = translation;
+					}
+					if (enchName != null) {
+						prints.add(new TextComponent(ChatColor.GRAY + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRomanIfUnder(level, 11))));
+					}
+				}
+			}
+		}
+		
+		if (hasMeta && item.getItemMeta() instanceof LeatherArmorMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_DYE)) {
+			LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
+			if (NBTUtils.contains(item, "display", "color")) {
+				Color color = new Color(meta.getColor().asRGB());
+				String hex = ColorUtils.rgb2Hex(color).toUpperCase();
+				prints.add(new TextComponent(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationUtils.getDyeColor(), language).replaceFirst("%s", hex)));
+			}
+		}
+		
+		if (hasMeta) {
+			ItemMeta meta = item.getItemMeta();
+			if (meta.hasLore()) {
+				for (String lore : meta.getLore()) {
+					prints.add(new TextComponent(ChatColor.DARK_PURPLE + "" + ChatColor.ITALIC + lore));
+				}
+			}
+		}
+		
+		if (hasMeta && isUnbreakble(item) && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_UNBREAKABLE)) {
+			prints.add(new TextComponent(ChatColor.BLUE + LanguageUtils.getTranslation(TranslationUtils.getUnbreakable(), language)));
+		}
+		
+		if (item.getType().getMaxDurability() > 0) {
+			int durability = item.getType().getMaxDurability() - (InteractiveChat.version.isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
+			int maxDur = item.getType().getMaxDurability();
+			if (durability < maxDur) {
+				prints.add(new TextComponent(ChatColor.WHITE + LanguageUtils.getTranslation(TranslationUtils.getDurability(), language).replaceFirst("%s", String.valueOf(durability)).replaceFirst("%s", String.valueOf(maxDur))));
+			}
+		}
+		
+		return prints;
 	}
 	
 	public static boolean isUnbreakble(ItemStack item) {

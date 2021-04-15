@@ -1,20 +1,22 @@
 InventoryImage:
   #Whether or not to generate images for the item placeholder
   Item:
+    Enabled: true
+    #Show information about the item in a tooltip image instead of text
+    UseTooltipImage: true
     EmbedDisplay: 
       Single: "{Item}"
       Multiple: "{Item} x{Amount}"
-    Enabled: true
   #Whether or not to generate images for the inventory placeholder
   Inventory:
+    Enabled: true
     #Use the player inventory gui template instead of the normal inventory template
     UsePlayerInventoryView: true
     EmbedColor: "#55FFFF"
-    Enabled: true
   #Whether or not to generate images for the enderchest placeholder
   EnderChest:
-    EmbedColor: "#FF55FF"
     Enabled: true
+    EmbedColor: "#FF55FF"
 
 HoverEventDisplay:
   #Whether or not to show hover event text

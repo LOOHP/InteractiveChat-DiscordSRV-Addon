@@ -54,6 +54,17 @@ public class Charts {
 	        }
 	    }));
 		
+		metrics.addCustomChart(new Metrics.SimplePie("item_image_tooltip_enabled", new Callable<String>() {
+	        @Override
+	        public String call() throws Exception {
+	        	String string = "Disabled";
+	        	if (InteractiveChatDiscordSrvAddon.plugin.getConfig().getBoolean("InventoryImage.Item.UseTooltipImage")) {
+	        		string = "Enabled";
+	        	}
+	            return string;
+	        }
+	    }));
+		
 		metrics.addCustomChart(new Metrics.SimplePie("inventory_image_view_enabled", new Callable<String>() {
 	        @Override
 	        public String call() throws Exception {
