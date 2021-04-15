@@ -14,38 +14,45 @@ import net.md_5.bungee.api.ChatColor;
 public class MCFont {
 	
 	private static boolean working = false;
-	private static Font standardFont;
-	private static Font backupFont = new Font(Font.MONOSPACED, Font.PLAIN, 16);
+	private static Font mcFont;
+	private static Font uniFont;
 	
-	private static double backupOffsetX = -1.0 / 16.0;
-	private static double backupOffsetY = -9.0 / 16.0;
+	private static double uniFontOffsetX = -1.0 / 16.0;
+	private static double uniFontOffsetY = -3.5 / 16.0;
 
     static {
-    	String path = InteractiveChatDiscordSrvAddon.plugin.getDataFolder() + "/assets/font/mcfont.ttf";
+    	String mcfontPath = InteractiveChatDiscordSrvAddon.plugin.getDataFolder() + "/assets/font/mcfont.ttf";
+    	String unifontPath = InteractiveChatDiscordSrvAddon.plugin.getDataFolder() + "/assets/font/unifont.ttf";
+    	
         try {
-        	File file = new File(path);
-            standardFont = Font.createFont(Font.TRUETYPE_FONT, file).deriveFont(18F);
-            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(standardFont);
+        	File mcfontFile = new File(mcfontPath);
+            mcFont = Font.createFont(Font.TRUETYPE_FONT, mcfontFile).deriveFont(18F);
+            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(mcFont);
+            
+            File unifontFile = new File(unifontPath);
+            uniFont = Font.createFont(Font.TRUETYPE_FONT, unifontFile).deriveFont(16F);
+            GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(uniFont);
+            
             working = true;
         } catch (Exception e) {
-        	Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to import font from " + path);
+        	Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to import font from " + mcfontPath);
             e.printStackTrace();
         }
     }
 
     public static Font getStandardFont() {
-		return standardFont;
+		return mcFont;
 	}
 
 	public static Font getBackupFont() {
-		return backupFont;
+		return uniFont;
 	}
 
 	public static Font getFont(String text, float fontSize) {
-        if (standardFont.canDisplayUpTo(text) == -1) {
-            return standardFont.deriveFont(fontSize);
+        if (mcFont.canDisplayUpTo(text) == -1) {
+            return mcFont.deriveFont(fontSize);
         } else {
-            return backupFont.deriveFont(fontSize).deriveFont(AffineTransform.getTranslateInstance(backupOffsetX * fontSize, backupOffsetY * fontSize));
+            return uniFont.deriveFont(fontSize).deriveFont(AffineTransform.getTranslateInstance(uniFontOffsetX * fontSize, uniFontOffsetY * fontSize));
         }
     }
     
