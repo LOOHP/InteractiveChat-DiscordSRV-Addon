@@ -23,6 +23,8 @@ HoverEventDisplay:
   Enabled: true
   #Whether or not to show the cursor image
   ShowCursorImage: true
+  #Show information in a tooltip image instead of text
+  UseTooltipImage: true
   #Which custom placeholder should have their hover event text ignored
   #This is a list of integer by indexes
   IgnoredPlaceholderIndexes: []

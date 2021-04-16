@@ -160,5 +160,13 @@ public class TranslationUtils {
 	public static String getOpenUrl() {
 		return "chat.link.open";
 	}
+	
+	public static String getRocketFlightDuration() {
+		if (InteractiveChat.version.isLegacy()) {
+			return "item.fireworks.flight";
+		} else {
+			return "item.minecraft.firework_rocket.flight";
+		}
+	}
 
 }

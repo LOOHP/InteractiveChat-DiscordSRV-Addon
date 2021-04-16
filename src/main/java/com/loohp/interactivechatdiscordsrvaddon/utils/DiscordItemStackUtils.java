@@ -136,6 +136,13 @@ public class DiscordItemStackUtils {
 		boolean hasMeta = item.hasItemMeta();
 		String description = "";
 		
+		if (xMaterial.equals(XMaterial.FIREWORK_ROCKET)) {
+			if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && NBTUtils.contains(item, "Fireworks", "Flight")) {
+				int flight = NBTUtils.getByte(item, "Fireworks", "Flight");
+				description += LanguageUtils.getTranslation(TranslationUtils.getRocketFlightDuration(), language) + " " + flight;
+			}
+		}
+		
 		if (xMaterial.equals(XMaterial.CROSSBOW)) {
 			CrossbowMeta meta = (CrossbowMeta) item.getItemMeta();
 			List<ItemStack> charged = meta.getChargedProjectiles();
@@ -357,9 +364,17 @@ public class DiscordItemStackUtils {
 		    }
 	    }
 	    
+	    name.setColor(RarityUtils.getRarityColor(item));
 	    prints.add(name);
 		
 		boolean hasMeta = item.hasItemMeta();
+		
+		if (xMaterial.equals(XMaterial.FIREWORK_ROCKET)) {
+			if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && NBTUtils.contains(item, "Fireworks", "Flight")) {
+				int flight = NBTUtils.getByte(item, "Fireworks", "Flight");
+				prints.add(new TextComponent(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationUtils.getRocketFlightDuration(), language) + " " + flight));
+			}
+		}
 		
 		if (xMaterial.equals(XMaterial.CROSSBOW)) {
 			CrossbowMeta meta = (CrossbowMeta) item.getItemMeta();

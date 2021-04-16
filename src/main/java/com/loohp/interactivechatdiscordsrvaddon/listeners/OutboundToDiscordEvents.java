@@ -83,6 +83,7 @@ import github.scarsz.discordsrv.util.MessageUtil;
 import github.scarsz.discordsrv.util.PlaceholderUtil;
 import github.scarsz.discordsrv.util.WebhookUtil;
 import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
 
 public class OutboundToDiscordEvents {
 	
@@ -289,9 +290,9 @@ public class OutboundToDiscordEvents {
 							
 							if (customP.getHover().isEnabled()) {
 								usingHoverClick = true;
-								String hoverText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getHover().getText()));
+								String hoverText = PlaceholderParser.parse(wrappedSender, customP.getHover().getText());
 								Color color = ColorUtils.getFirstColor(customP.getHover().getText());
-								hoverClick.hoverText(hoverText);
+								hoverClick.hoverText(new TextComponent(hoverText));
 								if (color != null) {
 									hoverClick.color(color);
 								}
@@ -330,9 +331,9 @@ public class OutboundToDiscordEvents {
 						
 						if (customP.getHover().isEnabled()) {
 							usingHoverClick = true;
-							String hoverText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getHover().getText()));
+							String hoverText = PlaceholderParser.parse(wrappedSender, customP.getHover().getText());
 							Color color = ColorUtils.getFirstColor(customP.getHover().getText());
-							hoverClick.hoverText(hoverText);
+							hoverClick.hoverText(new TextComponent(hoverText));
 							if (color != null) {
 								hoverClick.color(color);
 							}
@@ -432,7 +433,6 @@ public class OutboundToDiscordEvents {
 			
 			message.delete().queue();
 			
-			List<DiscordMessageContent> contents = new ArrayList<>();
 			List<DiscordDisplayData> dataList = new ArrayList<>();
 			
 			for (int key : matches) {
@@ -444,148 +444,7 @@ public class OutboundToDiscordEvents {
 			
 			Collections.sort(dataList, DISPLAY_DATA_COMPARATOR);
 			
-			for (DiscordDisplayData data : dataList) {
-				if (data instanceof ImageDisplayData) {
-					ImageDisplayData iData = (ImageDisplayData) data;
-					ImageDisplayType type = iData.getType();
-					String title = iData.getTitle();
-					if (iData.getItemStack().isPresent()) {
-						ItemStack item = iData.getItemStack().get();
-						Color color = DiscordItemStackUtils.getDiscordColor(item);
-						if (color == null || color.equals(Color.white)) {
-							color = new Color(0xFFFFFE);
-						}
-						try {
-							BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer());
-							ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
-							ImageIO.write(image, "png", itemOs);
-							
-							DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
-							
-							DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", null, color);
-							content.addAttachment("Item.png", itemOs.toByteArray());
-							contents.add(content);
-							
-							if (InteractiveChatDiscordSrvAddon.plugin.useTooltipImage) {
-								List<BaseComponent> prints = DiscordItemStackUtils.getToolTip(item);
-								BufferedImage tooltip = ImageGeneration.getToolTipImage(prints);
-								ByteArrayOutputStream tooltipOs = new ByteArrayOutputStream();
-								ImageIO.write(tooltip, "png", tooltipOs);
-								content.addAttachment("ToolTip.png", tooltipOs.toByteArray());
-								content.addImageUrl("attachment://ToolTip.png");
-							} else {
-								content.setDescription(description.getDescription().orElse(null));
-							}
-							
-							if (type.equals(ImageDisplayType.ITEM_CONTAINER)) {
-								if (!description.getDescription().isPresent()) {
-									content.getImageUrls().remove("attachment://ToolTip.png");
-									content.getAttachments().remove("ToolTip.png");
-								}
-								BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get(), data.getPlayer());
-								ByteArrayOutputStream contentOs = new ByteArrayOutputStream();
-								ImageIO.write(container, "png", contentOs);
-								content.addAttachment("Container.png", contentOs.toByteArray());
-								content.addImageUrl("attachment://Container.png");
-							} else {
-								if (iData.isFilledMap()) {
-									if (!description.getDescription().isPresent()) {
-										content.getImageUrls().remove("attachment://ToolTip.png");
-										content.getAttachments().remove("ToolTip.png");
-									}
-									BufferedImage map = ImageGeneration.getMapImage(item);
-									ByteArrayOutputStream mapOs = new ByteArrayOutputStream();
-									ImageIO.write(map, "png", mapOs);
-									content.addAttachment("Map.png", mapOs.toByteArray());
-									content.addImageUrl("attachment://Map.png");
-								}
-							}
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					} else if (iData.getInventory().isPresent()) {
-						Inventory inv = iData.getInventory().get();
-						try {
-							BufferedImage image;
-							if (iData.isPlayerInventory()) {
-								if (InteractiveChatDiscordSrvAddon.plugin.usePlayerInvView) {
-									image = ImageGeneration.getPlayerInventoryImage(inv, iData.getPlayer());
-								} else {
-									image = ImageGeneration.getInventoryImage(inv, data.getPlayer());
-								}
-							} else {
-								image = ImageGeneration.getInventoryImage(inv, data.getPlayer());
-							}
-							ByteArrayOutputStream os = new ByteArrayOutputStream();
-							Color color;
-							switch (type) {
-							case ENDERCHEST:
-								color = InteractiveChatDiscordSrvAddon.plugin.enderColor;
-								break;
-							case INVENTORY:
-								color = InteractiveChatDiscordSrvAddon.plugin.invColor;
-								break;
-							default:
-								color = Color.black;
-								break;
-							}
-							ImageIO.write(image, "png", os);
-							DiscordMessageContent content = new DiscordMessageContent(title, null, null, "attachment://Inventory.png", color);
-							content.addAttachment("Inventory.png", os.toByteArray());
-							contents.add(content);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}			
-					}
-				} else if (data instanceof HoverClickDisplayData) {
-					try {
-						HoverClickDisplayData hData = (HoverClickDisplayData) data;
-						String title = hData.getDisplayText();
-						Color color = hData.getColor();
-						String body = "";
-						String preview = null;
-						if (hData.hasHover()) {
-							body += hData.getHoverText();
-						}
-						if (hData.hasClick()) {
-							switch (hData.getClickAction()) {
-							case COPY_TO_CLIPBOARD:
-								if (body.length() > 0) {
-									body += "\n\n";
-								}
-								body += LanguageUtils.getTranslation(TranslationUtils.getCopyToClipboard(), InteractiveChatDiscordSrvAddon.plugin.language) + ": " + hData.getClickValue();
-								break;
-							case OPEN_URL:
-								if (body.length() > 0) {
-									body += "\n\n";
-								}
-								String url = hData.getClickValue();
-								body += LanguageUtils.getTranslation(TranslationUtils.getOpenUrl(), InteractiveChatDiscordSrvAddon.plugin.language) + ": " + url;
-								if (URLRequestUtils.IMAGE_URL_PATTERN.matcher(url).matches() && URLRequestUtils.isAllowed(url)) {
-									preview = url;
-								}
-								break;
-							default:
-								break;							
-							}
-						}						
-						DiscordMessageContent content = new DiscordMessageContent(title, null, body, color);
-						if (InteractiveChatDiscordSrvAddon.plugin.hoverImage) {
-							BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.getMiscTexture("hover_cursor");
-							ByteArrayOutputStream os = new ByteArrayOutputStream();
-							ImageIO.write(image, "png", os);
-							content.setAuthorIconUrl("attachment://Hover.png");
-							content.addAttachment("Hover.png", os.toByteArray());
-						}
-						if (preview != null) {
-							content.addImageUrl(preview);
-						}
-						contents.add(content);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
+			List<DiscordMessageContent> contents = createContents(dataList);
 			
 			DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
 			TextChannel textChannel = discordImageEvent.getChannel();
@@ -596,7 +455,7 @@ public class OutboundToDiscordEvents {
 				text = discordImageEvent.getNewMessage();
 				textChannel.sendMessage(text).queue();
 				for (DiscordMessageContent content : discordImageEvent.getDiscordMessageContents()) {
-					content.toJDAMessageAction(textChannel).queue();
+					content.toJDAMessageRestAction(textChannel).queue();
 				}
 			}
 		});
@@ -638,7 +497,6 @@ public class OutboundToDiscordEvents {
 			message.delete().queue();
 			Player player = OutboundToDiscordEvents.DATA.get(matches.iterator().next()).getPlayer();
 
-			List<DiscordMessageContent> contents = new ArrayList<>();
 			List<DiscordDisplayData> dataList = new ArrayList<>();
 			
 			for (int key : matches) {
@@ -650,148 +508,8 @@ public class OutboundToDiscordEvents {
 			
 			Collections.sort(dataList, DISPLAY_DATA_COMPARATOR);
 			
-			for (DiscordDisplayData data : dataList) {
-				if (data instanceof ImageDisplayData) {
-					ImageDisplayData iData = (ImageDisplayData) data;
-					ImageDisplayType type = iData.getType();
-					String title = iData.getTitle();
-					if (iData.getItemStack().isPresent()) {
-						ItemStack item = iData.getItemStack().get();
-						Color color = DiscordItemStackUtils.getDiscordColor(item);
-						if (color == null || color.equals(Color.white)) {
-							color = new Color(0xFFFFFE);
-						}
-						try {
-							BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer());
-							ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
-							ImageIO.write(image, "png", itemOs);
-							
-							DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
-							
-							DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", null, color);
-							content.addAttachment("Item.png", itemOs.toByteArray());
-							contents.add(content);
-							
-							if (InteractiveChatDiscordSrvAddon.plugin.useTooltipImage) {
-								List<BaseComponent> prints = DiscordItemStackUtils.getToolTip(item);
-								BufferedImage tooltip = ImageGeneration.getToolTipImage(prints);
-								ByteArrayOutputStream tooltipOs = new ByteArrayOutputStream();
-								ImageIO.write(tooltip, "png", tooltipOs);
-								content.addAttachment("ToolTip.png", tooltipOs.toByteArray());
-								content.addImageUrl("attachment://ToolTip.png");
-							} else {
-								content.setDescription(description.getDescription().orElse(null));
-							}
-							
-							if (type.equals(ImageDisplayType.ITEM_CONTAINER)) {
-								if (!description.getDescription().isPresent()) {
-									content.getImageUrls().remove("attachment://ToolTip.png");
-									content.getAttachments().remove("ToolTip.png");
-								}
-								BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get(), data.getPlayer());
-								ByteArrayOutputStream contentOs = new ByteArrayOutputStream();
-								ImageIO.write(container, "png", contentOs);
-								content.addAttachment("Container.png", contentOs.toByteArray());
-								content.addImageUrl("attachment://Container.png");
-							} else {
-								if (iData.isFilledMap()) {
-									if (!description.getDescription().isPresent()) {
-										content.getImageUrls().remove("attachment://ToolTip.png");
-										content.getAttachments().remove("ToolTip.png");
-									}
-									BufferedImage map = ImageGeneration.getMapImage(item);
-									ByteArrayOutputStream mapOs = new ByteArrayOutputStream();
-									ImageIO.write(map, "png", mapOs);
-									content.addAttachment("Map.png", mapOs.toByteArray());
-									content.addImageUrl("attachment://Map.png");
-								}
-							}
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					} else if (iData.getInventory().isPresent()) {
-						Inventory inv = iData.getInventory().get();
-						try {
-							BufferedImage image;
-							if (iData.isPlayerInventory()) {
-								if (InteractiveChatDiscordSrvAddon.plugin.usePlayerInvView) {
-									image = ImageGeneration.getPlayerInventoryImage(inv, iData.getPlayer());
-								} else {
-									image = ImageGeneration.getInventoryImage(inv, data.getPlayer());
-								}
-							} else {
-								image = ImageGeneration.getInventoryImage(inv, data.getPlayer());
-							}
-							ByteArrayOutputStream os = new ByteArrayOutputStream();
-							Color color;
-							switch (type) {
-							case ENDERCHEST:
-								color = InteractiveChatDiscordSrvAddon.plugin.enderColor;
-								break;
-							case INVENTORY:
-								color = InteractiveChatDiscordSrvAddon.plugin.invColor;
-								break;
-							default:
-								color = Color.black;
-								break;
-							}
-							ImageIO.write(image, "png", os);
-							DiscordMessageContent content = new DiscordMessageContent(title, null, null, "attachment://Inventory.png", color);
-							content.addAttachment("Inventory.png", os.toByteArray());
-							contents.add(content);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					}
-				} else if (data instanceof HoverClickDisplayData) {
-					try {
-						HoverClickDisplayData hData = (HoverClickDisplayData) data;
-						String title = hData.getDisplayText();
-						Color color = hData.getColor();
-						String body = "";
-						String preview = null;
-						if (hData.hasHover()) {
-							body += hData.getHoverText();
-						}
-						if (hData.hasClick()) {
-							switch (hData.getClickAction()) {
-							case COPY_TO_CLIPBOARD:
-								if (body.length() > 0) {
-									body += "\n\n";
-								}
-								body += LanguageUtils.getTranslation(TranslationUtils.getCopyToClipboard(), InteractiveChatDiscordSrvAddon.plugin.language) + ": __" + hData.getClickValue() + "__";
-								break;
-							case OPEN_URL:
-								if (body.length() > 0) {
-									body += "\n\n";
-								}
-								String url = hData.getClickValue();
-								body += LanguageUtils.getTranslation(TranslationUtils.getOpenUrl(), InteractiveChatDiscordSrvAddon.plugin.language) + ": __" + url + "__";
-								if (URLRequestUtils.IMAGE_URL_PATTERN.matcher(url).matches() && URLRequestUtils.isAllowed(url)) {
-									preview = url;
-								}
-								break;
-							default:
-								break;							
-							}
-						}						
-						DiscordMessageContent content = new DiscordMessageContent(title, null, body, color);
-						if (InteractiveChatDiscordSrvAddon.plugin.hoverImage) {
-							BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.getMiscTexture("hover_cursor");
-							ByteArrayOutputStream os = new ByteArrayOutputStream();
-							ImageIO.write(image, "png", os);
-							content.setAuthorIconUrl("attachment://Hover.png");
-							content.addAttachment("Hover.png", os.toByteArray());
-						}
-						if (preview != null) {
-							content.addImageUrl(preview);
-						}
-						contents.add(content);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
+			List<DiscordMessageContent> contents = createContents(dataList);
+			
 			List<WebhookMessageBuilder> messagesToSend = new ArrayList<>();
 			
 			DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
@@ -837,6 +555,164 @@ public class OutboundToDiscordEvents {
 			}
 			client.close();
 		}
+	}
+	
+	private static List<DiscordMessageContent> createContents(List<DiscordDisplayData> dataList) {
+		List<DiscordMessageContent> contents = new ArrayList<>();
+		for (DiscordDisplayData data : dataList) {
+			if (data instanceof ImageDisplayData) {
+				ImageDisplayData iData = (ImageDisplayData) data;
+				ImageDisplayType type = iData.getType();
+				String title = iData.getTitle();
+				if (iData.getItemStack().isPresent()) {
+					ItemStack item = iData.getItemStack().get();
+					Color color = DiscordItemStackUtils.getDiscordColor(item);
+					if (color == null || color.equals(Color.white)) {
+						color = new Color(0xFFFFFE);
+					}
+					try {
+						BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer());
+						ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
+						ImageIO.write(image, "png", itemOs);
+						
+						DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
+						
+						DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", color);
+						content.addAttachment("Item.png", itemOs.toByteArray());
+						contents.add(content);
+						
+						if (InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImage) {
+							List<BaseComponent> prints = DiscordItemStackUtils.getToolTip(item);
+							BufferedImage tooltip = ImageGeneration.getToolTipImage(prints);
+							ByteArrayOutputStream tooltipOs = new ByteArrayOutputStream();
+							ImageIO.write(tooltip, "png", tooltipOs);
+							content.addAttachment("ToolTip.png", tooltipOs.toByteArray());
+							content.addImageUrl("attachment://ToolTip.png");
+						} else {
+							content.addDescription(description.getDescription().orElse(null));
+						}
+						
+						if (type.equals(ImageDisplayType.ITEM_CONTAINER)) {
+							if (!description.getDescription().isPresent()) {
+								content.getImageUrls().remove("attachment://ToolTip.png");
+								content.getAttachments().remove("ToolTip.png");
+							}
+							BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get(), data.getPlayer());
+							ByteArrayOutputStream contentOs = new ByteArrayOutputStream();
+							ImageIO.write(container, "png", contentOs);
+							content.addAttachment("Container.png", contentOs.toByteArray());
+							content.addImageUrl("attachment://Container.png");
+						} else {
+							if (iData.isFilledMap()) {
+								if (!description.getDescription().isPresent()) {
+									content.getImageUrls().remove("attachment://ToolTip.png");
+									content.getAttachments().remove("ToolTip.png");
+								}
+								BufferedImage map = ImageGeneration.getMapImage(item);
+								ByteArrayOutputStream mapOs = new ByteArrayOutputStream();
+								ImageIO.write(map, "png", mapOs);
+								content.addAttachment("Map.png", mapOs.toByteArray());
+								content.addImageUrl("attachment://Map.png");
+							}
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				} else if (iData.getInventory().isPresent()) {
+					Inventory inv = iData.getInventory().get();
+					try {
+						BufferedImage image;
+						if (iData.isPlayerInventory()) {
+							if (InteractiveChatDiscordSrvAddon.plugin.usePlayerInvView) {
+								image = ImageGeneration.getPlayerInventoryImage(inv, iData.getPlayer());
+							} else {
+								image = ImageGeneration.getInventoryImage(inv, data.getPlayer());
+							}
+						} else {
+							image = ImageGeneration.getInventoryImage(inv, data.getPlayer());
+						}
+						ByteArrayOutputStream os = new ByteArrayOutputStream();
+						Color color;
+						switch (type) {
+						case ENDERCHEST:
+							color = InteractiveChatDiscordSrvAddon.plugin.enderColor;
+							break;
+						case INVENTORY:
+							color = InteractiveChatDiscordSrvAddon.plugin.invColor;
+							break;
+						default:
+							color = Color.black;
+							break;
+						}
+						ImageIO.write(image, "png", os);
+						DiscordMessageContent content = new DiscordMessageContent(title, null, null, "attachment://Inventory.png", color);
+						content.addAttachment("Inventory.png", os.toByteArray());
+						contents.add(content);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}			
+				}
+			} else if (data instanceof HoverClickDisplayData) {
+				try {
+					HoverClickDisplayData hData = (HoverClickDisplayData) data;
+					String title = hData.getDisplayText();
+					Color color = hData.getColor();
+					DiscordMessageContent content = new DiscordMessageContent(title, null, color);
+					String body = "";
+					String preview = null;
+					if (hData.hasHover()) {
+						if (InteractiveChatDiscordSrvAddon.plugin.hoverUseTooltipImage) {
+							BaseComponent print = hData.getHoverText();
+							BufferedImage tooltip = ImageGeneration.getToolTipImage(print, true);
+							ByteArrayOutputStream tooltipOs = new ByteArrayOutputStream();
+							ImageIO.write(tooltip, "png", tooltipOs);
+							content.addAttachment("ToolTip.png", tooltipOs.toByteArray());
+							content.addImageUrl("attachment://ToolTip.png");
+							content.addDescription(null);
+						} else {
+							body += ComponentStringUtils.stripColorAndConvertMagic(hData.getHoverText().toLegacyText());
+						}
+					}
+					if (hData.hasClick()) {
+						switch (hData.getClickAction()) {
+						case COPY_TO_CLIPBOARD:
+							if (body.length() > 0) {
+								body += "\n\n";
+							}
+							body += LanguageUtils.getTranslation(TranslationUtils.getCopyToClipboard(), InteractiveChatDiscordSrvAddon.plugin.language) + ": __" + hData.getClickValue() + "__";
+							break;
+						case OPEN_URL:
+							if (body.length() > 0) {
+								body += "\n\n";
+							}
+							String url = hData.getClickValue();
+							body += LanguageUtils.getTranslation(TranslationUtils.getOpenUrl(), InteractiveChatDiscordSrvAddon.plugin.language) + ": __" + url + "__";
+							if (URLRequestUtils.IMAGE_URL_PATTERN.matcher(url).matches() && URLRequestUtils.isAllowed(url)) {
+								preview = url;
+							}
+							break;
+						default:
+							break;							
+						}
+					}
+					content.addDescription(body);
+					if (InteractiveChatDiscordSrvAddon.plugin.hoverImage) {
+						BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.getMiscTexture("hover_cursor");
+						ByteArrayOutputStream os = new ByteArrayOutputStream();
+						ImageIO.write(image, "png", os);
+						content.setAuthorIconUrl("attachment://Hover.png");
+						content.addAttachment("Hover.png", os.toByteArray());
+					}
+					if (preview != null) {
+						content.addImageUrl(preview);
+					}
+					contents.add(content);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return contents;
 	}
 
 }

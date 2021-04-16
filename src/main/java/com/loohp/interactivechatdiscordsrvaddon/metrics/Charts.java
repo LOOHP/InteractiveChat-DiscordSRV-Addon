@@ -47,7 +47,7 @@ public class Charts {
 	        @Override
 	        public String call() throws Exception {
 	        	String string = "Disabled";
-	        	if (InteractiveChatDiscordSrvAddon.plugin.getConfig().getBoolean("InventoryImage.Item.Enabled")) {
+	        	if (InteractiveChatDiscordSrvAddon.plugin.itemImage) {
 	        		string = "Enabled";
 	        	}
 	            return string;
@@ -58,7 +58,7 @@ public class Charts {
 	        @Override
 	        public String call() throws Exception {
 	        	String string = "Disabled";
-	        	if (InteractiveChatDiscordSrvAddon.plugin.getConfig().getBoolean("InventoryImage.Item.UseTooltipImage")) {
+	        	if (InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImage) {
 	        		string = "Enabled";
 	        	}
 	            return string;
@@ -69,7 +69,7 @@ public class Charts {
 	        @Override
 	        public String call() throws Exception {
 	        	String string = "Disabled";
-	        	if (InteractiveChatDiscordSrvAddon.plugin.getConfig().getBoolean("InventoryImage.Inventory.Enabled")) {
+	        	if (InteractiveChatDiscordSrvAddon.plugin.invImage) {
 	        		string = "Enabled";
 	        	}
 	            return string;
@@ -80,7 +80,29 @@ public class Charts {
 	        @Override
 	        public String call() throws Exception {
 	        	String string = "Disabled";
-	        	if (InteractiveChatDiscordSrvAddon.plugin.getConfig().getBoolean("InventoryImage.EnderChest.Enabled")) {
+	        	if (InteractiveChatDiscordSrvAddon.plugin.enderImage) {
+	        		string = "Enabled";
+	        	}
+	            return string;
+	        }
+	    }));
+		
+		metrics.addCustomChart(new Metrics.SimplePie("hoverevent_display_enabled", new Callable<String>() {
+	        @Override
+	        public String call() throws Exception {
+	        	String string = "Disabled";
+	        	if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled) {
+	        		string = "Enabled";
+	        	}
+	            return string;
+	        }
+	    }));
+		
+		metrics.addCustomChart(new Metrics.SimplePie("hoverevent_image_tooltip_enabled", new Callable<String>() {
+	        @Override
+	        public String call() throws Exception {
+	        	String string = "Disabled";
+	        	if (InteractiveChatDiscordSrvAddon.plugin.hoverUseTooltipImage) {
 	        		string = "Enabled";
 	        	}
 	            return string;
@@ -91,7 +113,18 @@ public class Charts {
 	        @Override
 	        public String call() throws Exception {
 	        	String string = "Disabled";
-	        	if (InteractiveChatDiscordSrvAddon.plugin.getConfig().getBoolean("DiscordAttachments.Convert")) {
+	        	if (InteractiveChatDiscordSrvAddon.plugin.convertDiscordAttachments) {
+	        		string = "Enabled";
+	        	}
+	            return string;
+	        }
+	    }));
+		
+		metrics.addCustomChart(new Metrics.SimplePie("translate_mentions_enabled", new Callable<String>() {
+	        @Override
+	        public String call() throws Exception {
+	        	String string = "Disabled";
+	        	if (InteractiveChatDiscordSrvAddon.plugin.translateMentions) {
 	        		string = "Enabled";
 	        	}
 	            return string;

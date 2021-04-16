@@ -81,11 +81,12 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public Color invColor = Color.black;
 	public Color enderColor = Color.black;
 	
-	public boolean useTooltipImage = true;
+	public boolean itemUseTooltipImage = true;
 	
 	public boolean hoverEnabled = true;
 	public boolean hoverImage = true;
 	public Set<Integer> hoverIngore = new HashSet<>();
+	public boolean hoverUseTooltipImage = true;
 	
 	public String reloadConfigMessage;
 	public String reloadTextureMessage;
@@ -229,12 +230,14 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		
 		usePlayerInvView = getConfig().getBoolean("InventoryImage.Inventory.UsePlayerInventoryView");
 		
-		useTooltipImage = getConfig().getBoolean("InventoryImage.Item.UseTooltipImage");
+		itemUseTooltipImage = getConfig().getBoolean("InventoryImage.Item.UseTooltipImage");
 		
 		hoverEnabled = getConfig().getBoolean("HoverEventDisplay.Enabled");
 		hoverImage = getConfig().getBoolean("HoverEventDisplay.ShowCursorImage");
 		hoverIngore.clear();
 		hoverIngore = getConfig().getIntegerList("HoverEventDisplay.IgnoredPlaceholderIndexes").stream().collect(Collectors.toSet());
+		
+		hoverUseTooltipImage = getConfig().getBoolean("HoverEventDisplay.UseTooltipImage");
 		
 		convertDiscordAttachments = getConfig().getBoolean("DiscordAttachments.Convert");
 		discordAttachmentsFormattingText = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordAttachments.Formatting.Text"));

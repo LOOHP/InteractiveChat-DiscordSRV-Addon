@@ -7,6 +7,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
@@ -35,6 +36,8 @@ import org.json.simple.parser.ParseException;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.SkullUtils;
 import com.loohp.interactivechat.Utils.XMaterial;
+import com.loohp.interactivechat.utils.ChatComponentUtils;
+import com.loohp.interactivechat.utils.CustomStringUtils;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.HashUtils;
 import com.loohp.interactivechat.utils.MCVersion;
@@ -48,6 +51,7 @@ import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper.MapIcon;
 
 import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
 
 @SuppressWarnings("deprecation")
 public class ImageGeneration {
@@ -800,7 +804,7 @@ public class ImageGeneration {
 		} else if (xMaterial.equals(XMaterial.CLOCK)) {
 			long time = (player.getPlayerTime() % 24000) - 6000;
 			if (time < 0) {
-				time += 18000;
+				time += 24000;
 			}
 			int phase = (int) ((double) time / 24000 * 64);
 			itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("clock_" + PHASE_FORMAT.format(phase));
@@ -1041,8 +1045,54 @@ public class ImageGeneration {
 		
 		return image;
 	}
-
+	
+	public static BufferedImage getToolTipImage(BaseComponent print) throws Exception {
+		return getToolTipImage(Arrays.asList(print), false);
+	}
+	
+	public static BufferedImage getToolTipImage(BaseComponent print, boolean allowLineBreaks) throws Exception {
+		return getToolTipImage(Arrays.asList(print), allowLineBreaks);
+	}
+	
 	public static BufferedImage getToolTipImage(List<BaseComponent> prints) throws Exception {
+		return getToolTipImage(prints, false);
+	}
+
+	public static BufferedImage getToolTipImage(List<BaseComponent> prints, boolean allowLineBreaks) throws Exception {
+		
+		if (allowLineBreaks) {
+			List<BaseComponent> newPrints = new ArrayList<>();
+			for (BaseComponent base : prints) {
+				List<BaseComponent> current = new ArrayList<>();
+				for (BaseComponent each : CustomStringUtils.loadExtras(base)) {
+					if (each instanceof TextComponent) {
+						TextComponent textComponent = (TextComponent) each;
+						String[] lines = textComponent.getText().split("\\R", -1);
+						if (lines.length <= 1) {
+							current.add(each);
+						} else {							
+							for (int i = 0; i < lines.length; i++) {
+								String text = lines[i];
+								TextComponent clone = ChatComponentUtils.clone(textComponent);
+								clone.setText(text);
+								current.add(clone);
+								newPrints.add(ChatComponentUtils.join(current.toArray(new BaseComponent[current.size()])));
+								if (i <= lines.length - 1) {
+									current = new ArrayList<>();
+								}
+							}
+						}
+					} else {
+						current.add(each);
+					}
+				}
+				if (!current.isEmpty()) {
+					newPrints.add(ChatComponentUtils.join(current.toArray(new BaseComponent[current.size()])));
+				}
+			}
+			prints = newPrints;
+		}
+		
 		BufferedImage image = new BufferedImage(1120, prints.size() * 20 + 15, BufferedImage.TYPE_INT_ARGB);
 		
 		for (int i = 0; i < prints.size(); i++) {

@@ -4,27 +4,32 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import club.minnced.discord.webhook.send.WebhookEmbed.EmbedAuthor;
 import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import github.scarsz.discordsrv.dependencies.jda.api.EmbedBuilder;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
+import github.scarsz.discordsrv.dependencies.jda.api.requests.RestAction;
 import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.MessageAction;
 
 public class DiscordMessageContent {
 	
 	private String authorName;
 	private String authorIconUrl;
-	private String description;
+	private List<String> description;
 	private List<String> imageUrl;
 	private Color color;
 	private Map<String, byte[]> attachments;
 	
-	public DiscordMessageContent(String authorName, String authorIconUrl, String description, List<String> imageUrl, Color color, Map<String, byte[]> attachments) {
+	public DiscordMessageContent(String authorName, String authorIconUrl, List<String> description, List<String> imageUrl, Color color, Map<String, byte[]> attachments) {
 		this.authorName = authorName;
 		this.authorIconUrl = authorIconUrl;
 		this.description = description;
@@ -34,11 +39,11 @@ public class DiscordMessageContent {
 	}
 	
 	public DiscordMessageContent(String authorName, String authorIconUrl, String description, String imageUrl, Color color) {
-		this(authorName, authorIconUrl, description, new ArrayList<>(Arrays.asList(imageUrl)), color, new HashMap<>());
+		this(authorName, authorIconUrl, new ArrayList<>(Arrays.asList(description)), new ArrayList<>(Arrays.asList(imageUrl)), color, new HashMap<>());
 	}
 	
-	public DiscordMessageContent(String authorName, String authorIconUrl, String description, Color color) {
-		this(authorName, authorIconUrl, description, new ArrayList<>(), color, new HashMap<>());
+	public DiscordMessageContent(String authorName, String authorIconUrl, Color color) {
+		this(authorName, authorIconUrl, new ArrayList<>(), new ArrayList<>(), color, new HashMap<>());
 	}
 
 	public String getAuthorName() {
@@ -57,12 +62,24 @@ public class DiscordMessageContent {
 		this.authorIconUrl = authorIconUrl;
 	}
 
-	public String getDescription() {
+	public List<String> getDescriptions() {
 		return description;
 	}
 
-	public void setDescription(String description) {
+	public void addDescription(String description) {
+		this.description.add(description);
+	}
+	
+	public void setDescription(int index, String description) {
+		this.description.set(index, description);
+	}
+	
+	public void setDescriptions(List<String> description) {
 		this.description = description;
+	}
+	
+	public void clearDescriptions() {
+		description.clear();
 	}
 
 	public List<String> getImageUrls() {
@@ -77,7 +94,7 @@ public class DiscordMessageContent {
 		this.imageUrl.set(index, imageUrl);
 	}
 	
-	public void setImageUrl(List<String> imageUrl) {
+	public void setImageUrls(List<String> imageUrl) {
 		this.imageUrl = imageUrl;
 	}
 	
@@ -97,7 +114,7 @@ public class DiscordMessageContent {
 		return attachments;
 	}
 
-	public void setAttachment(Map<String, byte[]> attachments) {
+	public void setAttachments(Map<String, byte[]> attachments) {
 		this.attachments = attachments;
 	}
 	
@@ -109,29 +126,73 @@ public class DiscordMessageContent {
 		attachments.clear();
 	}
 	
-	public MessageAction toJDAMessageAction(TextChannel channel) {
-		EmbedBuilder embed = new EmbedBuilder().setAuthor(authorName, null, authorIconUrl).setColor(color).setDescription(description);
+	public RestAction<List<Message>> toJDAMessageRestAction(TextChannel channel) {
+		Map<MessageAction, Set<String>> actions = new LinkedHashMap<>();
+		Set<String> rootAttachments = new HashSet<>();
+		rootAttachments.add(authorIconUrl);
+		EmbedBuilder embed = new EmbedBuilder().setAuthor(authorName, null, authorIconUrl).setColor(color);
+		if (description.size() > 0) {
+			embed.setDescription(description.get(0));
+		}
 		if (imageUrl.size() > 0) {
-			embed.setImage(imageUrl.get(0));
+			String url = imageUrl.get(0);
+			embed.setImage(url);
+			rootAttachments.add(url);
 		}
-		MessageAction action = channel.sendMessage(embed.build());
-		for (int i = 1; i < imageUrl.size(); i++) {
-			action.embed(new EmbedBuilder().setColor(color).setImage(imageUrl.get(i)).build());
+		actions.put(channel.sendMessage(embed.build()), rootAttachments);
+		for (int i = 1; i < imageUrl.size() || i < description.size(); i++) {
+			Set<String> usedAttachments = new HashSet<>();
+			EmbedBuilder otherEmbed = new EmbedBuilder().setColor(color);
+			if (i < imageUrl.size()) {
+				String url = imageUrl.get(i);
+				otherEmbed.setImage(url);
+				usedAttachments.add(url);
+			}
+			if (i < description.size()) {
+				otherEmbed.setDescription(description.get(i));
+			}
+			actions.put(channel.sendMessage(otherEmbed.build()), usedAttachments);
 		}
-		for (Entry<String, byte[]> entry : attachments.entrySet()) {
-			action.addFile(entry.getValue(), entry.getKey());
+		Set<String> embededAttachments = new HashSet<>();
+		for (Entry<MessageAction, Set<String>> entry : actions.entrySet()) {
+			MessageAction action = entry.getKey();
+			Set<String> neededUrls = entry.getValue();
+			for (Entry<String, byte[]> attachment : attachments.entrySet()) {
+				String attachmentName = attachment.getKey();
+				if (neededUrls.contains("attachment://" + attachmentName)) {
+					action.addFile(attachment.getValue(), attachmentName);
+					embededAttachments.add(attachmentName);
+				}
+			}
 		}
-		return action;
+		MessageAction lastAction = actions.keySet().stream().skip(actions.size() - 1).findFirst().get();
+		for (Entry<String, byte[]> attachment : attachments.entrySet()) {
+			String attachmentName = attachment.getKey();
+			if (!embededAttachments.contains(attachmentName)) {
+				lastAction.addFile(attachment.getValue(), attachmentName);
+			}
+		}
+		return RestAction.allOf(actions.keySet());
 	}
 	
 	public WebhookMessageBuilder toWebhookMessageBuilder() {
-		WebhookEmbedBuilder embed = new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(authorName, authorIconUrl, null)).setColor(color.getRGB()).setDescription(description);
+		WebhookEmbedBuilder embed = new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(authorName, authorIconUrl, null)).setColor(color.getRGB());
+		if (description.size() > 0) {
+			embed.setDescription(description.get(0));
+		}
 		if (imageUrl.size() > 0) {
 			embed.setImageUrl(imageUrl.get(0));
 		}
 		WebhookMessageBuilder webhookmessage = new WebhookMessageBuilder().addEmbeds(embed.build());
-		for (int i = 1; i < imageUrl.size(); i++) {
-			webhookmessage.addEmbeds(new WebhookEmbedBuilder().setColor(color.getRGB()).setImageUrl(imageUrl.get(i)).build());
+		for (int i = 1; i < imageUrl.size() || i < description.size(); i++) {
+			WebhookEmbedBuilder otherEmbed = new WebhookEmbedBuilder().setColor(color.getRGB());
+			if (i < imageUrl.size()) {
+				otherEmbed.setImageUrl(imageUrl.get(i));
+			}
+			if (i < description.size()) {
+				otherEmbed.setDescription(description.get(i));
+			}
+			webhookmessage.addEmbeds(otherEmbed.build());
 		}
 		for (Entry<String, byte[]> entry : attachments.entrySet()) {
 			webhookmessage.addFile(entry.getKey(), entry.getValue());
