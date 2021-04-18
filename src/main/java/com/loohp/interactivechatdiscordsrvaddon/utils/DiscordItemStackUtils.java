@@ -313,10 +313,29 @@ public class DiscordItemStackUtils {
 		return new DiscordDescription(name, description.trim().isEmpty() ? null : description);
 	}
 	
-	public static List<BaseComponent> getToolTip(ItemStack item) throws Exception {
+	public static class DiscordToolTip {
+		private List<BaseComponent> components;
+		private boolean isBaseItem;
+		
+		public DiscordToolTip(List<BaseComponent> components, boolean isBaseItem) {
+			this.components = components;
+			this.isBaseItem = isBaseItem;
+		}
+
+		public List<BaseComponent> getComponents() {
+			return components;
+		}
+
+		public boolean isBaseItem() {
+			return isBaseItem;
+		}
+	}
+	
+	public static DiscordToolTip getToolTip(ItemStack item) throws Exception {
 		String language = InteractiveChatDiscordSrvAddon.plugin.language;
 		
 		List<BaseComponent> prints = new ArrayList<>();
+		boolean hasCustomName = true;
 		
 		if (item == null) {
 			item = new ItemStack(Material.AIR);
@@ -330,7 +349,7 @@ public class DiscordItemStackUtils {
 	    	try {
 	    		if (item.getEnchantments().isEmpty()) {
 	    			name = ChatComponentUtils.join(ComponentSerializer.parse(rawDisplayName));								    			
-	    		} else {							
+	    		} else {						
 	    			TextComponent coloring = new TextComponent(ChatColor.AQUA + "");
 	    			coloring.setColor(ChatColor.AQUA);
 	    			coloring.setExtra(Arrays.asList(ComponentSerializer.parse(rawDisplayName)));
@@ -361,6 +380,7 @@ public class DiscordItemStackUtils {
 		    	} else {
 		    		name = new TextComponent(ChatColorUtils.filterIllegalColorCodes(ChatColor.AQUA + str));
 		    	}
+				hasCustomName = false;
 		    }
 	    }
 	    
@@ -381,7 +401,7 @@ public class DiscordItemStackUtils {
 			List<ItemStack> charged = meta.getChargedProjectiles();
 			if (charged != null && !charged.isEmpty()) {
 				ItemStack charge = charged.get(0);
-				BaseComponent chargeItemName = getToolTip(charge).get(0);
+				BaseComponent chargeItemName = getToolTip(charge).getComponents().get(0);
 				prints.add(new TextComponent(ChatColor.WHITE + LanguageUtils.getTranslation(TranslationUtils.getCrossbowProjectile(), language) + " [" + chargeItemName.toLegacyText() + ChatColor.WHITE + "]"));
 			}
 		}
@@ -518,7 +538,7 @@ public class DiscordItemStackUtils {
 			}
 		}
 		
-		return prints;
+		return new DiscordToolTip(prints, !hasCustomName && prints.size() <= 1);
 	}
 	
 	public static boolean isUnbreakble(ItemStack item) {

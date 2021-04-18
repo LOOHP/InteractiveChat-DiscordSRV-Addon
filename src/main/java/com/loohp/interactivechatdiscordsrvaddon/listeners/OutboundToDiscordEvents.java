@@ -58,6 +58,7 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.ColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordDescription;
+import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordToolTip;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.URLRequestUtils;
 
@@ -582,12 +583,16 @@ public class OutboundToDiscordEvents {
 						contents.add(content);
 						
 						if (InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImage) {
-							List<BaseComponent> prints = DiscordItemStackUtils.getToolTip(item);
-							BufferedImage tooltip = ImageGeneration.getToolTipImage(prints);
-							ByteArrayOutputStream tooltipOs = new ByteArrayOutputStream();
-							ImageIO.write(tooltip, "png", tooltipOs);
-							content.addAttachment("ToolTip.png", tooltipOs.toByteArray());
-							content.addImageUrl("attachment://ToolTip.png");
+							DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item);
+							if (!discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
+								BufferedImage tooltip = ImageGeneration.getToolTipImage(discordToolTip.getComponents());
+								ByteArrayOutputStream tooltipOs = new ByteArrayOutputStream();
+								ImageIO.write(tooltip, "png", tooltipOs);
+								content.addAttachment("ToolTip.png", tooltipOs.toByteArray());
+								content.addImageUrl("attachment://ToolTip.png");
+							} else {
+								content.addDescription(description.getDescription().orElse(null));
+							}
 						} else {
 							content.addDescription(description.getDescription().orElse(null));
 						}

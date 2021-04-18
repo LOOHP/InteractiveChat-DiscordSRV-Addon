@@ -82,6 +82,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public Color enderColor = Color.black;
 	
 	public boolean itemUseTooltipImage = true;
+	public boolean itemUseTooltipImageOnBaseItem = false;
 	
 	public boolean hoverEnabled = true;
 	public boolean hoverImage = true;
@@ -238,6 +239,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		hoverIngore = getConfig().getIntegerList("HoverEventDisplay.IgnoredPlaceholderIndexes").stream().collect(Collectors.toSet());
 		
 		hoverUseTooltipImage = getConfig().getBoolean("HoverEventDisplay.UseTooltipImage");
+		itemUseTooltipImageOnBaseItem = getConfig().getBoolean("HoverEventDisplay.UseTooltipImageOnBaseItem");
 		
 		convertDiscordAttachments = getConfig().getBoolean("DiscordAttachments.Convert");
 		discordAttachmentsFormattingText = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordAttachments.Formatting.Text"));
