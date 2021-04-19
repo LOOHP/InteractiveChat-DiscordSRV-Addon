@@ -22,6 +22,7 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
 
 public class ImageUtils {
 	
@@ -423,6 +424,7 @@ public class ImageUtils {
 	
 	private static BufferedImage printComponent(BufferedImage image, BaseComponent baseComponent, int topX, int topY, float fontSize, double factor) {
 		String text = ComponentStringUtils.toLegacyString(baseComponent);
+		text = new TextComponent(ChatColorUtils.getFirstColors(text)).toLegacyText() + text;
 		String striped = ChatColorUtils.stripColor(text);
 		
 		BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);

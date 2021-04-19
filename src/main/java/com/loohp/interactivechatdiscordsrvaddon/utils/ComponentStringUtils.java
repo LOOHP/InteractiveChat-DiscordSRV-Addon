@@ -22,15 +22,34 @@ public class ComponentStringUtils {
 			if (each instanceof TranslatableComponent) {
 				TranslatableComponent trans = (TranslatableComponent) each;
 				String translated = LanguageUtils.getTranslation(trans.getTranslate(), InteractiveChatDiscordSrvAddon.plugin.language);
-				for (BaseComponent with : trans.getWith()) {
-					translated = translated.replaceFirst("%s", toLegacyString(with));
+				if (trans.getWith() != null) { 
+					for (BaseComponent with : trans.getWith()) {
+						translated = translated.replaceFirst("%s", toLegacyString(with));
+					}
 				}
-				sb.append(translated);
+				String formatting = "";
+				formatting += trans.getColor();
+				if (trans.isBold()) {
+					formatting += ChatColor.BOLD;
+				}
+				if (trans.isItalic()) {
+					formatting += ChatColor.ITALIC;
+				}
+				if (trans.isObfuscated()) {
+					formatting += ChatColor.MAGIC;
+				}
+				if (trans.isStrikethrough()) {
+					formatting += ChatColor.STRIKETHROUGH;
+				}
+				if (trans.isUnderlined()) {
+					formatting += ChatColor.UNDERLINE;
+				}
+				sb.append(formatting + translated);
 			} else {
 				sb.append(each.toLegacyText());
 			}
 		}
-		
+
 		return sb.toString();
 	}
 	

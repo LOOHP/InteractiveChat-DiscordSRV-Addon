@@ -50,8 +50,10 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.VectorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper.MapIcon;
 
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.chat.ComponentSerializer;
 
 @SuppressWarnings("deprecation")
 public class ImageGeneration {
@@ -680,6 +682,7 @@ public class ImageGeneration {
 	
 	private static BufferedImage getRawItemImage(ItemStack item, Player player) throws IOException {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
+		boolean requiresEnchantmentGlint = false;
 		int amount = item.getAmount();
 		XMaterial xMaterial = XMaterial.matchXMaterial(item);
 		String key = xMaterial.name().toLowerCase();
@@ -689,6 +692,9 @@ public class ImageGeneration {
 			key = "clock_00";
 		} else if (xMaterial.equals(XMaterial.COMPASS)) {
 			key = "compass_00";
+		} else if (xMaterial.equals(XMaterial.DEBUG_STICK)) {
+			key = "stick";
+			requiresEnchantmentGlint = true;
 		}
 		BufferedImage itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture(key);
 		if (!InteractiveChatDiscordSrvAddon.plugin.hasItemTexture(key)) {
@@ -697,8 +703,6 @@ public class ImageGeneration {
 				return null;
 			}
 		}
-		
-		boolean requiresEnchantmentGlint = false;
 		
 		if (xMaterial.isOneOf(Arrays.asList("CONTAINS:Banner"))) {
 			BufferedImage banner = BannerGraphics.generateBannerImage(item);
@@ -1059,7 +1063,6 @@ public class ImageGeneration {
 	}
 
 	public static BufferedImage getToolTipImage(List<BaseComponent> prints, boolean allowLineBreaks) throws Exception {
-		
 		if (allowLineBreaks) {
 			List<BaseComponent> newPrints = new ArrayList<>();
 			for (BaseComponent base : prints) {
@@ -1091,6 +1094,10 @@ public class ImageGeneration {
 				}
 			}
 			prints = newPrints;
+		}
+		
+		for (int i = 0; i < prints.size(); i++) {
+			System.out.println(i + "-: " + ComponentSerializer.toString(prints.get(i)).replace(ChatColor.COLOR_CHAR, '$'));
 		}
 		
 		BufferedImage image = new BufferedImage(1120, prints.size() * 20 + 15, BufferedImage.TYPE_INT_ARGB);

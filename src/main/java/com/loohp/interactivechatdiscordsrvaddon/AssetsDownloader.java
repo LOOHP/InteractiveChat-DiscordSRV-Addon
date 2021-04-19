@@ -10,6 +10,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -30,9 +31,14 @@ public class AssetsDownloader {
 	public static final String ASSETS_DATA_URL = "https://api.loohpjames.com/spigot/plugins/interactivechatdiscordsrvaddon";
 	
 	private static final DecimalFormat FORMAT = new DecimalFormat("0.0");
+	private static final AtomicBoolean LOCK = new AtomicBoolean(false);
 	
 	@SuppressWarnings("unchecked")
 	public static void loadAssets(File rootFolder) throws Exception {
+		if (LOCK.get()) {
+			return;
+		}
+		LOCK.set(true);
 		File hashes = new File(rootFolder, "hashes.json");
 		if (!hashes.exists()) {
 			try (PrintWriter pw = new PrintWriter(new OutputStreamWriter(new FileOutputStream(hashes), StandardCharsets.UTF_8))) {
@@ -134,6 +140,7 @@ public class AssetsDownloader {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		LOCK.set(false);
 	}
 	
 	private static String getEntryName(String name) {

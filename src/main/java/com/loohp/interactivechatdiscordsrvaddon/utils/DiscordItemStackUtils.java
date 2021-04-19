@@ -352,7 +352,7 @@ public class DiscordItemStackUtils {
 	    		} else {						
 	    			TextComponent coloring = new TextComponent(ChatColor.AQUA + "");
 	    			coloring.setColor(ChatColor.AQUA);
-	    			coloring.setExtra(Arrays.asList(ComponentSerializer.parse(rawDisplayName)));
+	    			coloring.setExtra(new ArrayList<>(Arrays.asList(ComponentSerializer.parse(rawDisplayName))));
 	    			name = ChatComponentUtils.cleanUpLegacyText(coloring, null);
 	    		}
 	    	} catch (Throwable e) {
@@ -384,7 +384,9 @@ public class DiscordItemStackUtils {
 		    }
 	    }
 	    
-	    name.setColor(RarityUtils.getRarityColor(item));
+	    if (name.getColorRaw() == null) {
+	    	name.setColor(RarityUtils.getRarityColor(item));
+	    }
 	    prints.add(name);
 		
 		boolean hasMeta = item.hasItemMeta();
