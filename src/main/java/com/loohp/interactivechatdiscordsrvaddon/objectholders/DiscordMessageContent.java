@@ -151,7 +151,9 @@ public class DiscordMessageContent {
 			if (i < description.size()) {
 				otherEmbed.setDescription(description.get(i));
 			}
-			actions.put(channel.sendMessage(otherEmbed.build()), usedAttachments);
+			if (!otherEmbed.isEmpty()) {
+				actions.put(channel.sendMessage(otherEmbed.build()), usedAttachments);
+			}
 		}
 		Set<String> embededAttachments = new HashSet<>();
 		for (Entry<MessageAction, Set<String>> entry : actions.entrySet()) {
@@ -192,7 +194,9 @@ public class DiscordMessageContent {
 			if (i < description.size()) {
 				otherEmbed.setDescription(description.get(i));
 			}
-			webhookmessage.addEmbeds(otherEmbed.build());
+			if (!otherEmbed.isEmpty()) {
+				webhookmessage.addEmbeds(otherEmbed.build());
+			}
 		}
 		for (Entry<String, byte[]> entry : attachments.entrySet()) {
 			webhookmessage.addFile(entry.getKey(), entry.getValue());
