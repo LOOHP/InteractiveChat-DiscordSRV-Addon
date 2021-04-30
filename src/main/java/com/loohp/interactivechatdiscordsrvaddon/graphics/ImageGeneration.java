@@ -776,15 +776,18 @@ public class ImageGeneration {
 		} else if (item.getItemMeta() instanceof LeatherArmorMeta) {
 			LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
 			Color color = new Color(meta.getColor().asRGB());
-			BufferedImage armorOverlay = InteractiveChatDiscordSrvAddon.plugin.getItemTexture(xMaterial.name().toLowerCase() + "_overlay");
-			BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
-			
-			itemImage = ImageUtils.multiply(itemImage, colorOverlay);
-			
-			Graphics2D g2 = itemImage.createGraphics();
-			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-			g2.drawImage(armorOverlay, 0, 0, null);
-			g2.dispose();
+			if (xMaterial.equals(XMaterial.LEATHER_HORSE_ARMOR)) {
+				BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
+				itemImage = ImageUtils.multiply(itemImage, colorOverlay);
+			} else {
+				BufferedImage armorOverlay = InteractiveChatDiscordSrvAddon.plugin.getItemTexture(xMaterial.name().toLowerCase() + "_overlay");
+				BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
+				itemImage = ImageUtils.multiply(itemImage, colorOverlay);
+				Graphics2D g2 = itemImage.createGraphics();
+				g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+				g2.drawImage(armorOverlay, 0, 0, null);
+				g2.dispose();
+			}
 		} else if (xMaterial.equals(XMaterial.ELYTRA)) {
 			int durability = item.getType().getMaxDurability() - (InteractiveChat.version.isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
 			if (durability <= 1) {
