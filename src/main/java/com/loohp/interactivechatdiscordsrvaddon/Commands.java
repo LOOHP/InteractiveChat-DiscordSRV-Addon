@@ -19,6 +19,8 @@ import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater.UpdaterResponse;
 
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 
 public class Commands implements CommandExecutor, TabCompleter {
 	
@@ -31,6 +33,9 @@ public class Commands implements CommandExecutor, TabCompleter {
 		if (args.length == 0) {
 			sender.sendMessage(ChatColor.AQUA + "InteractiveChat DiscordSRV Addon written by LOOHP!");
 			sender.sendMessage(ChatColor.GOLD + "You are running ICDiscordSRVAddon version: " + InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion());
+			TextComponent mcheads = new TextComponent(ChatColor.GRAY + "Thanks to " + ChatColor.YELLOW + "MCHeads " + ChatColor.GRAY + "for providing Minecraft avatars.");
+			mcheads.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://mc-heads.net"));
+			sender.spigot().sendMessage(mcheads);
 			return true;
 		}
 		
