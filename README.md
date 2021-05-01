@@ -36,3 +36,7 @@ Replace `VERSION` with the version number.
 
 - [InteractiveChat](https://www.spigotmc.org/resources/75870/)
 - [DiscordSRV](https://www.spigotmc.org/resources/discordsrv.18494/)
+
+## Credits
+
+Thanks to <a href="https://mc-heads.net">MCHeads</a> for providing Minecraft avatars.
