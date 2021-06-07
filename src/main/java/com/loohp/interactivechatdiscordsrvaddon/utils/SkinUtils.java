@@ -2,6 +2,7 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import java.lang.reflect.Method;
 import java.util.Base64;
+import java.util.Collection;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -36,7 +37,11 @@ public class SkinUtils {
 	public static String getSkinJsonFromProfile(Player player) throws Exception {
 		Object playerNMS = craftPlayerGetHandleMethod.invoke(craftPlayerClass.cast(player));
 		GameProfile profile = (GameProfile) nmsEntityPlayerGetProfileMethod.invoke(playerNMS);
-		Property property = profile.getProperties().get("textures").iterator().next();
+		Collection<Property> textures = profile.getProperties().get("textures");
+		if (textures == null || textures.isEmpty()) {
+			return null;
+		}
+		Property property = textures.iterator().next();
 		return new String(Base64.getDecoder().decode(property.getValue()));
 	}
 

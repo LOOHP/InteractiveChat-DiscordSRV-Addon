@@ -1,5 +1,6 @@
 package com.loohp.interactivechatdiscordsrvaddon.wrappers;
 
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
@@ -49,14 +50,17 @@ public class GraphicsToPacketMapWrapper {
 	private ItemStack mapItem;
 	private short mapId = Short.MAX_VALUE;
 	private int totalTime;
+	private boolean playbackBar;
 	
-	public GraphicsToPacketMapWrapper(ImageFrame[] frames) {
+	public GraphicsToPacketMapWrapper(ImageFrame[] frames, boolean playbackBar) {
 		this.frames = frames;
+		this.playbackBar = playbackBar;
 		update();
 	}
 	
 	public GraphicsToPacketMapWrapper(BufferedImage image) {
 		this.frames = new ImageFrame[] {new ImageFrame(image)};
+		this.playbackBar = false;
 		update();
 	}
 	
@@ -71,12 +75,25 @@ public class GraphicsToPacketMapWrapper {
 			mapItem.setItemMeta(meta);
 		}
 		int totalTime = 0;
-		for (int i = 0; i < frames.length; i++) {
-			ImageFrame frame = frames[i];
-			this.colors[i] = MapPalette.imageToBytes(ImageUtils.resizeImageQuality(ImageUtils.squarify(frame.getImage()), 128, 128));
-			totalTime += frame.getDelay() * 10;
+		for (ImageFrame frame : frames) {
+			totalTime += frame.getDelay();
 		}
 		this.totalTime = totalTime;
+		int currentTime = 0;
+		for (int i = 0; i < frames.length; i++) {
+			ImageFrame frame = frames[i];
+			BufferedImage processedFrame = ImageUtils.resizeImageQuality(ImageUtils.squarify(frame.getImage()), 128, 128);
+			if (playbackBar) {
+				Graphics2D g = processedFrame.createGraphics();
+				g.setColor(InteractiveChatDiscordSrvAddon.plugin.playbackBarEmptyColor);
+				g.fillRect(0, 126, 128, 2);
+				g.setColor(InteractiveChatDiscordSrvAddon.plugin.playbackBarFilledColor);
+				g.fillRect(0, 126, (int) (((double) currentTime / (double) totalTime) * 128), 2);
+				g.dispose();
+			}
+			this.colors[i] = MapPalette.imageToBytes(processedFrame);
+			currentTime += frame.getDelay();
+		}
 	}
 	
 	public ImageFrame[] getImageFrame() {
@@ -91,7 +108,7 @@ public class GraphicsToPacketMapWrapper {
 		int current = 0;
 		for (int i = 0; i < frames.length; i++) {
 			ImageFrame frame = frames[i];
-			current += frame.getDelay() * 10;
+			current += frame.getDelay();
 			if (current >= ms) {
 				return i;
 			}

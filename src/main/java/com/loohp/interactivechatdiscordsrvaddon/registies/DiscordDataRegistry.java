@@ -6,8 +6,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.loohp.interactivechat.utils.ColorUtils;
 import com.loohp.interactivechat.utils.CustomStringUtils;
-import com.loohp.interactivechatdiscordsrvaddon.utils.ColorUtils;
 
 public class DiscordDataRegistry {
 

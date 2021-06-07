@@ -3,6 +3,7 @@ package com.loohp.interactivechatdiscordsrvaddon.listeners;
 import org.bukkit.Bukkit;
 
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
+import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.api.ListenerPriority;
@@ -36,6 +37,7 @@ public class DiscordReadyEvents {
 	}
 	
 	public void ready() {
+		Debug.debug("Triggering discord ready...");
 		DiscordSRV discordsrv = InteractiveChatDiscordSrvAddon.discordsrv;
 		
 		JDA jda = discordsrv.getJda();

@@ -25,6 +25,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.ChatColorUtils;
+import com.loohp.interactivechat.utils.ColorUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
@@ -37,7 +38,6 @@ import com.loohp.interactivechatdiscordsrvaddon.metrics.Charts;
 import com.loohp.interactivechatdiscordsrvaddon.metrics.Metrics;
 import com.loohp.interactivechatdiscordsrvaddon.registies.InteractiveChatRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
-import com.loohp.interactivechatdiscordsrvaddon.utils.ColorUtils;
 
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.dependencies.jda.api.Permission;
@@ -48,6 +48,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public static InteractiveChatDiscordSrvAddon plugin;
 	public static InteractiveChat interactivechat;
 	public static DiscordSRV discordsrv;
+	
+	public static boolean debug = false;
 	
 	public static List<Permission> requiredPermissions;
 	
@@ -83,6 +85,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	
 	public boolean itemUseTooltipImage = true;
 	public boolean itemUseTooltipImageOnBaseItem = false;
+	public boolean itemAltAir = true;
+	
+	public boolean invShowLevel = true;
 	
 	public boolean hoverEnabled = true;
 	public boolean hoverImage = true;
@@ -107,7 +112,12 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	
 	public boolean translateMentions = true;
 	public String mentionHighlight = "";
-	//public String mentionHover = "";
+	
+	public boolean deathMessageItem = true;
+	
+	public boolean advancementName = true;
+	public boolean advancementItem = true;
+	public boolean advancementDescription = true;
 	
 	public boolean updaterEnabled = true;
 	
@@ -116,6 +126,10 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public boolean escapePlaceholdersFromDiscord = true;
 	public boolean escapeDiscordMarkdownInItems = true;
 	public boolean reducedAssetsDownloadInfo = false;
+	
+	public boolean playbackBarEnabled = true;
+	public Color playbackBarFilledColor;
+	public Color playbackBarEmptyColor;
 	
 	public String language = "en_us";
 	
@@ -129,6 +143,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	private Map<String, BufferedImage> font = new HashMap<>();
 	private Map<String, BufferedImage> puppet = new HashMap<>();
 	private Map<String, BufferedImage> armor = new HashMap<>();
+	protected Map<String, byte[]> extras = new HashMap<>();
 	
 	/*
 	public Set<String> discordMainCommands = new HashSet<>();
@@ -166,6 +181,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		DiscordSRV.api.subscribe(new InboundToGameEvents());
 		
 		getServer().getPluginManager().registerEvents(new InboundToGameEvents(), this);
+		getServer().getPluginManager().registerEvents(new OutboundToDiscordEvents(), this);
 		getServer().getPluginManager().registerEvents(new Debug(), this);
 		getServer().getPluginManager().registerEvents(new Updater(), this);
 		getCommand("interactivechatdiscordsrv").setExecutor(new Commands());
@@ -216,6 +232,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		reloadTextureMessage = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("Messages.ReloadTexture"));
 		linkExpired = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("Messages.LinkExpired"));
 		
+		debug = getConfig().getBoolean("Debug.PrintInfoToConsole");
+		
 		resourceOrder.clear();
 		List<String> order = getConfig().getStringList("Resources.Order");
 		ListIterator<String> itr = order.listIterator(order.size());
@@ -232,6 +250,10 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		usePlayerInvView = getConfig().getBoolean("InventoryImage.Inventory.UsePlayerInventoryView");
 		
 		itemUseTooltipImage = getConfig().getBoolean("InventoryImage.Item.UseTooltipImage");
+		itemUseTooltipImageOnBaseItem = getConfig().getBoolean("InventoryImage.Item.UseTooltipImageOnBaseItem");
+		itemAltAir = getConfig().getBoolean("InventoryImage.Item.AlternateAirTexture");
+		
+		invShowLevel = getConfig().getBoolean("InventoryImage.Inventory.ShowExperienceLevel");
 		
 		hoverEnabled = getConfig().getBoolean("HoverEventDisplay.Enabled");
 		hoverImage = getConfig().getBoolean("HoverEventDisplay.ShowCursorImage");
@@ -239,7 +261,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		hoverIngore = getConfig().getIntegerList("HoverEventDisplay.IgnoredPlaceholderIndexes").stream().collect(Collectors.toSet());
 		
 		hoverUseTooltipImage = getConfig().getBoolean("HoverEventDisplay.UseTooltipImage");
-		itemUseTooltipImageOnBaseItem = getConfig().getBoolean("HoverEventDisplay.UseTooltipImageOnBaseItem");
 		
 		convertDiscordAttachments = getConfig().getBoolean("DiscordAttachments.Convert");
 		discordAttachmentsFormattingText = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordAttachments.Formatting.Text"));
@@ -266,9 +287,19 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		invColor = ColorUtils.hex2Rgb(getConfig().getString("InventoryImage.Inventory.EmbedColor"));
 		enderColor = ColorUtils.hex2Rgb(getConfig().getString("InventoryImage.EnderChest.EmbedColor"));
 		
+		deathMessageItem = getConfig().getBoolean("DeathMessage.ShowItems");
+		
+		advancementName = getConfig().getBoolean("Advancements.CorrectAdvancementName");
+		advancementItem = getConfig().getBoolean("Advancements.ChangeToItemIcon");
+		advancementDescription = getConfig().getBoolean("Advancements.ShowDescription");
+		
 		translateMentions = getConfig().getBoolean("DiscordMention.TranslateMentions");
 		mentionHighlight = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordMention.MentionHighlight"));
 		//mentionHover = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getStringList("DiscordMention.MentionHoverText").stream().collect(Collectors.joining("\n")));
+		
+		playbackBarEnabled = getConfig().getBoolean("DiscordAttachments.PlaybackBar.Enabled");
+		playbackBarFilledColor = ColorUtils.hex2Rgb(getConfig().getString("DiscordAttachments.PlaybackBar.FilledColor"));
+		playbackBarEmptyColor = ColorUtils.hex2Rgb(getConfig().getString("DiscordAttachments.PlaybackBar.EmptyColor"));
 		
 		language = getConfig().getString("Resources.Language");
 		
@@ -375,6 +406,10 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 			return ImageGeneration.getMissingImage(512, 512);
 		}
 		return ImageUtils.copyImage(image);
+	}
+	
+	public byte[] getExtras(String str) {
+		return extras.get(str);
 	}
 	
 	public void reloadTextures() {

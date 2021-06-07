@@ -1,57 +1,27 @@
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.bukkit.Bukkit;
+import org.bukkit.inventory.ItemStack;
 
 import com.google.common.base.CharMatcher;
-import com.loohp.interactivechat.utils.CustomStringUtils;
-import com.loohp.interactivechat.utils.LanguageUtils;
-import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
+import com.loohp.interactivechat.registry.Registry;
+import com.loohp.interactivechat.utils.ComponentFlattening;
+import com.loohp.interactivechat.utils.ItemNBTUtils;
 
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TranslatableComponent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.event.HoverEvent.ShowItem;
 import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.TranslatableComponent;
 
 public class ComponentStringUtils {
-	
-	public static String toLegacyString(BaseComponent baseComponent) {
-		StringBuilder sb = new StringBuilder();
-		for (BaseComponent each : CustomStringUtils.loadExtras(baseComponent)) {
-			if (each instanceof TranslatableComponent) {
-				TranslatableComponent trans = (TranslatableComponent) each;
-				String translated = LanguageUtils.getTranslation(trans.getTranslate(), InteractiveChatDiscordSrvAddon.plugin.language);
-				if (trans.getWith() != null) { 
-					for (BaseComponent with : trans.getWith()) {
-						translated = translated.replaceFirst("%s", toLegacyString(with));
-					}
-				}
-				String formatting = "";
-				formatting += trans.getColor();
-				if (trans.isBold()) {
-					formatting += ChatColor.BOLD;
-				}
-				if (trans.isItalic()) {
-					formatting += ChatColor.ITALIC;
-				}
-				if (trans.isObfuscated()) {
-					formatting += ChatColor.MAGIC;
-				}
-				if (trans.isStrikethrough()) {
-					formatting += ChatColor.STRIKETHROUGH;
-				}
-				if (trans.isUnderlined()) {
-					formatting += ChatColor.UNDERLINE;
-				}
-				sb.append(formatting + translated);
-			} else {
-				sb.append(each.toLegacyText());
-			}
-		}
-
-		return sb.toString();
-	}
 	
 	public static String toMagic(String str) {
 		Random random = ThreadLocalRandom.current();
@@ -90,6 +60,57 @@ public class ComponentStringUtils {
 			}
 		}
 		return sb.toString();
+	}
+	
+	@SuppressWarnings("deprecation")
+	public static ItemStack extractItemStack(Component component) {
+		component = ComponentFlattening.flatten(component);
+		List<Component> children = new ArrayList<>(component.children());
+		for (int i = 0; i < children.size(); i++) {
+			Component child = children.get(i);
+			HoverEvent<?> hoverEvent = child.hoverEvent();
+			if (hoverEvent != null && hoverEvent.action().equals(HoverEvent.Action.SHOW_ITEM)) {
+				ShowItem showItem = (ShowItem) hoverEvent.value();
+				Key key = showItem.item();
+				int count = showItem.count();
+				String simpleNbt = "{id:\"" + key.asString() + "\", Count: " + count + "b}";
+				String longNbt = showItem.nbt() == null ? null : showItem.nbt().string();
+				ItemStack itemstack = null;
+				try {
+					itemstack = ItemNBTUtils.getItemFromNBTJson(simpleNbt);
+				} catch (Throwable e) {}
+				if (longNbt != null) {
+					try {
+						itemstack = Bukkit.getUnsafe().modifyItemStack(itemstack, longNbt);
+					} catch (Throwable e) {}
+				}
+				if (itemstack != null) {
+					return itemstack;
+				}
+			}
+			if (child instanceof TranslatableComponent) {
+				TranslatableComponent trans = (TranslatableComponent) child;
+				List<Component> withs = new ArrayList<>(trans.args());
+				for (int u = 0; u < withs.size(); u++) {
+					Component with = withs.get(u);
+					ItemStack itemstack = extractItemStack(with);
+					if (itemstack != null) {
+						return itemstack;
+					}
+				}
+				trans = trans.args(withs);
+				children.set(i, trans);
+			}
+		}
+		return null;
+	}
+	
+	public static github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component toDiscordSRVComponent(Component component) {
+		return github.scarsz.discordsrv.dependencies.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(Registry.ADVENTURE_GSON_SERIALIZER.serialize(component));
+	}
+	
+	public static Component toRegularComponent(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component component) {
+		return Registry.ADVENTURE_GSON_SERIALIZER.deserialize(github.scarsz.discordsrv.dependencies.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(component));
 	}
 
 }

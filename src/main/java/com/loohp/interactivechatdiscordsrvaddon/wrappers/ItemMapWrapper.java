@@ -19,11 +19,11 @@ import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.MapView;
 
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.MCVersion;
 
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.chat.ComponentSerializer;
+import net.kyori.adventure.text.Component;
 
 public class ItemMapWrapper {
 	
@@ -162,7 +162,7 @@ public class ItemMapWrapper {
 			byte y = (byte) nmsMapIconClassGetYMethod.invoke(nmsMapIconObject);
 			byte rotation = (byte) nmsMapIconClassGetRotationMethod.invoke(nmsMapIconObject);
 			Object ichatbasecomponentObject = nmsMapIconClassGetNameMethod == null ? null : nmsMapIconClassGetNameMethod.invoke(nmsMapIconObject);
-			BaseComponent name = ichatbasecomponentObject == null ? null : ComponentSerializer.parse((String) nmsChatSerializerSubclassAMethod.invoke(null, ichatbasecomponentObject))[0];
+			Component name = ichatbasecomponentObject == null ? null : Registry.ADVENTURE_GSON_SERIALIZER.deserialize((String) nmsChatSerializerSubclassAMethod.invoke(null, ichatbasecomponentObject));
 			icons.add(new MapIcon(type, x, y, rotation, name));
 		}
 		icons = icons.stream().sorted(ICON_ORDER).collect(Collectors.toList());
@@ -182,9 +182,9 @@ public class ItemMapWrapper {
 	    private final byte x;
 	    private final byte y;
 	    private final byte rotation;
-	    private final BaseComponent name;
+	    private final Component name;
 
-	    public MapIcon(MapIcon.Type mapicon_type, byte b0, byte b1, byte b2, BaseComponent name) {
+	    public MapIcon(MapIcon.Type mapicon_type, byte b0, byte b1, byte b2, Component name) {
 	        this.type = mapicon_type;
 	        this.x = b0;
 	        this.y = b1;
@@ -208,7 +208,7 @@ public class ItemMapWrapper {
 	        return this.rotation;
 	    }
 
-	    public BaseComponent getName() {
+	    public Component getName() {
 	        return this.name;
 	    }
 
