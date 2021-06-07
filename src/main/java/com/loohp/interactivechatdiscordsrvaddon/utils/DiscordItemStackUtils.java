@@ -361,18 +361,14 @@ public class DiscordItemStackUtils {
 		XMaterial xMaterial = XMaterial.matchXMaterial(item);
 		
 		Component itemDisplayNameComponent = null;
-		NamedTextColor rarityColor = ColorUtils.toNamedTextColor(RarityUtils.getRarityColor(item));
+		ChatColor rarityChatColor = RarityUtils.getRarityColor(item);
+	    NamedTextColor rarityColor = ColorUtils.toNamedTextColor(rarityChatColor);
 	    
 	    String rawDisplayName = item.hasItemMeta() && item.getItemMeta() != null ? NBTUtils.getString(item, "display", "Name") : null;
 	    if (rawDisplayName != null && JsonUtils.isValid(rawDisplayName)) {
 	    	try {
-	    		if (item.getEnchantments().isEmpty()) {
-	    			itemDisplayNameComponent = Registry.ADVENTURE_GSON_SERIALIZER.deserialize(rawDisplayName);
-	    		} else {							
-	    			Component name = Registry.ADVENTURE_GSON_SERIALIZER.deserialize(rawDisplayName);
-	    			name.colorIfAbsent(NamedTextColor.AQUA);
-	    			itemDisplayNameComponent = name;
-	    		}
+	    		itemDisplayNameComponent = Registry.ADVENTURE_GSON_SERIALIZER.deserialize(rawDisplayName);
+	    		itemDisplayNameComponent = itemDisplayNameComponent.colorIfAbsent(rarityColor);
 	    	} catch (Throwable e) {
 	    		itemDisplayNameComponent = null;
 	    	}
@@ -380,16 +376,10 @@ public class DiscordItemStackUtils {
 	    
 	    if (itemDisplayNameComponent == null) {
 		    if (item.hasItemMeta() && item.getItemMeta().hasDisplayName() && !item.getItemMeta().getDisplayName().equals("")) {
-		    	if (item.getEnchantments().isEmpty()) {
-		    		itemDisplayNameComponent = LegacyComponentSerializer.legacySection().deserialize(item.getItemMeta().getDisplayName());
-		    	} else {
-		    		itemDisplayNameComponent = LegacyComponentSerializer.legacySection().deserialize(ChatColor.AQUA + item.getItemMeta().getDisplayName());
-		    	}
+		    	itemDisplayNameComponent = LegacyComponentSerializer.legacySection().deserialize(rarityChatColor + item.getItemMeta().getDisplayName());
 		    } else {
 		    	itemDisplayNameComponent = Component.translatable(LanguageUtils.getTranslationKey(item));
-		    	if (!item.getEnchantments().isEmpty()) {
-		    		itemDisplayNameComponent = itemDisplayNameComponent.color(NamedTextColor.AQUA);
-		    	}
+		    	itemDisplayNameComponent = itemDisplayNameComponent.color(rarityColor);
 		    	if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
 					String owner = NBTUtils.getString(item, "SkullOwner", "Name");
 					if (owner != null) {
@@ -398,8 +388,6 @@ public class DiscordItemStackUtils {
 				}
 		    }
 	    }
-	    
-	    itemDisplayNameComponent = itemDisplayNameComponent.colorIfAbsent(rarityColor);
 	    
 	    prints.add(itemDisplayNameComponent);
 		
