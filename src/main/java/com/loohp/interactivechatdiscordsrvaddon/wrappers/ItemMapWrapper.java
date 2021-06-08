@@ -19,8 +19,8 @@ import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.MapView;
 
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.FilledMapUtils;
+import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NMSUtils;
 
@@ -157,7 +157,7 @@ public class ItemMapWrapper {
 			byte y = (byte) nmsMapIconClassGetYMethod.invoke(nmsMapIconObject);
 			byte rotation = (byte) nmsMapIconClassGetRotationMethod.invoke(nmsMapIconObject);
 			Object ichatbasecomponentObject = nmsMapIconClassGetNameMethod == null ? null : nmsMapIconClassGetNameMethod.invoke(nmsMapIconObject);
-			Component name = ichatbasecomponentObject == null ? null : Registry.ADVENTURE_GSON_SERIALIZER.deserialize((String) nmsChatSerializerSubclassAMethod.invoke(null, ichatbasecomponentObject));
+			Component name = ichatbasecomponentObject == null ? null : InteractiveChatComponentSerializer.gson().deserialize(nmsChatSerializerSubclassAMethod.invoke(null, ichatbasecomponentObject).toString());
 			icons.add(new MapIcon(type, x, y, rotation, name));
 		}
 		icons = icons.stream().sorted(ICON_ORDER).collect(Collectors.toList());

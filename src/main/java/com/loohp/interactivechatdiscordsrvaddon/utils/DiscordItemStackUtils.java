@@ -367,7 +367,7 @@ public class DiscordItemStackUtils {
 	    String rawDisplayName = item.hasItemMeta() && item.getItemMeta() != null ? NBTUtils.getString(item, "display", "Name") : null;
 	    if (rawDisplayName != null && JsonUtils.isValid(rawDisplayName)) {
 	    	try {
-	    		itemDisplayNameComponent = Registry.ADVENTURE_GSON_SERIALIZER.deserialize(rawDisplayName);
+	    		itemDisplayNameComponent = InteractiveChatComponentSerializer.gson().deserialize(rawDisplayName);
 	    		itemDisplayNameComponent = itemDisplayNameComponent.colorIfAbsent(rarityColor);
 	    	} catch (Throwable e) {
 	    		itemDisplayNameComponent = null;

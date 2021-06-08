@@ -548,8 +548,8 @@ public class OutboundToDiscordEvents implements Listener {
 				itemField.setAccessible(true);
 				item = (ItemStack) ItemStackUtils.toBukkitCopy(itemField.get(advancementDisplay));
 				itemField.setAccessible(false);
-				title = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(Registry.ADVENTURE_GSON_SERIALIZER.deserialize(WrappedChatComponent.fromHandle(advancementDisplay.getClass().getMethod("a").invoke(advancementDisplay)).getJson()), InteractiveChatDiscordSrvAddon.plugin.language);
-				description = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(Registry.ADVENTURE_GSON_SERIALIZER.deserialize(WrappedChatComponent.fromHandle(advancementDisplay.getClass().getMethod("b").invoke(advancementDisplay)).getJson()), InteractiveChatDiscordSrvAddon.plugin.language);						
+				title = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(InteractiveChatComponentSerializer.gson().deserialize(WrappedChatComponent.fromHandle(advancementDisplay.getClass().getMethod("a").invoke(advancementDisplay)).getJson()), InteractiveChatDiscordSrvAddon.plugin.language);
+				description = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(InteractiveChatComponentSerializer.gson().deserialize(WrappedChatComponent.fromHandle(advancementDisplay.getClass().getMethod("b").invoke(advancementDisplay)).getJson()), InteractiveChatDiscordSrvAddon.plugin.language);						
 				Object advancementFrameType = advancementDisplay.getClass().getMethod("e").invoke(advancementDisplay);
 				advancementType = AdvancementType.fromHandle(advancementFrameType);
 				Object namespacedKey = bukkitAdvancement.getClass().getMethod("getKey").invoke(bukkitAdvancement);

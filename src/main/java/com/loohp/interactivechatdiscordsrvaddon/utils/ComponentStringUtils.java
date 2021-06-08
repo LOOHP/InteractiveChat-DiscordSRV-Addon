@@ -10,8 +10,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 
 import com.google.common.base.CharMatcher;
-import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.ComponentFlattening;
+import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.ItemNBTUtils;
 
 import net.kyori.adventure.key.Key;
@@ -106,11 +106,11 @@ public class ComponentStringUtils {
 	}
 	
 	public static github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component toDiscordSRVComponent(Component component) {
-		return github.scarsz.discordsrv.dependencies.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(Registry.ADVENTURE_GSON_SERIALIZER.serialize(component));
+		return github.scarsz.discordsrv.dependencies.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().deserialize(InteractiveChatComponentSerializer.gson().serialize(component));
 	}
 	
 	public static Component toRegularComponent(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component component) {
-		return Registry.ADVENTURE_GSON_SERIALIZER.deserialize(github.scarsz.discordsrv.dependencies.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(component));
+		return InteractiveChatComponentSerializer.gson().deserialize(github.scarsz.discordsrv.dependencies.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(component));
 	}
 
 }
