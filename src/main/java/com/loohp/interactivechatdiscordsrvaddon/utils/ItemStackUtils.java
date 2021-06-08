@@ -3,11 +3,11 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.utils.MCVersion;
+import com.loohp.interactivechat.utils.NMSUtils;
 
 public class ItemStackUtils {
 	
@@ -17,19 +17,13 @@ public class ItemStackUtils {
 	
 	static {
 		try {
-			craftItemStackClass = getNMSClass("org.bukkit.craftbukkit.", "inventory.CraftItemStack");
-			nmsItemStackClass = getNMSClass("net.minecraft.server.", "ItemStack");
+			craftItemStackClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.", "inventory.CraftItemStack");
+			nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.", "ItemStack");
 			asBukkitCopyMethod = craftItemStackClass.getMethod("asBukkitCopy", nmsItemStackClass);
 		} catch (ClassNotFoundException | SecurityException | NoSuchMethodException e) {
 			e.printStackTrace();
 		}
 	}
-	
-	private static Class<?> getNMSClass(String prefix, String nmsClassString) throws ClassNotFoundException {	
-        String version = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3] + ".";
-        String name = prefix + version + nmsClassString;
-        return Class.forName(name);
-    }
 
 	public static boolean isArmor(ItemStack itemStack) {
 		if (itemStack == null) {

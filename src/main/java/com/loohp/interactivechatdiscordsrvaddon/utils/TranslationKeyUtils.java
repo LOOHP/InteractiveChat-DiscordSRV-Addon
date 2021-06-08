@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -20,6 +19,7 @@ import org.bukkit.potion.PotionEffectType;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NBTUtils;
+import com.loohp.interactivechat.utils.NMSUtils;
 
 public class TranslationKeyUtils {
 	
@@ -48,14 +48,14 @@ public class TranslationKeyUtils {
 		if (InteractiveChat.version.isLegacy()) {
 			try {
 				bukkitEnchantmentGetIdMethod = Enchantment.class.getMethod("getId");
-				nmsEnchantmentClass = getNMSClass("net.minecraft.server.", "Enchantment");
+				nmsEnchantmentClass = NMSUtils.getNMSClass("net.minecraft.server.", "Enchantment");
 				if (InteractiveChat.version.isOld()) {
 					getEnchantmentByIdMethod = nmsEnchantmentClass.getMethod("getById", int.class);
 				} else {
 					getEnchantmentByIdMethod = nmsEnchantmentClass.getMethod("c", int.class);
 				}
 				getEnchantmentKeyMethod = nmsEnchantmentClass.getMethod("a");
-				nmsMobEffectListClass = getNMSClass("net.minecraft.server.", "MobEffectList");
+				nmsMobEffectListClass = NMSUtils.getNMSClass("net.minecraft.server.", "MobEffectList");
 				if (InteractiveChat.version.isOld()) {
 					nmsMobEffectByIdField = nmsMobEffectListClass.getField("byId");
 				} else {
@@ -63,18 +63,18 @@ public class TranslationKeyUtils {
 				}
 				getEffectKeyMethod = nmsMobEffectListClass.getMethod("a");
 				
-				nmsItemRecordClass = getNMSClass("net.minecraft.server.", "ItemRecord");
+				nmsItemRecordClass = NMSUtils.getNMSClass("net.minecraft.server.", "ItemRecord");
 				nmsItemRecordTranslationKeyField = nmsItemRecordClass.getDeclaredField("c");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		} else {
 			try {
-				nmsMobEffectListClass = getNMSClass("net.minecraft.server.", "MobEffectList");
+				nmsMobEffectListClass = NMSUtils.getNMSClass("net.minecraft.server.", "MobEffectList");
 				getEffectFromIdMethod = nmsMobEffectListClass.getMethod("fromId", int.class);
 				getEffectKeyMethod = nmsMobEffectListClass.getMethod("c");
 				
-				craftTropicalFishClass = getNMSClass("org.bukkit.craftbukkit.", "entity.CraftTropicalFish");
+				craftTropicalFishClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.", "entity.CraftTropicalFish");
 				getTropicalFishPatternMethod = craftTropicalFishClass.getMethod("getPattern", int.class);
 				getTropicalFishPatternColorMethod = craftTropicalFishClass.getMethod("getPatternColor", int.class);
 				getTropicalFishBodyColorMethod = craftTropicalFishClass.getMethod("getBodyColor", int.class);
@@ -83,8 +83,8 @@ public class TranslationKeyUtils {
 			}
 		}
 		try {
-			craftItemStackClass = getNMSClass("org.bukkit.craftbukkit.", "inventory.CraftItemStack");
-			nmsItemStackClass = getNMSClass("net.minecraft.server.", "ItemStack");
+			craftItemStackClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.", "inventory.CraftItemStack");
+			nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.", "ItemStack");
 			asNMSCopyMethod = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class);
 			nmsGetItemMethod = nmsItemStackClass.getMethod("getItem");
 		} catch (ClassNotFoundException | SecurityException | NoSuchMethodException e) {
@@ -114,12 +114,6 @@ public class TranslationKeyUtils {
 		PREDEFINED_TROPICAL_FISH.put(67699456, 20);
 		PREDEFINED_TROPICAL_FISH.put(67371009, 21);
 	}
-	
-	private static Class<?> getNMSClass(String prefix, String nmsClassString) throws ClassNotFoundException {	
-        String version = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3] + ".";
-        String name = prefix + version + nmsClassString;
-        return Class.forName(name);
-    }
 
 	public static String getFilledMapId() {
 		return "filled_map.id";

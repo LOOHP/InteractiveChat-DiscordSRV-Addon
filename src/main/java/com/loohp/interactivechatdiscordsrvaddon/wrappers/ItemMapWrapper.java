@@ -22,6 +22,7 @@ import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.MCVersion;
+import com.loohp.interactivechat.utils.NMSUtils;
 
 import net.kyori.adventure.text.Component;
 
@@ -70,7 +71,7 @@ public class ItemMapWrapper {
 				bukkitMapViewClassGetIdMethod = null;
 			}
 			
-			nmsItemWorldMapClass = getNMSClass("net.minecraft.server.", "ItemWorldMap");
+			nmsItemWorldMapClass = NMSUtils.getNMSClass("net.minecraft.server.", "ItemWorldMap");
 			try {
 				if (InteractiveChat.version.isLegacy()) {
 					nmsItemWorldMapClassContructor = nmsItemWorldMapClass.getDeclaredConstructor();
@@ -86,17 +87,17 @@ public class ItemMapWrapper {
 				nmsItemWorldMapInstance = null;
 			}
 			
-			nmsWorldClass = getNMSClass("net.minecraft.server.", "World");
-			nmsItemStackClass = getNMSClass("net.minecraft.server.", "ItemStack");
+			nmsWorldClass = NMSUtils.getNMSClass("net.minecraft.server.", "World");
+			nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.", "ItemStack");
 			nmsItemWorldMapClassGetSavedMapMethod = nmsItemWorldMapClass.getMethod("getSavedMap", nmsItemStackClass, nmsWorldClass);
-			craftItemStackClass = getNMSClass("org.bukkit.craftbukkit.", "inventory.CraftItemStack");
+			craftItemStackClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.", "inventory.CraftItemStack");
 			craftItemStackClassAsNMSCopyMethod = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class);
-			craftWorldClass = getNMSClass("org.bukkit.craftbukkit.", "CraftWorld");
+			craftWorldClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.", "CraftWorld");
 			craftWorldClassGetHandleMethod = craftWorldClass.getMethod("getHandle");
-			nmsWorldMapClass = getNMSClass("net.minecraft.server.", "WorldMap");
+			nmsWorldMapClass = NMSUtils.getNMSClass("net.minecraft.server.", "WorldMap");
 			nmsWorldMapClassColorsField = nmsWorldMapClass.getField("colors");
 			nmsWorldMapClassDecorationsField = nmsWorldMapClass.getField("decorations");
-			nmsMapIconClass = getNMSClass("net.minecraft.server.", "MapIcon");
+			nmsMapIconClass = NMSUtils.getNMSClass("net.minecraft.server.", "MapIcon");
 			nmsMapIconClassGetTypeMethod = nmsMapIconClass.getMethod("getType");
 			nmsMapIconClassGetTypeMethodReturnsByte = nmsMapIconClassGetTypeMethod.getReturnType().equals(byte.class);
 			nmsMapIconClassGetXMethod = nmsMapIconClass.getMethod("getX");
@@ -107,19 +108,13 @@ public class ItemMapWrapper {
 			} catch (NoSuchMethodException e1) {
 				nmsMapIconClassGetNameMethod = null;
 			}
-			nmsIChatBaseComponentClass = getNMSClass("net.minecraft.server.", "IChatBaseComponent");
+			nmsIChatBaseComponentClass = NMSUtils.getNMSClass("net.minecraft.server.", "IChatBaseComponent");
 			nmsChatSerializerSubclass = Arrays.asList(nmsIChatBaseComponentClass.getDeclaredClasses()).stream().filter(each -> each.getSimpleName().equals("ChatSerializer")).findFirst().get();
 			nmsChatSerializerSubclassAMethod = nmsChatSerializerSubclass.getMethod("a", nmsIChatBaseComponentClass);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
-	private static Class<?> getNMSClass(String prefix, String nmsClassString) throws ClassNotFoundException {
-        String version = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3] + ".";
-        String name = prefix + version + nmsClassString;
-        return Class.forName(name);
-    }
 	
 	private ItemStack itemStack;
 	private byte[] colors;

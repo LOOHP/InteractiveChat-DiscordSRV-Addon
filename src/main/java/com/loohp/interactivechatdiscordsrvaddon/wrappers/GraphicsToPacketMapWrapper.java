@@ -23,6 +23,7 @@ import com.comphenix.protocol.wrappers.Pair;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.XMaterial;
 import com.loohp.interactivechat.utils.MCVersion;
+import com.loohp.interactivechat.utils.NMSUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageFrame;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
@@ -35,15 +36,9 @@ public class GraphicsToPacketMapWrapper {
 	
 	static {
 		try {
-			nmsMapIconClass = getNMSClass("net.minecraft.server.", "MapIcon");
+			nmsMapIconClass = NMSUtils.getNMSClass("net.minecraft.server.", "MapIcon");
 		} catch (Exception e) {}
 	}
-	
-	private static Class<?> getNMSClass(String prefix, String nmsClassString) throws ClassNotFoundException {
-        String version = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3] + ".";
-        String name = prefix + version + nmsClassString;
-        return Class.forName(name);
-    }
 	
 	private ImageFrame[] frames;
 	private byte[][] colors;
