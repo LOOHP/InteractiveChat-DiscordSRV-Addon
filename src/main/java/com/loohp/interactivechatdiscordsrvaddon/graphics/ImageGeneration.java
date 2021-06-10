@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
@@ -38,6 +39,7 @@ import org.json.simple.parser.ParseException;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.Utils.SkullUtils;
 import com.loohp.interactivechat.Utils.XMaterial;
+import com.loohp.interactivechat.utils.ComponentStyling;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.HashUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
@@ -1159,7 +1161,11 @@ public class ImageGeneration {
 		}
 		
 		if (allowLineBreaks) {
-			
+			List<Component> newList = new ArrayList<>();
+			for (Component component : prints) {
+				newList.addAll(ComponentStyling.splitAtLineBreaks(component));
+			}
+			prints = newList;
 		}
 		
 		BufferedImage image = new BufferedImage(1120, prints.size() * 20 + 15, BufferedImage.TYPE_INT_ARGB);
