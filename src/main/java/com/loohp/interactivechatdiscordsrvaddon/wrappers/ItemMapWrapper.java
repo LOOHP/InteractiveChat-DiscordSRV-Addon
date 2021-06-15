@@ -67,7 +67,7 @@ public class ItemMapWrapper {
 				bukkitMapViewClassGetIdMethod = null;
 			}
 			
-			nmsItemWorldMapClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemWorldMap");
+			nmsItemWorldMapClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemWorldMap", "net.minecraft.world.item.ItemWorldMap");
 			try {
 				if (InteractiveChat.version.isLegacy()) {
 					nmsItemWorldMapClassContructor = nmsItemWorldMapClass.getDeclaredConstructor();
