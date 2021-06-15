@@ -37,24 +37,22 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.Utils.SkullUtils;
-import com.loohp.interactivechat.Utils.XMaterial;
+import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.utils.ComponentStyling;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.HashUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.MCVersion;
+import com.loohp.interactivechat.utils.SkinUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemStackUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.PotionUtils;
-import com.loohp.interactivechatdiscordsrvaddon.utils.SkinUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.VectorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper.MapIcon;
-
-import net.kyori.adventure.text.Component;
 
 @SuppressWarnings("deprecation")
 public class ImageGeneration {
@@ -689,7 +687,7 @@ public class ImageGeneration {
 				break;
 			case PLAYER_HEAD:
 				try {
-					String base64 = SkullUtils.getSkinValue(helmet.getItemMeta());
+					String base64 = SkinUtils.getSkinValue(helmet.getItemMeta());
 					if (base64 != null) {
 						Cache<?> cache = Cache.getCache(base64 + PLAYER_HEAD_2D_KEY);
 						if (cache == null) {
@@ -783,6 +781,10 @@ public class ImageGeneration {
 		} else if (xMaterial.equals(XMaterial.ENCHANTED_GOLDEN_APPLE)) {
 			key = "golden_apple";
 			requiresEnchantmentGlint = true;
+		} else if (key.contains("infested_")) {
+			key = key.replace("infested_", "");
+		} else if (key.contains("waxed_")) {
+			key = key.replace("waxed_", "");
 		}
 		BufferedImage itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture(key);
 		if (!InteractiveChatDiscordSrvAddon.plugin.hasItemTexture(key)) {
@@ -838,7 +840,7 @@ public class ImageGeneration {
 			}
 		} else if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
 			try {
-				String base64 = SkullUtils.getSkinValue(item.getItemMeta());
+				String base64 = SkinUtils.getSkinValue(item.getItemMeta());
 				if (base64 != null) {
 					Cache<?> cache = Cache.getCache(base64 + PLAYER_HEAD_KEY);
 					if (cache == null) {

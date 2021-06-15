@@ -57,20 +57,12 @@
 							<createDependencyReducedPom>false</createDependencyReducedPom>
 							<relocations>
 								<relocation>
-									<pattern>com.cryptomorin.xseries</pattern>
-									<shadedPattern>com.loohp.interactivechatdiscordsrvaddon.Utils</shadedPattern>
-								</relocation>
-								<relocation>
 									<pattern>club.minnced.discord</pattern>
-									<shadedPattern>com.loohp.interactivechatdiscordsrvaddon.Utils</shadedPattern>
-								</relocation>
-								<relocation>
-									<pattern>org.apache.commons.text</pattern>
-									<shadedPattern>com.loohp.interactivechatdiscordsrvaddon.Utils</shadedPattern>
+									<shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.club.minnced.discord</shadedPattern>
 								</relocation>
 								<relocation>
 									<pattern>okhttp3</pattern>
-									<shadedPattern>com.loohp.interactivechatdiscordsrvaddon.Utils</shadedPattern>
+									<shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.okhttp3</shadedPattern>
 								</relocation>
 							</relocations>
 						</configuration>
@@ -228,12 +220,6 @@
 			<version>1.4</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-text</artifactId>
-			<version>1.9</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
 			<groupId>club.minnced</groupId>
 			<artifactId>discord-webhooks</artifactId>
 			<version>0.5.4</version>
@@ -242,13 +228,13 @@
 		<dependency>
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot-api</artifactId>
-			<version>1.16.5-R0.1-SNAPSHOT</version>
+			<version>1.17-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.bukkit</groupId>
 			<artifactId>craftbukkit</artifactId>
-			<version>1.16.5-R0.1-SNAPSHOT</version>
+			<version>1.17-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>

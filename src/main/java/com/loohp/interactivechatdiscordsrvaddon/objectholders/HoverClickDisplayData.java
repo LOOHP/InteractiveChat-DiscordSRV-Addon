@@ -6,7 +6,7 @@ import org.bukkit.entity.Player;
 
 import com.loohp.interactivechat.objectholders.CustomPlaceholder.ClickEventAction;
 
-import net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 
 public class HoverClickDisplayData extends DiscordDisplayData {
 	

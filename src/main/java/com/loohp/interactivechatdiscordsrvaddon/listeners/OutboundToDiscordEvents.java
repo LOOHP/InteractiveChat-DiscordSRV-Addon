@@ -4,8 +4,6 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,17 +33,15 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.loohp.interactivechat.ConfigManager;
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.Utils.XMaterial;
 import com.loohp.interactivechat.api.InteractiveChatAPI;
+import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.objectholders.CustomPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.MentionPair;
 import com.loohp.interactivechat.objectholders.WebData;
-import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
 import com.loohp.interactivechat.utils.CustomStringUtils;
@@ -62,6 +58,7 @@ import com.loohp.interactivechatdiscordsrvaddon.api.events.GameMessageProcessIte
 import com.loohp.interactivechatdiscordsrvaddon.api.events.GameMessageProcessPlayerInventoryEvent;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AttachmentData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordDisplayData;
@@ -71,12 +68,13 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.IDProvider;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayType;
 import com.loohp.interactivechatdiscordsrvaddon.registies.DiscordDataRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.utils.AchievementUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.AdvancementUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DeathMessageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordDescription;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordToolTip;
-import com.loohp.interactivechatdiscordsrvaddon.utils.ItemStackUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.URLRequestUtils;
 
@@ -103,8 +101,8 @@ import github.scarsz.discordsrv.util.DiscordUtil;
 import github.scarsz.discordsrv.util.MessageUtil;
 import github.scarsz.discordsrv.util.PlaceholderUtil;
 import github.scarsz.discordsrv.util.WebhookUtil;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 public class OutboundToDiscordEvents implements Listener {
 	
@@ -531,32 +529,40 @@ public class OutboundToDiscordEvents implements Listener {
 		MessageFormat messageFormat = event.getMessageFormat();
         if (messageFormat == null) return;
 		
-        ItemStack item = null;
         String title = null;
         String description = null;
+        ItemStack item = null;
         AdvancementType advancementType = null;
         boolean isMinecraft = true;
         
 		Event bukkitEvent = event.getTriggeringBukkitEvent();
 		if (bukkitEvent.getClass().getSimpleName().equals("PlayerAdvancementDoneEvent")) {
 			Debug.debug("onAdvancement getting advancement");
-			try {
-				Object bukkitAdvancement = bukkitEvent.getClass().getMethod("getAdvancement").invoke(bukkitEvent);
-				Object craftAdvancement = bukkitAdvancement.getClass().getMethod("getHandle").invoke(bukkitAdvancement);
-				Object advancementDisplay = craftAdvancement.getClass().getMethod("c").invoke(craftAdvancement);
-				Field itemField = advancementDisplay.getClass().getDeclaredField("c");
-				itemField.setAccessible(true);
-				item = (ItemStack) ItemStackUtils.toBukkitCopy(itemField.get(advancementDisplay));
-				itemField.setAccessible(false);
-				title = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(InteractiveChatComponentSerializer.gson().deserialize(WrappedChatComponent.fromHandle(advancementDisplay.getClass().getMethod("a").invoke(advancementDisplay)).getJson()), InteractiveChatDiscordSrvAddon.plugin.language);
-				description = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(InteractiveChatComponentSerializer.gson().deserialize(WrappedChatComponent.fromHandle(advancementDisplay.getClass().getMethod("b").invoke(advancementDisplay)).getJson()), InteractiveChatDiscordSrvAddon.plugin.language);						
-				Object advancementFrameType = advancementDisplay.getClass().getMethod("e").invoke(advancementDisplay);
-				advancementType = AdvancementType.fromHandle(advancementFrameType);
-				Object namespacedKey = bukkitAdvancement.getClass().getMethod("getKey").invoke(bukkitAdvancement);
-				isMinecraft = namespacedKey.getClass().getMethod("getNamespace").invoke(namespacedKey).toString().equalsIgnoreCase("minecraft");
-			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException | NoSuchFieldException e) {
-				e.printStackTrace();
+			Object bukkitAdvancement = AdvancementUtils.getAdvancementFromEvent(bukkitEvent);
+			AdvancementData data = AdvancementUtils.getAdvancementData(bukkitAdvancement);
+			if (data == null) {
+				return;
 			}
+			title = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(data.getTitle(), InteractiveChatDiscordSrvAddon.plugin.language);
+			description = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(data.getDescription(), InteractiveChatDiscordSrvAddon.plugin.language);
+			item = data.getItem();
+			advancementType = data.getAdvancementType();
+			isMinecraft = data.isMinecraft();
+		} else if (bukkitEvent.getClass().getSimpleName().equals("PlayerAchievementAwardedEvent")) {
+			Debug.debug("onAdvancement getting achievement");
+			Object bukkitAchievement = AchievementUtils.getAdvancementFromEvent(bukkitEvent);
+			if (bukkitAchievement == null) {
+				return;
+			}
+			AdvancementData data = AchievementUtils.getAdvancementData(bukkitAchievement);
+			if (data == null) {
+				return;
+			}
+			title = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(data.getTitle(), InteractiveChatDiscordSrvAddon.plugin.language);
+			description = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(data.getDescription(), InteractiveChatDiscordSrvAddon.plugin.language);
+			item = data.getItem();
+			advancementType = data.getAdvancementType();
+			isMinecraft = data.isMinecraft();
 		} else {
 			return;
 		}

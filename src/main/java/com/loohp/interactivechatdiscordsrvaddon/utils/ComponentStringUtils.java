@@ -14,11 +14,11 @@ import com.loohp.interactivechat.utils.ComponentFlattening;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.ItemNBTUtils;
 
-import net.kyori.adventure.key.Key;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TranslatableComponent;
-import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.text.event.HoverEvent.ShowItem;
+import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.TranslatableComponent;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent.ShowItem;
 import net.md_5.bungee.api.ChatColor;
 
 public class ComponentStringUtils {

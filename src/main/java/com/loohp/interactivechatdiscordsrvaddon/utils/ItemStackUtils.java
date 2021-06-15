@@ -17,8 +17,8 @@ public class ItemStackUtils {
 	
 	static {
 		try {
-			craftItemStackClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.", "inventory.CraftItemStack");
-			nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.", "ItemStack");
+			craftItemStackClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.inventory.CraftItemStack");
+			nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemStack", "net.minecraft.world.item.ItemStack");
 			asBukkitCopyMethod = craftItemStackClass.getMethod("asBukkitCopy", nmsItemStackClass);
 		} catch (ClassNotFoundException | SecurityException | NoSuchMethodException e) {
 			e.printStackTrace();

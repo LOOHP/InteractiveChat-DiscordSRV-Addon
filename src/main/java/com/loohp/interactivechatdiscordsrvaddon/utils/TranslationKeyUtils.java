@@ -48,14 +48,14 @@ public class TranslationKeyUtils {
 		if (InteractiveChat.version.isLegacy()) {
 			try {
 				bukkitEnchantmentGetIdMethod = Enchantment.class.getMethod("getId");
-				nmsEnchantmentClass = NMSUtils.getNMSClass("net.minecraft.server.", "Enchantment");
+				nmsEnchantmentClass = NMSUtils.getNMSClass("net.minecraft.server.%s.Enchantment", "net.minecraft.world.item.enchantment.Enchantment");
 				if (InteractiveChat.version.isOld()) {
 					getEnchantmentByIdMethod = nmsEnchantmentClass.getMethod("getById", int.class);
 				} else {
 					getEnchantmentByIdMethod = nmsEnchantmentClass.getMethod("c", int.class);
 				}
 				getEnchantmentKeyMethod = nmsEnchantmentClass.getMethod("a");
-				nmsMobEffectListClass = NMSUtils.getNMSClass("net.minecraft.server.", "MobEffectList");
+				nmsMobEffectListClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MobEffectList", "net.minecraft.world.effect.MobEffectList");
 				if (InteractiveChat.version.isOld()) {
 					nmsMobEffectByIdField = nmsMobEffectListClass.getField("byId");
 				} else {
@@ -63,18 +63,18 @@ public class TranslationKeyUtils {
 				}
 				getEffectKeyMethod = nmsMobEffectListClass.getMethod("a");
 				
-				nmsItemRecordClass = NMSUtils.getNMSClass("net.minecraft.server.", "ItemRecord");
+				nmsItemRecordClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemRecord", "net.minecraft.world.item.ItemRecord");
 				nmsItemRecordTranslationKeyField = nmsItemRecordClass.getDeclaredField("c");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		} else {
 			try {
-				nmsMobEffectListClass = NMSUtils.getNMSClass("net.minecraft.server.", "MobEffectList");
+				nmsMobEffectListClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MobEffectList", "net.minecraft.world.effect.MobEffectList");
 				getEffectFromIdMethod = nmsMobEffectListClass.getMethod("fromId", int.class);
 				getEffectKeyMethod = nmsMobEffectListClass.getMethod("c");
 				
-				craftTropicalFishClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.", "entity.CraftTropicalFish");
+				craftTropicalFishClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.entity.CraftTropicalFish");
 				getTropicalFishPatternMethod = craftTropicalFishClass.getMethod("getPattern", int.class);
 				getTropicalFishPatternColorMethod = craftTropicalFishClass.getMethod("getPatternColor", int.class);
 				getTropicalFishBodyColorMethod = craftTropicalFishClass.getMethod("getBodyColor", int.class);
@@ -83,8 +83,8 @@ public class TranslationKeyUtils {
 			}
 		}
 		try {
-			craftItemStackClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.", "inventory.CraftItemStack");
-			nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.", "ItemStack");
+			craftItemStackClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.inventory.CraftItemStack");
+			nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemStack", "net.minecraft.world.item.ItemStack");
 			asNMSCopyMethod = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class);
 			nmsGetItemMethod = nmsItemStackClass.getMethod("getItem");
 		} catch (ClassNotFoundException | SecurityException | NoSuchMethodException e) {

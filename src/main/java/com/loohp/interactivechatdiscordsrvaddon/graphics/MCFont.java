@@ -25,14 +25,19 @@ public class MCFont {
 	
 	private static boolean working = false;
 	
-	private static Map<String, MCFont> FONTS = new LinkedHashMap<>();
-	private static List<String> ORDER = new ArrayList<>();
+	private static final Map<String, MCFont> FONTS = new LinkedHashMap<>();
+	private static final List<String> ORDER = new ArrayList<>();
 
     static {
     	reloadFonts();
     }
     
     public synchronized static void reloadFonts() {
+    	try {
+    		GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+    	} catch (Throwable e) {
+    		throw new RuntimeException("No fonts provided by the JVM or the Operating System!\nCheck the Q&A section in https://www.spigotmc.org/resources/83917/ for more information", e);
+    	}
         try {
         	File fontFolder = new File(InteractiveChatDiscordSrvAddon.plugin.getDataFolder() + "/assets/font");
         	if (!fontFolder.exists()) {
@@ -77,8 +82,10 @@ public class MCFont {
         	}
         	
         	Bukkit.getScheduler().runTask(InteractiveChatDiscordSrvAddon.plugin, () -> {
-        		FONTS = fonts;
-            	ORDER = order;
+        		FONTS.clear();
+        		FONTS.putAll(fonts);
+            	ORDER.clear();
+            	ORDER.addAll(order);
         	});
 
             working = true;

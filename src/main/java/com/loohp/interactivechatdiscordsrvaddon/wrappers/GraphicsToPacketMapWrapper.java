@@ -3,11 +3,12 @@ package com.loohp.interactivechatdiscordsrvaddon.wrappers;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.MapMeta;
@@ -18,10 +19,11 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.reflect.FieldAccessException;
 import com.comphenix.protocol.wrappers.EnumWrappers.ItemSlot;
 import com.comphenix.protocol.wrappers.Pair;
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.Utils.XMaterial;
+import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NMSUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
@@ -33,10 +35,19 @@ import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
 public class GraphicsToPacketMapWrapper {
 	
 	private static Class<?> nmsMapIconClass;
+	private static Class<?> nmsWorldMapClass;
+	private static Class<?> nmsWorldMapBClass;
+	private static Constructor<?> nmsWorldMapBClassConstructor;
 	
 	static {
 		try {
-			nmsMapIconClass = NMSUtils.getNMSClass("net.minecraft.server.", "MapIcon");
+			nmsMapIconClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MapIcon", "net.minecraft.world.level.saveddata.maps.MapIcon");
+			nmsWorldMapClass = NMSUtils.getNMSClass("net.minecraft.server.%s.WorldMap", "net.minecraft.world.level.saveddata.maps.WorldMap");
+			
+			if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_17)) {
+				nmsWorldMapBClass = Stream.of(nmsWorldMapClass.getClasses()).filter(each -> each.getName().endsWith("$b")).findFirst().get();
+				nmsWorldMapBClassConstructor = nmsWorldMapBClass.getConstructor(int.class, int.class, int.class, int.class, byte[].class);
+			}
 		} catch (Exception e) {}
 	}
 	
@@ -136,22 +147,28 @@ public class GraphicsToPacketMapWrapper {
 		}
 		
 		PacketContainer packet2 = protocollib.createPacket(PacketType.Play.Server.MAP);
-		int mapIconFieldPos = 2;
-		packet2.getIntegers().write(0, (int) mapId);
-		packet2.getBytes().write(0, (byte) 0);
-		if (!InteractiveChat.version.isOld()) {
+		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_17)) {
+			packet2.getIntegers().write(0, (int) mapId);
+			packet2.getBytes().write(0, (byte) 0);
 			packet2.getBooleans().write(0, false);
-			mapIconFieldPos++;
+		} else {
+			int mapIconFieldPos = 2;
+			packet2.getIntegers().write(0, (int) mapId);
+			packet2.getBytes().write(0, (byte) 0);
+			if (!InteractiveChat.version.isOld()) {
+				packet2.getBooleans().write(0, false);
+				mapIconFieldPos++;
+			}
+			if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_14)) {
+				packet2.getBooleans().write(1, false);
+				mapIconFieldPos++;
+			}
+			packet2.getModifier().write(mapIconFieldPos, Array.newInstance(nmsMapIconClass, 0));
+			packet2.getIntegers().write(1, 0);
+			packet2.getIntegers().write(2, 0);
+			packet2.getIntegers().write(3, 128);
+			packet2.getIntegers().write(4, 128);
 		}
-		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_14)) {
-			packet2.getBooleans().write(1, false);
-			mapIconFieldPos++;
-		}
-		packet2.getModifier().write(mapIconFieldPos, Array.newInstance(nmsMapIconClass, 0));
-		packet2.getIntegers().write(1, 0);
-		packet2.getIntegers().write(2, 0);
-		packet2.getIntegers().write(3, 128);
-		packet2.getIntegers().write(4, 128);  
 		
 		try {
 			protocollib.sendServerPacket(player, packet1);
@@ -172,9 +189,13 @@ public class GraphicsToPacketMapWrapper {
 						frameTime = 0;
 					}
 					try {
-						packet2.getByteArrays().write(0, colors[current]);
+						if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_17)) {
+							packet2.getModifier().write(4, nmsWorldMapBClassConstructor.newInstance(0, 0, 128, 128, colors[current]));
+						} else {
+							packet2.getByteArrays().write(0, colors[current]);
+						}
 						protocollib.sendServerPacket(player, packet2);
-					} catch (InvocationTargetException e) {
+					} catch (InvocationTargetException | FieldAccessException | InstantiationException | IllegalAccessException | IllegalArgumentException e) {
 						e.printStackTrace();
 					}
 				} else {

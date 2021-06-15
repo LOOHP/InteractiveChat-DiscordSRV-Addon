@@ -4,16 +4,25 @@ import net.md_5.bungee.api.ChatColor;
 
 public enum AdvancementType {
 	
-	TASK(ChatColor.GREEN, "chat.type.advancement.task"), CHALLENGE(ChatColor.DARK_PURPLE, "chat.type.advancement.challenge"), GOAL(ChatColor.GREEN, "chat.type.advancement.goal");
+	TASK(ChatColor.GREEN, "chat.type.advancement.task"),
+	CHALLENGE(ChatColor.DARK_PURPLE, "chat.type.advancement.challenge"),
+	GOAL(ChatColor.GREEN, "chat.type.advancement.goal"),
+	LEGACY(ChatColor.GREEN, "chat.type.achievement", true);
 	
 	private static final AdvancementType[] VALUES = values();
 	
     private ChatColor color;
     private String translationKey;
+    private boolean isLegacy;
 
-    private AdvancementType(ChatColor color, String translationKey) {
+    AdvancementType(ChatColor color, String translationKey, boolean isLegacy) {
         this.color = color;
         this.translationKey = translationKey;
+        this.isLegacy = isLegacy;
+    }
+    
+    AdvancementType(ChatColor color, String translationKey) {
+    	this(color, translationKey, false);
     }
 
     public ChatColor getColor() {
@@ -22,6 +31,10 @@ public enum AdvancementType {
     
     public String getTranslationKey() {
     	return translationKey;
+    }
+    
+    public boolean isLegacy() {
+    	return isLegacy;
     }
     
     public static AdvancementType fromHandle(Object obj) {
