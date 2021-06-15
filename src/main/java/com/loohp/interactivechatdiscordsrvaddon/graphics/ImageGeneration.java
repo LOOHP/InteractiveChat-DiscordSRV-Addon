@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -12,6 +13,8 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Random;
+
+import javax.imageio.ImageIO;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -34,30 +37,27 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.Utils.SkullUtils;
-import com.loohp.interactivechat.Utils.XMaterial;
-import com.loohp.interactivechat.utils.ChatComponentUtils;
-import com.loohp.interactivechat.utils.CustomStringUtils;
+import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.utils.ComponentStyling;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.HashUtils;
+import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.MCVersion;
+import com.loohp.interactivechat.utils.SkinUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
+import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemStackUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.PotionUtils;
-import com.loohp.interactivechatdiscordsrvaddon.utils.SkinUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.VectorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper.MapIcon;
 
-import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.chat.ComponentSerializer;
-
 @SuppressWarnings("deprecation")
 public class ImageGeneration {
 	
+	private static final String OPTIFINE_CAPE_URL = "https://optifine.net/capes/%s.png";
 	private static final String TEXTURE_MINECRAFT_URL = "http://textures.minecraft.net/texture/";
 	private static final String PLAYER_RENDER_URL = "https://mc-heads.net/player/%s/64";
 	private static final String SKULL_RENDER_URL = "https://mc-heads.net/head/%s/96";
@@ -68,6 +68,7 @@ public class ImageGeneration {
 	
 	private static final double ENCHANTMENT_GLINT_FACTOR = 190.0 / 255.0;
 	
+	private static final String PLAYER_CAPE_KEY = "PlayerCapeTexture";
 	private static final String FULL_BODY_IMAGE_KEY = "FullBodyImage";
 	private static final String PLAYER_HEAD_KEY = "PlayerHeadImage";
 	private static final String PLAYER_HEAD_2D_KEY = "PlayerHead2DImage";
@@ -78,6 +79,7 @@ public class ImageGeneration {
 	private static final Random RANDOM = new Random();
 	
 	public static BufferedImage getMissingImage(int width, int length) {
+		Debug.debug("ImageGeneration creating missing texture image");
 		BufferedImage image = new BufferedImage(width, length, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = image.createGraphics();
 		g.setColor(new Color(0, 0, 0));
@@ -90,15 +92,28 @@ public class ImageGeneration {
 	}
 	
 	public static BufferedImage getItemStackImage(ItemStack item, Player player) throws IOException {
+		return getItemStackImage(item, player, false);
+	}
+	
+	public static BufferedImage getItemStackImage(ItemStack item, Player player, boolean alternateAir) throws IOException {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
+		Debug.debug("ImageGeneration creating item stack image " + item);
+		
 		BufferedImage background = new BufferedImage(36, 36, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = background.createGraphics();
 		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-		if (item == null || item.getType().equals(Material.AIR)) {
-			return background;
-		}
 		
-		BufferedImage itemImage = getRawItemImage(item, player);
+		BufferedImage itemImage;
+		if (item == null || item.getType().equals(Material.AIR)) {
+			if (alternateAir) {
+				itemImage = InteractiveChatDiscordSrvAddon.plugin.getBlockTexture("air_alternate");
+			} else {
+				g.dispose();
+				return background;
+			}
+		} else {
+			itemImage = getRawItemImage(item, player);
+		}
 		
 		if (itemImage != null) {
 			g.drawImage(itemImage, 0, 0, null);
@@ -110,7 +125,8 @@ public class ImageGeneration {
 	
 	public static BufferedImage getInventoryImage(Inventory inventory, Player player) throws Exception {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
-		InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();
+		InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();		
+		Debug.debug("ImageGeneration creating inventory image of " + player.getName());
 		
 		String key = INVENTORY_KEY + HashUtils.createSha1("Inventory", inventory);
 		if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial())) {
@@ -150,6 +166,7 @@ public class ImageGeneration {
 	public static BufferedImage getPlayerInventoryImage(Inventory inventory, Player player) throws Exception {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();
+		Debug.debug("ImageGeneration creating player inventory image of " + player.getName());
 		
 		String key = PLAYER_INVENTORY_KEY + HashUtils.createSha1(player.getUniqueId().toString(), inventory);
 		if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial())) {
@@ -159,7 +176,16 @@ public class ImageGeneration {
 			}
 		}
 		
-		BufferedImage background = InteractiveChatDiscordSrvAddon.plugin.getGUITexture("player_inventory");
+		BufferedImage background;
+		if (player.getName().equalsIgnoreCase("LOOHP") || player.getName().equalsIgnoreCase("NARLIAR")) {
+			try {
+				background = ImageIO.read(new ByteArrayInputStream(InteractiveChatDiscordSrvAddon.plugin.getExtras("player_inventory_painting")));
+			} catch (Throwable e) {
+				background = InteractiveChatDiscordSrvAddon.plugin.getGUITexture("player_inventory");
+			}
+		} else {
+			background = InteractiveChatDiscordSrvAddon.plugin.getGUITexture("player_inventory");
+		}
 		
 		BufferedImage target = new BufferedImage(background.getWidth(), background.getHeight(), BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = target.createGraphics();
@@ -268,45 +294,87 @@ public class ImageGeneration {
 	
 	private static BufferedImage getFullBodyImage(Player player, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots) {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
+		Debug.debug("ImageGeneration creating puppet image of " + player.getName());
+		
 		BufferedImage image;
+		BufferedImage cape;
 		try {
 			JSONObject json = (JSONObject) new JSONParser().parse(SkinUtils.getSkinJsonFromProfile(player));
-			String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace(TEXTURE_MINECRAFT_URL, "");
-			boolean slim = false;
-			if (((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).containsKey("metadata")) {
-				slim = ((JSONObject) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("metadata")).get("model").toString().equals("slim");
-			}
-			Cache<?> cache = Cache.getCache(player.getUniqueId().toString() + value + FULL_BODY_IMAGE_KEY);
-			if (cache == null) {
-				String url = PLAYER_RENDER_URL.replaceFirst("%s", value);
-				image = ImageUtils.downloadImage(url);
-				Cache.putCache(player.getUniqueId().toString() + value + FULL_BODY_IMAGE_KEY, image, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+			if (json == null) {
+				cape = null;
+				image = InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("default");
 			} else {
-				image = (BufferedImage) cache.getObject();
-			}
-			image = ImageUtils.copyImage(image);
-			if (slim) {
-				BufferedImage rightArm = ImageUtils.copyAndGetSubImage(image, 0, 32, 12, 48);
-				BufferedImage leftArm = ImageUtils.copyAndGetSubImage(image, 52, 32, 12, 48);
-				Color color = new Color(0, 0, 0, 255);
-				for (int x = 0; x < 16; x++) {
-					for (int y = 32; y < 80; y++) {
-						image.setRGB(x, y, color.getRGB());
+				try {
+					if (((JSONObject) json.get("textures")).containsKey("CAPE")) {
+						String url = (String) ((JSONObject) ((JSONObject) json.get("textures")).get("CAPE")).get("url");
+						Cache<?> cache = Cache.getCache(player.getUniqueId().toString() + url + PLAYER_CAPE_KEY);
+						if (cache == null) {
+							cape = ImageUtils.downloadImage(url);
+							Cache.putCache(player.getUniqueId().toString() + url + PLAYER_CAPE_KEY, cape, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+						} else {
+							cape = (BufferedImage) cache.getObject();
+						}
+					} else {
+						String url = OPTIFINE_CAPE_URL.replaceAll("%s", player.getName());
+						Cache<?> cache = Cache.getCache(player.getUniqueId().toString() + url + PLAYER_CAPE_KEY);
+						if (cache == null) {
+							try {
+								cape = ImageUtils.downloadImage(url);
+								Cache.putCache(player.getUniqueId().toString() + url + PLAYER_CAPE_KEY, cape, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+							} catch (Throwable ignore) {
+								cape = null;
+							}
+						} else {
+							cape = (BufferedImage) cache.getObject();
+						}
 					}
+				} catch (Throwable e) {
+					cape = null;
 				}
-				for (int x = 48; x < 64; x++) {
-					for (int y = 32; y < 80; y++) {
-						image.setRGB(x, y, color.getRGB());
+				
+				try {
+					String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace(TEXTURE_MINECRAFT_URL, "");
+					boolean slim = false;
+					if (((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).containsKey("metadata")) {
+						slim = ((JSONObject) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("metadata")).get("model").toString().equals("slim");
 					}
+					Cache<?> cache = Cache.getCache(player.getUniqueId().toString() + value + FULL_BODY_IMAGE_KEY);
+					if (cache == null) {
+						String url = PLAYER_RENDER_URL.replaceFirst("%s", value);
+						image = ImageUtils.downloadImage(url);
+						Cache.putCache(player.getUniqueId().toString() + value + FULL_BODY_IMAGE_KEY, image, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+					} else {
+						image = (BufferedImage) cache.getObject();
+					}
+					image = ImageUtils.copyImage(image);
+					if (slim) {
+						BufferedImage rightArm = ImageUtils.copyAndGetSubImage(image, 0, 32, 12, 48);
+						BufferedImage leftArm = ImageUtils.copyAndGetSubImage(image, 52, 32, 12, 48);
+						Color color = new Color(0, 0, 0, 255);
+						for (int x = 0; x < 16; x++) {
+							for (int y = 32; y < 80; y++) {
+								image.setRGB(x, y, color.getRGB());
+							}
+						}
+						for (int x = 48; x < 64; x++) {
+							for (int y = 32; y < 80; y++) {
+								image.setRGB(x, y, color.getRGB());
+							}
+						}
+						Graphics2D g = image.createGraphics();
+						g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+						g.drawImage(rightArm, 4, 32, null);
+						g.drawImage(leftArm, 48, 32, null);
+						g.dispose();
+					}
+				} catch (Throwable e1) {
+					e1.printStackTrace();
+					image = InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("default");
 				}
-				Graphics2D g = image.createGraphics();
-				g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-				g.drawImage(rightArm, 4, 32, null);
-				g.drawImage(leftArm, 48, 32, null);
-				g.dispose();
 			}
-		} catch (Throwable e) {
+		} catch (Exception e) {
 			e.printStackTrace();
+			cape = null;
 			image = InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("default");
 		}
 		
@@ -498,7 +566,20 @@ public class ImageGeneration {
 			case ELYTRA:
 				isArmor = false;
 				chestplateImage = new BufferedImage(150, 150, BufferedImage.TYPE_INT_ARGB);
-				BufferedImage wing = InteractiveChatDiscordSrvAddon.plugin.getArmorTexture("elytra");
+				BufferedImage wing = cape == null ? InteractiveChatDiscordSrvAddon.plugin.getArmorTexture("elytra") : cape;
+				if (wing.getWidth() % 64 != 0 || wing.getHeight() % 32 != 0) {
+					int w = 0;
+					int h = 0;
+					while (w < wing.getWidth()) {
+						w += 64;
+						h += 32;
+					}
+					BufferedImage resize = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+					Graphics2D g3 = resize.createGraphics();
+					g3.drawImage(wing, 0, 0, null);
+					g3.dispose();
+					wing = resize;
+				}
 				scale = wing.getWidth() / 64;
 				wing = ImageUtils.copyAndGetSubImage(wing, 34 * scale, 2 * scale, 12 * scale, 20 * scale);
 				wing = ImageUtils.multiply(ImageUtils.resizeImage(wing, Math.pow(scale, -1) * 3.75), 0.7);
@@ -512,7 +593,7 @@ public class ImageGeneration {
 				
 				if (chestplate.getEnchantments().size() > 0) {
 					BufferedImage tint_ori = InteractiveChatDiscordSrvAddon.plugin.getMiscTexture("enchanted_item_glint");
-					BufferedImage tintImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);				
+					BufferedImage tintImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
 					Graphics2D g4 = tintImage.createGraphics();
 					g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 					g4.drawImage(tint_ori, 0, 0, 512, 512, null);
@@ -606,7 +687,7 @@ public class ImageGeneration {
 				break;
 			case PLAYER_HEAD:
 				try {
-					String base64 = SkullUtils.getSkinValue(helmet.getItemMeta());
+					String base64 = SkinUtils.getSkinValue(helmet.getItemMeta());
 					if (base64 != null) {
 						Cache<?> cache = Cache.getCache(base64 + PLAYER_HEAD_2D_KEY);
 						if (cache == null) {
@@ -682,6 +763,8 @@ public class ImageGeneration {
 	
 	private static BufferedImage getRawItemImage(ItemStack item, Player player) throws IOException {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
+		Debug.debug("ImageGeneration creating raw item stack image " + item);
+		
 		boolean requiresEnchantmentGlint = false;
 		int amount = item.getAmount();
 		XMaterial xMaterial = XMaterial.matchXMaterial(item);
@@ -695,6 +778,13 @@ public class ImageGeneration {
 		} else if (xMaterial.equals(XMaterial.DEBUG_STICK)) {
 			key = "stick";
 			requiresEnchantmentGlint = true;
+		} else if (xMaterial.equals(XMaterial.ENCHANTED_GOLDEN_APPLE)) {
+			key = "golden_apple";
+			requiresEnchantmentGlint = true;
+		} else if (key.contains("infested_")) {
+			key = key.replace("infested_", "");
+		} else if (key.contains("waxed_")) {
+			key = key.replace("waxed_", "");
 		}
 		BufferedImage itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture(key);
 		if (!InteractiveChatDiscordSrvAddon.plugin.hasItemTexture(key)) {
@@ -703,7 +793,6 @@ public class ImageGeneration {
 				return null;
 			}
 		}
-		
 		if (xMaterial.isOneOf(Arrays.asList("CONTAINS:Banner"))) {
 			BufferedImage banner = BannerGraphics.generateBannerImage(item);
 			
@@ -727,29 +816,31 @@ public class ImageGeneration {
 			g4.dispose();
 		} else if (xMaterial.equals(XMaterial.SHIELD)) {
 			BufferedImage banner = BannerGraphics.generateShieldImage(item);
-			itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("shield_banner");
-			
-			BufferedImage sizedBanner = new BufferedImage(11, 24, BufferedImage.TYPE_INT_ARGB);
-			Graphics2D g2 = sizedBanner.createGraphics();
-			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-			g2.drawImage(banner, 0, 0, 11, 24, null);
-			g2.dispose();
-			
-			BufferedImage shearBanner = new BufferedImage(40, 40, BufferedImage.TYPE_INT_ARGB);
-			Graphics2D g3 = shearBanner.createGraphics();
-			g3.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-			AffineTransform t = AffineTransform.getShearInstance(1.5 / 24.0 * -1, 2.5 / 11.0);
-			g3.setTransform(t);
-			g3.drawImage(sizedBanner, 3, 2, null);
-			g3.dispose();
-			
-			Graphics2D g4 = itemImage.createGraphics();
-			g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-			g4.drawImage(shearBanner, 8, 0, null);
-			g4.dispose();
+			if (banner != null) {
+				itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("shield_banner");
+				
+				BufferedImage sizedBanner = new BufferedImage(11, 24, BufferedImage.TYPE_INT_ARGB);
+				Graphics2D g2 = sizedBanner.createGraphics();
+				g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+				g2.drawImage(banner, 0, 0, 11, 24, null);
+				g2.dispose();
+				
+				BufferedImage shearBanner = new BufferedImage(40, 40, BufferedImage.TYPE_INT_ARGB);
+				Graphics2D g3 = shearBanner.createGraphics();
+				g3.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+				AffineTransform t = AffineTransform.getShearInstance(1.5 / 24.0 * -1, 2.5 / 11.0);
+				g3.setTransform(t);
+				g3.drawImage(sizedBanner, 3, 2, null);
+				g3.dispose();
+				
+				Graphics2D g4 = itemImage.createGraphics();
+				g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+				g4.drawImage(shearBanner, 8, 0, null);
+				g4.dispose();
+			}
 		} else if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
 			try {
-				String base64 = SkullUtils.getSkinValue(item.getItemMeta());
+				String base64 = SkinUtils.getSkinValue(item.getItemMeta());
 				if (base64 != null) {
 					Cache<?> cache = Cache.getCache(base64 + PLAYER_HEAD_KEY);
 					if (cache == null) {
@@ -761,7 +852,7 @@ public class ImageGeneration {
 						BufferedImage newImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
 						Graphics2D g2 = newImage.createGraphics();
 						g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-						g2.drawImage(newSkull, 5, 3, 24, 28, null);
+						g2.drawImage(newSkull, 4, 3, 23, 28, null);
 						g2.dispose();
 						
 						Cache.putCache(base64 + PLAYER_HEAD_KEY, newImage, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
@@ -922,7 +1013,7 @@ public class ImageGeneration {
 			}
 		}
 		
-		if (requiresEnchantmentGlint || xMaterial.equals(XMaterial.ENCHANTED_GOLDEN_APPLE) || xMaterial.equals(XMaterial.ENCHANTED_BOOK) || item.getEnchantments().size() > 0) {
+		if (requiresEnchantmentGlint || xMaterial.equals(XMaterial.ENCHANTED_BOOK) || item.getEnchantments().size() > 0) {
 			BufferedImage tint_ori = InteractiveChatDiscordSrvAddon.plugin.getMiscTexture("enchanted_item_glint");
 			BufferedImage tintImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);				
 			Graphics2D g3 = tintImage.createGraphics();
@@ -953,22 +1044,20 @@ public class ImageGeneration {
 		}
 		
 		if (amount > 1) {
-			String tenth = String.valueOf(amount / 10);
-			String single = String.valueOf(amount % 10);
-			
-			BufferedImage firstChar_ori = InteractiveChatDiscordSrvAddon.plugin.getFontTexture(tenth);
-			BufferedImage secondChar_ori = InteractiveChatDiscordSrvAddon.plugin.getFontTexture(single);
-			
 			BufferedImage newItemImage = new BufferedImage(40, 40, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g4 = newItemImage.createGraphics();
 			g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 			g4.drawImage(itemImage, 0, 0, null);
-			if (amount > 9) {
-				g4.drawImage(ImageUtils.darken(ImageUtils.copyImage(firstChar_ori), 180), 10, 21, null);
-				g4.drawImage(firstChar_ori, 8, 19, null);
+			
+			String str = Integer.toString(amount);
+			int x = 22;
+			for (int i = str.length() - 1; i >= 0; i--) {
+				BufferedImage charImage = InteractiveChatDiscordSrvAddon.plugin.getFontTexture(str.substring(i, i + 1));
+				g4.drawImage(ImageUtils.darken(ImageUtils.copyImage(charImage), 180), x, 21, null);
+				g4.drawImage(charImage, x - 2, 19, null);
+				x -= 12;
 			}
-			g4.drawImage(ImageUtils.darken(ImageUtils.copyImage(secondChar_ori), 180), 22, 21, null);
-			g4.drawImage(secondChar_ori, 20, 19, null);
+			
 			g4.dispose();
 			
 			itemImage = newItemImage;
@@ -982,6 +1071,7 @@ public class ImageGeneration {
 			throw new IllegalArgumentException("Provided item is not a filled map");
 		}
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
+		Debug.debug("ImageGeneration creating map image");
 		
 		BufferedImage background = InteractiveChatDiscordSrvAddon.plugin.getGUITexture("map_background");
 		
@@ -1020,7 +1110,7 @@ public class ImageGeneration {
 			int y = icon.getY() + 128;
 			double rotation = (360.0 / 16.0 * (double) icon.getRotation()) + 180.0;
 			int type = icon.getType().ordinal();
-			BaseComponent baseComponent = icon.getName();
+			Component component = icon.getName();
 			
 			//String name
 			BufferedImage iconImage = ImageUtils.copyAndGetSubImage(asset, type % MAP_ICON_PER_ROLE * iconWidth, type / MAP_ICON_PER_ROLE * iconWidth, iconWidth, iconWidth);
@@ -1044,8 +1134,8 @@ public class ImageGeneration {
             
             g2.drawImage(iconCan, imageX - (iconCan.getWidth() / 2), imageY - (iconCan.getHeight() / 2), 96, 96, null);
             
-            if (baseComponent != null && MCFont.isWorking()) {
-            	ImageUtils.printComponentNoShadow(image, baseComponent, imageX, imageY + 32, 30, true);
+            if (component != null && MCFont.isWorking()) {
+            	ImageUtils.printComponentNoShadow(image, component, imageX, imageY + 32, 30, true);
             }
 		}
 		g2.dispose();
@@ -1053,60 +1143,41 @@ public class ImageGeneration {
 		return image;
 	}
 	
-	public static BufferedImage getToolTipImage(BaseComponent print) throws Exception {
+	public static BufferedImage getToolTipImage(Component print) throws Exception {
 		return getToolTipImage(Arrays.asList(print), false);
 	}
 	
-	public static BufferedImage getToolTipImage(BaseComponent print, boolean allowLineBreaks) throws Exception {
+	public static BufferedImage getToolTipImage(Component print, boolean allowLineBreaks) throws Exception {
 		return getToolTipImage(Arrays.asList(print), allowLineBreaks);
 	}
 	
-	public static BufferedImage getToolTipImage(List<BaseComponent> prints) throws Exception {
+	public static BufferedImage getToolTipImage(List<Component> prints) throws Exception {
 		return getToolTipImage(prints, false);
 	}
 
-	public static BufferedImage getToolTipImage(List<BaseComponent> prints, boolean allowLineBreaks) throws Exception {
-		if (allowLineBreaks) {
-			List<BaseComponent> newPrints = new ArrayList<>();
-			for (BaseComponent base : prints) {
-				List<BaseComponent> current = new ArrayList<>();
-				for (BaseComponent each : CustomStringUtils.loadExtras(base)) {
-					if (each instanceof TextComponent) {
-						TextComponent textComponent = (TextComponent) each;
-						String[] lines = textComponent.getText().split("\\R", -1);
-						if (lines.length <= 1) {
-							current.add(each);
-						} else {							
-							for (int i = 0; i < lines.length; i++) {
-								String text = lines[i];
-								TextComponent clone = ChatComponentUtils.clone(textComponent);
-								clone.setText(text);
-								current.add(clone);
-								newPrints.add(ChatComponentUtils.join(current.toArray(new BaseComponent[current.size()])));
-								if (i <= lines.length - 1) {
-									current = new ArrayList<>();
-								}
-							}
-						}
-					} else {
-						current.add(each);
-					}
-				}
-				if (!current.isEmpty()) {
-					newPrints.add(ChatComponentUtils.join(current.toArray(new BaseComponent[current.size()])));
-				}
-			}
-			prints = newPrints;
+	public static BufferedImage getToolTipImage(List<Component> prints, boolean allowLineBreaks) throws Exception {
+		if (prints.isEmpty()) {
+			Debug.debug("ImageGeneration creating tooltip image");
+		} else {
+			Debug.debug("ImageGeneration creating tooltip image of " + InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(prints.get(0)));
 		}
 		
-		for (int i = 0; i < prints.size(); i++) {
-			System.out.println(i + "-: " + ComponentSerializer.toString(prints.get(i)).replace(ChatColor.COLOR_CHAR, '$'));
+		if (allowLineBreaks) {
+			List<Component> newList = new ArrayList<>();
+			for (Component component : prints) {
+				newList.addAll(ComponentStyling.splitAtLineBreaks(component));
+			}
+			prints = newList;
 		}
 		
 		BufferedImage image = new BufferedImage(1120, prints.size() * 20 + 15, BufferedImage.TYPE_INT_ARGB);
 		
+		if (!MCFont.isWorking()) {
+			return getMissingImage(image.getWidth(), image.getHeight());
+		}
+		
 		for (int i = 0; i < prints.size(); i++) {
-			BaseComponent text = prints.get(i);
+			Component text = prints.get(i);
 			ImageUtils.printComponent(image, text, 8, 8 + 20 * i, 16);
 		}
 		

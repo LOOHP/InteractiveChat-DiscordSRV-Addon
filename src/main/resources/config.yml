@@ -10,16 +10,30 @@ InventoryImage:
     EmbedDisplay: 
       Single: "{Item}"
       Multiple: "{Item} x{Amount}"
+    AlternateAirTexture: true
   #Whether or not to generate images for the inventory placeholder
   Inventory:
     Enabled: true
     #Use the player inventory gui template instead of the normal inventory template
     UsePlayerInventoryView: true
     EmbedColor: "#55FFFF"
+    ShowExperienceLevel: true
   #Whether or not to generate images for the enderchest placeholder
   EnderChest:
     Enabled: true
     EmbedColor: "#FF55FF"
+
+DeathMessage:
+  #Show the weapon inside the death message if there is one
+  ShowItems: true
+
+Advancements:
+  #Replace the advancement name from DiscordSRV with the actual display name
+  CorrectAdvancementName: true
+  #Show the icon of the advancement instead of the player head
+  ChangeToItemIcon: true
+  #Show the description of that advancement
+  ShowDescription: true
 
 HoverEventDisplay:
   #Whether or not to show hover event text
@@ -61,6 +75,11 @@ DiscordAttachments:
       - https://textures.minecraft.net
       - http://textures.minecraft.net
   Timeout: 86400
+  PlaybackBar:
+    Enabled: true
+    FilledColor: "#FF0000"
+    EmptyColor: "#938B86"
+
 
 DiscordMention:
   #Link mentions through discordsrv linked accounts
@@ -99,6 +118,9 @@ Settings:
   EscapePlaceholdersSentFromDiscord: true
   EscapeDiscordMarkdownFormattingInItems: true
   ReducedAssetsDownloadInfo: false
+
+Debug:
+  PrintInfoToConsole: false
 
 Resources:
   Language: en_us

@@ -7,11 +7,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
+
+import com.loohp.interactivechat.utils.NMSUtils;
 
 public class PotionUtils {
 	
@@ -36,18 +37,18 @@ public class PotionUtils {
 	
 	static {
 		try {
-			craftItemStackClass = getNMSClass("org.bukkit.craftbukkit.", "inventory.CraftItemStack");
-			nmsItemStackClass = getNMSClass("net.minecraft.server.", "ItemStack");
+			craftItemStackClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.inventory.CraftItemStack");
+			nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemStack", "net.minecraft.world.item.ItemStack");
 			asNMSCopyMethod = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class);
 			nmsItemHasTagMethod = nmsItemStackClass.getMethod("hasTag");
 			nmsItemHasGetMethod = nmsItemStackClass.getMethod("getTag");
-			nmsNbtTagCompoundClass = getNMSClass("net.minecraft.server.", "NBTTagCompound");
+			nmsNbtTagCompoundClass = NMSUtils.getNMSClass("net.minecraft.server.%s.NBTTagCompound", "net.minecraft.nbt.NBTTagCompound");
 			nmsNbtTagGetStringMethod = nmsNbtTagCompoundClass.getMethod("getString", String.class);
-			nmsPotionRegistryClass = getNMSClass("net.minecraft.server.", "PotionRegistry");
+			nmsPotionRegistryClass = NMSUtils.getNMSClass("net.minecraft.server.%s.PotionRegistry", "net.minecraft.world.item.alchemy.PotionRegistry");
 			nmsPotionRegistryA1Method = nmsPotionRegistryClass.getMethod("a", String.class);
 			nmsPotionRegistryA2Method = nmsPotionRegistryClass.getMethod("a");
-			craftPotionUtilClass = getNMSClass("org.bukkit.craftbukkit.", "potion.CraftPotionUtil");
-			nmsMobEffectClass = getNMSClass("net.minecraft.server.", "MobEffect");
+			craftPotionUtilClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.potion.CraftPotionUtil");
+			nmsMobEffectClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MobEffect", "net.minecraft.world.effect.MobEffect");
 			craftPotionUtilToBukkitMethod = craftPotionUtilClass.getMethod("toBukkit", nmsMobEffectClass);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -72,12 +73,6 @@ public class PotionUtils {
 		POSITIVE_EFFECTS.add("DOLPHINS_GRACE");
 		POSITIVE_EFFECTS.add("HERO_OF_THE_VILLAGE");
 	}
-	
-	private static Class<?> getNMSClass(String prefix, String nmsClassString) throws ClassNotFoundException {
-        String version = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3] + ".";
-        String name = prefix + version + nmsClassString;
-        return Class.forName(name);
-    }
 
 	public static Color getPotionBaseColor(PotionType type) {
 		PotionEffectType effect = type.getEffectType();

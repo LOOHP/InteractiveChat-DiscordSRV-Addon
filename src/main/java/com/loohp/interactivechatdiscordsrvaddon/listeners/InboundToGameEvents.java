@@ -36,12 +36,10 @@ import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 
-import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.api.events.PrePacketComponentProcessEvent;
-import com.loohp.interactivechat.utils.CustomStringUtils;
-import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.api.events.DiscordAttachmentConversionEvent;
+import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.GifReader;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageFrame;
 import com.loohp.interactivechatdiscordsrvaddon.modules.DiscordToGameMention;
@@ -61,13 +59,12 @@ import github.scarsz.discordsrv.dependencies.jda.api.entities.Message.Attachment
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Role;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.User;
-import github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component;
-import github.scarsz.discordsrv.dependencies.kyori.adventure.text.TextReplacementConfig;
 import github.scarsz.discordsrv.util.MessageUtil;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.TextReplacementConfig;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.ClickEvent;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 public class InboundToGameEvents implements Listener {
 	
@@ -86,6 +83,7 @@ public class InboundToGameEvents implements Listener {
 	
 	@Subscribe(priority = ListenerPriority.LOWEST)
 	public void onRecieveMessageFromDiscordPre(DiscordGuildMessagePreProcessEvent event) {
+		Debug.debug("Triggering onRecieveMessageFromDiscordPre");
 		DiscordSRV srv = InteractiveChatDiscordSrvAddon.discordsrv;
 		try {
 			discordRegexesField.setAccessible(true);
@@ -103,16 +101,18 @@ public class InboundToGameEvents implements Listener {
 		}
 	}
 	
-	@Subscribe(priority = ListenerPriority.HIGHEST)
+	@Subscribe(priority = ListenerPriority.HIGH)
 	public void onRecieveMessageFromDiscordPost(DiscordGuildMessagePostProcessEvent event) {
+		Debug.debug("Triggering onRecieveMessageFromDiscordPost");
 		Message message = event.getMessage();
 		
-		Component component = event.getMinecraftMessage();
+		github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component component = event.getMinecraftMessage();
 		
 		DiscordSRV srv = InteractiveChatDiscordSrvAddon.discordsrv;
 		User author = message.getAuthor();
 		
 		if (InteractiveChatDiscordSrvAddon.plugin.translateMentions) {
+			Debug.debug("onRecieveMessageFromDiscordPost translating mentions");
 			
 			Set<UUID> mentionTitleSent = new HashSet<>();
 			Map<Member, UUID> channelMembers = new HashMap<>();
@@ -132,7 +132,7 @@ public class InboundToGameEvents implements Listener {
 			
 			if (message.mentionsEveryone()) {
 				//github.scarsz.discordsrv.dependencies.kyori.adventure.text.event.HoverEvent<Component> hover = Component.text(InteractiveChatDiscordSrvAddon.plugin.mentionHover.replace("{DiscordUser}", senderDiscordName).replace("{TextChannel}", "#" + channel.getName()).replace("{Guild}", guild.getName())).asHoverEvent();
-				component = component.replaceText(TextReplacementConfig.builder().matchLiteral("@here").replacement(Component.text(InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@here"))).build()).replaceText(TextReplacementConfig.builder().matchLiteral("@everyone").replacement(Component.text(InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@everyone"))).build());
+				component = component.replaceText(github.scarsz.discordsrv.dependencies.kyori.adventure.text.TextReplacementConfig.builder().matchLiteral("@here").replacement(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@here"))).build()).replaceText(github.scarsz.discordsrv.dependencies.kyori.adventure.text.TextReplacementConfig.builder().matchLiteral("@everyone").replacement(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@everyone"))).build());
 				for (UUID uuid : channelMembers.values()) {
 					mentionTitleSent.add(uuid);
 					Player player = Bukkit.getPlayer(uuid);
@@ -145,7 +145,7 @@ public class InboundToGameEvents implements Listener {
 			List<Role> mentionedRoles = message.getMentionedRoles();
 			for (Role role : mentionedRoles) {
 				//github.scarsz.discordsrv.dependencies.kyori.adventure.text.event.HoverEvent<Component> hover = Component.text(InteractiveChatDiscordSrvAddon.plugin.mentionHover.replace("{DiscordUser}", senderDiscordName).replace("{TextChannel}", "#" + channel.getName()).replace("{Guild}", guild.getName())).asHoverEvent();
-				component = component.replaceText(TextReplacementConfig.builder().matchLiteral("@" + role.getName()).replacement(Component.text(InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@" + role.getName()))).build());
+				component = component.replaceText(github.scarsz.discordsrv.dependencies.kyori.adventure.text.TextReplacementConfig.builder().matchLiteral("@" + role.getName()).replacement(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@" + role.getName()))).build());
 				for (Entry<Member, UUID> entry : channelMembers.entrySet()) {
 					UUID uuid = entry.getValue();
 					if (!mentionTitleSent.contains(uuid) && entry.getKey().getRoles().contains(role)) {
@@ -162,7 +162,7 @@ public class InboundToGameEvents implements Listener {
 			if (!mentionedUsers.isEmpty()) {
 				for (User user : mentionedUsers) {
 					//github.scarsz.discordsrv.dependencies.kyori.adventure.text.event.HoverEvent<Component> hover = Component.text(InteractiveChatDiscordSrvAddon.plugin.mentionHover.replace("{DiscordUser}", senderDiscordName).replace("{TextChannel}", "#" + channel.getName()).replace("{Guild}", guild.getName())).asHoverEvent();
-					component = component.replaceText(TextReplacementConfig.builder().matchLiteral("@" + user.getName()).replacement(Component.text(InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@" + user.getName()))).build());
+					component = component.replaceText(github.scarsz.discordsrv.dependencies.kyori.adventure.text.TextReplacementConfig.builder().matchLiteral("@" + user.getName()).replacement(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(InteractiveChatDiscordSrvAddon.plugin.mentionHighlight.replace("{DiscordMention}", "@" + user.getName()))).build());
 					Member member = guild.getMember(user);
 					if (member != null) {
 						UUID uuid = channelMembers.get(member);
@@ -183,6 +183,7 @@ public class InboundToGameEvents implements Listener {
 		String processedMessage = MessageUtil.toLegacy(component);
 		
 		if (InteractiveChatDiscordSrvAddon.plugin.convertDiscordAttachments) {
+			Debug.debug("onRecieveMessageFromDiscordPost converting discord attachments");
 			Set<String> processedUrl = new HashSet<>();
 			for (Attachment attachment : message.getAttachments()) {
 				InteractiveChatDiscordSrvAddon.plugin.attachmentCounter.incrementAndGet();
@@ -204,7 +205,7 @@ public class InboundToGameEvents implements Listener {
 							GraphicsToPacketMapWrapper map;
 							if (url.toLowerCase().endsWith(".gif")) {
 								ImageFrame[] frames = GifReader.readGif(stream);
-								map = new GraphicsToPacketMapWrapper(frames);
+								map = new GraphicsToPacketMapWrapper(frames, InteractiveChatDiscordSrvAddon.plugin.playbackBarEnabled);
 							} else {
 								BufferedImage image = ImageIO.read(stream);
 								map = new GraphicsToPacketMapWrapper(image);
@@ -241,7 +242,7 @@ public class InboundToGameEvents implements Listener {
 						GraphicsToPacketMapWrapper map;
 						if (url.toLowerCase().endsWith(".gif")) {
 							ImageFrame[] frames = GifReader.readGif(stream);
-							map = new GraphicsToPacketMapWrapper(frames);
+							map = new GraphicsToPacketMapWrapper(frames, InteractiveChatDiscordSrvAddon.plugin.playbackBarEnabled);
 						} else {
 							BufferedImage image = ImageIO.read(stream);
 							map = new GraphicsToPacketMapWrapper(image);
@@ -260,68 +261,35 @@ public class InboundToGameEvents implements Listener {
 		}
 	}
 	
-	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onChatPacket(PrePacketComponentProcessEvent event) {
+		Debug.debug("Trggering onChatPacket");
 		if (InteractiveChatDiscordSrvAddon.plugin.convertDiscordAttachments) {
+			Debug.debug("onChatPacket converting discord attachments");
 			for (Entry<UUID, DiscordAttachmentData> entry : DATA.entrySet()) {
 				DiscordAttachmentData data = entry.getValue();
 				String url = data.getUrl();
-				BaseComponent baseComponent = event.getBaseComponent();
-	
-				List<BaseComponent> newlist = new ArrayList<>();
-				for (BaseComponent each : CustomStringUtils.loadExtras(baseComponent)) {
-					if (each instanceof TextComponent) {
-						String text = ((TextComponent) each).getText();
-						if (text.contains(url)) {
-							((TextComponent) each).setText(text.substring(0, text.indexOf(url)));
-							newlist.add(each);
-							String replacement = InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsFormattingText.replace("{FileName}", data.getFileName());
-							TextComponent textComponent = new TextComponent(replacement);
-							if (InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsFormattingHoverEnabled) {
-								String hover = InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsFormattingHoverText.replace("{FileName}", data.getFileName());
-								textComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new BaseComponent[] {new TextComponent(hover)}));
-							}
-							TextComponent imageAppend = null;
-							if (InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsUseMaps && data.isImage()) {
-								textComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/interactivechatdiscordsrv imagemap " + data.getUniqueId().toString()));
-								imageAppend = new TextComponent(InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsFormattingImageAppend.replace("{FileName}", data.getFileName()));
-								imageAppend.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new BaseComponent[] {new TextComponent(InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsFormattingImageAppendHover.replace("{FileName}", data.getFileName()))}));
-								imageAppend.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
-							} else {
-								textComponent.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
-							}
-							
-							newlist.add(textComponent);
-							if (imageAppend != null) {
-								newlist.add(imageAppend);
-							}
-							
-							TextComponent trailing = new TextComponent(text.substring(text.indexOf(url) + url.length(), text.length()));
-							if (InteractiveChat.version.isLegacy() && !InteractiveChat.version.equals(MCVersion.V1_12)) {
-								trailing = (TextComponent) CustomStringUtils.copyFormatting(trailing, each);
-			 	        	} else {
-			 	        		trailing.copyFormatting(each);
-			 	        	}
-							if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
-								trailing.setFont(each.getFont());
-							}
-							newlist.add(trailing);
-						} else {
-							newlist.add(each);
-						}
-					} else {
-						newlist.add(each);
-					}
+				Component component = event.getComponent();
+				
+				String replacement = InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsFormattingText.replace("{FileName}", data.getFileName());
+				Component textComponent = LegacyComponentSerializer.legacySection().deserialize(replacement);
+				if (InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsFormattingHoverEnabled) {
+					String hover = InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsFormattingHoverText.replace("{FileName}", data.getFileName());
+					textComponent = textComponent.hoverEvent(HoverEvent.showText(LegacyComponentSerializer.legacySection().deserialize(hover)));
+				}
+				if (InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsUseMaps && data.isImage()) {
+					textComponent = textComponent.clickEvent(ClickEvent.runCommand("/interactivechatdiscordsrv imagemap " + data.getUniqueId().toString()));
+					Component imageAppend = LegacyComponentSerializer.legacySection().deserialize(InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsFormattingImageAppend.replace("{FileName}", data.getFileName()));
+					imageAppend = imageAppend.hoverEvent(HoverEvent.showText(LegacyComponentSerializer.legacySection().deserialize(InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsFormattingImageAppendHover.replace("{FileName}", data.getFileName()))));
+					imageAppend = imageAppend.clickEvent(ClickEvent.openUrl(url));
+					textComponent = textComponent.append(imageAppend);
+				} else {
+					textComponent = textComponent.clickEvent(ClickEvent.openUrl(url));
 				}
 				
-				TextComponent product = new TextComponent("");
-				for (int i = 0; i < newlist.size(); i++) {
-					BaseComponent each = newlist.get(i);
-					product.addExtra(each);
-				}
+				component = component.replaceText(TextReplacementConfig.builder().matchLiteral(url).replacement(textComponent).build());
 				
-				event.setBaseComponent(product);
+				event.setComponent(component);
 			}
 		}
 	}

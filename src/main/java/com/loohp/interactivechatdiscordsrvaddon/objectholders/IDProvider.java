@@ -10,10 +10,8 @@ public class IDProvider {
 		this.counter = new AtomicInteger(0);
 	}
 	
-	public synchronized int getNext() {
-		int value = counter.get();
-		counter.set(value == Integer.MAX_VALUE ? 0 : value + 1);
-		return value;
+	public int getNext() {
+		return counter.getAndUpdate(i -> i >= Integer.MAX_VALUE ? 0 : i + 1);
 	}
 
 }

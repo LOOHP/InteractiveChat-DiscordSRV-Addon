@@ -5,13 +5,15 @@
 	<groupId>com.loohp</groupId>
 	<artifactId>InteractiveChatDiscordSrvAddon</artifactId>
 	<name>InteractiveChatDiscordSrvAddon</name>
-	<version>1.4.0.7</version>
+	<version>4.0.0.0</version>
 
 	<description>Have InteractiveChat Placeholders translated on DiscordSRV discord messages.</description>
 	<url>https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon</url>
 	<packaging>jar</packaging>
 
 	<properties>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.number></project.build.number>
 		<project.fullVersion>${project.version}</project.fullVersion>
@@ -55,20 +57,12 @@
 							<createDependencyReducedPom>false</createDependencyReducedPom>
 							<relocations>
 								<relocation>
-									<pattern>com.cryptomorin.xseries</pattern>
-									<shadedPattern>com.loohp.interactivechatdiscordsrvaddon.Utils</shadedPattern>
-								</relocation>
-								<relocation>
 									<pattern>club.minnced.discord</pattern>
-									<shadedPattern>com.loohp.interactivechatdiscordsrvaddon.Utils</shadedPattern>
-								</relocation>
-								<relocation>
-									<pattern>org.apache.commons.text</pattern>
-									<shadedPattern>com.loohp.interactivechatdiscordsrvaddon.Utils</shadedPattern>
+									<shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.club.minnced.discord</shadedPattern>
 								</relocation>
 								<relocation>
 									<pattern>okhttp3</pattern>
-									<shadedPattern>com.loohp.interactivechatdiscordsrvaddon.Utils</shadedPattern>
+									<shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.okhttp3</shadedPattern>
 								</relocation>
 							</relocations>
 						</configuration>
@@ -221,10 +215,9 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-text</artifactId>
-			<version>1.9</version>
-			<scope>compile</scope>
+			<groupId>com.madgag</groupId>
+			<artifactId>animated-gif-lib</artifactId>
+			<version>1.4</version>
 		</dependency>
 		<dependency>
 			<groupId>club.minnced</groupId>
@@ -235,19 +228,19 @@
 		<dependency>
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot-api</artifactId>
-			<version>1.16.5-R0.1-SNAPSHOT</version>
+			<version>1.17-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.bukkit</groupId>
 			<artifactId>craftbukkit</artifactId>
-			<version>1.16.5-R0.1-SNAPSHOT</version>
+			<version>1.17-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.discordsrv</groupId>
 			<artifactId>discordsrv</artifactId>
-			<version>1.22.0</version>
+			<version>1.23.0-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -259,7 +252,7 @@
 		<dependency>
 			<groupId>com.loohp</groupId>
 			<artifactId>InteractiveChat</artifactId>
-			<version>3.3.0.0</version>
+			<version>4.0.0.0</version>
 			<scope>provided</scope>
 		</dependency>
 	</dependencies>

@@ -3,6 +3,7 @@ package com.loohp.interactivechatdiscordsrvaddon.listeners;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.imageio.ImageIO;
 
@@ -20,22 +22,30 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import com.loohp.interactivechat.ConfigManager;
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.Utils.XMaterial;
 import com.loohp.interactivechat.api.InteractiveChatAPI;
+import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.objectholders.CustomPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.MentionPair;
 import com.loohp.interactivechat.objectholders.WebData;
 import com.loohp.interactivechat.utils.ChatColorUtils;
+import com.loohp.interactivechat.utils.ColorUtils;
 import com.loohp.interactivechat.utils.CustomStringUtils;
+import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechat.utils.NBTUtils;
 import com.loohp.interactivechat.utils.PlaceholderParser;
@@ -46,7 +56,11 @@ import com.loohp.interactivechatdiscordsrvaddon.api.events.GameMessagePreProcess
 import com.loohp.interactivechatdiscordsrvaddon.api.events.GameMessageProcessInventoryEvent;
 import com.loohp.interactivechatdiscordsrvaddon.api.events.GameMessageProcessItemEvent;
 import com.loohp.interactivechatdiscordsrvaddon.api.events.GameMessageProcessPlayerInventoryEvent;
+import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.AttachmentData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordMessageContent;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.HoverClickDisplayData;
@@ -54,12 +68,14 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.IDProvider;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayType;
 import com.loohp.interactivechatdiscordsrvaddon.registies.DiscordDataRegistry;
-import com.loohp.interactivechatdiscordsrvaddon.utils.ColorUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.AchievementUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.AdvancementUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.DeathMessageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordDescription;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordToolTip;
-import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.URLRequestUtils;
 
 import club.minnced.discord.webhook.WebhookClient;
@@ -67,6 +83,9 @@ import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.api.ListenerPriority;
 import github.scarsz.discordsrv.api.Subscribe;
+import github.scarsz.discordsrv.api.events.AchievementMessagePostProcessEvent;
+import github.scarsz.discordsrv.api.events.AchievementMessagePreProcessEvent;
+import github.scarsz.discordsrv.api.events.DeathMessagePostProcessEvent;
 import github.scarsz.discordsrv.api.events.DiscordGuildMessagePostProcessEvent;
 import github.scarsz.discordsrv.api.events.DiscordGuildMessageSentEvent;
 import github.scarsz.discordsrv.api.events.GameChatMessagePreProcessEvent;
@@ -77,28 +96,30 @@ import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.User;
 import github.scarsz.discordsrv.dependencies.jda.api.events.message.MessageReceivedEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.hooks.ListenerAdapter;
-import github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component;
-import github.scarsz.discordsrv.dependencies.kyori.adventure.text.TextReplacementConfig;
+import github.scarsz.discordsrv.objects.MessageFormat;
 import github.scarsz.discordsrv.util.DiscordUtil;
 import github.scarsz.discordsrv.util.MessageUtil;
 import github.scarsz.discordsrv.util.PlaceholderUtil;
 import github.scarsz.discordsrv.util.WebhookUtil;
-import net.md_5.bungee.api.chat.BaseComponent;
-import net.md_5.bungee.api.chat.TextComponent;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
-public class OutboundToDiscordEvents {
+public class OutboundToDiscordEvents implements Listener {
 	
 	public static final Comparator<DiscordDisplayData> DISPLAY_DATA_COMPARATOR = Comparator.comparing(each -> each.getPosition());
 	private static final IDProvider DATA_ID_PROVIDER = new IDProvider();
 	public static final Map<Integer, DiscordDisplayData> DATA = Collections.synchronizedMap(new LinkedHashMap<>());
+	public static final Map<Integer, AttachmentData> RESEND_WITH_ATTACHMENT = Collections.synchronizedMap(new LinkedHashMap<>());
 	
 	@Subscribe(priority = ListenerPriority.LOW)
 	public void onDiscordToGame(DiscordGuildMessagePostProcessEvent event) {
+		Debug.debug("Triggering onDiscordToGame");
 		InteractiveChatDiscordSrvAddon.plugin.messagesCounter.incrementAndGet();
-		Component component = event.getMinecraftMessage();
+		github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component component = event.getMinecraftMessage();
 		if (InteractiveChatDiscordSrvAddon.plugin.escapePlaceholdersFromDiscord) {
+			Debug.debug("onDiscordToGame escaping placeholders");
 			for (ICPlaceholder placeholder : InteractiveChat.placeholderList) {
-				component = component.replaceText(TextReplacementConfig.builder().matchLiteral(placeholder.getKeyword()).replacement("\\" + placeholder.getKeyword()).build());
+				component = component.replaceText(github.scarsz.discordsrv.dependencies.kyori.adventure.text.TextReplacementConfig.builder().matchLiteral(placeholder.getKeyword()).replacement("\\" + placeholder.getKeyword()).build());
 			}
 			event.setMinecraftMessage(component);
 		}
@@ -107,6 +128,7 @@ public class OutboundToDiscordEvents {
 	@SuppressWarnings("deprecation")
 	@Subscribe(priority = ListenerPriority.HIGHEST)
 	public void onGameToDiscord(GameChatMessagePreProcessEvent event) {
+		Debug.debug("Triggering onGameToDiscord");
 		InteractiveChatDiscordSrvAddon.plugin.messagesCounter.incrementAndGet();
 		Player sender = event.getPlayer();
 		ICPlayer wrappedSender = new ICPlayer(sender);
@@ -127,6 +149,7 @@ public class OutboundToDiscordEvents {
 		message = gameMessagePreProcessEvent.getMessage();
 
 		if (InteractiveChat.useItem && sender.hasPermission("interactivechat.module.item")) {
+			Debug.debug("onGameToDiscord processing item display");
 			long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, InteractiveChat.itemPlaceholder) - now;
 			if (cooldown < 0 || cooldown + 100 > ConfigManager.getConfig().getLong("ItemDisplay.Item.Cooldown") * 1000) {
 				String placeholder = InteractiveChat.itemPlaceholder;
@@ -201,6 +224,7 @@ public class OutboundToDiscordEvents {
 		}
 		
 		if (InteractiveChat.useInventory && sender.hasPermission("interactivechat.module.inventory")) {
+			Debug.debug("onGameToDiscord processing inventory display");
 			long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, InteractiveChat.invPlaceholder) - now;
 			if (cooldown < 0 || cooldown + 100 > ConfigManager.getConfig().getLong("ItemDisplay.Inventory.Cooldown") * 1000) {
 				String placeholder = InteractiveChat.invPlaceholder;
@@ -237,6 +261,7 @@ public class OutboundToDiscordEvents {
 		}
 		
 		if (InteractiveChat.useEnder && sender.hasPermission("interactivechat.module.enderchest")) {
+			Debug.debug("onGameToDiscord processing enderchest display");
 			long cooldown = InteractiveChatAPI.getPlayerPlaceholderCooldown(sender, InteractiveChat.enderPlaceholder) - now;
 			if (cooldown < 0 || cooldown + 100 > ConfigManager.getConfig().getLong("ItemDisplay.EnderChest.Cooldown") * 1000) {
 				String placeholder = InteractiveChat.enderPlaceholder;
@@ -272,6 +297,7 @@ public class OutboundToDiscordEvents {
 			}
 		}
 		
+		Debug.debug("onGameToDiscord processing custom placeholders");
 		for (ICPlaceholder placeholder : InteractiveChatAPI.getICPlaceholderList()) {
 			if (!placeholder.isBuildIn()) {
 				CustomPlaceholder customP = placeholder.getCustomPlaceholder().get();
@@ -293,7 +319,7 @@ public class OutboundToDiscordEvents {
 								usingHoverClick = true;
 								String hoverText = PlaceholderParser.parse(wrappedSender, customP.getHover().getText());
 								Color color = ColorUtils.getFirstColor(customP.getHover().getText());
-								hoverClick.hoverText(new TextComponent(hoverText));
+								hoverClick.hoverText(LegacyComponentSerializer.legacySection().deserialize(hoverText));
 								if (color != null) {
 									hoverClick.color(color);
 								}
@@ -334,7 +360,7 @@ public class OutboundToDiscordEvents {
 							usingHoverClick = true;
 							String hoverText = PlaceholderParser.parse(wrappedSender, customP.getHover().getText());
 							Color color = ColorUtils.getFirstColor(customP.getHover().getText());
-							hoverClick.hoverText(new TextComponent(hoverText));
+							hoverClick.hoverText(LegacyComponentSerializer.legacySection().deserialize(hoverText));
 							if (color != null) {
 								hoverClick.color(color);
 							}
@@ -357,6 +383,7 @@ public class OutboundToDiscordEvents {
 		
 		DiscordSRV srv = InteractiveChatDiscordSrvAddon.discordsrv;
 		if (InteractiveChatDiscordSrvAddon.plugin.translateMentions) {
+			Debug.debug("onGameToDiscord processing mentions");
 			for (MentionPair pair : InteractiveChat.mentionPair.values()) {
 				if (pair.getSender().equals(sender.getUniqueId())) {
 					UUID recieverUUID = pair.getReciever();
@@ -364,9 +391,6 @@ public class OutboundToDiscordEvents {
 					Player reciever = Bukkit.getPlayer(recieverUUID);
 					if (reciever != null) {
 						names.add(ChatColorUtils.stripColor(reciever.getName()));
-						if (!names.contains(ChatColorUtils.stripColor(reciever.getDisplayName()))) {
-							names.add(ChatColorUtils.stripColor(reciever.getDisplayName()));
-						}
 						List<String> list = InteractiveChatAPI.getNicknames(reciever.getUniqueId());
 						for (String name : list) {
 							names.add(ChatColorUtils.stripColor(name));
@@ -403,8 +427,233 @@ public class OutboundToDiscordEvents {
 		event.setMessage(message);
 	}
 	
+	//===== Death Message
+	
+	private static final Map<UUID, ItemStack> DEATH_BY = new ConcurrentHashMap<>();
+	
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onDeath(PlayerDeathEvent event) {
+		if (!InteractiveChatDiscordSrvAddon.plugin.deathMessageItem) {
+			return;
+		}
+		Debug.debug("Triggered onDeath");
+		Player player = event.getEntity();
+		Component deathMessage = DeathMessageUtils.getDeathMessage(player);
+		ItemStack item = ComponentStringUtils.extractItemStack(deathMessage);
+		DEATH_BY.put(player.getUniqueId(), item == null ? new ItemStack(Material.AIR) : item);
+	}
+	
+	@Subscribe(priority = ListenerPriority.HIGHEST)
+	public void onDeathMessageSend(DeathMessagePostProcessEvent event) {
+		if (event.isCancelled()) {
+			return;
+		}
+		if (!InteractiveChatDiscordSrvAddon.plugin.deathMessageItem) {
+			return;
+		}
+		Debug.debug("Triggered onDeathMessageSend");
+		ItemStack item = DEATH_BY.remove(event.getPlayer().getUniqueId());
+		if (item == null || item.getType().equals(Material.AIR)) {
+			return;
+		}
+		if (!item.hasItemMeta()) {
+			return;
+		}
+		ItemMeta meta = item.getItemMeta();
+		if (meta == null || !meta.hasDisplayName() || meta.getDisplayName().length() <= 0) {
+			return;
+		}
+		Color color = null;
+		if (!event.getDiscordMessage().getEmbeds().isEmpty()) {
+			color = event.getDiscordMessage().getEmbeds().get(0).getColor();
+		}
+		if (color == null) {
+			color = Color.black;
+		}
+		Player player = event.getPlayer();
+		DiscordMessageContent content = new DiscordMessageContent(ChatColorUtils.stripColor(meta.getDisplayName()), "attachment://Item.png", color);
+		try {
+			BufferedImage image = ImageGeneration.getItemStackImage(item, player, InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
+			ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
+			ImageIO.write(image, "png", itemOs);
+			
+			DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
+			
+			content.addAttachment("Item.png", itemOs.toByteArray());
+			
+			if (InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImage) {
+				DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item);
+				if (!discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
+					BufferedImage tooltip = ImageGeneration.getToolTipImage(discordToolTip.getComponents());
+					ByteArrayOutputStream tooltipOs = new ByteArrayOutputStream();
+					ImageIO.write(tooltip, "png", tooltipOs);
+					content.addAttachment("ToolTip.png", tooltipOs.toByteArray());
+					content.addImageUrl("attachment://ToolTip.png");
+				} else {
+					content.addDescription(description.getDescription().orElse(null));
+				}
+			} else {
+				content.addDescription(description.getDescription().orElse(null));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		Bukkit.getScheduler().runTaskLaterAsynchronously(InteractiveChat.plugin, () -> {
+			Debug.debug("onDeathMessageSend sending item to discord");
+			TextChannel destinationChannel = DiscordSRV.getPlugin().getDestinationTextChannelForGameChannelName(event.getChannel());
+			if (event.isUsingWebhooks()) {
+				String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(destinationChannel);
+				WebhookClient client = WebhookClient.withUrl(webHookUrl);
+				
+				if (client == null) {
+					throw new NullPointerException("Unable to get the Webhook client URL for the TextChannel " + destinationChannel.getName());
+				}
+				
+				client.send(content.toWebhookMessageBuilder().setUsername(event.getWebhookName()).setAvatarUrl(event.getWebhookAvatarUrl()).build());
+				client.close();
+	        } else {
+	        	content.toJDAMessageRestAction(destinationChannel).queue();
+	        }
+		}, 5);
+	}
+	
+	//===== Advancement
+	
+	@Subscribe(priority = ListenerPriority.HIGHEST)
+	public void onAdvancement(AchievementMessagePreProcessEvent event) {
+		if (event.isCancelled()) {
+			return;
+		}
+		Debug.debug("Triggered onAdvancement");
+		MessageFormat messageFormat = event.getMessageFormat();
+        if (messageFormat == null) return;
+		
+        String title = null;
+        String description = null;
+        ItemStack item = null;
+        AdvancementType advancementType = null;
+        boolean isMinecraft = true;
+        
+		Event bukkitEvent = event.getTriggeringBukkitEvent();
+		if (bukkitEvent.getClass().getSimpleName().equals("PlayerAdvancementDoneEvent")) {
+			Debug.debug("onAdvancement getting advancement");
+			Object bukkitAdvancement = AdvancementUtils.getAdvancementFromEvent(bukkitEvent);
+			AdvancementData data = AdvancementUtils.getAdvancementData(bukkitAdvancement);
+			if (data == null) {
+				return;
+			}
+			title = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(data.getTitle(), InteractiveChatDiscordSrvAddon.plugin.language);
+			description = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(data.getDescription(), InteractiveChatDiscordSrvAddon.plugin.language);
+			item = data.getItem();
+			advancementType = data.getAdvancementType();
+			isMinecraft = data.isMinecraft();
+		} else if (bukkitEvent.getClass().getSimpleName().equals("PlayerAchievementAwardedEvent")) {
+			Debug.debug("onAdvancement getting achievement");
+			Object bukkitAchievement = AchievementUtils.getAdvancementFromEvent(bukkitEvent);
+			if (bukkitAchievement == null) {
+				return;
+			}
+			AdvancementData data = AchievementUtils.getAdvancementData(bukkitAchievement);
+			if (data == null) {
+				return;
+			}
+			title = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(data.getTitle(), InteractiveChatDiscordSrvAddon.plugin.language);
+			description = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(data.getDescription(), InteractiveChatDiscordSrvAddon.plugin.language);
+			item = data.getItem();
+			advancementType = data.getAdvancementType();
+			isMinecraft = data.isMinecraft();
+		} else {
+			return;
+		}
+		
+		Debug.debug("onAdvancement processing advancement");
+		if (InteractiveChatDiscordSrvAddon.plugin.advancementItem && item != null) {
+			String content = messageFormat.getContent();
+			if (content == null) {
+				content = "";
+			}
+			try {
+				int id = DATA_ID_PROVIDER.getNext();
+				BufferedImage icon = ImageGeneration.getItemStackImage(item, event.getPlayer(), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				ImageIO.write(icon, "png", baos);
+				content += "<ICA=" + id + ">";
+				messageFormat.setContent(content);
+				RESEND_WITH_ATTACHMENT.put(id, new AttachmentData("Icon.png", baos.toByteArray()));
+				messageFormat.setAuthorImageUrl("attachment://Icon.png");
+			} catch (IOException e) {				
+				e.printStackTrace();
+			}
+		}
+		if (InteractiveChatDiscordSrvAddon.plugin.advancementName && title != null) {
+			event.setAchievementName(ChatColorUtils.stripColor(title));
+			messageFormat.setAuthorName(LanguageUtils.getTranslation(advancementType.getTranslationKey(), InteractiveChatDiscordSrvAddon.plugin.language).replaceFirst("%s", event.getPlayer().getName()).replaceFirst("%s", ChatColorUtils.stripColor(title)));
+			Color color;
+			if (isMinecraft) {
+				color = ColorUtils.getColor(advancementType.getColor());
+			} else {
+				String colorStr = ChatColorUtils.getFirstColors(title);
+				color = ColorUtils.getColor(ColorUtils.toChatColor(colorStr));
+			}
+			if (color.equals(Color.white)) {
+				color = new Color(0xFFFFFE);
+			}
+			messageFormat.setColor(color);
+		}
+		if (InteractiveChatDiscordSrvAddon.plugin.advancementDescription && description != null) {
+			messageFormat.setDescription(ChatColorUtils.stripColor(description));
+		}
+		event.setMessageFormat(messageFormat);
+	}
+	
+	@Subscribe(priority = ListenerPriority.HIGHEST)
+	public void onAdvancementSend(AchievementMessagePostProcessEvent event) {
+		if (event.isCancelled()) {
+			return;
+		}
+		Debug.debug("Triggered onAdvancementSend");
+		Message message = event.getDiscordMessage();
+		if (!message.getContentRaw().contains("<ICA=")) {
+			return;
+		}
+		String text = message.getContentRaw();
+		Set<Integer> matches = new LinkedHashSet<>();
+		for (int key : RESEND_WITH_ATTACHMENT.keySet()) {
+			if (text.contains("<ICA=" + key + ">")) {
+				matches.add(key);
+			}
+		}
+		event.setCancelled(true);
+		DiscordMessageContent content = new DiscordMessageContent(message);
+		for (int key : matches) {
+			AttachmentData data = RESEND_WITH_ATTACHMENT.remove(key); 
+			if (data != null) {
+				content.addAttachment(data.getName(), data.getData());
+			}
+		}
+		TextChannel destinationChannel = DiscordSRV.getPlugin().getDestinationTextChannelForGameChannelName(event.getChannel());
+		Debug.debug("onAdvancementSend sending message to discord");
+		if (event.isUsingWebhooks()) {
+			String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(destinationChannel);
+			WebhookClient client = WebhookClient.withUrl(webHookUrl);
+			
+			if (client == null) {
+				throw new NullPointerException("Unable to get the Webhook client URL for the TextChannel " + destinationChannel.getName());
+			}
+			
+			client.send(content.toWebhookMessageBuilder().setUsername(event.getWebhookName()).setAvatarUrl(event.getWebhookAvatarUrl()).build());
+			client.close();
+		} else {
+			content.toJDAMessageRestAction(destinationChannel).queue();
+		}
+	}
+	
+	//=====
+	
 	@Subscribe(priority = ListenerPriority.HIGHEST)
 	public void discordMessageSent(DiscordGuildMessageSentEvent event) {
+		Debug.debug("Triggered discordMessageSent");
 		Message message = event.getMessage();
 		String textOriginal = message.getContentRaw();
 		TextChannel channel = event.getChannel();
@@ -429,6 +678,7 @@ public class OutboundToDiscordEvents {
 			}
 			
 			if (matches.isEmpty()) {
+				Debug.debug("discordMessageSent keys empty");
 				return;
 			}
 			
@@ -445,7 +695,8 @@ public class OutboundToDiscordEvents {
 			
 			Collections.sort(dataList, DISPLAY_DATA_COMPARATOR);
 			
-			List<DiscordMessageContent> contents = createContents(dataList);
+			Debug.debug("discordMessageSent creating contents");
+			List<DiscordMessageContent> contents = createContents(dataList);			
 			
 			DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
 			TextChannel textChannel = discordImageEvent.getChannel();
@@ -453,6 +704,7 @@ public class OutboundToDiscordEvents {
 				String restore = discordImageEvent.getOriginalMessage();
 				textChannel.sendMessage(restore).queue();
 			} else {
+				Debug.debug("discordMessageSent sending to discord");
 				text = discordImageEvent.getNewMessage();
 				textChannel.sendMessage(text).queue();
 				for (DiscordMessageContent content : discordImageEvent.getDiscordMessageContents()) {
@@ -466,6 +718,7 @@ public class OutboundToDiscordEvents {
 		
 		@Override
 		public void onMessageReceived(MessageReceivedEvent event) {
+			Debug.debug("Triggered onMessageReceived");
 			if (event.getAuthor().equals(event.getJDA().getSelfUser())) {
 				return;
 			}
@@ -492,6 +745,7 @@ public class OutboundToDiscordEvents {
 				}
 			}
 			if (matches.isEmpty()) {
+				Debug.debug("onMessageReceived keys empty");
 				return;
 			}
 			
@@ -509,6 +763,7 @@ public class OutboundToDiscordEvents {
 			
 			Collections.sort(dataList, DISPLAY_DATA_COMPARATOR);
 			
+			Debug.debug("onMessageReceived creating contents");
 			List<DiscordMessageContent> contents = createContents(dataList);
 			
 			List<WebhookMessageBuilder> messagesToSend = new ArrayList<>();
@@ -544,13 +799,14 @@ public class OutboundToDiscordEvents {
                 }
             }
 			
-			String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(textChannel, username);
+			String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(textChannel);
 			WebhookClient client = WebhookClient.withUrl(webHookUrl);
 			
 			if (client == null) {
 				throw new NullPointerException("Unable to get the Webhook client URL for the TextChannel " + textChannel.getName());
 			}
 			
+			Debug.debug("onMessageReceived sending to discord");
 			for (WebhookMessageBuilder builder : messagesToSend) {
 				client.send(builder.setUsername(username).setAvatarUrl(avatarUrl).build());
 			}
@@ -566,13 +822,14 @@ public class OutboundToDiscordEvents {
 				ImageDisplayType type = iData.getType();
 				String title = iData.getTitle();
 				if (iData.getItemStack().isPresent()) {
+					Debug.debug("createContents creating item discord content");
 					ItemStack item = iData.getItemStack().get();
 					Color color = DiscordItemStackUtils.getDiscordColor(item);
 					if (color == null || color.equals(Color.white)) {
 						color = new Color(0xFFFFFE);
 					}
 					try {
-						BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer());
+						BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer(), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
 						ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
 						ImageIO.write(image, "png", itemOs);
 						
@@ -624,6 +881,7 @@ public class OutboundToDiscordEvents {
 						e.printStackTrace();
 					}
 				} else if (iData.getInventory().isPresent()) {
+					Debug.debug("createContents creating inventory discord content");
 					Inventory inv = iData.getInventory().get();
 					try {
 						BufferedImage image;
@@ -652,12 +910,21 @@ public class OutboundToDiscordEvents {
 						ImageIO.write(image, "png", os);
 						DiscordMessageContent content = new DiscordMessageContent(title, null, null, "attachment://Inventory.png", color);
 						content.addAttachment("Inventory.png", os.toByteArray());
+						if (type.equals(ImageDisplayType.INVENTORY) && InteractiveChatDiscordSrvAddon.plugin.invShowLevel) {
+							int level = iData.getPlayer().getLevel();
+							ByteArrayOutputStream bottleOut = new ByteArrayOutputStream();
+							ImageIO.write(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("experience_bottle"), "png", bottleOut);
+							content.addAttachment("Level.png", bottleOut.toByteArray());
+							content.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language).replaceFirst("%s", level + ""));
+							content.setFooterImageUrl("attachment://Level.png");
+						}
 						contents.add(content);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}			
 				}
 			} else if (data instanceof HoverClickDisplayData) {
+				Debug.debug("createContents creating hover event discord content");
 				try {
 					HoverClickDisplayData hData = (HoverClickDisplayData) data;
 					String title = hData.getDisplayText();
@@ -667,7 +934,7 @@ public class OutboundToDiscordEvents {
 					String preview = null;
 					if (hData.hasHover()) {
 						if (InteractiveChatDiscordSrvAddon.plugin.hoverUseTooltipImage) {
-							BaseComponent print = hData.getHoverText();
+							Component print = hData.getHoverText();
 							BufferedImage tooltip = ImageGeneration.getToolTipImage(print, true);
 							ByteArrayOutputStream tooltipOs = new ByteArrayOutputStream();
 							ImageIO.write(tooltip, "png", tooltipOs);
@@ -675,7 +942,7 @@ public class OutboundToDiscordEvents {
 							content.addImageUrl("attachment://ToolTip.png");
 							content.addDescription(null);
 						} else {
-							body += ComponentStringUtils.stripColorAndConvertMagic(hData.getHoverText().toLegacyText());
+							body += ComponentStringUtils.stripColorAndConvertMagic(InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(hData.getHoverText()));
 						}
 					}
 					if (hData.hasClick()) {
@@ -684,14 +951,14 @@ public class OutboundToDiscordEvents {
 							if (body.length() > 0) {
 								body += "\n\n";
 							}
-							body += LanguageUtils.getTranslation(TranslationUtils.getCopyToClipboard(), InteractiveChatDiscordSrvAddon.plugin.language) + ": __" + hData.getClickValue() + "__";
+							body += LanguageUtils.getTranslation(TranslationKeyUtils.getCopyToClipboard(), InteractiveChatDiscordSrvAddon.plugin.language) + ": __" + hData.getClickValue() + "__";
 							break;
 						case OPEN_URL:
 							if (body.length() > 0) {
 								body += "\n\n";
 							}
 							String url = hData.getClickValue();
-							body += LanguageUtils.getTranslation(TranslationUtils.getOpenUrl(), InteractiveChatDiscordSrvAddon.plugin.language) + ": __" + url + "__";
+							body += LanguageUtils.getTranslation(TranslationKeyUtils.getOpenUrl(), InteractiveChatDiscordSrvAddon.plugin.language) + ": __" + url + "__";
 							if (URLRequestUtils.IMAGE_URL_PATTERN.matcher(url).matches() && URLRequestUtils.isAllowed(url)) {
 								preview = url;
 							}

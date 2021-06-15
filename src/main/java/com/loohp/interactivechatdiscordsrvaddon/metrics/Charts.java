@@ -120,6 +120,50 @@ public class Charts {
 	        }
 	    }));
 		
+		metrics.addCustomChart(new Metrics.SimplePie("show_death_message_weapon", new Callable<String>() {
+	        @Override
+	        public String call() throws Exception {
+	        	String string = "Disabled";
+	        	if (InteractiveChatDiscordSrvAddon.plugin.deathMessageItem) {
+	        		string = "Enabled";
+	        	}
+	            return string;
+	        }
+	    }));
+		
+		metrics.addCustomChart(new Metrics.SimplePie("correct_advancement_name", new Callable<String>() {
+	        @Override
+	        public String call() throws Exception {
+	        	String string = "Disabled";
+	        	if (InteractiveChatDiscordSrvAddon.plugin.advancementName) {
+	        		string = "Enabled";
+	        	}
+	            return string;
+	        }
+	    }));
+		
+		metrics.addCustomChart(new Metrics.SimplePie("show_advancement_item_icon", new Callable<String>() {
+	        @Override
+	        public String call() throws Exception {
+	        	String string = "Disabled";
+	        	if (InteractiveChatDiscordSrvAddon.plugin.advancementItem) {
+	        		string = "Enabled";
+	        	}
+	            return string;
+	        }
+	    }));
+		
+		metrics.addCustomChart(new Metrics.SimplePie("show_advancement_description", new Callable<String>() {
+	        @Override
+	        public String call() throws Exception {
+	        	String string = "Disabled";
+	        	if (InteractiveChatDiscordSrvAddon.plugin.advancementDescription) {
+	        		string = "Enabled";
+	        	}
+	            return string;
+	        }
+	    }));
+		
 		metrics.addCustomChart(new Metrics.SimplePie("translate_mentions_enabled", new Callable<String>() {
 	        @Override
 	        public String call() throws Exception {

@@ -126,9 +126,20 @@ public class AssetsDownloader {
 					file.delete();
 				}
 				HTTPRequestUtils.download(file, key);
-			}
-			
+			}			
 			Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Done!");
+		}
+		
+		if (data.containsKey("extras-entries")) {
+			InteractiveChatDiscordSrvAddon.plugin.extras.clear();
+			JSONObject extras = (JSONObject) data.get("extras-entries");
+			for (Object obj : extras.keySet()) {
+				String key = obj.toString();
+				String value = extras.get(key).toString();
+				try {
+					InteractiveChatDiscordSrvAddon.plugin.extras.put(value, HTTPRequestUtils.download(key));
+				} catch (Exception e) {}
+			}
 		}
 		
 		json.put("assets", hash);

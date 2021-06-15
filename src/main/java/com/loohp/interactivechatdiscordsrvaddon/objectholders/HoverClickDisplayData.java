@@ -6,17 +6,17 @@ import org.bukkit.entity.Player;
 
 import com.loohp.interactivechat.objectholders.CustomPlaceholder.ClickEventAction;
 
-import net.md_5.bungee.api.chat.BaseComponent;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 
 public class HoverClickDisplayData extends DiscordDisplayData {
 	
 	private String displayText;
-	private BaseComponent hoverText;
+	private Component hoverText;
 	private Color color;
 	private ClickEventAction clickAction;
 	private String clickValue;
 
-	public HoverClickDisplayData(Player player, int position, Color color, String displayText, BaseComponent hoverText, ClickEventAction clickAction, String clickValue) {
+	public HoverClickDisplayData(Player player, int position, Color color, String displayText, Component hoverText, ClickEventAction clickAction, String clickValue) {
 		super(player, position);
 		this.displayText = displayText;
 		this.hoverText = hoverText;
@@ -29,7 +29,7 @@ public class HoverClickDisplayData extends DiscordDisplayData {
 		return displayText;
 	}
 
-	public BaseComponent getHoverText() {
+	public Component getHoverText() {
 		return hoverText;
 	}
 	
@@ -58,7 +58,7 @@ public class HoverClickDisplayData extends DiscordDisplayData {
 		private Player player;
 		private Integer postion;
 		private String displayText;
-		private BaseComponent hoverText;
+		private Component hoverText;
 		private Color color;
 		private ClickEventAction clickAction;
 		private String clickValue;
@@ -94,11 +94,11 @@ public class HoverClickDisplayData extends DiscordDisplayData {
 			return this;
 		}
 
-		public BaseComponent getHoverText() {
+		public Component getHoverText() {
 			return hoverText;
 		}
 
-		public Builder hoverText(BaseComponent hoverText) {
+		public Builder hoverText(Component hoverText) {
 			this.hoverText = hoverText;
 			return this;
 		}

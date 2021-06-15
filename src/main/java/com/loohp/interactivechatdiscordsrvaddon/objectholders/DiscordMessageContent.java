@@ -12,10 +12,12 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import club.minnced.discord.webhook.send.WebhookEmbed.EmbedAuthor;
+import club.minnced.discord.webhook.send.WebhookEmbed.EmbedFooter;
 import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import github.scarsz.discordsrv.dependencies.jda.api.EmbedBuilder;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.MessageEmbed;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.dependencies.jda.api.requests.RestAction;
 import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.MessageAction;
@@ -27,6 +29,8 @@ public class DiscordMessageContent {
 	private List<String> description;
 	private List<String> imageUrl;
 	private Color color;
+	private String footer;
+	private String footerImageUrl;
 	private Map<String, byte[]> attachments;
 	
 	public DiscordMessageContent(String authorName, String authorIconUrl, List<String> description, List<String> imageUrl, Color color, Map<String, byte[]> attachments) {
@@ -36,6 +40,8 @@ public class DiscordMessageContent {
 		this.imageUrl = imageUrl;
 		this.color = color;
 		this.attachments = attachments;
+		this.footer = null;
+		this.footerImageUrl = null;
 	}
 	
 	public DiscordMessageContent(String authorName, String authorIconUrl, String description, String imageUrl, Color color) {
@@ -44,6 +50,25 @@ public class DiscordMessageContent {
 	
 	public DiscordMessageContent(String authorName, String authorIconUrl, Color color) {
 		this(authorName, authorIconUrl, new ArrayList<>(), new ArrayList<>(), color, new HashMap<>());
+	}
+	
+	public DiscordMessageContent(Message message) {
+		if (message.getEmbeds().isEmpty()) {
+			throw new IllegalArgumentException("Not embeds found!");
+		}
+		MessageEmbed embed = message.getEmbeds().get(0);
+		this.authorName = embed.getAuthor().getName();
+		this.authorIconUrl = embed.getAuthor().getIconUrl();
+		this.description = new ArrayList<>();
+		if (embed.getDescription() != null) {
+			description.add(embed.getDescription());
+		}
+		this.imageUrl = new ArrayList<>();
+		if (embed.getImage() != null) {
+			imageUrl.add(embed.getImage().getUrl());
+		}
+		this.color = embed.getColor();
+		this.attachments = new HashMap<>();
 	}
 
 	public String getAuthorName() {
@@ -110,6 +135,22 @@ public class DiscordMessageContent {
 		this.color = color;
 	}
 
+	public String getFooter() {
+		return footer;
+	}
+
+	public void setFooter(String footer) {
+		this.footer = footer;
+	}
+
+	public String getFooterImageUrl() {
+		return footerImageUrl;
+	}
+
+	public void setFooterImageUrl(String footerImageUrl) {
+		this.footerImageUrl = footerImageUrl;
+	}
+
 	public Map<String, byte[]> getAttachments() {
 		return attachments;
 	}
@@ -139,6 +180,16 @@ public class DiscordMessageContent {
 			embed.setImage(url);
 			rootAttachments.add(url);
 		}
+		if (imageUrl.size() == 1 || description.size() == 1) {
+			if (footer != null) {
+				if (footerImageUrl == null) {
+					embed.setFooter(footer);
+				} else {
+					embed.setFooter(footer, footerImageUrl);
+					rootAttachments.add(footerImageUrl);
+				}
+			}
+		}
 		actions.put(channel.sendMessage(embed.build()), rootAttachments);
 		for (int i = 1; i < imageUrl.size() || i < description.size(); i++) {
 			Set<String> usedAttachments = new HashSet<>();
@@ -150,6 +201,15 @@ public class DiscordMessageContent {
 			}
 			if (i < description.size()) {
 				otherEmbed.setDescription(description.get(i));
+			}
+			if (!(i + 1 < imageUrl.size() || i + 1 < description.size())) {
+				if (footer != null) {
+					if (footerImageUrl == null) {
+						otherEmbed.setFooter(footer);
+					} else {
+						otherEmbed.setFooter(footer, footerImageUrl);
+					}
+				}
 			}
 			if (!otherEmbed.isEmpty()) {
 				actions.put(channel.sendMessage(otherEmbed.build()), usedAttachments);
@@ -185,6 +245,11 @@ public class DiscordMessageContent {
 		if (imageUrl.size() > 0) {
 			embed.setImageUrl(imageUrl.get(0));
 		}
+		if (imageUrl.size() == 1 || description.size() == 1) {
+			if (footer != null) {
+				embed.setFooter(new EmbedFooter(footer, footerImageUrl));
+			}
+		}
 		WebhookMessageBuilder webhookmessage = new WebhookMessageBuilder().addEmbeds(embed.build());
 		for (int i = 1; i < imageUrl.size() || i < description.size(); i++) {
 			WebhookEmbedBuilder otherEmbed = new WebhookEmbedBuilder().setColor(color.getRGB());
@@ -193,6 +258,11 @@ public class DiscordMessageContent {
 			}
 			if (i < description.size()) {
 				otherEmbed.setDescription(description.get(i));
+			}
+			if (!(i + 1 < imageUrl.size() || i + 1 < description.size())) {
+				if (footer != null) {
+					otherEmbed.setFooter(new EmbedFooter(footer, footerImageUrl));
+				}
 			}
 			if (!otherEmbed.isEmpty()) {
 				webhookmessage.addEmbeds(otherEmbed.build());
