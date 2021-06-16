@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.WordUtils;
 import org.bukkit.DyeColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -20,6 +21,7 @@ import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NBTUtils;
 import com.loohp.interactivechat.utils.NMSUtils;
+import com.loohp.interactivechatdiscordsrvaddon.wrappers.PatternTypeWrapper;
 
 public class TranslationKeyUtils {
 	
@@ -293,6 +295,16 @@ public class TranslationKeyUtils {
 			bytes[0] = 0;
 		}
 		return ((bytes[0] & 0xFF) << 24) | ((bytes[1] & 0xFF) << 16) | ((bytes[2] & 0xFF) << 8) | (bytes[3] & 0xFF);
+	}
+	
+	public static String getBannerPatternName(PatternTypeWrapper type, DyeColor color) {
+		if (InteractiveChat.version.isLegacy()) {
+			String colorName = WordUtils.capitalizeFully(color.name().toLowerCase().replace("_", " ")).replace(" ", "");
+			colorName = colorName.substring(0, 1).toLowerCase() + colorName.substring(1);
+			return "item.banner." + type.getAssetName() + "." + colorName;
+		} else {
+			return "block.minecraft.banner." + type.getAssetName() + "." + color.name().toLowerCase();
+		}
 	}
 
 }

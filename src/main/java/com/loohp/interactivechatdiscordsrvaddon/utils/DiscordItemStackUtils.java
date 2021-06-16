@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -12,9 +13,13 @@ import java.util.stream.Stream;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.block.Banner;
+import org.bukkit.block.banner.Pattern;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BannerMeta;
+import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.CrossbowMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
@@ -43,6 +48,7 @@ import com.loohp.interactivechat.utils.NBTUtils;
 import com.loohp.interactivechat.utils.RarityUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.registies.DiscordDataRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.wrappers.PatternTypeWrapper;
 
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.dependencies.mcdiscordreserializer.discord.DiscordSerializer;
@@ -137,6 +143,48 @@ public class DiscordItemStackUtils {
 		
 		boolean hasMeta = item.hasItemMeta();
 		String description = "";
+		
+		if (xMaterial.equals(XMaterial.SHIELD)) {
+			if (NBTUtils.contains(item, "BlockEntityTag")) {
+				List<Pattern> patterns = Collections.emptyList();
+				if (!(item.getItemMeta() instanceof BannerMeta)) {
+					if (item.getItemMeta() instanceof BlockStateMeta) {
+						BlockStateMeta bmeta = (BlockStateMeta) item.getItemMeta();
+						if (bmeta.hasBlockState()) {
+							Banner bannerBlockMeta = (Banner) bmeta.getBlockState();
+				            patterns = bannerBlockMeta.getPatterns();
+						}			       
+					}
+				} else {
+					BannerMeta meta = (BannerMeta) item.getItemMeta();
+					patterns = meta.getPatterns();
+				}
+
+	            for (Pattern pattern : patterns) {
+	            	PatternTypeWrapper type = PatternTypeWrapper.fromPatternType(pattern.getPattern());
+	            	description += LanguageUtils.getTranslation(TranslationKeyUtils.getBannerPatternName(type, pattern.getColor()), language) + "\n";
+	            }
+			}
+		}
+		
+		if (xMaterial.isOneOf(Arrays.asList("CONTAINS:Banner"))) {
+			List<Pattern> patterns = Collections.emptyList();
+			if (!(item.getItemMeta() instanceof BannerMeta)) {
+				if (item.getItemMeta() instanceof BlockStateMeta) {
+					BlockStateMeta bmeta = (BlockStateMeta) item.getItemMeta();
+		            Banner bannerBlockMeta = (Banner) bmeta.getBlockState();
+		            patterns = bannerBlockMeta.getPatterns();
+				}
+			} else {
+				BannerMeta meta = (BannerMeta) item.getItemMeta();
+				patterns = meta.getPatterns();
+			}	
+
+            for (Pattern pattern : patterns) {
+            	PatternTypeWrapper type = PatternTypeWrapper.fromPatternType(pattern.getPattern());
+            	description += LanguageUtils.getTranslation(TranslationKeyUtils.getBannerPatternName(type, pattern.getColor()), language) + "\n";
+            }
+		}
 		
 		if (xMaterial.equals(XMaterial.TROPICAL_FISH_BUCKET)) {
 			List<String> translations = TranslationKeyUtils.getTropicalFishBucketName(item);
@@ -391,6 +439,48 @@ public class DiscordItemStackUtils {
 	    prints.add(itemDisplayNameComponent);
 		
 		boolean hasMeta = item.hasItemMeta();
+		
+		if (xMaterial.equals(XMaterial.SHIELD)) {
+			if (NBTUtils.contains(item, "BlockEntityTag")) {
+				List<Pattern> patterns = Collections.emptyList();
+				if (!(item.getItemMeta() instanceof BannerMeta)) {
+					if (item.getItemMeta() instanceof BlockStateMeta) {
+						BlockStateMeta bmeta = (BlockStateMeta) item.getItemMeta();
+						if (bmeta.hasBlockState()) {
+							Banner bannerBlockMeta = (Banner) bmeta.getBlockState();
+				            patterns = bannerBlockMeta.getPatterns();
+						}			       
+					}
+				} else {
+					BannerMeta meta = (BannerMeta) item.getItemMeta();
+					patterns = meta.getPatterns();
+				}
+
+	            for (Pattern pattern : patterns) {
+	            	PatternTypeWrapper type = PatternTypeWrapper.fromPatternType(pattern.getPattern());
+	            	prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getBannerPatternName(type, pattern.getColor()), language)));
+	            }
+			}
+		}
+		
+		if (xMaterial.isOneOf(Arrays.asList("CONTAINS:Banner"))) {
+			List<Pattern> patterns = Collections.emptyList();
+			if (!(item.getItemMeta() instanceof BannerMeta)) {
+				if (item.getItemMeta() instanceof BlockStateMeta) {
+					BlockStateMeta bmeta = (BlockStateMeta) item.getItemMeta();
+		            Banner bannerBlockMeta = (Banner) bmeta.getBlockState();
+		            patterns = bannerBlockMeta.getPatterns();
+				}
+			} else {
+				BannerMeta meta = (BannerMeta) item.getItemMeta();
+				patterns = meta.getPatterns();
+			}	
+
+            for (Pattern pattern : patterns) {
+            	PatternTypeWrapper type = PatternTypeWrapper.fromPatternType(pattern.getPattern());
+            	prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getBannerPatternName(type, pattern.getColor()), language)));
+            }
+		}
 		
 		if (xMaterial.equals(XMaterial.TROPICAL_FISH_BUCKET)) {
 			List<String> translations = TranslationKeyUtils.getTropicalFishBucketName(item);
