@@ -6,21 +6,18 @@ public class ImageFrame {
 	
 	private final int delay;
 	private final BufferedImage image;
-	private final int width;
-	private final int height;
+	private final String disposal;
 
-	public ImageFrame(BufferedImage image, int delay, int width, int height) {
+	public ImageFrame(BufferedImage image, int delay, String disposal) {
 		this.image = image;
 		this.delay = delay;
-		this.width = width;
-		this.height = height;
+		this.disposal = disposal;
 	}
 
 	public ImageFrame(BufferedImage image) {
 		this.image = image;
 		this.delay = 0;
-		this.width = image.getWidth();
-		this.height = image.getHeight();
+		this.disposal = "";
 	}
 
 	public BufferedImage getImage() {
@@ -30,12 +27,9 @@ public class ImageFrame {
 	public int getDelay() {
 		return delay;
 	}
-
-	public int getWidth() {
-		return width;
+	
+	public String getDisposal() {
+		return disposal;
 	}
-
-	public int getHeight() {
-		return height;
-	}
+	
 }
