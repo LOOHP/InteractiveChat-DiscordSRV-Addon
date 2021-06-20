@@ -73,7 +73,11 @@ public class TranslationKeyUtils {
 		} else {
 			try {
 				nmsMobEffectListClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MobEffectList", "net.minecraft.world.effect.MobEffectList");
-				getEffectFromIdMethod = nmsMobEffectListClass.getMethod("fromId", int.class);
+				try {
+					getEffectFromIdMethod = nmsMobEffectListClass.getMethod("fromId", int.class);
+				} catch (Exception e) {
+					getEffectFromIdMethod = nmsMobEffectListClass.getMethod("byId", int.class);
+				}
 				getEffectKeyMethod = nmsMobEffectListClass.getMethod("c");
 				
 				craftTropicalFishClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.entity.CraftTropicalFish");

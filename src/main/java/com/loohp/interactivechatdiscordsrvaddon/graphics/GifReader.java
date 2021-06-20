@@ -20,6 +20,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.loohp.interactivechatdiscordsrvaddon.utils.ThrowingSupplier;
 import com.madgag.gif.fmsware.GifDecoder;
 
 public class GifReader {
@@ -32,10 +33,24 @@ public class GifReader {
 		  buffer.write(data, 0, nRead);
 		}
 		byte[] input = buffer.toByteArray();
+		
+		ImageFrame[] result;
+		result = returnOrNull(() -> readGifMethod0(new ByteArrayInputStream(input)));
+		if (result != null) {
+			return result;
+		}
+		result = returnOrNull(() -> readGifMethod1(new ByteArrayInputStream(input)));
+		if (result != null) {
+			return result;
+		}
+		return returnOrNull(() -> readGifFallbackMethod(new ByteArrayInputStream(input)));
+	}
+	
+	private static ImageFrame[] returnOrNull(ThrowingSupplier<ImageFrame[]> supplier) {
 		try {
-			return readGifMethod0(new ByteArrayInputStream(input));
-		} catch (Exception e) {
-			return readGifMethod1(new ByteArrayInputStream(input));
+			return supplier.get();
+		} catch (Throwable e) {
+			return null;
 		}
 	}
 	
@@ -143,6 +158,10 @@ public class GifReader {
 	    reader.dispose();
 
 	    return frames.toArray(new ImageFrame[frames.size()]);
+	}
+	
+	private static ImageFrame[] readGifFallbackMethod(InputStream input) throws IOException {
+		return new ImageFrame[] {new ImageFrame(ImageIO.read(input))};
 	}
 
 }
