@@ -6,10 +6,9 @@ import java.util.stream.Stream;
 
 import org.bukkit.entity.Player;
 
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.utils.ChatComponentType;
 import com.loohp.interactivechat.utils.NMSUtils;
-
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 
 public class DeathMessageUtils {
 	

@@ -46,6 +46,7 @@ import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NBTUtils;
 import com.loohp.interactivechat.utils.RarityUtils;
+import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.registies.DiscordDataRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.PatternTypeWrapper;
@@ -121,7 +122,7 @@ public class DiscordItemStackUtils {
 		if (item == null) {
 			item = new ItemStack(Material.AIR);
 		}
-		XMaterial xMaterial = XMaterial.matchXMaterial(item);
+		XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
 		String name;
 		if (item.hasItemMeta() && item.getItemMeta().hasDisplayName() && !item.getItemMeta().getDisplayName().equals("")) {
 			name = item.getItemMeta().getDisplayName();
@@ -405,7 +406,7 @@ public class DiscordItemStackUtils {
 		if (item == null) {
 			item = new ItemStack(Material.AIR);
 		}
-		XMaterial xMaterial = XMaterial.matchXMaterial(item);
+		XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
 		
 		Component itemDisplayNameComponent = null;
 		ChatColor rarityChatColor = RarityUtils.getRarityColor(item);

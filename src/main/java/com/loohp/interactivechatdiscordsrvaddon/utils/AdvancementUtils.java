@@ -9,12 +9,11 @@ import org.bukkit.advancement.Advancement;
 import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.inventory.ItemStack;
 
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.utils.ChatComponentType;
 import com.loohp.interactivechat.utils.NMSUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
-
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 
 public class AdvancementUtils {
 	

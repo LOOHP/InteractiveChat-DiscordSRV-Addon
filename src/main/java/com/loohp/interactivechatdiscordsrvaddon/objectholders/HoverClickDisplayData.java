@@ -4,9 +4,8 @@ import java.awt.Color;
 
 import org.bukkit.entity.Player;
 
-import com.loohp.interactivechat.objectholders.CustomPlaceholder.ClickEventAction;
-
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.objectholders.CustomPlaceholder.ClickEventAction;
 
 public class HoverClickDisplayData extends DiscordDisplayData {
 	

@@ -37,6 +37,11 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 
 import com.loohp.interactivechat.api.events.PrePacketComponentProcessEvent;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.TextReplacementConfig;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.ClickEvent;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.api.events.DiscordAttachmentConversionEvent;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
@@ -60,11 +65,6 @@ import github.scarsz.discordsrv.dependencies.jda.api.entities.Role;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.User;
 import github.scarsz.discordsrv.util.MessageUtil;
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.TextReplacementConfig;
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.ClickEvent;
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent;
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 public class InboundToGameEvents implements Listener {
 	

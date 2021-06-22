@@ -18,12 +18,11 @@ import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.MapView;
 
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.utils.ChatComponentType;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NMSUtils;
-
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 
 public class ItemMapWrapper {
 	

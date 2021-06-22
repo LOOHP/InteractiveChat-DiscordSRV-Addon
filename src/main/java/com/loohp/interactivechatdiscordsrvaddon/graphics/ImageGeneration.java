@@ -45,6 +45,7 @@ import com.loohp.interactivechat.utils.HashUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.SkinUtils;
+import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
@@ -384,7 +385,7 @@ public class ImageGeneration {
 		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 		
 		if (ItemStackUtils.isWearable(leggings)) {
-			XMaterial type = XMaterial.matchXMaterial(leggings);
+			XMaterial type = XMaterialUtils.matchXMaterial(leggings);
 			BufferedImage leggingsImage = null;
 			BufferedImage leggingsImage1 = null;
 			BufferedImage leggingsImage2 = null;
@@ -455,7 +456,7 @@ public class ImageGeneration {
 		}
 		
 		if (ItemStackUtils.isWearable(boots)) {
-			XMaterial type = XMaterial.matchXMaterial(boots);
+			XMaterial type = XMaterialUtils.matchXMaterial(boots);
 			BufferedImage bootsImage = null;
 			int scale = 1;
 			switch (type) {
@@ -521,7 +522,7 @@ public class ImageGeneration {
 		}
 		
 		if (ItemStackUtils.isWearable(chestplate)) {
-			XMaterial type = XMaterial.matchXMaterial(chestplate);
+			XMaterial type = XMaterialUtils.matchXMaterial(chestplate);
 			BufferedImage chestplateImage = null;
 			BufferedImage chestplateImage1 = null;
 			BufferedImage chestplateImage2 = null;
@@ -635,7 +636,7 @@ public class ImageGeneration {
 		}
 		
 		if (ItemStackUtils.isWearable(helmet)) {
-			XMaterial type = XMaterial.matchXMaterial(helmet);
+			XMaterial type = XMaterialUtils.matchXMaterial(helmet);
 			BufferedImage helmetImage = null;
 			int scale = 1;
 			boolean isArmor = true;
@@ -767,7 +768,7 @@ public class ImageGeneration {
 		
 		boolean requiresEnchantmentGlint = false;
 		int amount = item.getAmount();
-		XMaterial xMaterial = XMaterial.matchXMaterial(item);
+		XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
 		String key = xMaterial.name().toLowerCase();
 		if (xMaterial.equals(XMaterial.CROSSBOW)) {
 			key = "crossbow_standby";
@@ -892,7 +893,7 @@ public class ImageGeneration {
 			List<ItemStack> charged = meta.getChargedProjectiles();
 			if (charged != null && !charged.isEmpty()) {
 				ItemStack charge = charged.get(0);
-				XMaterial chargeType = XMaterial.matchXMaterial(charge);
+				XMaterial chargeType = XMaterialUtils.matchXMaterial(charge);
 				if (chargeType.equals(XMaterial.FIREWORK_ROCKET)) {
 					itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("crossbow_firework");
 				} else {
