@@ -27,10 +27,6 @@ public class MCFont {
 	
 	private static final Map<String, MCFont> FONTS = new LinkedHashMap<>();
 	private static final List<String> ORDER = new ArrayList<>();
-
-    static {
-    	reloadFonts();
-    }
     
     public synchronized static void reloadFonts() {
     	try {

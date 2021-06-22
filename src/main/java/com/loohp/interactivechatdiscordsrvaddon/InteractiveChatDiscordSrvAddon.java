@@ -644,6 +644,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 				}
 			}
 			
+			MCFont.reloadFonts();
+			
 			Bukkit.getScheduler().runTask(plugin, () -> {
 				InteractiveChatDiscordSrvAddon.plugin.blocks = blocks;
 				InteractiveChatDiscordSrvAddon.plugin.items = items;
