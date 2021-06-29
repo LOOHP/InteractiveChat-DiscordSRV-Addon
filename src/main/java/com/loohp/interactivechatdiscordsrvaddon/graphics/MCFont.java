@@ -13,10 +13,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.bukkit.Bukkit;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 
+import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
+import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
+import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 
 import net.md_5.bungee.api.ChatColor;

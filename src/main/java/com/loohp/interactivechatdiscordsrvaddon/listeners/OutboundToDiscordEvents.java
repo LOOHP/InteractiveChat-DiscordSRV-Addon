@@ -33,9 +33,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import com.loohp.interactivechat.ConfigManager;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.api.InteractiveChatAPI;
+import com.loohp.interactivechat.config.ConfigManager;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -48,9 +48,11 @@ import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
 import com.loohp.interactivechat.utils.CustomStringUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
+import com.loohp.interactivechat.utils.InventoryUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechat.utils.NBTUtils;
 import com.loohp.interactivechat.utils.PlaceholderParser;
+import com.loohp.interactivechat.utils.PlayerUtils;
 import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.api.events.DiscordImageEvent;
@@ -156,10 +158,8 @@ public class OutboundToDiscordEvents implements Listener {
 				String placeholder = InteractiveChat.itemPlaceholder;
 				int index = InteractiveChat.itemCaseSensitive ? message.indexOf(placeholder) : message.toLowerCase().indexOf(placeholder.toLowerCase());
 				if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\'))) {
-					ItemStack item = sender.getEquipment().getItemInHand();
-					if (item == null) {
-						item = new ItemStack(Material.AIR);
-					}
+					ItemStack item = PlayerUtils.getHeldItem(sender);
+					boolean isAir = item.getType().equals(Material.AIR);
 					XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
 					String itemStr;
 					if (item.hasItemMeta() && item.getItemMeta().hasDisplayName() && !item.getItemMeta().getDisplayName().equals("")) {
@@ -177,11 +177,11 @@ public class OutboundToDiscordEvents implements Listener {
 					itemStr = ComponentStringUtils.stripColorAndConvertMagic(itemStr);
 					
 					int amount = item.getAmount();
-					if (item == null || item.getType().equals(Material.AIR)) {
+					if (isAir) {
 						amount = 1;
 					}
 				
-					String replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemReplaceText).replace("{Amount}", String.valueOf(amount)).replace("{Item}", itemStr));
+					String replaceText = PlaceholderParser.parse(wrappedSender, (amount == 1 ? ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemSingularReplaceText) : ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemReplaceText).replace("{Amount}", String.valueOf(amount))).replace("{Item}", itemStr));
 					message = message.replaceAll((InteractiveChat.itemCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.itemPlaceholder), replaceText);
 					if (InteractiveChatDiscordSrvAddon.plugin.itemImage) {
 						int inventoryId = DATA_ID_PROVIDER.getNext();
@@ -195,7 +195,7 @@ public class OutboundToDiscordEvents implements Listener {
 							if (bsm instanceof InventoryHolder) {
 								Inventory container = ((InventoryHolder) bsm).getInventory();
 								if (!container.isEmpty()) {
-									inv = Bukkit.createInventory(null, container.getSize() + (container.getSize() % 9));
+									inv = Bukkit.createInventory(null, InventoryUtils.toMultipleOf9(container.getSize()));
 									for (int j = 0; j < container.getSize(); j++) {
 										if (container.getItem(j) != null) {
 											if (!container.getItem(j).getType().equals(Material.AIR)) {
@@ -274,7 +274,7 @@ public class OutboundToDiscordEvents implements Listener {
 						int inventoryId = DATA_ID_PROVIDER.getNext();
 						int position = InteractiveChat.enderCaseSensitive ? originalMessage.indexOf(InteractiveChat.enderPlaceholder) : originalMessage.toLowerCase().indexOf(InteractiveChat.enderPlaceholder.toLowerCase());
 						
-						Inventory inv = Bukkit.createInventory(null, 27);
+						Inventory inv = Bukkit.createInventory(null, InventoryUtils.toMultipleOf9(sender.getEnderChest().getSize()));
 						for (int j = 0; j < sender.getEnderChest().getSize(); j++) {
 							if (sender.getEnderChest().getItem(j) != null) {
 								if (!sender.getEnderChest().getItem(j).getType().equals(Material.AIR)) {

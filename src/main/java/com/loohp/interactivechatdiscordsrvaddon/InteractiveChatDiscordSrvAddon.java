@@ -23,6 +23,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechat.config.Config;
 import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
@@ -44,6 +45,9 @@ import github.scarsz.discordsrv.dependencies.jda.api.Permission;
 import net.md_5.bungee.api.ChatColor;
 
 public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
+	
+	public static final int BSTATS_PLUGIN_ID = 8863;
+	public static final String CONFIG_ID = "interactivechatdiscordsrvaddon_config";
 	
 	public static InteractiveChatDiscordSrvAddon plugin;
 	public static InteractiveChat interactivechat;
@@ -165,15 +169,15 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 				}
 			}
 		}
-
-		getConfig().options().header("For information on what each option does. Please refer to https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon/blob/master/src/main/resources/config.yml");
-		getConfig().options().copyDefaults(true);
-		saveConfig();
 		
+		if (!getDataFolder().exists()) {
+			getDataFolder().mkdirs();
+		}
+
+		Config.loadConfig(CONFIG_ID, new File(getDataFolder(), "config.yml"), getClass().getClassLoader().getResourceAsStream("config.yml"), getClass().getClassLoader().getResourceAsStream("config.yml"), true);
 		reloadConfig();
 		
-		int pluginId = 8863;
-		metrics = new Metrics(this, pluginId);
+		metrics = new Metrics(this, BSTATS_PLUGIN_ID);
 		Charts.setup(metrics);
 		
 		DiscordSRV.api.subscribe(new DiscordReadyEvents());
@@ -226,16 +230,17 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	
 	@Override
 	public void reloadConfig() {
-		super.reloadConfig();
+		Config config = Config.getConfig(CONFIG_ID);
+		config.reload();
 		
-		reloadConfigMessage = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("Messages.ReloadConfig"));
-		reloadTextureMessage = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("Messages.ReloadTexture"));
-		linkExpired = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("Messages.LinkExpired"));
+		reloadConfigMessage = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.ReloadConfig"));
+		reloadTextureMessage = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.ReloadTexture"));
+		linkExpired = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.LinkExpired"));
 		
-		debug = getConfig().getBoolean("Debug.PrintInfoToConsole");
+		debug = config.getConfiguration().getBoolean("Debug.PrintInfoToConsole");
 		
 		resourceOrder.clear();
-		List<String> order = getConfig().getStringList("Resources.Order");
+		List<String> order = config.getConfiguration().getStringList("Resources.Order");
 		ListIterator<String> itr = order.listIterator(order.size());
 		resourceOrder.add("assets");
 		while (itr.hasPrevious()) {
@@ -243,69 +248,69 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 			resourceOrder.add("resources/" + pack);
 		}
 		
-		itemImage = getConfig().getBoolean("InventoryImage.Item.Enabled");
-		invImage = getConfig().getBoolean("InventoryImage.Inventory.Enabled");
-		enderImage = getConfig().getBoolean("InventoryImage.EnderChest.Enabled");
+		itemImage = config.getConfiguration().getBoolean("InventoryImage.Item.Enabled");
+		invImage = config.getConfiguration().getBoolean("InventoryImage.Inventory.Enabled");
+		enderImage = config.getConfiguration().getBoolean("InventoryImage.EnderChest.Enabled");
 		
-		usePlayerInvView = getConfig().getBoolean("InventoryImage.Inventory.UsePlayerInventoryView");
+		usePlayerInvView = config.getConfiguration().getBoolean("InventoryImage.Inventory.UsePlayerInventoryView");
 		
-		itemUseTooltipImage = getConfig().getBoolean("InventoryImage.Item.UseTooltipImage");
-		itemUseTooltipImageOnBaseItem = getConfig().getBoolean("InventoryImage.Item.UseTooltipImageOnBaseItem");
-		itemAltAir = getConfig().getBoolean("InventoryImage.Item.AlternateAirTexture");
+		itemUseTooltipImage = config.getConfiguration().getBoolean("InventoryImage.Item.UseTooltipImage");
+		itemUseTooltipImageOnBaseItem = config.getConfiguration().getBoolean("InventoryImage.Item.UseTooltipImageOnBaseItem");
+		itemAltAir = config.getConfiguration().getBoolean("InventoryImage.Item.AlternateAirTexture");
 		
-		invShowLevel = getConfig().getBoolean("InventoryImage.Inventory.ShowExperienceLevel");
+		invShowLevel = config.getConfiguration().getBoolean("InventoryImage.Inventory.ShowExperienceLevel");
 		
-		hoverEnabled = getConfig().getBoolean("HoverEventDisplay.Enabled");
-		hoverImage = getConfig().getBoolean("HoverEventDisplay.ShowCursorImage");
+		hoverEnabled = config.getConfiguration().getBoolean("HoverEventDisplay.Enabled");
+		hoverImage = config.getConfiguration().getBoolean("HoverEventDisplay.ShowCursorImage");
 		hoverIngore.clear();
-		hoverIngore = getConfig().getIntegerList("HoverEventDisplay.IgnoredPlaceholderIndexes").stream().collect(Collectors.toSet());
+		hoverIngore = config.getConfiguration().getIntegerList("HoverEventDisplay.IgnoredPlaceholderIndexes").stream().collect(Collectors.toSet());
 		
-		hoverUseTooltipImage = getConfig().getBoolean("HoverEventDisplay.UseTooltipImage");
+		hoverUseTooltipImage = config.getConfiguration().getBoolean("HoverEventDisplay.UseTooltipImage");
 		
-		convertDiscordAttachments = getConfig().getBoolean("DiscordAttachments.Convert");
-		discordAttachmentsFormattingText = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordAttachments.Formatting.Text"));
-		discordAttachmentsFormattingHoverEnabled = getConfig().getBoolean("DiscordAttachments.Formatting.Hover.Enabled");
-		discordAttachmentsFormattingHoverText = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getStringList("DiscordAttachments.Formatting.Hover.HoverText").stream().collect(Collectors.joining("\n")));
-		discordAttachmentsUseMaps = getConfig().getBoolean("DiscordAttachments.ShowImageUsingMaps");
-		discordAttachmentTimeout = getConfig().getInt("DiscordAttachments.Timeout") * 20;
-		discordAttachmentsFormattingImageAppend = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordAttachments.Formatting.ImageOriginal"));
-		discordAttachmentsFormattingImageAppendHover = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getStringList("DiscordAttachments.Formatting.Hover.ImageOriginalHover").stream().collect(Collectors.joining("\n")));
+		convertDiscordAttachments = config.getConfiguration().getBoolean("DiscordAttachments.Convert");
+		discordAttachmentsFormattingText = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordAttachments.Formatting.Text"));
+		discordAttachmentsFormattingHoverEnabled = config.getConfiguration().getBoolean("DiscordAttachments.Formatting.Hover.Enabled");
+		discordAttachmentsFormattingHoverText = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getStringList("DiscordAttachments.Formatting.Hover.HoverText").stream().collect(Collectors.joining("\n")));
+		discordAttachmentsUseMaps = config.getConfiguration().getBoolean("DiscordAttachments.ShowImageUsingMaps");
+		discordAttachmentTimeout = config.getConfiguration().getInt("DiscordAttachments.Timeout") * 20;
+		discordAttachmentsFormattingImageAppend = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordAttachments.Formatting.ImageOriginal"));
+		discordAttachmentsFormattingImageAppendHover = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getStringList("DiscordAttachments.Formatting.Hover.ImageOriginalHover").stream().collect(Collectors.joining("\n")));
 		
-		imageWhitelistEnabled = getConfig().getBoolean("DiscordAttachments.RestrictImageUrl.Enabled");
-		whitelistedImageUrls = getConfig().getStringList("DiscordAttachments.RestrictImageUrl.Whitelist");
+		imageWhitelistEnabled = config.getConfiguration().getBoolean("DiscordAttachments.RestrictImageUrl.Enabled");
+		whitelistedImageUrls = config.getConfiguration().getStringList("DiscordAttachments.RestrictImageUrl.Whitelist");
 		
-		updaterEnabled = getConfig().getBoolean("Options.UpdaterEnabled");
+		updaterEnabled = config.getConfiguration().getBoolean("Options.UpdaterEnabled");
 		
-		cacheTimeout = getConfig().getInt("Settings.CacheTimeout") * 20;
+		cacheTimeout = config.getConfiguration().getInt("Settings.CacheTimeout") * 20;
 		
-		escapePlaceholdersFromDiscord = getConfig().getBoolean("Settings.EscapePlaceholdersSentFromDiscord");
-		escapeDiscordMarkdownInItems = getConfig().getBoolean("Settings.EscapeDiscordMarkdownFormattingInItems");
-		reducedAssetsDownloadInfo = getConfig().getBoolean("Settings.ReducedAssetsDownloadInfo");
+		escapePlaceholdersFromDiscord = config.getConfiguration().getBoolean("Settings.EscapePlaceholdersSentFromDiscord");
+		escapeDiscordMarkdownInItems = config.getConfiguration().getBoolean("Settings.EscapeDiscordMarkdownFormattingInItems");
+		reducedAssetsDownloadInfo = config.getConfiguration().getBoolean("Settings.ReducedAssetsDownloadInfo");
 		
-		itemDisplaySingle = getConfig().getString("InventoryImage.Item.EmbedDisplay.Single");
-		itemDisplayMultiple = getConfig().getString("InventoryImage.Item.EmbedDisplay.Multiple");		
-		invColor = ColorUtils.hex2Rgb(getConfig().getString("InventoryImage.Inventory.EmbedColor"));
-		enderColor = ColorUtils.hex2Rgb(getConfig().getString("InventoryImage.EnderChest.EmbedColor"));
+		itemDisplaySingle = config.getConfiguration().getString("InventoryImage.Item.EmbedDisplay.Single");
+		itemDisplayMultiple = config.getConfiguration().getString("InventoryImage.Item.EmbedDisplay.Multiple");		
+		invColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("InventoryImage.Inventory.EmbedColor"));
+		enderColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("InventoryImage.EnderChest.EmbedColor"));
 		
-		deathMessageItem = getConfig().getBoolean("DeathMessage.ShowItems");
+		deathMessageItem = config.getConfiguration().getBoolean("DeathMessage.ShowItems");
 		
-		advancementName = getConfig().getBoolean("Advancements.CorrectAdvancementName");
-		advancementItem = getConfig().getBoolean("Advancements.ChangeToItemIcon");
-		advancementDescription = getConfig().getBoolean("Advancements.ShowDescription");
+		advancementName = config.getConfiguration().getBoolean("Advancements.CorrectAdvancementName");
+		advancementItem = config.getConfiguration().getBoolean("Advancements.ChangeToItemIcon");
+		advancementDescription = config.getConfiguration().getBoolean("Advancements.ShowDescription");
 		
-		translateMentions = getConfig().getBoolean("DiscordMention.TranslateMentions");
-		mentionHighlight = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getString("DiscordMention.MentionHighlight"));
-		//mentionHover = ChatColorUtils.translateAlternateColorCodes('&', getConfig().getStringList("DiscordMention.MentionHoverText").stream().collect(Collectors.joining("\n")));
+		translateMentions = config.getConfiguration().getBoolean("DiscordMention.TranslateMentions");
+		mentionHighlight = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordMention.MentionHighlight"));
+		//mentionHover = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getStringList("DiscordMention.MentionHoverText").stream().collect(Collectors.joining("\n")));
 		
-		playbackBarEnabled = getConfig().getBoolean("DiscordAttachments.PlaybackBar.Enabled");
-		playbackBarFilledColor = ColorUtils.hex2Rgb(getConfig().getString("DiscordAttachments.PlaybackBar.FilledColor"));
-		playbackBarEmptyColor = ColorUtils.hex2Rgb(getConfig().getString("DiscordAttachments.PlaybackBar.EmptyColor"));
+		playbackBarEnabled = config.getConfiguration().getBoolean("DiscordAttachments.PlaybackBar.Enabled");
+		playbackBarFilledColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordAttachments.PlaybackBar.FilledColor"));
+		playbackBarEmptyColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordAttachments.PlaybackBar.EmptyColor"));
 		
-		language = getConfig().getString("Resources.Language");
+		language = config.getConfiguration().getString("Resources.Language");
 		
 		/*
-		discordMainCommands = getConfig().getStringList("DiscordCommands.MainCommand").stream().collect(Collectors.toSet());
-		discordListSubCommand = getConfig().getString("DiscordCommands.SubCommands.ListPlaceholders");
+		discordMainCommands = config.getConfiguration().getStringList("DiscordCommands.MainCommand").stream().collect(Collectors.toSet());
+		discordListSubCommand = config.getConfiguration().getString("DiscordCommands.SubCommands.ListPlaceholders");
 		*/
 		LanguageUtils.loadTranslations(language);
 		
