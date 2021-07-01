@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import javax.imageio.ImageIO;
@@ -77,7 +76,7 @@ public class ImageGeneration {
 	private static final String INVENTORY_KEY = "Inventory";
 	private static final String PLAYER_INVENTORY_KEY = "PlayerInventory";
 	
-	private static final DecimalFormat VARIATION_FORMAT = new DecimalFormat("00");
+	private static final DecimalFormat PHASE_FORMAT = new DecimalFormat("00");
 	private static final Random RANDOM = new Random();
 	
 	public static BufferedImage getMissingImage(int width, int length) {
@@ -907,7 +906,7 @@ public class ImageGeneration {
 				time += 24000;
 			}
 			int phase = (int) ((double) time / 24000 * 64);
-			itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("clock_" + VARIATION_FORMAT.format(phase));
+			itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("clock_" + PHASE_FORMAT.format(phase));
 		} else if (xMaterial.equals(XMaterial.COMPASS)) {
 			int phase;
 			if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
@@ -955,20 +954,7 @@ public class ImageGeneration {
 					phase = RANDOM.nextInt(32);
 				}
 			}
-			itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("compass_" + VARIATION_FORMAT.format(phase));
-		} else if (xMaterial.equals(XMaterial.LIGHT)) {
-			int level = 15;
-			Object blockStateObj = item.getItemMeta().serialize().get("BlockStateTag");
-			if (blockStateObj != null && blockStateObj instanceof Map) {
-				@SuppressWarnings("unchecked")
-				Object levelObj = ((Map<?, Object>) blockStateObj).get("level");
-				if (levelObj != null) {
-					try {
-						level = Integer.parseInt(levelObj.toString().replace("i", ""));
-					} catch (NumberFormatException e) {}
-				}
-			}
-			itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("light_" + VARIATION_FORMAT.format(Math.max(0, Math.min(level, 15))));
+			itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("compass_" + PHASE_FORMAT.format(phase));
 		}
 		
 		if (item.getItemMeta() instanceof PotionMeta) {
