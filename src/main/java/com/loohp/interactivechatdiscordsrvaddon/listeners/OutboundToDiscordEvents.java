@@ -620,9 +620,11 @@ public class OutboundToDiscordEvents implements Listener {
 		}
 		String text = message.getContentRaw();
 		Set<Integer> matches = new LinkedHashSet<>();
-		for (int key : RESEND_WITH_ATTACHMENT.keySet()) {
-			if (text.contains("<ICA=" + key + ">")) {
-				matches.add(key);
+		synchronized (RESEND_WITH_ATTACHMENT) {
+			for (int key : RESEND_WITH_ATTACHMENT.keySet()) {
+				if (text.contains("<ICA=" + key + ">")) {
+					matches.add(key);
+				}
 			}
 		}
 		event.setCancelled(true);
@@ -671,10 +673,12 @@ public class OutboundToDiscordEvents implements Listener {
 			
 			Set<Integer> matches = new LinkedHashSet<>();
 			
-			for (int key : DATA.keySet()) {
-				if (text.contains("<ICD=" + key + ">")) {
-					text = text.replace("<ICD=" + key + ">", "");
-					matches.add(key);
+			synchronized (DATA) {
+				for (int key : DATA.keySet()) {
+					if (text.contains("<ICD=" + key + ">")) {
+						text = text.replace("<ICD=" + key + ">", "");
+						matches.add(key);
+					}
 				}
 			}
 			
@@ -739,19 +743,22 @@ public class OutboundToDiscordEvents implements Listener {
 			
 			Set<Integer> matches = new LinkedHashSet<>();
 			
-			for (int key : OutboundToDiscordEvents.DATA.keySet()) {
-				if (text.contains("<ICD=" + key + ">")) {
-					text = text.replace("<ICD=" + key + ">", "");
-					matches.add(key);
+			synchronized (DATA) {
+				for (int key : DATA.keySet()) {
+					if (text.contains("<ICD=" + key + ">")) {
+						text = text.replace("<ICD=" + key + ">", "");
+						matches.add(key);
+					}
 				}
 			}
+			
 			if (matches.isEmpty()) {
 				Debug.debug("onMessageReceived keys empty");
 				return;
 			}
 			
 			message.delete().queue();
-			Player player = OutboundToDiscordEvents.DATA.get(matches.iterator().next()).getPlayer();
+			Player player = DATA.get(matches.iterator().next()).getPlayer();
 
 			List<DiscordDisplayData> dataList = new ArrayList<>();
 			
