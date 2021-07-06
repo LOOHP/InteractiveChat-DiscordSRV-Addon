@@ -41,6 +41,7 @@ import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.libs.org.json.simple.parser.ParseException;
 import com.loohp.interactivechat.utils.ComponentStyling;
+import com.loohp.interactivechat.utils.CustomStringUtils;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.HashUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
@@ -317,7 +318,7 @@ public class ImageGeneration {
 							cape = (BufferedImage) cache.getObject();
 						}
 					} else {
-						String url = OPTIFINE_CAPE_URL.replaceAll("%s", player.getName());
+						String url = OPTIFINE_CAPE_URL.replaceAll("%s", CustomStringUtils.escapeReplaceAllMetaCharacters(player.getName()));
 						Cache<?> cache = Cache.getCache(player.getUniqueId().toString() + url + PLAYER_CAPE_KEY);
 						if (cache == null) {
 							try {
