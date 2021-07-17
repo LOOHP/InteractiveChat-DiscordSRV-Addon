@@ -66,7 +66,11 @@ public class TranslationKeyUtils {
 				getEffectKeyMethod = nmsMobEffectListClass.getMethod("a");
 				
 				nmsItemRecordClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemRecord", "net.minecraft.world.item.ItemRecord");
-				nmsItemRecordTranslationKeyField = nmsItemRecordClass.getDeclaredField("c");
+				try {
+					nmsItemRecordTranslationKeyField = nmsItemRecordClass.getDeclaredField("c");
+				} catch (NoSuchFieldException e) {
+					nmsItemRecordTranslationKeyField = nmsItemRecordClass.getDeclaredField("a");
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -244,7 +248,11 @@ public class TranslationKeyUtils {
 				Object nmsItemObject = nmsGetItemMethod.invoke(nmsItemStackObject);
 				Object nmsItemRecordObject = nmsItemRecordClass.cast(nmsItemObject);
 				nmsItemRecordTranslationKeyField.setAccessible(true);
-				return nmsItemRecordTranslationKeyField.get(nmsItemRecordObject).toString();
+				if (InteractiveChat.version.isOld()) {
+					return "item.record." + nmsItemRecordTranslationKeyField.get(nmsItemRecordObject).toString() + ".desc";
+				} else {
+					return nmsItemRecordTranslationKeyField.get(nmsItemRecordObject).toString();
+				}
 			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 				e.printStackTrace();
 				return "";
