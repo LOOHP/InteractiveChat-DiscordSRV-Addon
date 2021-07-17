@@ -45,6 +45,7 @@ import com.loohp.interactivechat.utils.CustomStringUtils;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.HashUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
+import com.loohp.interactivechat.utils.ItemNBTUtils;
 import com.loohp.interactivechat.utils.ItemStackUtils;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.SkinUtils;
@@ -766,7 +767,7 @@ public class ImageGeneration {
 	
 	private static BufferedImage getRawItemImage(ItemStack item, Player player) throws IOException {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
-		Debug.debug("ImageGeneration creating raw item stack image " + item);
+		Debug.debug("ImageGeneration creating raw item stack image " + (item == null ? "null" : ItemNBTUtils.getNMSItemStackJson(item)));
 		
 		boolean requiresEnchantmentGlint = false;
 		int amount = item.getAmount();
