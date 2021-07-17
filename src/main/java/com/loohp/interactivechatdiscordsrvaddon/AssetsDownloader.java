@@ -49,9 +49,13 @@ public class AssetsDownloader {
 			}
 		}
 		
-		InputStreamReader hashReader = new InputStreamReader(new FileInputStream(hashes), StandardCharsets.UTF_8);
-		JSONObject json = (JSONObject) new JSONParser().parse(hashReader);
-		hashReader.close();
+		JSONObject json;
+		try (InputStreamReader hashReader = new InputStreamReader(new FileInputStream(hashes), StandardCharsets.UTF_8)) {
+			json = (JSONObject) new JSONParser().parse(hashReader);
+		} catch (Throwable e) {
+			new RuntimeException("Invalid hashes.json! It will be reset.", e).printStackTrace();
+			json = new JSONObject();
+		}
 		String oldHash = json.containsKey("assets") ? json.get("assets").toString() : "EMPTY";
 		
 		File assetsFolder = new File(rootFolder, "assets");
