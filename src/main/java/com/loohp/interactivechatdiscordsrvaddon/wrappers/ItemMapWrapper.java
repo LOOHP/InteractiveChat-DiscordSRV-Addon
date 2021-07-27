@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.MapView;
@@ -29,6 +30,12 @@ public class ItemMapWrapper {
 	private static Method bukkitBukkitClassGetMapShortMethod;
 	private static Method bukkitMapViewClassGetIdMethod;
 	
+	private static Class<?> craftMapViewClass;
+	private static Class<?> craftPlayerClass;
+	private static Method craftMapViewClassRenderMethod;
+	private static Class<?> craftRenderDataClass;
+	private static Field craftRenderDataClassBufferField;
+	
 	private static Class<?> nmsItemWorldMapClass;
 	private static Constructor<?> nmsItemWorldMapClassContructor;
 	private static Class<?> nmsWorldClass;
@@ -39,7 +46,6 @@ public class ItemMapWrapper {
 	private static Class<?> craftWorldClass;
 	private static Method craftWorldClassGetHandleMethod;
 	private static Class<?> nmsWorldMapClass;
-	private static Field nmsWorldMapClassColorsField;
 	private static Field nmsWorldMapClassDecorationsField;
 	private static Class<?> nmsMapIconClass;
 	private static Method nmsMapIconClassGetTypeMethod;
@@ -82,6 +88,12 @@ public class ItemMapWrapper {
 				nmsItemWorldMapInstance = null;
 			}
 			
+			craftMapViewClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.map.CraftMapView");
+			craftPlayerClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.entity.CraftPlayer");
+			craftMapViewClassRenderMethod = craftMapViewClass.getMethod("render", craftPlayerClass);
+			craftRenderDataClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.map.RenderData");
+			craftRenderDataClassBufferField = craftRenderDataClass.getField("buffer");
+			
 			nmsWorldClass = NMSUtils.getNMSClass("net.minecraft.server.%s.World", "net.minecraft.world.level.World");
 			nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemStack", "net.minecraft.world.item.ItemStack");
 			nmsItemWorldMapClassGetSavedMapMethod = nmsItemWorldMapClass.getMethod("getSavedMap", nmsItemStackClass, nmsWorldClass);
@@ -90,11 +102,6 @@ public class ItemMapWrapper {
 			craftWorldClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.CraftWorld");
 			craftWorldClassGetHandleMethod = craftWorldClass.getMethod("getHandle");
 			nmsWorldMapClass = NMSUtils.getNMSClass("net.minecraft.server.%s.WorldMap", "net.minecraft.world.level.saveddata.maps.WorldMap");
-			try {
-				nmsWorldMapClassColorsField = nmsWorldMapClass.getField("g");
-			} catch (NoSuchFieldException e) {
-				nmsWorldMapClassColorsField = nmsWorldMapClass.getField("colors");
-			}
 			nmsMapIconClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MapIcon", "net.minecraft.world.level.saveddata.maps.MapIcon");
 			try {
 				nmsWorldMapClassDecorationsField = nmsWorldMapClass.getField("q");
@@ -124,14 +131,14 @@ public class ItemMapWrapper {
 	private byte[] colors;
 	private List<MapIcon> icons;
 	
-	public ItemMapWrapper(ItemStack itemStack) throws Exception {
+	public ItemMapWrapper(ItemStack itemStack, Player player) throws Exception {
 		this.itemStack = itemStack;
 		this.icons = new ArrayList<>();
-		update();
+		update(player);
 	}
 	
 	@SuppressWarnings("deprecation")
-	public void update() throws Exception {
+	public void update(Player player) throws Exception {
 		if (!FilledMapUtils.isFilledMap(itemStack)) {
 			throw new IllegalArgumentException("Provided item is not a filled map");
 		}
@@ -147,7 +154,7 @@ public class ItemMapWrapper {
 		Object nmsItemStackObject = craftItemStackClassAsNMSCopyMethod.invoke(null, itemStack);
 		Object nmsWorldServerObject = craftWorldClassGetHandleMethod.invoke(craftWorldClass.cast(mapView.getWorld()));
 		Object worldMapObject = nmsItemWorldMapClassGetSavedMapMethod.invoke(nmsItemWorldMapInstance, nmsItemStackObject, nmsWorldServerObject);
-		colors = (byte[]) nmsWorldMapClassColorsField.get(worldMapObject);
+		colors = (byte[]) craftRenderDataClassBufferField.get(craftMapViewClassRenderMethod.invoke(craftMapViewClass.cast(mapView), craftPlayerClass.cast(player)));
 		Collection<?> nmsMapIconsCollection = ((Map<?, ?>) nmsWorldMapClassDecorationsField.get(worldMapObject)).values();
 		icons.clear();
 		for (Object nmsMapIconObject : nmsMapIconsCollection) {

@@ -33,15 +33,14 @@ import org.bukkit.potion.PotionEffect;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.TranslatableComponent;
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import com.loohp.interactivechat.libs.org.apache.commons.text.WordUtils;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
-import com.loohp.interactivechat.utils.JsonUtils;
+import com.loohp.interactivechat.utils.ItemStackUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NBTUtils;
@@ -123,19 +122,7 @@ public class DiscordItemStackUtils {
 			item = new ItemStack(Material.AIR);
 		}
 		XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
-		String name;
-		if (item.hasItemMeta() && item.getItemMeta().hasDisplayName() && !item.getItemMeta().getDisplayName().equals("")) {
-			name = item.getItemMeta().getDisplayName();
-		} else {
-			String itemKey = LanguageUtils.getTranslationKey(item);
-			name = LanguageUtils.getTranslation(itemKey, InteractiveChatDiscordSrvAddon.plugin.language);
-			if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
-				String owner = NBTUtils.getString(item, "SkullOwner", "Name");
-				if (owner != null) {
-					name = name.replaceFirst("%s", owner);
-				}
-			}
-		}
+		String name = PlainTextComponentSerializer.plainText().serialize(ItemStackUtils.getDisplayName(item));
 		if (item.getAmount() == 1 || item == null || item.getType().equals(Material.AIR)) {
 			name = InteractiveChatDiscordSrvAddon.plugin.itemDisplaySingle.replace("{Item}", ComponentStringUtils.stripColorAndConvertMagic(name)).replace("{Amount}", String.valueOf(item.getAmount()));
 		} else {
@@ -408,35 +395,7 @@ public class DiscordItemStackUtils {
 		}
 		XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
 		
-		Component itemDisplayNameComponent = null;
-		ChatColor rarityChatColor = RarityUtils.getRarityColor(item);
-	    NamedTextColor rarityColor = ColorUtils.toNamedTextColor(rarityChatColor);
-	    
-	    String rawDisplayName = item.hasItemMeta() && item.getItemMeta() != null ? NBTUtils.getString(item, "display", "Name") : null;
-	    if (rawDisplayName != null && JsonUtils.isValid(rawDisplayName)) {
-	    	try {
-	    		itemDisplayNameComponent = InteractiveChatComponentSerializer.gson().deserialize(rawDisplayName);
-	    		itemDisplayNameComponent = itemDisplayNameComponent.colorIfAbsent(rarityColor);
-	    	} catch (Throwable e) {
-	    		itemDisplayNameComponent = null;
-	    	}
-	    }
-	    
-	    if (itemDisplayNameComponent == null) {
-		    if (item.hasItemMeta() && item.getItemMeta().hasDisplayName() && !item.getItemMeta().getDisplayName().equals("")) {
-		    	itemDisplayNameComponent = LegacyComponentSerializer.legacySection().deserialize(rarityChatColor + item.getItemMeta().getDisplayName());
-		    } else {
-		    	itemDisplayNameComponent = Component.translatable(LanguageUtils.getTranslationKey(item));
-		    	itemDisplayNameComponent = itemDisplayNameComponent.color(rarityColor);
-		    	if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
-					String owner = NBTUtils.getString(item, "SkullOwner", "Name");
-					if (owner != null) {
-						itemDisplayNameComponent = ((TranslatableComponent) itemDisplayNameComponent).args(Component.text(owner));
-					}
-				}
-		    }
-	    }
-	    
+		Component itemDisplayNameComponent = ItemStackUtils.getDisplayName(item);
 	    prints.add(itemDisplayNameComponent);
 		
 		boolean hasMeta = item.hasItemMeta();

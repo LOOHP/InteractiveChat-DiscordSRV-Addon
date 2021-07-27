@@ -1083,7 +1083,7 @@ public class ImageGeneration {
 		return itemImage;
 	}
 	
-	public static BufferedImage getMapImage(ItemStack item) throws Exception {
+	public static BufferedImage getMapImage(ItemStack item, Player player) throws Exception {
 		if (!FilledMapUtils.isFilledMap(item)) {
 			throw new IllegalArgumentException("Provided item is not a filled map");
 		}
@@ -1101,7 +1101,7 @@ public class ImageGeneration {
 		int borderOffset = (int) (image.getWidth() / 23.3333333333333333333);
 		int ratio = (image.getWidth() - borderOffset * 2) / 128;
 		
-		ItemMapWrapper data = new ItemMapWrapper(item);
+		ItemMapWrapper data = new ItemMapWrapper(item, player);
 		for (int widthOffset = 0; widthOffset < 128; widthOffset++) {
 			for (int heightOffset = 0; heightOffset < 128; heightOffset++) {
 				byte index = data.getColors()[widthOffset + heightOffset * 128];

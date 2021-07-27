@@ -878,7 +878,7 @@ public class OutboundToDiscordEvents implements Listener {
 									content.getImageUrls().remove("attachment://ToolTip.png");
 									content.getAttachments().remove("ToolTip.png");
 								}
-								BufferedImage map = ImageGeneration.getMapImage(item);
+								BufferedImage map = ImageGeneration.getMapImage(item, iData.getPlayer());
 								ByteArrayOutputStream mapOs = new ByteArrayOutputStream();
 								ImageIO.write(map, "png", mapOs);
 								content.addAttachment("Map.png", mapOs.toByteArray());
