@@ -29,6 +29,7 @@ import org.bukkit.inventory.meta.CrossbowMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.map.MapCursor;
 import org.bukkit.map.MapPalette;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
@@ -37,6 +38,7 @@ import org.bukkit.util.Vector;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.libs.org.json.simple.parser.ParseException;
@@ -56,7 +58,6 @@ import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.utils.PotionUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.VectorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper;
-import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper.MapIcon;
 
 @SuppressWarnings("deprecation")
 public class ImageGeneration {
@@ -1122,12 +1123,12 @@ public class ImageGeneration {
 		BufferedImage asset = InteractiveChatDiscordSrvAddon.plugin.getGUITexture("map_icons");
 		int iconWidth = asset.getWidth() / MAP_ICON_PER_ROLE;
 		
-		for (MapIcon icon : data.getMapIcons()) {
+		for (MapCursor icon : data.getMapCursors()) {
 			int x = icon.getX() + 128;
 			int y = icon.getY() + 128;
-			double rotation = (360.0 / 16.0 * (double) icon.getRotation()) + 180.0;
+			double rotation = (360.0 / 16.0 * (double) icon.getDirection()) + 180.0;
 			int type = icon.getType().ordinal();
-			Component component = icon.getName();
+			Component component = LegacyComponentSerializer.legacySection().deserializeOrNull(icon.getCaption());
 			
 			//String name
 			BufferedImage iconImage = ImageUtils.copyAndGetSubImage(asset, type % MAP_ICON_PER_ROLE * iconWidth, type / MAP_ICON_PER_ROLE * iconWidth, iconWidth, iconWidth);

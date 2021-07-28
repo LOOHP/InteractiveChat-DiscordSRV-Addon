@@ -205,7 +205,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 			getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon has been Enabled!");
 		}
 		
-		reloadTextures();
+		reloadTextures(false);
 		/*
 		ProtocolLibrary.getProtocolManager().addPacketListener(new PacketAdapter(this, ListenerPriority.HIGHEST, PacketType.Play.Server.ENTITY_EQUIPMENT) {
 			public void onPacketSending(PacketEvent event) {
@@ -417,10 +417,10 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		return extras.get(str);
 	}
 	
-	public void reloadTextures() {
+	public void reloadTextures(boolean redownload) {
 		Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
 			try {
-				AssetsDownloader.loadAssets(getDataFolder());
+				AssetsDownloader.loadAssets(getDataFolder(), redownload);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

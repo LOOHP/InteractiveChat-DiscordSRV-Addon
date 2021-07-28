@@ -34,7 +34,7 @@ public class AssetsDownloader {
 	private static final AtomicBoolean LOCK = new AtomicBoolean(false);
 	
 	@SuppressWarnings("unchecked")
-	public static void loadAssets(File rootFolder) throws Exception {
+	public static void loadAssets(File rootFolder, boolean force) throws Exception {
 		if (LOCK.get()) {
 			return;
 		}
@@ -65,8 +65,12 @@ public class AssetsDownloader {
 		
 		String hash = data.get("hash").toString();
 		
-		if (!hash.equals(oldHash)) {
-			Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Hash changed! Re-downloading assets! Please wait... (" + oldHash + " -> " + hash + ")");
+		if (force || !hash.equals(oldHash)) {
+			if (force && hash.equals(oldHash)) {
+				Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Forcibly re-downloading assets! Please wait... (" + oldHash + " -> " + hash + ")");
+			} else {
+				Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Hash changed! Re-downloading assets! Please wait... (" + oldHash + " -> " + hash + ")");
+			}
 			
 			JSONObject client = (JSONObject) data.get("client-entries");
 			

@@ -1,5 +1,6 @@
 package com.loohp.interactivechatdiscordsrvaddon;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -51,8 +52,12 @@ public class Commands implements CommandExecutor, TabCompleter {
 		}
 		
 		if (args[0].equalsIgnoreCase("reloadtexture")) {
+			boolean redownload = false;
+			if (Arrays.asList(args).contains("--redownload")) {
+				redownload = true;
+			}
 			if (sender.hasPermission("interactivechatdiscordsrv.reloadtexture")) {
-				InteractiveChatDiscordSrvAddon.plugin.reloadTextures();
+				InteractiveChatDiscordSrvAddon.plugin.reloadTextures(redownload);
 				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.reloadTextureMessage);
 			} else {
 				sender.sendMessage(InteractiveChat.noPermissionMessage);
@@ -133,6 +138,15 @@ public class Commands implements CommandExecutor, TabCompleter {
 			if (sender.hasPermission("interactivechatdiscordsrv.update")) {
 				if ("update".startsWith(args[0].toLowerCase())) {
 					tab.add("update");
+				}
+			}
+			return tab;
+		case 2:
+			if (sender.hasPermission("interactivechatdiscordsrv.reloadtexture")) {
+				if ("reloadtexture".equals(args[0].toLowerCase())) {
+					if ("--redownload".startsWith(args[1].toLowerCase())) {
+						tab.add("--redownload");
+					}
 				}
 			}
 			return tab;
