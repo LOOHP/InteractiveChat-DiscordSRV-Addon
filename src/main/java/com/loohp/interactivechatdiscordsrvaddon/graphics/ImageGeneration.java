@@ -373,12 +373,10 @@ public class ImageGeneration {
 						g.dispose();
 					}
 				} catch (Throwable e1) {
-					e1.printStackTrace();
 					image = InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("default");
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
 			cape = null;
 			image = InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("default");
 		}
