@@ -47,7 +47,7 @@ HoverEventDisplay:
   IgnoredPlaceholderIndexes: []
 
 DiscordAttachments:
-  #Whether or not to convert discord attachments from diguesting urls into clickable text in chat
+  #Whether or not to convert discord attachments from digusting urls into clickable text in chat
   Convert: true
   Formatting: 
     Text: "&e[&b{FileName}&e]"
