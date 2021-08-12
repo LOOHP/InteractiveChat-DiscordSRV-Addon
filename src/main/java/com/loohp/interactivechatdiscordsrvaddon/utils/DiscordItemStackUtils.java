@@ -122,7 +122,7 @@ public class DiscordItemStackUtils {
 			item = new ItemStack(Material.AIR);
 		}
 		XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
-		String name = PlainTextComponentSerializer.plainText().serialize(ItemStackUtils.getDisplayName(item));
+		String name = PlainTextComponentSerializer.plainText().serialize(LegacyComponentSerializer.legacySection().deserialize(InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(ItemStackUtils.getDisplayName(item), language)));
 		if (item.getAmount() == 1 || item == null || item.getType().equals(Material.AIR)) {
 			name = InteractiveChatDiscordSrvAddon.plugin.itemDisplaySingle.replace("{Item}", ComponentStringUtils.stripColorAndConvertMagic(name)).replace("{Amount}", String.valueOf(item.getAmount()));
 		} else {
