@@ -297,7 +297,7 @@ public class OutboundToDiscordEvents implements Listener {
 		Debug.debug("onGameToDiscord processing custom placeholders");
 		for (ICPlaceholder placeholder : InteractiveChatAPI.getICPlaceholderList()) {
 			if (!placeholder.isBuildIn()) {
-				CustomPlaceholder customP = placeholder.getCustomPlaceholder().get();
+				CustomPlaceholder customP = (CustomPlaceholder) placeholder;
 				if (!InteractiveChat.useCustomPlaceholderPermissions || (InteractiveChat.useCustomPlaceholderPermissions && sender.hasPermission(customP.getPermission()))) {
 					boolean onCooldown = InteractiveChatAPI.isPlaceholderOnCooldown(sender.getUniqueId(), customP);
 					int index = placeholder.isCaseSensitive() ? message.indexOf(placeholder.getKeyword()) : message.toLowerCase().indexOf(placeholder.getKeyword().toLowerCase());
@@ -470,7 +470,7 @@ public class OutboundToDiscordEvents implements Listener {
 		Player player = event.getPlayer();
 		DiscordMessageContent content = new DiscordMessageContent(ChatColorUtils.stripColor(meta.getDisplayName()), "attachment://Item.png", color);
 		try {
-			BufferedImage image = ImageGeneration.getItemStackImage(item, player, InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
+			BufferedImage image = ImageGeneration.getItemStackImage(item, new ICPlayer(player), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
 			ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
 			ImageIO.write(image, "png", itemOs);
 			
@@ -572,7 +572,7 @@ public class OutboundToDiscordEvents implements Listener {
 			}
 			try {
 				int id = DATA_ID_PROVIDER.getNext();
-				BufferedImage icon = ImageGeneration.getItemStackImage(item, event.getPlayer(), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
+				BufferedImage icon = ImageGeneration.getItemStackImage(item, new ICPlayer(event.getPlayer()), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				ImageIO.write(icon, "png", baos);
 				content += "<ICA=" + id + ">";
@@ -833,7 +833,7 @@ public class OutboundToDiscordEvents implements Listener {
 						color = new Color(0xFFFFFE);
 					}
 					try {
-						BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer(), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
+						BufferedImage image = ImageGeneration.getItemStackImage(item, new ICPlayer(data.getPlayer()), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
 						ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
 						ImageIO.write(image, "png", itemOs);
 						
@@ -863,7 +863,7 @@ public class OutboundToDiscordEvents implements Listener {
 								content.getImageUrls().remove("attachment://ToolTip.png");
 								content.getAttachments().remove("ToolTip.png");
 							}
-							BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get(), data.getPlayer());
+							BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get(), new ICPlayer(data.getPlayer()));
 							ByteArrayOutputStream contentOs = new ByteArrayOutputStream();
 							ImageIO.write(container, "png", contentOs);
 							content.addAttachment("Container.png", contentOs.toByteArray());
@@ -891,12 +891,12 @@ public class OutboundToDiscordEvents implements Listener {
 						BufferedImage image;
 						if (iData.isPlayerInventory()) {
 							if (InteractiveChatDiscordSrvAddon.plugin.usePlayerInvView) {
-								image = ImageGeneration.getPlayerInventoryImage(inv, iData.getPlayer());
+								image = ImageGeneration.getPlayerInventoryImage(inv, new ICPlayer(iData.getPlayer()));
 							} else {
-								image = ImageGeneration.getInventoryImage(inv, data.getPlayer());
+								image = ImageGeneration.getInventoryImage(inv, new ICPlayer(data.getPlayer()));
 							}
 						} else {
-							image = ImageGeneration.getInventoryImage(inv, data.getPlayer());
+							image = ImageGeneration.getInventoryImage(inv, new ICPlayer(data.getPlayer()));
 						}
 						ByteArrayOutputStream os = new ByteArrayOutputStream();
 						Color color;

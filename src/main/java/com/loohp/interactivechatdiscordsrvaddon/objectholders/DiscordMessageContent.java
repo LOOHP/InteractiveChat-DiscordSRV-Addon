@@ -167,6 +167,7 @@ public class DiscordMessageContent {
 		attachments.clear();
 	}
 	
+	@SuppressWarnings("deprecation")
 	public RestAction<List<Message>> toJDAMessageRestAction(TextChannel channel) {
 		Map<MessageAction, Set<String>> actions = new LinkedHashMap<>();
 		Set<String> rootAttachments = new HashSet<>();

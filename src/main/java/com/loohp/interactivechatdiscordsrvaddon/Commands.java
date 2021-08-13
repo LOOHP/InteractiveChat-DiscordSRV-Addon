@@ -17,6 +17,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.ClickEvent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import com.loohp.interactivechat.utils.ChatColorUtils;
+import com.loohp.interactivechatdiscordsrvaddon.api.events.InteractiveChatDiscordSRVConfigReloadEvent;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents.DiscordAttachmentData;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
@@ -44,6 +45,7 @@ public class Commands implements CommandExecutor, TabCompleter {
 		if (args[0].equalsIgnoreCase("reloadconfig")) {
 			if (sender.hasPermission("interactivechatdiscordsrv.reloadconfig")) {
 				InteractiveChatDiscordSrvAddon.plugin.reloadConfig();
+				Bukkit.getPluginManager().callEvent(new InteractiveChatDiscordSRVConfigReloadEvent());
 				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.reloadConfigMessage);
 			} else {
 				sender.sendMessage(InteractiveChat.noPermissionMessage);

@@ -101,6 +101,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public String reloadConfigMessage;
 	public String reloadTextureMessage;
 	public String linkExpired;
+	public String accountNotLinked;
+	public String unableToRetrieveData;
+	public String invalidDiscordChannel;
 	
 	public boolean convertDiscordAttachments = true;
 	public String discordAttachmentsFormattingText;
@@ -137,6 +140,19 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	
 	public String language = "en_us";
 	
+	public boolean shareInvCommandEnabled = true;
+	public boolean shareInvCommandIsMainServer = true;
+	public String shareInvCommandInGameMessageText = "";
+	public String shareInvCommandInGameMessageHover = "";
+	public String shareInvCommandTitle = "";
+	public String shareInvCommandSkullName = "";
+	
+	public boolean shareEnderCommandEnabled = true;
+	public boolean shareEnderCommandIsMainServer = true;
+	public String shareEnderCommandInGameMessageText = "";
+	public String shareEnderCommandInGameMessageHover = "";
+	public String shareEnderCommandTitle = "";
+	
 	private List<String> resourceOrder = new ArrayList<>();
 	
 	private Map<String, BufferedImage> blocks = new HashMap<>();
@@ -148,11 +164,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	private Map<String, BufferedImage> puppet = new HashMap<>();
 	private Map<String, BufferedImage> armor = new HashMap<>();
 	protected Map<String, byte[]> extras = new HashMap<>();
-	
-	/*
-	public Set<String> discordMainCommands = new HashSet<>();
-	public String discordListSubCommand = "list";
-	*/
 	
 	@Override
 	public void onEnable() {
@@ -236,6 +247,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		reloadConfigMessage = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.ReloadConfig"));
 		reloadTextureMessage = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.ReloadTexture"));
 		linkExpired = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.LinkExpired"));
+		accountNotLinked = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.AccountNotLinked"));
+		unableToRetrieveData = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.UnableToRetrieveData"));
+		invalidDiscordChannel = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.InvalidDiscordChannel"));
 		
 		debug = config.getConfiguration().getBoolean("Debug.PrintInfoToConsole");
 		
@@ -300,18 +314,26 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		
 		translateMentions = config.getConfiguration().getBoolean("DiscordMention.TranslateMentions");
 		mentionHighlight = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordMention.MentionHighlight"));
-		//mentionHover = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getStringList("DiscordMention.MentionHoverText").stream().collect(Collectors.joining("\n")));
 		
 		playbackBarEnabled = config.getConfiguration().getBoolean("DiscordAttachments.PlaybackBar.Enabled");
 		playbackBarFilledColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordAttachments.PlaybackBar.FilledColor"));
 		playbackBarEmptyColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordAttachments.PlaybackBar.EmptyColor"));
 		
+		shareInvCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.ShareInventory.Enabled");
+		shareInvCommandIsMainServer = config.getConfiguration().getBoolean("DiscordCommands.ShareInventory.IsMainServer");
+		shareInvCommandInGameMessageText = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.ShareInventory.InGameMessage.Text"));
+		shareInvCommandInGameMessageHover = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getStringList("DiscordCommands.ShareInventory.InGameMessage.Hover").stream().collect(Collectors.joining("\n")));
+		shareInvCommandTitle = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.ShareInventory.InventoryTitle"));
+		shareInvCommandSkullName = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.ShareInventory.SkullDisplayName"));
+		
+		shareEnderCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.ShareEnderChest.Enabled");
+		shareEnderCommandIsMainServer = config.getConfiguration().getBoolean("DiscordCommands.ShareEnderChest.IsMainServer");
+		shareEnderCommandInGameMessageText = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.ShareEnderChest.InGameMessage.Text"));
+		shareEnderCommandInGameMessageHover = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getStringList("DiscordCommands.ShareEnderChest.InGameMessage.Hover").stream().collect(Collectors.joining("\n")));
+		shareEnderCommandTitle = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.ShareEnderChest.InventoryTitle"));
+		
 		language = config.getConfiguration().getString("Resources.Language");
 		
-		/*
-		discordMainCommands = config.getConfiguration().getStringList("DiscordCommands.MainCommand").stream().collect(Collectors.toSet());
-		discordListSubCommand = config.getConfiguration().getString("DiscordCommands.SubCommands.ListPlaceholders");
-		*/
 		LanguageUtils.loadTranslations(language);
 		
 		discordsrv.reloadRegexes();
@@ -662,6 +684,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 				InteractiveChatDiscordSrvAddon.plugin.armor = armor;
 				
 				MCFont.reloadFonts();
+				
+				Cache.clearAllCache();
 				
 				int total = blocks.size() + items.size() + font.size() + misc.size() + gui.size() + banner.size() + puppet.size() + armor.size();
 				Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] Loaded " + total + " textures!");

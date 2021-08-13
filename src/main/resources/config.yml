@@ -80,6 +80,32 @@ DiscordAttachments:
     FilledColor: "#FF0000"
     EmptyColor: "#938B86"
 
+DiscordCommands:
+  ShareInventory:
+    #Enable the /inv command on discord
+    Enabled: true
+    #If you do NOT use a shared discord channel for multiple servers, this should ALWAYS be true
+    #If you do, set this option on ONE of the servers connected to the discord channel to true, 
+    #With all others servers to false.
+    IsMainServer: true
+    InGameMessage: 
+      Text: "&6{Player} shared their Inventory: &f[&b{Player}'s Inventory&f]"
+      Hover:
+        - "&bClick to view!"
+    InventoryTitle: "{Player}'s Inventory"
+    SkullDisplayName: "&e{Player}"
+  ShareEnderChest:
+    #Enable the /ender command on discord
+    Enabled: true
+    #If you do NOT use a shared discord channel for multiple servers, this should ALWAYS be true
+    #If you do, set this option on ONE of the servers connected to the discord channel to true, 
+    #With all others servers to false.
+    IsMainServer: true
+    InGameMessage: 
+      Text: "&6{Player} shared their Ender Chest: &f[&d{Player}'s Ender Chest&f]"
+      Hover:
+        - "&bClick to view!"
+    InventoryTitle: "{Player}'s Ender Chest"
 
 DiscordMention:
   #Link mentions through discordsrv linked accounts
@@ -112,6 +138,9 @@ Messages:
   ReloadConfig: "&aICDiscordSRVAddon config has been reloaded!"
   ReloadTexture: "&aICDiscordSRVAddon reloading textures--- (See console for progress)"
   LinkExpired: "&cThis link has been expired! To view this link, please head over to the linked discord channel!"
+  AccountNotLinked: "&cYou must have you Discord account linked to your Minecraft account to use this!"
+  UnableToRetrieveData: "&cUnable to retrieve data."
+  InvalidDiscordChannel: "&cYou cannot do that in this channel."
 
 Settings:
   CacheTimeout: 300

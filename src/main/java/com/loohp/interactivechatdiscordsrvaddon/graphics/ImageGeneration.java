@@ -17,6 +17,7 @@ import java.util.Random;
 
 import javax.imageio.ImageIO;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World.Environment;
@@ -39,12 +40,16 @@ import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.libs.org.json.simple.parser.ParseException;
+import com.loohp.interactivechat.objectholders.ICPlayer;
+import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 import com.loohp.interactivechat.utils.ComponentStyling;
 import com.loohp.interactivechat.utils.CustomStringUtils;
 import com.loohp.interactivechat.utils.FilledMapUtils;
+import com.loohp.interactivechat.utils.HTTPRequestUtils;
 import com.loohp.interactivechat.utils.HashUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.ItemNBTUtils;
@@ -67,6 +72,7 @@ public class ImageGeneration {
 	private static final String PLAYER_RENDER_URL = "https://mc-heads.net/player/%s/64";
 	private static final String SKULL_RENDER_URL = "https://mc-heads.net/head/%s/96";
 	private static final String HEAD_2D_RENDER_URL = "https://mc-heads.net/avatar/%s/32";
+	private static final String PLAYER_INFO_URL = "https://sessionserver.mojang.com/session/minecraft/profile/%s";
 	
 	private static final int MAP_ICON_PER_ROLE = 16;
 	private static final int SPACING = 36;
@@ -96,11 +102,11 @@ public class ImageGeneration {
 		return image;
 	}
 	
-	public static BufferedImage getItemStackImage(ItemStack item, Player player) throws IOException {
+	public static BufferedImage getItemStackImage(ItemStack item, OfflineICPlayer player) throws IOException {
 		return getItemStackImage(item, player, false);
 	}
 	
-	public static BufferedImage getItemStackImage(ItemStack item, Player player, boolean alternateAir) throws IOException {
+	public static BufferedImage getItemStackImage(ItemStack item, OfflineICPlayer player, boolean alternateAir) throws IOException {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		Debug.debug("ImageGeneration creating item stack image " + item);
 		
@@ -128,7 +134,7 @@ public class ImageGeneration {
 		return background;
 	}
 	
-	public static BufferedImage getInventoryImage(Inventory inventory, Player player) throws Exception {
+	public static BufferedImage getInventoryImage(Inventory inventory, OfflineICPlayer player) throws Exception {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();		
 		Debug.debug("ImageGeneration creating inventory image of " + player.getName());
@@ -168,7 +174,7 @@ public class ImageGeneration {
 		return target;
 	}
 	
-	public static BufferedImage getPlayerInventoryImage(Inventory inventory, Player player) throws Exception {
+	public static BufferedImage getPlayerInventoryImage(Inventory inventory, OfflineICPlayer player) throws Exception {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();
 		Debug.debug("ImageGeneration creating player inventory image of " + player.getName());
@@ -297,14 +303,19 @@ public class ImageGeneration {
 		return target;
 	}
 	
-	private static BufferedImage getFullBodyImage(Player player, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots) {
+	private static BufferedImage getFullBodyImage(OfflineICPlayer player, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots) {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		Debug.debug("ImageGeneration creating puppet image of " + player.getName());
 		
 		BufferedImage image;
 		BufferedImage cape;
 		try {
-			JSONObject json = (JSONObject) new JSONParser().parse(SkinUtils.getSkinJsonFromProfile(player));
+			JSONObject json;
+			if (player instanceof ICPlayer && ((ICPlayer) player).isLocal()) {
+				json = (JSONObject) new JSONParser().parse(SkinUtils.getSkinJsonFromProfile(((ICPlayer) player).getLocalPlayer()));
+			} else {
+				json = (JSONObject) new JSONParser().parse(new String(Base64.getDecoder().decode(((JSONObject) ((JSONArray) HTTPRequestUtils.getJSONResponse(PLAYER_INFO_URL.replace("%s", player.getUniqueId().toString())).get("properties")).get(0)).get("value").toString())));
+			}
 			if (json == null) {
 				cape = null;
 				image = InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("default");
@@ -764,7 +775,7 @@ public class ImageGeneration {
 		return image;
 	}
 	
-	private static BufferedImage getRawItemImage(ItemStack item, Player player) throws IOException {
+	private static BufferedImage getRawItemImage(ItemStack item, OfflineICPlayer player) throws IOException {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		Debug.debug("ImageGeneration creating raw item stack image " + (item == null ? "null" : ItemNBTUtils.getNMSItemStackJson(item)));
 		
@@ -903,7 +914,7 @@ public class ImageGeneration {
 				}
 			}
 		} else if (xMaterial.equals(XMaterial.CLOCK)) {
-			long time = (player.getPlayerTime() % 24000) - 6000;
+			long time = ((player instanceof ICPlayer && ((ICPlayer) player).isLocal() ? ((ICPlayer) player).getLocalPlayer().getPlayerTime() : Bukkit.getWorlds().get(0).getTime()) % 24000) - 6000;
 			if (time < 0) {
 				time += 24000;
 			}
@@ -911,50 +922,55 @@ public class ImageGeneration {
 			itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("clock_" + VARIATION_FORMAT.format(phase));
 		} else if (xMaterial.equals(XMaterial.COMPASS)) {
 			int phase;
-			if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
-				CompassMeta meta = (CompassMeta) item.getItemMeta();
-				Location target;
-				if (meta.hasLodestone()) {
-					Location lodestone = meta.getLodestone();
-					target = new Location(lodestone.getWorld(), lodestone.getBlockX() + 0.5, lodestone.getY(), lodestone.getZ() + 0.5, lodestone.getYaw(), lodestone.getPitch());
-					requiresEnchantmentGlint = true;
-				} else if (player.getWorld().getEnvironment().equals(Environment.NORMAL)) {
-					Location spawn = player.getWorld().getSpawnLocation();
-					target = new Location(spawn.getWorld(), spawn.getBlockX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, spawn.getYaw(), spawn.getPitch());
-				} else {
-					target = null;
-				}
-				if (target != null && target.getWorld().equals(player.getWorld())) {
-					Location playerLocation = player.getEyeLocation();
-					playerLocation.setPitch(0);
-					Vector looking = playerLocation.getDirection();
-					Vector pointing = target.toVector().subtract(playerLocation.toVector());
-					pointing.setY(0);
-					double degree = VectorUtils.getBearing(looking, pointing) - 180;
-					if (degree < 0) {
-						degree += 360;
+			ICPlayer icplayer;
+			if (player instanceof ICPlayer && (icplayer = (ICPlayer) player).isLocal()) {
+				if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
+					CompassMeta meta = (CompassMeta) item.getItemMeta();
+					Location target;
+					if (meta.hasLodestone()) {
+						Location lodestone = meta.getLodestone();
+						target = new Location(lodestone.getWorld(), lodestone.getBlockX() + 0.5, lodestone.getY(), lodestone.getZ() + 0.5, lodestone.getYaw(), lodestone.getPitch());
+						requiresEnchantmentGlint = true;
+					} else if (icplayer.getLocalPlayer().getWorld().getEnvironment().equals(Environment.NORMAL)) {
+						Location spawn = icplayer.getLocalPlayer().getWorld().getSpawnLocation();
+						target = new Location(spawn.getWorld(), spawn.getBlockX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, spawn.getYaw(), spawn.getPitch());
+					} else {
+						target = null;
 					}
-					phase = (int) (degree / 360 * 32);
+					if (target != null && target.getWorld().equals(icplayer.getLocalPlayer().getWorld())) {
+						Location playerLocation = icplayer.getLocalPlayer().getEyeLocation();
+						playerLocation.setPitch(0);
+						Vector looking = playerLocation.getDirection();
+						Vector pointing = target.toVector().subtract(playerLocation.toVector());
+						pointing.setY(0);
+						double degree = VectorUtils.getBearing(looking, pointing) - 180;
+						if (degree < 0) {
+							degree += 360;
+						}
+						phase = (int) (degree / 360 * 32);
+					} else {
+						phase = RANDOM.nextInt(32);
+					}
 				} else {
-					phase = RANDOM.nextInt(32);
+					if (icplayer.getLocalPlayer().getWorld().getEnvironment().equals(Environment.NORMAL)) {
+						Location spawn = icplayer.getLocalPlayer().getWorld().getSpawnLocation();
+						Location target = new Location(spawn.getWorld(), spawn.getBlockX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, spawn.getYaw(), spawn.getPitch());
+						Location playerLocation = icplayer.getLocalPlayer().getEyeLocation();
+						playerLocation.setPitch(0);
+						Vector looking = playerLocation.getDirection();
+						Vector pointing = target.toVector().subtract(playerLocation.toVector());
+						pointing.setY(0);
+						double degree = VectorUtils.getBearing(looking, pointing) - 180;
+						if (degree < 0) {
+							degree += 360;
+						}
+						phase = (int) (degree / 360 * 32);
+					} else {
+						phase = RANDOM.nextInt(32);
+					}
 				}
 			} else {
-				if (player.getWorld().getEnvironment().equals(Environment.NORMAL)) {
-					Location spawn = player.getWorld().getSpawnLocation();
-					Location target = new Location(spawn.getWorld(), spawn.getBlockX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, spawn.getYaw(), spawn.getPitch());
-					Location playerLocation = player.getEyeLocation();
-					playerLocation.setPitch(0);
-					Vector looking = playerLocation.getDirection();
-					Vector pointing = target.toVector().subtract(playerLocation.toVector());
-					pointing.setY(0);
-					double degree = VectorUtils.getBearing(looking, pointing) - 180;
-					if (degree < 0) {
-						degree += 360;
-					}
-					phase = (int) (degree / 360 * 32);
-				} else {
-					phase = RANDOM.nextInt(32);
-				}
+				phase = 0;
 			}
 			itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("compass_" + VARIATION_FORMAT.format(phase));
 		} else if (xMaterial.equals(XMaterial.LIGHT)) {

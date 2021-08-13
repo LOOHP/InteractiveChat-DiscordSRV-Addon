@@ -42,6 +42,9 @@ public class DiscordReadyEvents {
 		
 		JDA jda = discordsrv.getJda();
 		jda.addEventListener(new OutboundToDiscordEvents.JDAEvents());
+		DiscordCommands discordCommands = new DiscordCommands(discordsrv);
+		jda.addEventListener(discordCommands);
+		Bukkit.getPluginManager().registerEvents(discordCommands, InteractiveChatDiscordSrvAddon.plugin);
 		
 		for (String channelId : discordsrv.getChannels().values()) {
 			GuildChannel channel = jda.getGuildChannelById(channelId);
