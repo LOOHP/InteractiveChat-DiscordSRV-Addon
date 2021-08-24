@@ -671,8 +671,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 				}
 			}
 			
-			MCFont.reloadFonts();
-			
 			Bukkit.getScheduler().runTask(plugin, () -> {
 				InteractiveChatDiscordSrvAddon.plugin.blocks = blocks;
 				InteractiveChatDiscordSrvAddon.plugin.items = items;
@@ -683,7 +681,11 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 				InteractiveChatDiscordSrvAddon.plugin.puppet = puppet;
 				InteractiveChatDiscordSrvAddon.plugin.armor = armor;
 				
-				MCFont.reloadFonts();
+				if (!MCFont.reloadFonts()) {
+					Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] As Fonts failed to load, features that requires it will be disabled.");
+					itemUseTooltipImage = false;
+					hoverUseTooltipImage = false;
+				}
 				
 				Cache.clearAllCache();
 				

@@ -89,11 +89,13 @@ public class InboundToGameEvents implements Listener {
 			discordRegexesField.setAccessible(true);
 			@SuppressWarnings("unchecked")
 			Map<Pattern, String> discordRegexes = (Map<Pattern, String>) discordRegexesField.get(srv);
-			Iterator<Pattern> itr = discordRegexes.keySet().iterator();
-			while (itr.hasNext()) {
-				Pattern pattern = itr.next();
-				if (pattern.pattern().equals("@+(everyone|here)")) {
-					itr.remove();
+			if (discordRegexes != null) {
+				Iterator<Pattern> itr = discordRegexes.keySet().iterator();
+				while (itr.hasNext()) {
+					Pattern pattern = itr.next();
+					if (pattern.pattern().equals("@+(everyone|here)")) {
+						itr.remove();
+					}
 				}
 			}
 		} catch (Exception e) {

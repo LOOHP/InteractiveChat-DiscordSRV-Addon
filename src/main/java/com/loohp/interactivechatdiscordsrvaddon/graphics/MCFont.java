@@ -28,22 +28,21 @@ public class MCFont {
 	private static final Map<String, MCFont> FONTS = new LinkedHashMap<>();
 	private static final List<String> ORDER = new ArrayList<>();
     
-    public synchronized static void reloadFonts() {
+    public synchronized static boolean reloadFonts() {
     	try {
     		GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
     	} catch (Throwable e) {
-    		throw new RuntimeException("No fonts provided by the JVM or the Operating System!\nCheck the Q&A section in https://www.spigotmc.org/resources/83917/ for more information", e);
+    		new RuntimeException("No fonts provided by the JVM or the Operating System!\nCheck the Q&A section in https://www.spigotmc.org/resources/83917/ for more information", e).printStackTrace();
+    		return working = false;
     	}
         try {
         	File fontFolder = new File(InteractiveChatDiscordSrvAddon.plugin.getDataFolder() + "/assets/font");
         	if (!fontFolder.exists()) {
-        		working = false;
-        		return;
+        		return working = false;
         	}
         	File fontDataFile = new File(fontFolder, "font.json");
         	if (!fontDataFile.exists()) {
-        		working = false;
-        		return;
+        		return working = false;
         	}
         	InputStreamReader reader = new InputStreamReader(new FileInputStream(fontDataFile), StandardCharsets.UTF_8);
         	JSONObject json = (JSONObject) new JSONParser().parse(reader);
@@ -84,11 +83,11 @@ public class MCFont {
             	ORDER.addAll(order);
         	});
 
-            working = true;
+            return working = true;
         } catch (Throwable e) {
         	Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load fonts");
             e.printStackTrace();
-            working = false;
+            return working = false;
         }
     }
 
