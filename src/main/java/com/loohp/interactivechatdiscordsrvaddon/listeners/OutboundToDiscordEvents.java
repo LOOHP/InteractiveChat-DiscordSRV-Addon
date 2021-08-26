@@ -42,6 +42,7 @@ import com.loohp.interactivechat.objectholders.CustomPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.MentionPair;
+import com.loohp.interactivechat.objectholders.PlaceholderCooldownManager;
 import com.loohp.interactivechat.objectholders.WebData;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
@@ -120,7 +121,7 @@ public class OutboundToDiscordEvents implements Listener {
 		github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component component = event.getMinecraftMessage();
 		if (InteractiveChatDiscordSrvAddon.plugin.escapePlaceholdersFromDiscord) {
 			Debug.debug("onDiscordToGame escaping placeholders");
-			for (ICPlaceholder placeholder : InteractiveChat.placeholderList) {
+			for (ICPlaceholder placeholder : InteractiveChat.placeholderList.values()) {
 				component = component.replaceText(github.scarsz.discordsrv.dependencies.kyori.adventure.text.TextReplacementConfig.builder().matchLiteral(placeholder.getKeyword()).replacement("\\" + placeholder.getKeyword()).build());
 			}
 			event.setMinecraftMessage(component);
@@ -132,16 +133,14 @@ public class OutboundToDiscordEvents implements Listener {
 	public void onGameToDiscord(GameChatMessagePreProcessEvent event) {
 		Debug.debug("Triggering onGameToDiscord");
 		InteractiveChatDiscordSrvAddon.plugin.messagesCounter.incrementAndGet();
+		boolean reserializer = DiscordSRV.config().getBoolean("Experiment_MCDiscordReserializer_ToDiscord");
+		
 		Player sender = event.getPlayer();
 		ICPlayer wrappedSender = new ICPlayer(sender);
 		String message = event.getMessage();
 		String originalMessage = message;
-		long now = System.currentTimeMillis();
-		long uniCooldown = InteractiveChatAPI.getPlayerUniversalCooldown(sender) - now;
-		
-		if (!(uniCooldown < 0 || uniCooldown + 100 > InteractiveChat.universalCooldown)) {
-			return;
-		}
+		PlaceholderCooldownManager cooldownManager = InteractiveChatDiscordSrvAddon.plugin.placeholderCooldownManager;
+		long now = cooldownManager.checkMessage(sender.getUniqueId(), message).getTimeNow();
 
 		GameMessagePreProcessEvent gameMessagePreProcessEvent = new GameMessagePreProcessEvent(sender, message, false);
 		Bukkit.getPluginManager().callEvent(gameMessagePreProcessEvent);
@@ -152,7 +151,7 @@ public class OutboundToDiscordEvents implements Listener {
 
 		if (InteractiveChat.useItem && sender.hasPermission("interactivechat.module.item")) {
 			Debug.debug("onGameToDiscord processing item display");
-			if (!InteractiveChatAPI.isPlaceholderOnCooldown(sender.getUniqueId(), InteractiveChat.placeholderList.stream().filter(each -> each.getKeyword().equals(InteractiveChat.itemPlaceholder)).findFirst().get())) {
+			if (!cooldownManager.isPlaceholderOnCooldownAt(sender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.itemPlaceholder)).findFirst().get(), now)) {
 				String placeholder = InteractiveChat.itemPlaceholder;
 				int index = InteractiveChat.itemCaseSensitive ? message.indexOf(placeholder) : message.toLowerCase().indexOf(placeholder.toLowerCase());
 				if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\'))) {
@@ -180,6 +179,9 @@ public class OutboundToDiscordEvents implements Listener {
 					}
 				
 					String replaceText = PlaceholderParser.parse(wrappedSender, (amount == 1 ? ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemSingularReplaceText) : ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemReplaceText).replace("{Amount}", String.valueOf(amount))).replace("{Item}", itemStr));
+					if (reserializer) {
+						replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
+					}
 					message = message.replaceAll((InteractiveChat.itemCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.itemPlaceholder), CustomStringUtils.escapeReplaceAllMetaCharacters(replaceText));
 					if (InteractiveChatDiscordSrvAddon.plugin.itemImage) {
 						int inventoryId = DATA_ID_PROVIDER.getNext();
@@ -224,11 +226,14 @@ public class OutboundToDiscordEvents implements Listener {
 		
 		if (InteractiveChat.useInventory && sender.hasPermission("interactivechat.module.inventory")) {
 			Debug.debug("onGameToDiscord processing inventory display");
-			if (!InteractiveChatAPI.isPlaceholderOnCooldown(sender.getUniqueId(), InteractiveChat.placeholderList.stream().filter(each -> each.getKeyword().equals(InteractiveChat.invPlaceholder)).findFirst().get())) {
+			if (!cooldownManager.isPlaceholderOnCooldownAt(sender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.invPlaceholder)).findFirst().get(), now)) {
 				String placeholder = InteractiveChat.invPlaceholder;
 				int index = InteractiveChat.invCaseSensitive ? message.indexOf(placeholder) : message.toLowerCase().indexOf(placeholder.toLowerCase());
 				if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\'))) {
 					String replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.invReplaceText));
+					if (reserializer) {
+						replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
+					}
 					message = message.replaceAll((InteractiveChat.invCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.invPlaceholder), CustomStringUtils.escapeReplaceAllMetaCharacters(replaceText));
 					if (InteractiveChatDiscordSrvAddon.plugin.invImage) {
 						int inventoryId = DATA_ID_PROVIDER.getNext();
@@ -260,11 +265,14 @@ public class OutboundToDiscordEvents implements Listener {
 		
 		if (InteractiveChat.useEnder && sender.hasPermission("interactivechat.module.enderchest")) {
 			Debug.debug("onGameToDiscord processing enderchest display");
-			if (!InteractiveChatAPI.isPlaceholderOnCooldown(sender.getUniqueId(), InteractiveChat.placeholderList.stream().filter(each -> each.getKeyword().equals(InteractiveChat.enderPlaceholder)).findFirst().get())) {
+			if (!cooldownManager.isPlaceholderOnCooldownAt(sender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.enderPlaceholder)).findFirst().get(), now)) {
 				String placeholder = InteractiveChat.enderPlaceholder;
 				int index = InteractiveChat.enderCaseSensitive ? message.indexOf(placeholder) : message.toLowerCase().indexOf(placeholder.toLowerCase());
 				if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\'))) {
 					String replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.enderReplaceText));
+					if (reserializer) {
+						replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
+					}
 					message = message.replaceAll((InteractiveChat.enderCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.enderPlaceholder), CustomStringUtils.escapeReplaceAllMetaCharacters(replaceText));
 					if (InteractiveChatDiscordSrvAddon.plugin.enderImage) {
 						int inventoryId = DATA_ID_PROVIDER.getNext();
@@ -299,12 +307,15 @@ public class OutboundToDiscordEvents implements Listener {
 			if (!placeholder.isBuildIn()) {
 				CustomPlaceholder customP = (CustomPlaceholder) placeholder;
 				if (!InteractiveChat.useCustomPlaceholderPermissions || (InteractiveChat.useCustomPlaceholderPermissions && sender.hasPermission(customP.getPermission()))) {
-					boolean onCooldown = InteractiveChatAPI.isPlaceholderOnCooldown(sender.getUniqueId(), customP);
+					boolean onCooldown = cooldownManager.isPlaceholderOnCooldownAt(sender.getUniqueId(), customP, now);
 					int index = placeholder.isCaseSensitive() ? message.indexOf(placeholder.getKeyword()) : message.toLowerCase().indexOf(placeholder.getKeyword().toLowerCase());
 					if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\')) && !onCooldown) {
 						String replaceText = customP.getKeyword();
 						if (customP.getReplace().isEnabled()) {
 							replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
+							if (reserializer) {
+								replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
+							}
 							message = message.replaceAll((customP.isCaseSensitive() ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(customP.getKeyword()), CustomStringUtils.escapeReplaceAllMetaCharacters(replaceText));
 						}
 						if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && !InteractiveChatDiscordSrvAddon.plugin.hoverIngore.contains(customP.getPosition())) {
@@ -340,12 +351,15 @@ public class OutboundToDiscordEvents implements Listener {
 		
 		if (InteractiveChat.t && WebData.getInstance() != null) {
 			for (CustomPlaceholder customP : WebData.getInstance().getSpecialPlaceholders()) {
-				boolean onCooldown = InteractiveChatAPI.isPlaceholderOnCooldown(sender.getUniqueId(), customP);
+				boolean onCooldown = cooldownManager.isPlaceholderOnCooldownAt(sender.getUniqueId(), customP, now);
 				int index = customP.isCaseSensitive() ? message.indexOf(customP.getKeyword()) : message.toLowerCase().indexOf(customP.getKeyword().toLowerCase());
 				if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\')) && !onCooldown) {
 					String replaceText = customP.getKeyword();
 					if (customP.getReplace().isEnabled()) {
 						replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
+						if (reserializer) {
+							replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
+						}
 						message = message.replaceAll((customP.isCaseSensitive() ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(customP.getKeyword()), CustomStringUtils.escapeReplaceAllMetaCharacters(replaceText));
 					}
 					if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && !InteractiveChatDiscordSrvAddon.plugin.hoverIngore.contains(customP.getPosition())) {

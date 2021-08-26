@@ -84,11 +84,11 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 	
 	public void reload() {
 		discordsrv.getMainGuild().retrieveCommands().complete().stream().map(each -> each.delete()).reduce(RestAction::and).ifPresent(action -> action.complete());
-		Optional<ICPlaceholder> optInvPlaceholder = InteractiveChat.placeholderList.stream().filter(each -> each.getKeyword().equals(InteractiveChat.invPlaceholder)).findFirst();
+		Optional<ICPlaceholder> optInvPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.invPlaceholder)).findFirst();
 		if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandEnabled && optInvPlaceholder.isPresent()) {
 			discordsrv.getMainGuild().upsertCommand(INVENTORY_LABEL, ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())).queue();	
 		}
-		Optional<ICPlaceholder> optEnderPlaceholder = InteractiveChat.placeholderList.stream().filter(each -> each.getKeyword().equals(InteractiveChat.enderPlaceholder)).findFirst();
+		Optional<ICPlaceholder> optEnderPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.enderPlaceholder)).findFirst();
 		if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandEnabled && optEnderPlaceholder.isPresent()) {
 			discordsrv.getMainGuild().upsertCommand(ENDERCHEST_LABEL, ChatColorUtils.stripColor(optEnderPlaceholder.get().getDescription())).queue();
 		}

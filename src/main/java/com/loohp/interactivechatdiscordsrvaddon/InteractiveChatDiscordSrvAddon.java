@@ -24,6 +24,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.config.Config;
+import com.loohp.interactivechat.objectholders.PlaceholderCooldownManager;
 import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
@@ -152,6 +153,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public String shareEnderCommandInGameMessageText = "";
 	public String shareEnderCommandInGameMessageHover = "";
 	public String shareEnderCommandTitle = "";
+	
+	public PlaceholderCooldownManager placeholderCooldownManager = new PlaceholderCooldownManager();
 	
 	private List<String> resourceOrder = new ArrayList<>();
 	
