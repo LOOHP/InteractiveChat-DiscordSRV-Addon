@@ -294,7 +294,7 @@ public class ImageGeneration {
 		//puppet
 		EntityEquipment equipment = player.getEquipment();
 		BufferedImage puppet = getFullBodyImage(player, equipment.getHelmet(), equipment.getChestplate(), equipment.getLeggings(), equipment.getBoots());
-		g.drawImage(puppet, 65, 20, null);
+		g.drawImage(puppet, 65, -10, null);
 		
 		g.dispose();
 		
@@ -392,7 +392,7 @@ public class ImageGeneration {
 			image = InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("default");
 		}
 		
-		image = ImageUtils.expandCenterAligned(ImageUtils.multiply(image, 0.7), 6, 4, 6, 6);
+		image = ImageUtils.expandCenterAligned(ImageUtils.multiply(image, 0.7), 36, 4, 6, 6);
 		
 		Graphics2D g = image.createGraphics();
 		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
@@ -464,8 +464,8 @@ public class ImageGeneration {
 				leggingsImage2 = ImageUtils.additionNonTransparent(leggingsImage2, tintImage, ENCHANTMENT_GLINT_FACTOR);
 			}
 			
-			g.drawImage(leggingsImage1, 20, 68, 36, 24, null);
-			g.drawImage(leggingsImage2, 20, 84, 36, 30, null);
+			g.drawImage(leggingsImage1, 20, 98, 36, 24, null);
+			g.drawImage(leggingsImage2, 20, 114, 36, 30, null);
 		}
 		
 		if (ItemStackUtils.isWearable(boots)) {
@@ -531,7 +531,7 @@ public class ImageGeneration {
 				bootsImage = ImageUtils.additionNonTransparent(bootsImage, tintImage, ENCHANTMENT_GLINT_FACTOR);
 			}
 
-			g.drawImage(bootsImage, 18, 114, 40, 32, null);
+			g.drawImage(bootsImage, 18, 144, 40, 32, null);
 		}
 		
 		if (ItemStackUtils.isWearable(chestplate)) {
@@ -616,7 +616,7 @@ public class ImageGeneration {
 					chestplateImage = ImageUtils.additionNonTransparent(chestplateImage, tintImage, ENCHANTMENT_GLINT_FACTOR);
 				}
 				
-				ImageUtils.drawTransparent(image, chestplateImage, -10, 28);
+				ImageUtils.drawTransparent(image, chestplateImage, -10, 58);
 			default:
 				break;
 			}
@@ -642,9 +642,9 @@ public class ImageGeneration {
 					chestplateImage3 = ImageUtils.additionNonTransparent(chestplateImage3, tintImage, ENCHANTMENT_GLINT_FACTOR);
 				}
 				
-				g.drawImage(chestplateImage1, 18, 34, 40, 56, null);
-				g.drawImage(chestplateImage2, 2, 34, 24, 56, null);
-				g.drawImage(chestplateImage3, 50, 34, 24, 56, null);
+				g.drawImage(chestplateImage1, 18, 64, 40, 56, null);
+				g.drawImage(chestplateImage2, 2, 64, 24, 56, null);
+				g.drawImage(chestplateImage3, 50, 64, 24, 56, null);
 			}
 		}
 		
@@ -652,6 +652,9 @@ public class ImageGeneration {
 			XMaterial type = XMaterialUtils.matchXMaterial(helmet);
 			BufferedImage helmetImage = null;
 			int scale = 1;
+			int offsetX = 0;
+			int offsetY = 0;
+			boolean shouldResize = true;
 			boolean isArmor = true;
 			switch (type) {
 			case LEATHER_HELMET:
@@ -749,14 +752,26 @@ public class ImageGeneration {
 				isArmor = false;
 				helmetImage = ImageUtils.resizeImageAbs(helmetImage, 32, 32);
 				break;
+			case DRAGON_HEAD:
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("dragon_head_2d");
+				scale = 1;
+				isArmor = false;
+				helmetImage = ImageUtils.resizeImageAbs(helmetImage, 48, 60);
+				offsetX = -4;
+				offsetY = -21;
+				shouldResize = false;
+				break;
 			default:
+				isArmor = false;
 				break;
 			}
 			if (isArmor) {
 				helmetImage = ImageUtils.resizeImage(ImageUtils.copyAndGetSubImage(helmetImage, 8 * scale, 8 * scale, 8 * scale, 8 * scale), Math.pow(scale, -1) * 4);
 			}
 			
-			helmetImage = ImageUtils.multiply(ImageUtils.resizeImageStretch(helmetImage, 8), 0.7);
+			if (shouldResize) {
+				helmetImage = ImageUtils.multiply(ImageUtils.resizeImageStretch(helmetImage, 8), 0.7);
+			}
 			if (helmet.getEnchantments().size() > 0) {
 				BufferedImage tint_ori = InteractiveChatDiscordSrvAddon.plugin.getMiscTexture("enchanted_item_glint");
 				BufferedImage tintImage = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
@@ -767,7 +782,7 @@ public class ImageGeneration {
 				helmetImage = ImageUtils.additionNonTransparent(helmetImage, tintImage, ENCHANTMENT_GLINT_FACTOR);
 			}
 			
-			g.drawImage(helmetImage, 18, 2, 40, 40, null);
+			g.drawImage(helmetImage, 18 + offsetX, 32 + offsetY, shouldResize ? 40 : helmetImage.getWidth(), shouldResize ? 40 : helmetImage.getHeight(), null);
 		}
 		
 		g.dispose();
