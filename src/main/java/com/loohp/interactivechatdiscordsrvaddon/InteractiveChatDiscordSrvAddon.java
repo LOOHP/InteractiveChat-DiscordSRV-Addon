@@ -141,6 +141,18 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	
 	public String language = "en_us";
 	
+	public boolean playerlistCommandEnabled = true;
+	public String playerlistCommandDescription = "";
+	public boolean playerlistCommandIsMainServer = true;
+	public boolean playerlistCommandBungeecord = true;
+	public String playerlistCommandPlayerFormat = "";
+	public boolean playerlistCommandAvatar = true;
+	public boolean playerlistCommandPing = true;
+	public String playerlistCommandHeader = "";
+	public String playerlistCommandFooter = "";
+	public String playerlistCommandEmptyServer = "";
+	public Color playerlistCommandColor = new Color(153, 153, 153);
+	
 	public boolean shareInvCommandEnabled = true;
 	public boolean shareInvCommandIsMainServer = true;
 	public String shareInvCommandInGameMessageText = "";
@@ -321,6 +333,18 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		playbackBarEnabled = config.getConfiguration().getBoolean("DiscordAttachments.PlaybackBar.Enabled");
 		playbackBarFilledColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordAttachments.PlaybackBar.FilledColor"));
 		playbackBarEmptyColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordAttachments.PlaybackBar.EmptyColor"));
+		
+		playerlistCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.PlayerList.Enabled");
+		playerlistCommandDescription = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.PlayerList.Description"));
+		playerlistCommandIsMainServer = config.getConfiguration().getBoolean("DiscordCommands.PlayerList.IsMainServer");
+		playerlistCommandBungeecord = config.getConfiguration().getBoolean("DiscordCommands.PlayerList.ListBungeecordPlayers");
+		playerlistCommandPlayerFormat = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.PlayerList.TablistOptions.PlayerFormat"));
+		playerlistCommandAvatar = config.getConfiguration().getBoolean("DiscordCommands.PlayerList.TablistOptions.ShowPlayerAvatar");
+		playerlistCommandPing = config.getConfiguration().getBoolean("DiscordCommands.PlayerList.TablistOptions.ShowPlayerPing");
+		playerlistCommandHeader = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getStringList("DiscordCommands.PlayerList.TablistOptions.HeaderText").stream().collect(Collectors.joining("\n")));
+		playerlistCommandFooter = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getStringList("DiscordCommands.PlayerList.TablistOptions.FooterText").stream().collect(Collectors.joining("\n")));
+		playerlistCommandEmptyServer = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.PlayerList.EmptyServer"));
+		playerlistCommandColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordCommands.PlayerList.TablistOptions.SidebarColor"));
 		
 		shareInvCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.ShareInventory.Enabled");
 		shareInvCommandIsMainServer = config.getConfiguration().getBoolean("DiscordCommands.ShareInventory.IsMainServer");

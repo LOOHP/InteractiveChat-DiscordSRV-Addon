@@ -33,7 +33,7 @@ public class AssetsDownloader {
 	private static final DecimalFormat FORMAT = new DecimalFormat("0.0");
 	private static final AtomicBoolean LOCK = new AtomicBoolean(false);
 	
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "deprecation" })
 	public static void loadAssets(File rootFolder, boolean force) throws Exception {
 		if (LOCK.get()) {
 			return;

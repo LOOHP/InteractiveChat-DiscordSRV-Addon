@@ -81,6 +81,33 @@ DiscordAttachments:
     EmptyColor: "#938B86"
 
 DiscordCommands:
+  PlayerList:
+    #Enable the /playerlist command to show all online players in a tablist style
+    Enabled: true
+    #The description of this command on discord
+    Description: "Show all online players!"
+    #If you do NOT use a shared discord channel for multiple servers, this should ALWAYS be true
+    #If you do, set this option on ONE of the servers connected to the discord channel to true, 
+    #With all others servers to false.
+    IsMainServer: true
+    #List other players on the same network if connected to bungeecord
+    ListBungeecordPlayers: true
+    #Message to display when no one is online
+    EmptyServer: "There are no players online."
+    TablistOptions:
+      SidebarColor: "#999999"
+      #The formatting of each player name
+      PlayerFormat: "%vault_prefix%%player_name%"
+      #Whether to show the player avatar
+      ShowPlayerAvatar: true
+      #Whether to show player ping
+      ShowPlayerPing: true
+      #Leave a single blank line to disable
+      HeaderText:
+        - "&aOnline Players ({OnlinePlayers}/100)"
+      #Leave a single blank line to disable
+      FooterText:
+        - ""
   ShareInventory:
     #Enable the /inv command on discord
     Enabled: true

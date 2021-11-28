@@ -3,17 +3,23 @@ package com.loohp.interactivechatdiscordsrvaddon.listeners;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.Inventory;
@@ -38,8 +44,10 @@ import com.loohp.interactivechat.modules.InventoryDisplay;
 import com.loohp.interactivechat.objectholders.ICPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
+import com.loohp.interactivechat.objectholders.ValueTrios;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ComponentReplacing;
+import com.loohp.interactivechat.utils.ComponentStyling;
 import com.loohp.interactivechat.utils.CustomStringUtils;
 import com.loohp.interactivechat.utils.HashUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
@@ -60,11 +68,13 @@ import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.SlashCommandEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.hooks.ListenerAdapter;
 import github.scarsz.discordsrv.dependencies.jda.api.requests.RestAction;
+import me.clip.placeholderapi.PlaceholderAPI;
 import net.md_5.bungee.api.ChatColor;
 
 public class DiscordCommands extends ListenerAdapter implements Listener {
 	
 	public static final String CUSTOM_CHANNEL = "icdsrva:discord_commands";
+	public static final String PLAYERLIST_LABEL = "playerlist";
 	public static final String INVENTORY_LABEL = "inv";
 	public static final String ENDERCHEST_LABEL = "ender";
 	
@@ -84,6 +94,9 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 	
 	public void reload() {
 		discordsrv.getMainGuild().retrieveCommands().complete().stream().map(each -> each.delete()).reduce(RestAction::and).ifPresent(action -> action.complete());
+		if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandEnabled) {
+			discordsrv.getMainGuild().upsertCommand(PLAYERLIST_LABEL, ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandDescription)).queue();
+		}
 		Optional<ICPlaceholder> optInvPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.invPlaceholder)).findFirst();
 		if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandEnabled && optInvPlaceholder.isPresent()) {
 			discordsrv.getMainGuild().upsertCommand(INVENTORY_LABEL, ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())).queue();	
@@ -101,7 +114,61 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 		}
 		TextChannel channel = (TextChannel) event.getChannel();
 		String label = event.getName();
-		if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandEnabled && label.equalsIgnoreCase(INVENTORY_LABEL)) {
+		if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandEnabled && label.equalsIgnoreCase(PLAYERLIST_LABEL)) {
+			String minecraftChannel = discordsrv.getChannels().entrySet().stream().filter(entry -> channel.getId().equals(entry.getValue())).map(Map.Entry::getKey).findFirst().orElse(null);
+			if (minecraftChannel == null) {
+				if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandIsMainServer) {
+					event.reply(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.invalidDiscordChannel)).setEphemeral(true).queue();
+				}
+				return;
+			}
+			event.reply("...").queue();
+			Map<OfflinePlayer, Integer> players;
+			if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandBungeecord && !Bukkit.getOnlinePlayers().isEmpty()) {
+				try {
+					List<ValueTrios<UUID, String, Integer>> bungeePlayers = InteractiveChatAPI.getBungeecordPlayerList().get();
+					players = new LinkedHashMap<>(bungeePlayers.size());
+					for (ValueTrios<UUID, String, Integer> playerinfo : bungeePlayers) {
+						players.put(Bukkit.getOfflinePlayer(playerinfo.getFirst()), playerinfo.getThird());
+					}
+				} catch (InterruptedException | ExecutionException e) {
+					e.printStackTrace();
+					event.getHook().editOriginal(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.unableToRetrieveData)).queue();
+					return;
+				}
+			} else {
+				players = Bukkit.getOnlinePlayers().stream().collect(Collectors.toMap(each -> each, each -> each.getPing()));
+			}
+			if (players.isEmpty()) {
+				event.getHook().editOriginal(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandEmptyServer)).queue();
+			} else {
+				List<Component> header = new ArrayList<>();
+				if (!InteractiveChatDiscordSrvAddon.plugin.playerlistCommandHeader.isEmpty()) {
+					header = ComponentStyling.splitAtLineBreaks(LegacyComponentSerializer.legacySection().deserialize(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandHeader.replace("{OnlinePlayers}", players.size() + "")));
+				}
+				List<Component> footer = new ArrayList<>();
+				if (!InteractiveChatDiscordSrvAddon.plugin.playerlistCommandFooter.isEmpty()) {
+					footer = ComponentStyling.splitAtLineBreaks(LegacyComponentSerializer.legacySection().deserialize(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandFooter.replace("{OnlinePlayers}", players.size() + "")));
+				}
+				List<ValueTrios<UUID, Component, Integer>> player = new ArrayList<>();
+				for (Entry<OfflinePlayer, Integer> entry : players.entrySet()) {
+					OfflinePlayer offlineplayer = entry.getKey();
+					player.add(new ValueTrios<>(offlineplayer.getUniqueId(), LegacyComponentSerializer.legacySection().deserialize(PlaceholderAPI.setPlaceholders(offlineplayer, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandPlayerFormat)), entry.getValue()));
+				}
+				try {
+					BufferedImage image = ImageGeneration.getTabListImage(header, footer, player, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandAvatar, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandPing);
+					DiscordMessageContent content = new DiscordMessageContent(null, null, null, "attachment://Tablist.png", InteractiveChatDiscordSrvAddon.plugin.playerlistCommandColor);
+					ByteArrayOutputStream os = new ByteArrayOutputStream();
+					ImageIO.write(image, "png", os);
+					content.addAttachment("Tablist.png", os.toByteArray());
+					event.getHook().deleteOriginal().and(content.toJDAMessageRestAction(channel)).queue();
+				} catch (Exception e) {
+					event.getHook().editOriginal(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.unableToRetrieveData)).queue();
+					return;
+				}
+			}
+			
+		} else if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandEnabled && label.equalsIgnoreCase(INVENTORY_LABEL)) {
 			String minecraftChannel = discordsrv.getChannels().entrySet().stream().filter(entry -> channel.getId().equals(entry.getValue())).map(Map.Entry::getKey).findFirst().orElse(null);
 			if (minecraftChannel == null) {
 				if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandIsMainServer) {

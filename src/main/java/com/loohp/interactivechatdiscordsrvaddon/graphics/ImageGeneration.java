@@ -11,9 +11,12 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
+import java.util.stream.Stream;
 
 import javax.imageio.ImageIO;
 
@@ -46,6 +49,8 @@ import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.libs.org.json.simple.parser.ParseException;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
+import com.loohp.interactivechat.objectholders.ValuePairs;
+import com.loohp.interactivechat.objectholders.ValueTrios;
 import com.loohp.interactivechat.utils.ComponentStyling;
 import com.loohp.interactivechat.utils.CustomStringUtils;
 import com.loohp.interactivechat.utils.FilledMapUtils;
@@ -71,7 +76,7 @@ public class ImageGeneration {
 	private static final String TEXTURE_MINECRAFT_URL = "http://textures.minecraft.net/texture/";
 	private static final String PLAYER_RENDER_URL = "https://mc-heads.net/player/%s/64";
 	private static final String SKULL_RENDER_URL = "https://mc-heads.net/head/%s/96";
-	private static final String HEAD_2D_RENDER_URL = "https://mc-heads.net/avatar/%s/32";
+	private static final String HEAD_2D_RENDER_URL = "https://mc-heads.net/avatar/%s/%s";
 	private static final String PLAYER_INFO_URL = "https://sessionserver.mojang.com/session/minecraft/profile/%s";
 	
 	private static final int MAP_ICON_PER_ROLE = 16;
@@ -85,6 +90,10 @@ public class ImageGeneration {
 	private static final String PLAYER_HEAD_2D_KEY = "PlayerHead2DImage";
 	private static final String INVENTORY_KEY = "Inventory";
 	private static final String PLAYER_INVENTORY_KEY = "PlayerInventory";
+	
+	private static final int TABLIST_SINGLE_COLUMN_LIMIT = 10;
+	private static final Color TABLIST_BACKGROUND = new Color(68, 71, 68);
+	private static final Color TABLIST_PLAYER_BACKGROUND = new Color(91, 94, 91);
 	
 	private static final DecimalFormat VARIATION_FORMAT = new DecimalFormat("00");
 	private static final Random RANDOM = new Random();
@@ -710,10 +719,10 @@ public class ImageGeneration {
 						if (cache == null) {
 							JSONObject json = (JSONObject) new JSONParser().parse(new String(Base64.getDecoder().decode(base64)));
 							String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace(TEXTURE_MINECRAFT_URL, "");
-							String url = HEAD_2D_RENDER_URL.replaceFirst("%s", value);
+							String url = HEAD_2D_RENDER_URL.replaceFirst("%s", value).replaceFirst("%s", "32");
 							helmetImage = ImageUtils.multiply(ImageUtils.downloadImage(url), 0.9);
 							helmetImage = ImageUtils.resizeImageAbs(helmetImage, 32, 32);
-							Cache.putCache(base64 + PLAYER_HEAD_2D_KEY, helmetImage, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+							Cache.putCache(base64 + PLAYER_HEAD_2D_KEY + "32", helmetImage, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
 							helmetImage = ImageUtils.copyImage(helmetImage);
 						} else {
 							helmetImage = ImageUtils.copyImage((BufferedImage) cache.getObject());
@@ -1253,6 +1262,215 @@ public class ImageGeneration {
 		g.dispose();
 		
 		return background;
+	}
+	
+	public static BufferedImage getTabListImage(List<Component> header, List<Component> footer, List<ValueTrios<UUID, Component, Integer>> players, boolean showAvatar, boolean showPing) throws Exception {
+		List<ValuePairs<BufferedImage, Integer>> playerImages = new ArrayList<>(players.size());
+		int masterOffsetX = 0;
+		for (ValueTrios<UUID, Component, Integer> trio : players) {
+			UUID uuid = trio.getFirst();
+			Component name = trio.getSecond();
+			int ping = trio.getThird();
+			BufferedImage image = new BufferedImage(1024, 16, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g = image.createGraphics();
+			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+			int offsetX = 0;
+			if (showAvatar) {
+				BufferedImage avatar;
+				try {
+					Player onlinePlayer = Bukkit.getPlayer(uuid);
+					if (onlinePlayer == null) {
+						Cache<?> cache = Cache.getCache(uuid + PLAYER_HEAD_2D_KEY);
+						if (cache == null) {
+							String url = HEAD_2D_RENDER_URL.replaceFirst("%s", uuid.toString()).replaceFirst("%s", "16");
+							avatar = ImageUtils.multiply(ImageUtils.downloadImage(url), 0.9);
+							Cache.putCache(uuid + PLAYER_HEAD_2D_KEY + "16", avatar, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+							avatar = ImageUtils.copyImage(avatar);
+						} else {
+							avatar = ImageUtils.copyImage((BufferedImage) cache.getObject());
+						}
+					} else {
+						try {
+							JSONObject json = (JSONObject) new JSONParser().parse(SkinUtils.getSkinJsonFromProfile(onlinePlayer));
+							String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace(TEXTURE_MINECRAFT_URL, "");
+							Cache<?> cache = Cache.getCache(onlinePlayer.getUniqueId() + value + PLAYER_HEAD_2D_KEY + "16");
+							if (cache == null) {
+								String url = HEAD_2D_RENDER_URL.replaceFirst("%s", value).replaceFirst("%s", "16");
+								avatar = ImageUtils.downloadImage(url);
+								Cache.putCache(onlinePlayer.getUniqueId() + value + PLAYER_HEAD_2D_KEY + "16", avatar, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+							} else {
+								avatar = (BufferedImage) cache.getObject();
+							}
+							avatar = ImageUtils.copyImage(avatar);
+						} catch (Exception e) {
+							String url = HEAD_2D_RENDER_URL.replaceFirst("%s", uuid.toString()).replaceFirst("%s", "16");
+							avatar = ImageUtils.downloadImage(url);
+							Cache.putCache(uuid + "e" + PLAYER_HEAD_2D_KEY + "16", avatar, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+							avatar = ImageUtils.copyImage(avatar);
+						}
+					}
+				} catch (Exception e) {
+					avatar = ImageUtils.resizeImageAbs(InteractiveChatDiscordSrvAddon.plugin.getPuppetTexture("default_head_2d"), 16, 16);
+				}
+				g.drawImage(avatar, offsetX, 0, 16, 16, null);
+				offsetX += 18;
+			} else {
+				offsetX += 2;
+			}
+			g.dispose();
+			ImageUtils.printComponent(image, name, offsetX, -1, 16);
+			int lastX = 0;
+			for (int x = 0; x < image.getWidth(); x++) {
+				for (int y = 0; y < image.getHeight(); y++) {
+					if (image.getRGB(x, y) != 0) {
+						lastX = x;
+						break;
+					}
+				}
+			}
+			if (lastX > masterOffsetX) {
+				masterOffsetX = lastX;
+			}
+			playerImages.add(new ValuePairs<>(image, ping));
+		}
+		List<BufferedImage> playerRows = new ArrayList<>(playerImages.size());
+		for (ValuePairs<BufferedImage, Integer> pair : playerImages) {
+			BufferedImage image = pair.getFirst();
+			if (showPing) {
+				masterOffsetX += 4;
+				BufferedImage ping = getPingIcon(pair.getSecond());
+				Graphics2D g = image.createGraphics();
+				g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+				g.drawImage(ImageUtils.resizeImageAbs(ping, 20, 14), masterOffsetX, 3, null);
+				g.dispose();
+				masterOffsetX += 22;
+			} else {
+				masterOffsetX += 2;
+			}
+			BufferedImage cropped = new BufferedImage(masterOffsetX, 16, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g = cropped.createGraphics();
+			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+			g.setColor(TABLIST_PLAYER_BACKGROUND);
+			g.fillRect(0, 0, cropped.getWidth(), cropped.getHeight());
+			g.drawImage(image, 0, 0, null);
+			g.dispose();
+			playerRows.add(cropped);
+		}
+		Map<BufferedImage, Integer> headerLines = new LinkedHashMap<>(header.size());
+		for (Component line : header) {
+			BufferedImage image = new BufferedImage(1024, 18, BufferedImage.TYPE_INT_ARGB);
+			ImageUtils.printComponent(image, line, 0, -1, 16);
+			int lastX = 0;
+			for (int x = 0; x < image.getWidth(); x++) {
+				for (int y = 0; y < image.getHeight(); y++) {
+					if (image.getRGB(x, y) != 0) {
+						lastX = x;
+						break;
+					}
+				}
+			}
+			BufferedImage cropped = new BufferedImage(lastX, 18, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g = cropped.createGraphics();
+			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+			g.drawImage(image, 0, 0, null);
+			g.dispose();
+			headerLines.put(cropped, lastX);
+		}
+		Map<BufferedImage, Integer> footerLines = new LinkedHashMap<>(footer.size());
+		for (Component line : footer) {
+			BufferedImage image = new BufferedImage(1024, 18, BufferedImage.TYPE_INT_ARGB);
+			ImageUtils.printComponent(image, line, 0, -1, 16);
+			int lastX = 0;
+			for (int x = 0; x < image.getWidth(); x++) {
+				for (int y = 0; y < image.getHeight(); y++) {
+					if (image.getRGB(x, y) != 0) {
+						lastX = x;
+						break;
+					}
+				}
+			}
+			BufferedImage cropped = new BufferedImage(lastX, 18, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g = cropped.createGraphics();
+			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+			g.drawImage(image, 0, 0, null);
+			g.dispose();
+			footerLines.put(cropped, lastX);
+		}
+		BufferedImage image;
+		if (playerRows.size() <= TABLIST_SINGLE_COLUMN_LIMIT) {
+			image = new BufferedImage(masterOffsetX + 4, playerRows.size() * 18 + 2, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g = image.createGraphics();
+			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+			g.setColor(TABLIST_BACKGROUND);
+			g.fillRect(0, 0, image.getWidth(), image.getHeight());
+			int offsetY = 2;
+			for (BufferedImage each : playerRows) {
+				g.drawImage(each, 2, offsetY, null);
+				offsetY += 18;
+			}
+			g.dispose();
+		} else {
+			image = new BufferedImage(masterOffsetX * 2 + 6, (int) Math.ceil((double) playerRows.size() / 2) * 18 + 2, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g = image.createGraphics();
+			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+			g.setColor(TABLIST_BACKGROUND);
+			g.fillRect(0, 0, image.getWidth(), image.getHeight());
+			int offsetY = 2;
+			int half = (int) Math.ceil((double) playerRows.size() / 2);
+			for (int i = 0; i < half; i++) {
+				g.drawImage(playerRows.get(i), 2, offsetY, null);
+				offsetY += 18;
+			}
+			offsetY = 2;
+			for (int i = half; i < playerRows.size(); i++) {
+				g.drawImage(playerRows.get(i), masterOffsetX + 4, offsetY, null);
+				offsetY += 18;
+			}
+			if (playerRows.size() % 2 == 1) {
+				g.fillRect(masterOffsetX + 4, offsetY, masterOffsetX, 16);
+			}
+			g.dispose();
+		}
+		int maxOffsetX = Stream.concat(headerLines.values().stream(), footerLines.values().stream()).mapToInt(each -> each).max().orElse(0);
+		if (maxOffsetX <= 0) {
+			return image;
+		} else {
+			BufferedImage decoration = new BufferedImage(Math.max(image.getWidth(), maxOffsetX + 4), (headerLines.isEmpty() ? 0 : headerLines.size() * 18 + 2) + image.getHeight() + (footerLines.isEmpty() ? 2 : footerLines.size() * 18 + 2), BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g = decoration.createGraphics();
+			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+			g.setColor(TABLIST_BACKGROUND);
+			g.fillRect(0, 0, decoration.getWidth(), decoration.getHeight());
+			int offsetY = 2;
+			for (BufferedImage each : headerLines.keySet()) {
+				g.drawImage(each, (decoration.getWidth() / 2) - (each.getWidth() / 2), offsetY, null);
+				offsetY += 18;
+			}
+			g.drawImage(image, (decoration.getWidth() / 2) - (image.getWidth() / 2), offsetY, null);
+			offsetY += image.getHeight();
+			for (BufferedImage each : footerLines.keySet()) {
+				g.drawImage(each, (decoration.getWidth() / 2) - (each.getWidth() / 2), offsetY, null);
+				offsetY += 18;
+			}
+			g.dispose();
+			return decoration;
+		}
+	}
+	
+	public static BufferedImage getPingIcon(int ms) {
+		BufferedImage icons = InteractiveChatDiscordSrvAddon.plugin.getGUITexture("icons");
+		if (ms < 0) {
+			return ImageUtils.copyAndGetSubImage(icons, 0, 56, 10, 7);
+		} else if (ms < 150) {
+			return ImageUtils.copyAndGetSubImage(icons, 0, 16, 10, 7);
+		} else if (ms < 300) {
+			return ImageUtils.copyAndGetSubImage(icons, 0, 24, 10, 7);
+		} else if (ms < 600) {
+			return ImageUtils.copyAndGetSubImage(icons, 0, 32, 10, 7);
+		} else if (ms < 1000) {
+			return ImageUtils.copyAndGetSubImage(icons, 0, 40, 10, 7);
+		} else {
+			return ImageUtils.copyAndGetSubImage(icons, 0, 48, 10, 7);
+		}
 	}
 	
 }
