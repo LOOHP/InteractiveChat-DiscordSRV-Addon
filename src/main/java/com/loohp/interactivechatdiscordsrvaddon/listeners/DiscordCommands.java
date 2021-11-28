@@ -124,7 +124,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 			}
 			event.reply("...").queue();
 			Map<OfflinePlayer, Integer> players;
-			if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandBungeecord && !Bukkit.getOnlinePlayers().isEmpty()) {
+			if (InteractiveChat.bungeecordMode && InteractiveChatDiscordSrvAddon.plugin.playerlistCommandBungeecord && !Bukkit.getOnlinePlayers().isEmpty()) {
 				try {
 					List<ValueTrios<UUID, String, Integer>> bungeePlayers = InteractiveChatAPI.getBungeecordPlayerList().get();
 					players = new LinkedHashMap<>(bungeePlayers.size());
