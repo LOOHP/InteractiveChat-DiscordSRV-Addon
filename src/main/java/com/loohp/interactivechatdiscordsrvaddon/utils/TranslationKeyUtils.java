@@ -14,6 +14,7 @@ import org.bukkit.DyeColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.TropicalFish.Pattern;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 
@@ -317,6 +318,47 @@ public class TranslationKeyUtils {
 		} else {
 			return "block.minecraft.banner." + type.getAssetName() + "." + color.name().toLowerCase();
 		}
+	}
+	
+	public static String getAttributeKey(String attributeName) {
+		return "attribute.name." + attributeName;
+	}
+	
+	public static String getAttributeModifierKey(double amount, int operation) {
+		if (amount > 0) {
+			return "attribute.modifier.plus." + operation;
+		} else if (amount < 0) {
+			return "attribute.modifier.take." + operation;
+		} else {
+			return "attribute.modifier.equals." + operation;
+		}
+	}
+	
+	public static String getModifierSlotKey(EquipmentSlot slot) {
+		switch (slot) {
+		case HEAD:
+			return "item.modifiers.head";
+		case CHEST:
+			return "item.modifiers.chest";
+		case LEGS:
+			return "item.modifiers.legs";
+		case FEET:
+			return "item.modifiers.feet";
+		case HAND:
+			return "item.modifiers.mainhand";
+		case OFF_HAND:
+			return "item.modifiers.offhand";
+		default:
+			return "item.modifiers." + slot.toString().toLowerCase();
+		}
+	}
+	
+	public static String getCanDestroy() {
+		return "item.canBreak";
+	}
+	
+	public static String getCanPlace() {
+		return "item.canPlace";
 	}
 
 }

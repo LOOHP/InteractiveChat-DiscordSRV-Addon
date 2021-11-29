@@ -5,6 +5,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -16,6 +17,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Banner;
 import org.bukkit.block.banner.Pattern;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BannerMeta;
@@ -35,6 +37,10 @@ import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import com.loohp.interactivechat.libs.net.querz.nbt.io.SNBTDeserializer;
+import com.loohp.interactivechat.libs.net.querz.nbt.tag.CompoundTag;
+import com.loohp.interactivechat.libs.net.querz.nbt.tag.ListTag;
+import com.loohp.interactivechat.libs.net.querz.nbt.tag.StringTag;
 import com.loohp.interactivechat.libs.org.apache.commons.text.WordUtils;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
@@ -345,11 +351,127 @@ public class DiscordItemStackUtils {
 			}
 		}
 		
+		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && NBTUtils.contains(item, "AttributeModifiers") && NBTUtils.getSize(item, "AttributeModifiers") > 0 && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
+			List<String> mainHand = new LinkedList<>();
+			List<String> offHand = new LinkedList<>();
+			List<String> feet = new LinkedList<>();
+			List<String> legs = new LinkedList<>();
+			List<String> chest = new LinkedList<>();
+			List<String> head = new LinkedList<>();
+			@SuppressWarnings("unchecked")
+			ListTag<CompoundTag> attributeList = (ListTag<CompoundTag>) new SNBTDeserializer().fromString(NBTUtils.getNBTCompound(item, "tag", "AttributeModifiers").toJson());
+			for (CompoundTag attributeTag : attributeList) {
+				String attributeName = attributeTag.getString("AttributeName").replace("minecraft:", "");
+				double amount = attributeTag.getDouble("Amount");
+				int operation = attributeTag.containsKey("Operation") ? attributeTag.getInt("Operation") : 0;
+				String attributeComponent = LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeModifierKey(amount, operation), language).replaceFirst("%s", amount + "").replaceFirst("%s", LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeKey(attributeName), language)).replace("%%", "%");
+				if (attributeTag.containsKey("Slot")) {
+					String slot = attributeTag.getString("Slot");
+					if (slot.equals("mainhand")) {
+						mainHand.add(attributeComponent);
+					} else if (slot.equals("offhand")) {
+						offHand.add(attributeComponent);
+					} else if (slot.equals("feet")) {
+						feet.add(attributeComponent);
+					} else if (slot.equals("legs")) {
+						legs.add(attributeComponent);
+					} else if (slot.equals("chest")) {
+						chest.add(attributeComponent);
+					} else if (slot.equals("head")) {
+						head.add(attributeComponent);
+					}
+				} else {
+					mainHand.add(attributeComponent);
+					offHand.add(attributeComponent);
+					feet.add(attributeComponent);
+					legs.add(attributeComponent);
+					chest.add(attributeComponent);
+					head.add(attributeComponent);
+				}
+			}
+			if (!mainHand.isEmpty()) {
+				description += "\n";
+				description += LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HAND), language) + "\n";
+				for (String each : mainHand) {
+					description += each + "\n";
+				}
+			}
+			if (!offHand.isEmpty()) {
+				description += "\n";
+				description += LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.OFF_HAND), language) + "\n";
+				for (String each : offHand) {
+					description += each + "\n";
+				}
+			}
+			if (!feet.isEmpty()) {
+				description += "\n";
+				description += LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.FEET), language) + "\n";
+				for (String each : feet) {
+					description += each + "\n";
+				}
+			}
+			if (!legs.isEmpty()) {
+				description += "\n";
+				description += LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.LEGS), language) + "\n";
+				for (String each : legs) {
+					description += each + "\n";
+				}
+			}
+			if (!chest.isEmpty()) {
+				description += "\n";
+				description += LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.CHEST), language) + "\n";
+				for (String each : chest) {
+					description += each + "\n";
+				}
+			}
+			if (!head.isEmpty()) {
+				description += "\n";
+				description += LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HEAD), language) + "\n";
+				for (String each : head) {
+					description += each + "\n";
+				}
+			}
+		}
+		
 		if (hasMeta && isUnbreakble(item) && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_UNBREAKABLE)) {
 			if (!description.equals("")) {
 				description += "\n";
 			}
 			description += "**" + LanguageUtils.getTranslation(TranslationKeyUtils.getUnbreakable(), language) + "**\n";
+		}
+		
+		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_DESTROYS)) {
+			if (NBTUtils.contains(item, "CanDestroy") && NBTUtils.getSize(item, "CanDestroy") > 0) {
+				description += "\n";
+				description += LanguageUtils.getTranslation(TranslationKeyUtils.getCanDestroy(), language) + "\n";
+				@SuppressWarnings("unchecked")
+				ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTUtils.getNBTCompound(item, "tag", "CanDestroy").toJson());
+				for (StringTag materialTag : materialList) {
+					XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
+					if (parsedXMaterial == null) {
+						description += WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase()) + "\n";
+					} else {
+						description += LanguageUtils.getTranslation(LanguageUtils.getTranslationKey(parsedXMaterial.parseItem()), language) + "\n";
+					}
+				}
+			}
+		}
+		
+		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_PLACED_ON)) {
+			if (NBTUtils.contains(item, "CanPlaceOn") && NBTUtils.getSize(item, "CanPlaceOn") > 0) {
+				description += "\n";
+				description += LanguageUtils.getTranslation(TranslationKeyUtils.getCanPlace(), language) + "\n";
+				@SuppressWarnings("unchecked")
+				ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTUtils.getNBTCompound(item, "tag", "CanPlaceOn").toJson());
+				for (StringTag materialTag : materialList) {
+					XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
+					if (parsedXMaterial == null) {
+						description += WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase()) + "\n";
+					} else {
+						description += LanguageUtils.getTranslation(LanguageUtils.getTranslationKey(parsedXMaterial.parseItem()), language) + "\n";
+					}
+				}
+			}
 		}
 		
 		if (item.getType().getMaxDurability() > 0) {
@@ -593,8 +715,124 @@ public class DiscordItemStackUtils {
 			}
 		}
 		
+		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && NBTUtils.contains(item, "AttributeModifiers") && NBTUtils.getSize(item, "AttributeModifiers") > 0 && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
+			List<Component> mainHand = new LinkedList<>();
+			List<Component> offHand = new LinkedList<>();
+			List<Component> feet = new LinkedList<>();
+			List<Component> legs = new LinkedList<>();
+			List<Component> chest = new LinkedList<>();
+			List<Component> head = new LinkedList<>();
+			@SuppressWarnings("unchecked")
+			ListTag<CompoundTag> attributeList = (ListTag<CompoundTag>) new SNBTDeserializer().fromString(NBTUtils.getNBTCompound(item, "tag", "AttributeModifiers").toJson());
+			for (CompoundTag attributeTag : attributeList) {
+				String attributeName = attributeTag.getString("AttributeName").replace("minecraft:", "");
+				double amount = attributeTag.getDouble("Amount");
+				int operation = attributeTag.containsKey("Operation") ? attributeTag.getInt("Operation") : 0;
+				Component attributeComponent = LegacyComponentSerializer.legacySection().deserialize(ChatColor.BLUE + LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeModifierKey(amount, operation), language).replaceFirst("%s", amount + "").replaceFirst("%s", LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeKey(attributeName), language)).replace("%%", "%"));
+				if (attributeTag.containsKey("Slot")) {
+					String slot = attributeTag.getString("Slot");
+					if (slot.equals("mainhand")) {
+						mainHand.add(attributeComponent);
+					} else if (slot.equals("offhand")) {
+						offHand.add(attributeComponent);
+					} else if (slot.equals("feet")) {
+						feet.add(attributeComponent);
+					} else if (slot.equals("legs")) {
+						legs.add(attributeComponent);
+					} else if (slot.equals("chest")) {
+						chest.add(attributeComponent);
+					} else if (slot.equals("head")) {
+						head.add(attributeComponent);
+					}
+				} else {
+					mainHand.add(attributeComponent);
+					offHand.add(attributeComponent);
+					feet.add(attributeComponent);
+					legs.add(attributeComponent);
+					chest.add(attributeComponent);
+					head.add(attributeComponent);
+				}
+			}
+			if (!mainHand.isEmpty()) {
+				prints.add(Component.empty());
+				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HAND), language)));
+				for (Component each : mainHand) {
+					prints.add(each);
+				}
+			}
+			if (!offHand.isEmpty()) {
+				prints.add(Component.empty());
+				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.OFF_HAND), language)));
+				for (Component each : offHand) {
+					prints.add(each);
+				}
+			}
+			if (!feet.isEmpty()) {
+				prints.add(Component.empty());
+				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.FEET), language)));
+				for (Component each : feet) {
+					prints.add(each);
+				}
+			}
+			if (!legs.isEmpty()) {
+				prints.add(Component.empty());
+				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.LEGS), language)));
+				for (Component each : legs) {
+					prints.add(each);
+				}
+			}
+			if (!chest.isEmpty()) {
+				prints.add(Component.empty());
+				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.CHEST), language)));
+				for (Component each : chest) {
+					prints.add(each);
+				}
+			}
+			if (!head.isEmpty()) {
+				prints.add(Component.empty());
+				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HEAD), language)));
+				for (Component each : head) {
+					prints.add(each);
+				}
+			}
+		}
+		
 		if (hasMeta && isUnbreakble(item) && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_UNBREAKABLE)) {
 			prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.BLUE + LanguageUtils.getTranslation(TranslationKeyUtils.getUnbreakable(), language)));
+		}
+		
+		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_DESTROYS)) {
+			if (NBTUtils.contains(item, "CanDestroy") && NBTUtils.getSize(item, "CanDestroy") > 0) {
+				prints.add(Component.empty());
+				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getCanDestroy(), language)));
+				@SuppressWarnings("unchecked")
+				ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTUtils.getNBTCompound(item, "tag", "CanDestroy").toJson());
+				for (StringTag materialTag : materialList) {
+					XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
+					if (parsedXMaterial == null) {
+						prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_GRAY + WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase())));
+					} else {
+						prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_GRAY + LanguageUtils.getTranslation(LanguageUtils.getTranslationKey(parsedXMaterial.parseItem()), language)));
+					}
+				}
+			}
+		}
+		
+		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_PLACED_ON)) {
+			if (NBTUtils.contains(item, "CanPlaceOn") && NBTUtils.getSize(item, "CanPlaceOn") > 0) {
+				prints.add(Component.empty());
+				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getCanPlace(), language)));
+				@SuppressWarnings("unchecked")
+				ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTUtils.getNBTCompound(item, "tag", "CanPlaceOn").toJson());
+				for (StringTag materialTag : materialList) {
+					XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
+					if (parsedXMaterial == null) {
+						prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_GRAY + WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase())));
+					} else {
+						prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_GRAY + LanguageUtils.getTranslation(LanguageUtils.getTranslationKey(parsedXMaterial.parseItem()), language)));
+					}
+				}
+			}
 		}
 		
 		if (item.getType().getMaxDurability() > 0) {
