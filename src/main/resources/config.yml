@@ -94,6 +94,8 @@ DiscordCommands:
     ListBungeecordPlayers: true
     #Message to display when no one is online
     EmptyServer: "There are no players online."
+    #Delete the tablist message after X seconds (Set to 0 to not have it deleted)
+    DeleteAfter: 0
     TablistOptions:
       SidebarColor: "#999999"
       #The formatting of each player name

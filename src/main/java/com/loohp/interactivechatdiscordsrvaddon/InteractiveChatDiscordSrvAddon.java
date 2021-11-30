@@ -145,6 +145,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public String playerlistCommandDescription = "";
 	public boolean playerlistCommandIsMainServer = true;
 	public boolean playerlistCommandBungeecord = true;
+	public int playerlistCommandDeleteAfter = 10;
 	public String playerlistCommandPlayerFormat = "";
 	public boolean playerlistCommandAvatar = true;
 	public boolean playerlistCommandPing = true;
@@ -338,6 +339,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		playerlistCommandDescription = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.PlayerList.Description"));
 		playerlistCommandIsMainServer = config.getConfiguration().getBoolean("DiscordCommands.PlayerList.IsMainServer");
 		playerlistCommandBungeecord = config.getConfiguration().getBoolean("DiscordCommands.PlayerList.ListBungeecordPlayers");
+		playerlistCommandDeleteAfter = config.getConfiguration().getInt("DiscordCommands.PlayerList.DeleteAfter");
 		playerlistCommandPlayerFormat = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.PlayerList.TablistOptions.PlayerFormat"));
 		playerlistCommandAvatar = config.getConfiguration().getBoolean("DiscordCommands.PlayerList.TablistOptions.ShowPlayerAvatar");
 		playerlistCommandPing = config.getConfiguration().getBoolean("DiscordCommands.PlayerList.TablistOptions.ShowPlayerPing");
