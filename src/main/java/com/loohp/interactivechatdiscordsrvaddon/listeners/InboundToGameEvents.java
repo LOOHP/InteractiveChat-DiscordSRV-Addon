@@ -3,7 +3,6 @@ package com.loohp.interactivechatdiscordsrvaddon.listeners;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -71,35 +70,19 @@ public class InboundToGameEvents implements Listener {
 	public static final Map<UUID, DiscordAttachmentData> DATA = new ConcurrentHashMap<>();	
 	public static final Map<Player, GraphicsToPacketMapWrapper> MAP_VIEWERS = new ConcurrentHashMap<>();
 	
-	private static Field discordRegexesField;
-	
-	protected static void ready(DiscordSRV srv) {
-		try {
-			discordRegexesField = srv.getClass().getDeclaredField("discordRegexes");
-		} catch (NoSuchFieldException | SecurityException e) {
-			e.printStackTrace();
-		}
-	}
-	
 	@Subscribe(priority = ListenerPriority.LOWEST)
 	public void onRecieveMessageFromDiscordPre(DiscordGuildMessagePreProcessEvent event) {
 		Debug.debug("Triggering onRecieveMessageFromDiscordPre");
 		DiscordSRV srv = InteractiveChatDiscordSrvAddon.discordsrv;
-		try {
-			discordRegexesField.setAccessible(true);
-			@SuppressWarnings("unchecked")
-			Map<Pattern, String> discordRegexes = (Map<Pattern, String>) discordRegexesField.get(srv);
-			if (discordRegexes != null) {
-				Iterator<Pattern> itr = discordRegexes.keySet().iterator();
-				while (itr.hasNext()) {
-					Pattern pattern = itr.next();
-					if (pattern.pattern().equals("@+(everyone|here)")) {
-						itr.remove();
-					}
+		Map<Pattern, String> discordRegexes = srv.getDiscordRegexes();
+		if (discordRegexes != null) {
+			Iterator<Pattern> itr = discordRegexes.keySet().iterator();
+			while (itr.hasNext()) {
+				Pattern pattern = itr.next();
+				if (pattern.pattern().equals("@+(everyone|here)")) {
+					itr.remove();
 				}
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 	

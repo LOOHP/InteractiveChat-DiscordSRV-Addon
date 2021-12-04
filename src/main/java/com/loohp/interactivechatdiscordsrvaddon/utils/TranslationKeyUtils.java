@@ -19,8 +19,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
 import com.loohp.interactivechat.utils.MCVersion;
-import com.loohp.interactivechat.utils.NBTUtils;
 import com.loohp.interactivechat.utils.NMSUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.PatternTypeWrapper;
 
@@ -77,13 +77,15 @@ public class TranslationKeyUtils {
 			}
 		} else {
 			try {
-				nmsMobEffectListClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MobEffectList", "net.minecraft.world.effect.MobEffectList");
-				try {
-					getEffectFromIdMethod = nmsMobEffectListClass.getMethod("fromId", int.class);
-				} catch (Exception e) {
-					getEffectFromIdMethod = nmsMobEffectListClass.getMethod("byId", int.class);
+				if (InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_17)) {
+					nmsMobEffectListClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MobEffectList", "net.minecraft.world.effect.MobEffectList");
+					try {
+						getEffectFromIdMethod = nmsMobEffectListClass.getMethod("fromId", int.class);
+					} catch (Exception e) {
+						getEffectFromIdMethod = nmsMobEffectListClass.getMethod("byId", int.class);
+					}
+					getEffectKeyMethod = nmsMobEffectListClass.getMethod("c");
 				}
-				getEffectKeyMethod = nmsMobEffectListClass.getMethod("c");
 				
 				craftTropicalFishClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.entity.CraftTropicalFish");
 				getTropicalFishPatternMethod = craftTropicalFishClass.getMethod("getPattern", int.class);
@@ -97,7 +99,11 @@ public class TranslationKeyUtils {
 			craftItemStackClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.inventory.CraftItemStack");
 			nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemStack", "net.minecraft.world.item.ItemStack");
 			asNMSCopyMethod = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class);
-			nmsGetItemMethod = nmsItemStackClass.getMethod("getItem");
+			try {
+				nmsGetItemMethod = nmsItemStackClass.getMethod("getItem");
+			} catch (Exception e) {
+				nmsGetItemMethod = nmsItemStackClass.getMethod("c");
+			}
 		} catch (ClassNotFoundException | SecurityException | NoSuchMethodException e) {
 			e.printStackTrace();
 		}
@@ -144,7 +150,10 @@ public class TranslationKeyUtils {
 
 	@SuppressWarnings("deprecation")
 	public static String getEffect(PotionEffectType type) {
-		if (!InteractiveChat.version.isLegacy()) {
+		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_18)) {
+			NamespacedKey namespacedKey = type.getKey();
+			return "effect." + namespacedKey.getNamespace() + "." + namespacedKey.getKey();
+		} else if (!InteractiveChat.version.isLegacy()) {
 			try {
 				int id = type.getId();
 				Object nmsMobEffectListObject = getEffectFromIdMethod.invoke(null, id);
@@ -183,10 +192,15 @@ public class TranslationKeyUtils {
 			}
 		}
 	}
+	
+	public static String getEffectLevel(int level) {
+		return "potion.potency." + level;
+	}
 
 	public static String getEnchantment(Enchantment enchantment) {
 		if (!InteractiveChat.version.isLegacy()) {
-			return "enchantment." + enchantment.getKey().getNamespace() + "." + enchantment.getKey().getKey();
+			NamespacedKey namespacedKey = enchantment.getKey();
+			return "enchantment." + namespacedKey.getNamespace() + "." + namespacedKey.getKey();
 		} else {
 			try {
 				Object nmsEnchantmentObject = getEnchantmentByIdMethod.invoke(null, bukkitEnchantmentGetIdMethod.invoke(enchantment));
@@ -200,6 +214,10 @@ public class TranslationKeyUtils {
 				return "";
 			}
 		}
+	}
+	
+	public static String getEnchantmentLevel(int level) {
+		return "enchantment.level." + level;
 	}
 
 	public static String getDyeColor() {
@@ -266,8 +284,8 @@ public class TranslationKeyUtils {
 	
 	public static List<String> getTropicalFishBucketName(ItemStack bucket) {
 		List<String> list = new ArrayList<>();
-		if (!InteractiveChat.version.isLegacy() && NBTUtils.contains(bucket, "BucketVariantTag")) {
-			int variance = NBTUtils.getInt(bucket, "BucketVariantTag");
+		if (!InteractiveChat.version.isLegacy() && NBTEditor.contains(bucket, "BucketVariantTag")) {
+			int variance = NBTEditor.getInt(bucket, "BucketVariantTag");
 			int prefefinedType = PREDEFINED_TROPICAL_FISH.getOrDefault(variance, -1);
 			if (prefefinedType != -1) {
 				list.add("entity.minecraft.tropical_fish.predefined." + prefefinedType);				

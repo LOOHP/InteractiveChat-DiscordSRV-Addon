@@ -36,6 +36,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.api.InteractiveChatAPI;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
+import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import com.loohp.interactivechat.objectholders.CustomPlaceholder;
@@ -50,7 +51,6 @@ import com.loohp.interactivechat.utils.CustomStringUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.InventoryUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
-import com.loohp.interactivechat.utils.NBTUtils;
 import com.loohp.interactivechat.utils.PlaceholderParser;
 import com.loohp.interactivechat.utils.PlayerUtils;
 import com.loohp.interactivechat.utils.XMaterialUtils;
@@ -165,7 +165,7 @@ public class OutboundToDiscordEvents implements Listener {
 						String itemKey = LanguageUtils.getTranslationKey(item);
 						itemStr = LanguageUtils.getTranslation(itemKey, InteractiveChatDiscordSrvAddon.plugin.language);
 						if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
-							String owner = NBTUtils.getString(item, "SkullOwner", "Name");
+							String owner = NBTEditor.getString(item, "SkullOwner", "Name");
 							if (owner != null) {
 								itemStr = itemStr.replaceFirst("%s", owner);
 							}

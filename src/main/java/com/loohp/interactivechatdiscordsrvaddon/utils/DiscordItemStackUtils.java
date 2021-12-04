@@ -2,6 +2,7 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import java.awt.Color;
 import java.lang.reflect.Method;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,6 +35,7 @@ import org.bukkit.potion.PotionEffect;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
+import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -49,7 +51,6 @@ import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.ItemStackUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechat.utils.MCVersion;
-import com.loohp.interactivechat.utils.NBTUtils;
 import com.loohp.interactivechat.utils.RarityUtils;
 import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
@@ -138,8 +139,8 @@ public class DiscordItemStackUtils {
 		boolean hasMeta = item.hasItemMeta();
 		String description = "";
 		
-		if (xMaterial.equals(XMaterial.SHIELD)) {
-			if (NBTUtils.contains(item, "BlockEntityTag")) {
+		if (xMaterial.equals(XMaterial.SHIELD) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
+			if (NBTEditor.contains(item, "BlockEntityTag")) {
 				List<Pattern> patterns = Collections.emptyList();
 				if (!(item.getItemMeta() instanceof BannerMeta)) {
 					if (item.getItemMeta() instanceof BlockStateMeta) {
@@ -161,7 +162,7 @@ public class DiscordItemStackUtils {
 			}
 		}
 		
-		if (xMaterial.isOneOf(Arrays.asList("CONTAINS:Banner"))) {
+		if (xMaterial.isOneOf(Arrays.asList("CONTAINS:Banner")) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
 			List<Pattern> patterns = Collections.emptyList();
 			if (!(item.getItemMeta() instanceof BannerMeta)) {
 				if (item.getItemMeta() instanceof BlockStateMeta) {
@@ -196,8 +197,8 @@ public class DiscordItemStackUtils {
 		}
 		
 		if (xMaterial.equals(XMaterial.FIREWORK_ROCKET)) {
-			if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && NBTUtils.contains(item, "Fireworks", "Flight")) {
-				int flight = NBTUtils.getByte(item, "Fireworks", "Flight");
+			if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && NBTEditor.contains(item, "Fireworks", "Flight")) {
+				int flight = NBTEditor.getByte(item, "Fireworks", "Flight");
 				description += LanguageUtils.getTranslation(TranslationKeyUtils.getRocketFlightDuration(), language) + " " + flight + "\n";
 			}
 		}
@@ -261,14 +262,15 @@ public class DiscordItemStackUtils {
 							description += "**" + translation;
 						}
 						int amplifier = effect.getAmplifier();
-						if (amplifier > 0) {
-							description += " " + RomanNumberUtils.toRoman(amplifier + 1);
+						String effectLevelTranslation = LanguageUtils.getTranslation(TranslationKeyUtils.getEffectLevel(amplifier), language);
+						if (effectLevelTranslation.length() > 0) {
+							description += " " + effectLevelTranslation;
 						}
 						if (!effect.getType().isInstant()) {
 							if (xMaterial.equals(XMaterial.LINGERING_POTION)) {
-								description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() / 4 * 50) + ")";
+								description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() / 4 * 50, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true) + ")";
 							} else {
-								description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() * 50) + ")";
+								description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() * 50, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true) + ")";
 							}
 						}
 						description += "**\n";
@@ -295,7 +297,7 @@ public class DiscordItemStackUtils {
 						enchName = translation;
 					}
 					if (enchName != null) {
-						description += "**" + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRomanIfUnder(level, 11)) + "**\n";
+						description += "**" + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + LanguageUtils.getTranslation(TranslationKeyUtils.getEnchantmentLevel(level), language)) + "**\n";
 					}
 				}
 			} else {
@@ -311,7 +313,7 @@ public class DiscordItemStackUtils {
 						enchName = translation;
 					}
 					if (enchName != null) {
-						description += "**" + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRomanIfUnder(level, 11)) + "**\n";
+						description += "**" + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + LanguageUtils.getTranslation(TranslationKeyUtils.getEnchantmentLevel(level), language)) + "**\n";
 					}
 				}
 			}
@@ -319,7 +321,7 @@ public class DiscordItemStackUtils {
 		
 		if (hasMeta && item.getItemMeta() instanceof LeatherArmorMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_DYE)) {
 			LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
-			if (NBTUtils.contains(item, "display", "color")) {
+			if (NBTEditor.contains(item, "display", "color")) {
 				if (!description.equals("")) {
 					description += "\n";
 				}
@@ -351,7 +353,7 @@ public class DiscordItemStackUtils {
 			}
 		}
 		
-		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && NBTUtils.contains(item, "AttributeModifiers") && NBTUtils.getSize(item, "AttributeModifiers") > 0 && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
+		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && NBTEditor.contains(item, "AttributeModifiers") && NBTEditor.getSize(item, "AttributeModifiers") > 0 && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
 			List<String> mainHand = new LinkedList<>();
 			List<String> offHand = new LinkedList<>();
 			List<String> feet = new LinkedList<>();
@@ -359,7 +361,7 @@ public class DiscordItemStackUtils {
 			List<String> chest = new LinkedList<>();
 			List<String> head = new LinkedList<>();
 			@SuppressWarnings("unchecked")
-			ListTag<CompoundTag> attributeList = (ListTag<CompoundTag>) new SNBTDeserializer().fromString(NBTUtils.getNBTCompound(item, "tag", "AttributeModifiers").toJson());
+			ListTag<CompoundTag> attributeList = (ListTag<CompoundTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "AttributeModifiers").toJson());
 			for (CompoundTag attributeTag : attributeList) {
 				String attributeName = attributeTag.getString("AttributeName").replace("minecraft:", "");
 				double amount = attributeTag.getDouble("Amount");
@@ -441,11 +443,11 @@ public class DiscordItemStackUtils {
 		}
 		
 		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_DESTROYS)) {
-			if (NBTUtils.contains(item, "CanDestroy") && NBTUtils.getSize(item, "CanDestroy") > 0) {
+			if (NBTEditor.contains(item, "CanDestroy") && NBTEditor.getSize(item, "CanDestroy") > 0) {
 				description += "\n";
 				description += LanguageUtils.getTranslation(TranslationKeyUtils.getCanDestroy(), language) + "\n";
 				@SuppressWarnings("unchecked")
-				ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTUtils.getNBTCompound(item, "tag", "CanDestroy").toJson());
+				ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "CanDestroy").toJson());
 				for (StringTag materialTag : materialList) {
 					XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
 					if (parsedXMaterial == null) {
@@ -458,11 +460,11 @@ public class DiscordItemStackUtils {
 		}
 		
 		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_PLACED_ON)) {
-			if (NBTUtils.contains(item, "CanPlaceOn") && NBTUtils.getSize(item, "CanPlaceOn") > 0) {
+			if (NBTEditor.contains(item, "CanPlaceOn") && NBTEditor.getSize(item, "CanPlaceOn") > 0) {
 				description += "\n";
 				description += LanguageUtils.getTranslation(TranslationKeyUtils.getCanPlace(), language) + "\n";
 				@SuppressWarnings("unchecked")
-				ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTUtils.getNBTCompound(item, "tag", "CanPlaceOn").toJson());
+				ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "CanPlaceOn").toJson());
 				for (StringTag materialTag : materialList) {
 					XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
 					if (parsedXMaterial == null) {
@@ -522,8 +524,8 @@ public class DiscordItemStackUtils {
 		
 		boolean hasMeta = item.hasItemMeta();
 		
-		if (xMaterial.equals(XMaterial.SHIELD)) {
-			if (NBTUtils.contains(item, "BlockEntityTag")) {
+		if (xMaterial.equals(XMaterial.SHIELD) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
+			if (NBTEditor.contains(item, "BlockEntityTag")) {
 				List<Pattern> patterns = Collections.emptyList();
 				if (!(item.getItemMeta() instanceof BannerMeta)) {
 					if (item.getItemMeta() instanceof BlockStateMeta) {
@@ -545,7 +547,7 @@ public class DiscordItemStackUtils {
 			}
 		}
 		
-		if (xMaterial.isOneOf(Arrays.asList("CONTAINS:Banner"))) {
+		if (xMaterial.isOneOf(Arrays.asList("CONTAINS:Banner")) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
 			List<Pattern> patterns = Collections.emptyList();
 			if (!(item.getItemMeta() instanceof BannerMeta)) {
 				if (item.getItemMeta() instanceof BlockStateMeta) {
@@ -579,8 +581,8 @@ public class DiscordItemStackUtils {
 		}
 		
 		if (xMaterial.equals(XMaterial.FIREWORK_ROCKET)) {
-			if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && NBTUtils.contains(item, "Fireworks", "Flight")) {
-				int flight = NBTUtils.getByte(item, "Fireworks", "Flight");
+			if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && NBTEditor.contains(item, "Fireworks", "Flight")) {
+				int flight = NBTEditor.getByte(item, "Fireworks", "Flight");
 				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getRocketFlightDuration(), language) + " " + flight));
 			}
 		}
@@ -644,14 +646,15 @@ public class DiscordItemStackUtils {
 							description += translation;
 						}
 						int amplifier = effect.getAmplifier();
-						if (amplifier > 0) {
-							description += " " + RomanNumberUtils.toRoman(amplifier + 1);
+						String effectLevelTranslation = LanguageUtils.getTranslation(TranslationKeyUtils.getEffectLevel(amplifier), language);
+						if (effectLevelTranslation.length() > 0) {
+							description += " " + effectLevelTranslation;
 						}
 						if (!effect.getType().isInstant()) {
 							if (xMaterial.equals(XMaterial.LINGERING_POTION)) {
-								description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() / 4 * 50) + ")";
+								description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() / 4 * 50, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true) + ")";
 							} else {
-								description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() * 50) + ")";
+								description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() * 50, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true) + ")";
 							}
 						}
 						ChatColor color = PotionUtils.isPositive(effect.getType()) ? ChatColor.BLUE : ChatColor.RED;
@@ -675,7 +678,7 @@ public class DiscordItemStackUtils {
 						enchName = translation;
 					}
 					if (enchName != null) {
-						prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRomanIfUnder(level, 11))));
+						prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + LanguageUtils.getTranslation(TranslationKeyUtils.getEnchantmentLevel(level), language))));
 					}
 				}
 			} else {
@@ -691,7 +694,7 @@ public class DiscordItemStackUtils {
 						enchName = translation;
 					}
 					if (enchName != null) {
-						prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + RomanNumberUtils.toRomanIfUnder(level, 11))));
+						prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + LanguageUtils.getTranslation(TranslationKeyUtils.getEnchantmentLevel(level), language))));
 					}
 				}
 			}
@@ -699,7 +702,7 @@ public class DiscordItemStackUtils {
 		
 		if (hasMeta && item.getItemMeta() instanceof LeatherArmorMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_DYE)) {
 			LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
-			if (NBTUtils.contains(item, "display", "color")) {
+			if (NBTEditor.contains(item, "display", "color")) {
 				Color color = new Color(meta.getColor().asRGB());
 				String hex = ColorUtils.rgb2Hex(color).toUpperCase();
 				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getDyeColor(), language).replaceFirst("%s", hex)));
@@ -715,7 +718,7 @@ public class DiscordItemStackUtils {
 			}
 		}
 		
-		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && NBTUtils.contains(item, "AttributeModifiers") && NBTUtils.getSize(item, "AttributeModifiers") > 0 && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
+		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && NBTEditor.contains(item, "AttributeModifiers") && NBTEditor.getSize(item, "AttributeModifiers") > 0 && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
 			List<Component> mainHand = new LinkedList<>();
 			List<Component> offHand = new LinkedList<>();
 			List<Component> feet = new LinkedList<>();
@@ -723,7 +726,7 @@ public class DiscordItemStackUtils {
 			List<Component> chest = new LinkedList<>();
 			List<Component> head = new LinkedList<>();
 			@SuppressWarnings("unchecked")
-			ListTag<CompoundTag> attributeList = (ListTag<CompoundTag>) new SNBTDeserializer().fromString(NBTUtils.getNBTCompound(item, "tag", "AttributeModifiers").toJson());
+			ListTag<CompoundTag> attributeList = (ListTag<CompoundTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "AttributeModifiers").toJson());
 			for (CompoundTag attributeTag : attributeList) {
 				String attributeName = attributeTag.getString("AttributeName").replace("minecraft:", "");
 				double amount = attributeTag.getDouble("Amount");
@@ -802,11 +805,11 @@ public class DiscordItemStackUtils {
 		}
 		
 		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_DESTROYS)) {
-			if (NBTUtils.contains(item, "CanDestroy") && NBTUtils.getSize(item, "CanDestroy") > 0) {
+			if (NBTEditor.contains(item, "CanDestroy") && NBTEditor.getSize(item, "CanDestroy") > 0) {
 				prints.add(Component.empty());
 				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getCanDestroy(), language)));
 				@SuppressWarnings("unchecked")
-				ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTUtils.getNBTCompound(item, "tag", "CanDestroy").toJson());
+				ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "CanDestroy").toJson());
 				for (StringTag materialTag : materialList) {
 					XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
 					if (parsedXMaterial == null) {
@@ -819,11 +822,11 @@ public class DiscordItemStackUtils {
 		}
 		
 		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_PLACED_ON)) {
-			if (NBTUtils.contains(item, "CanPlaceOn") && NBTUtils.getSize(item, "CanPlaceOn") > 0) {
+			if (NBTEditor.contains(item, "CanPlaceOn") && NBTEditor.getSize(item, "CanPlaceOn") > 0) {
 				prints.add(Component.empty());
 				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getCanPlace(), language)));
 				@SuppressWarnings("unchecked")
-				ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTUtils.getNBTCompound(item, "tag", "CanPlaceOn").toJson());
+				ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "CanPlaceOn").toJson());
 				for (StringTag materialTag : materialList) {
 					XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
 					if (parsedXMaterial == null) {
@@ -856,7 +859,7 @@ public class DiscordItemStackUtils {
 			}
 			return false;
 		} else {
-			return NBTUtils.getByte(item, "Unbreakable") > 0;
+			return NBTEditor.getByte(item, "Unbreakable") > 0;
 		}
 	}
 

@@ -33,6 +33,7 @@ import com.loohp.interactivechat.api.InteractiveChatAPI.SharedType;
 import com.loohp.interactivechat.api.events.PostPacketComponentProcessEvent;
 import com.loohp.interactivechat.bungeemessaging.BungeeMessageSender;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
+import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.TranslatableComponent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.ClickEvent;
@@ -55,7 +56,6 @@ import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.InventoryUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechat.utils.MCVersion;
-import com.loohp.interactivechat.utils.NBTUtils;
 import com.loohp.interactivechat.utils.PlayerUtils;
 import com.loohp.interactivechat.utils.SkinUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
@@ -385,7 +385,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 			if (level != 1) {
 				expText = expText.args(Component.text(level + ""));
 			}
-			exp = NBTUtils.set(exp, InteractiveChatComponentSerializer.gson().serialize(expText), "display", "Name");
+			exp = NBTEditor.set(exp, InteractiveChatComponentSerializer.gson().serialize(expText), "display", "Name");
 		} else {
 			ItemMeta expMeta = exp.getItemMeta();
 			expMeta.setDisplayName(ChatColor.YELLOW + LanguageUtils.getTranslation(InventoryDisplay.getLevelTranslation(level), InteractiveChat.language).replaceFirst("%s", level + ""));
@@ -470,7 +470,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 			if (level != 1) {
 				expText = expText.args(Component.text(level + ""));
 			}
-			exp = NBTUtils.set(exp, InteractiveChatComponentSerializer.gson().serialize(expText), "display", "Name");
+			exp = NBTEditor.set(exp, InteractiveChatComponentSerializer.gson().serialize(expText), "display", "Name");
 		} else {
 			ItemMeta expMeta = exp.getItemMeta();
 			expMeta.setDisplayName(ChatColor.YELLOW + LanguageUtils.getTranslation(InventoryDisplay.getLevelTranslation(level), InteractiveChat.language).replaceFirst("%s", level + ""));

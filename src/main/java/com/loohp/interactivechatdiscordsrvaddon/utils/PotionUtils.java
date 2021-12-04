@@ -24,8 +24,8 @@ public class PotionUtils {
 	private static Class<?> nmsNbtTagCompoundClass;
 	private static Method nmsNbtTagGetStringMethod;
 	private static Class<?> nmsPotionRegistryClass;
-	private static Method nmsPotionRegistryA1Method;
-	private static Method nmsPotionRegistryA2Method;
+	private static Method nmsPotionRegistryGetPotionRegistryFromStringMethod;
+	private static Method nmsPotionRegistryGetMobEffectListMethod;
 	private static Class<?> craftPotionUtilClass;
 	private static Class<?> nmsMobEffectClass;
 	private static Method craftPotionUtilToBukkitMethod;
@@ -40,13 +40,22 @@ public class PotionUtils {
 			craftItemStackClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.inventory.CraftItemStack");
 			nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemStack", "net.minecraft.world.item.ItemStack");
 			asNMSCopyMethod = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class);
-			nmsItemHasTagMethod = nmsItemStackClass.getMethod("hasTag");
-			nmsItemHasGetMethod = nmsItemStackClass.getMethod("getTag");
+			try {
+				nmsItemHasTagMethod = nmsItemStackClass.getMethod("hasTag");
+				nmsItemHasGetMethod = nmsItemStackClass.getMethod("getTag");
+			} catch (Exception e) {
+				nmsItemHasTagMethod = nmsItemStackClass.getMethod("r");
+				nmsItemHasGetMethod = nmsItemStackClass.getMethod("s");
+			}
 			nmsNbtTagCompoundClass = NMSUtils.getNMSClass("net.minecraft.server.%s.NBTTagCompound", "net.minecraft.nbt.NBTTagCompound");
-			nmsNbtTagGetStringMethod = nmsNbtTagCompoundClass.getMethod("getString", String.class);
+			try {
+				nmsNbtTagGetStringMethod = nmsNbtTagCompoundClass.getMethod("getString", String.class);
+			} catch (Exception e) {
+				nmsNbtTagGetStringMethod = nmsNbtTagCompoundClass.getMethod("l", String.class);
+			}
 			nmsPotionRegistryClass = NMSUtils.getNMSClass("net.minecraft.server.%s.PotionRegistry", "net.minecraft.world.item.alchemy.PotionRegistry");
-			nmsPotionRegistryA1Method = nmsPotionRegistryClass.getMethod("a", String.class);
-			nmsPotionRegistryA2Method = nmsPotionRegistryClass.getMethod("a");
+			nmsPotionRegistryGetPotionRegistryFromStringMethod = nmsPotionRegistryClass.getMethod("a", String.class);
+			nmsPotionRegistryGetMobEffectListMethod = nmsPotionRegistryClass.getMethod("a");
 			craftPotionUtilClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.potion.CraftPotionUtil");
 			nmsMobEffectClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MobEffect", "net.minecraft.world.effect.MobEffect");
 			craftPotionUtilToBukkitMethod = craftPotionUtilClass.getMethod("toBukkit", nmsMobEffectClass);
@@ -100,12 +109,12 @@ public class PotionUtils {
 		if (split.length == 2) {
 			pName = split[1];
 		}
-		Object reg = nmsPotionRegistryA1Method.invoke(null, pName);
+		Object reg = nmsPotionRegistryGetPotionRegistryFromStringMethod.invoke(null, pName);
 		if (reg == null) {
 			return null;
 		}
 		List<PotionEffect> effects = new ArrayList<>();
-		for (Object me : (List<?>) nmsPotionRegistryA2Method.invoke(reg)) {
+		for (Object me : (List<?>) nmsPotionRegistryGetMobEffectListMethod.invoke(reg)) {
 			effects.add((PotionEffect) craftPotionUtilToBukkitMethod.invoke(null, me));
 		}
 		return effects;

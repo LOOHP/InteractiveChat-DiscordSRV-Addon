@@ -47,19 +47,23 @@ public class DiscordReadyEvents {
 		Bukkit.getPluginManager().registerEvents(discordCommands, InteractiveChatDiscordSrvAddon.plugin);
 		
 		for (String channelId : discordsrv.getChannels().values()) {
-			GuildChannel channel = jda.getGuildChannelById(channelId);
-			if (channel != null) {
-				Guild guild = channel.getGuild();
-				Member self = guild.getMember(jda.getSelfUser());
-				for (Permission permission : InteractiveChatDiscordSrvAddon.requiredPermissions) {
-					if (!self.hasPermission(channel, permission)) {
-						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] DiscordSRV Bot is missing the \"" + permission.getName() + "\" permission in the channel \"" + channel.getName() + "\" (Id: " + channel.getId() + ")");
+			if (channelId != null) {
+				try {
+					GuildChannel channel = jda.getGuildChannelById(channelId);
+					if (channel != null) {
+						Guild guild = channel.getGuild();
+						Member self = guild.getMember(jda.getSelfUser());
+						for (Permission permission : InteractiveChatDiscordSrvAddon.requiredPermissions) {
+							if (!self.hasPermission(channel, permission)) {
+								Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] DiscordSRV Bot is missing the \"" + permission.getName() + "\" permission in the channel \"" + channel.getName() + "\" (Id: " + channel.getId() + ")");
+							}
+						}
 					}
+				} catch (Exception e) {
+					new RuntimeException("Error when getting guild from channelId (" + channelId + ")", e).printStackTrace();
 				}
 			}
 		}
-		
-		InboundToGameEvents.ready(discordsrv);
 	}
 
 }

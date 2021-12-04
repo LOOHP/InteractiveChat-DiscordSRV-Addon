@@ -5,26 +5,31 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
-import java.util.concurrent.TimeUnit;
+import java.util.LinkedList;
+import java.util.List;
 
 public class TimeUtils {
 	
 	private static DecimalFormat formatter = new DecimalFormat("00");
 	
-	public static String getReadableTimeBetween(long beginning, long ending) {
+	public static String getReadableTimeBetween(long beginning, long ending, String delimiter, ChronoUnit largestUnit, ChronoUnit smallestUnit, boolean showEvenIfLargestIs0) {
 		LocalDateTime start = LocalDateTime.ofInstant(Instant.ofEpochMilli(beginning), ZoneId.systemDefault());
 		LocalDateTime end = LocalDateTime.ofInstant(Instant.ofEpochMilli(ending), ZoneId.systemDefault());
-		long hrs = ChronoUnit.HOURS.between(start, end);
-		long mins = ChronoUnit.MINUTES.between(start, end);
-		long secs = ChronoUnit.SECONDS.between(start, end);
 		
-		return (hrs == 0 ? "" : (hrs + ":")) + formatter.format(mins % 60) + ":" + formatter.format(secs % 60);
-	}
-	
-	public static String getReadableTime(long time) {		
-		return String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(time),
-	            TimeUnit.MILLISECONDS.toMinutes(time) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(time)),
-	            TimeUnit.MILLISECONDS.toSeconds(time) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(time)));
+		List<String> timeStrings = new LinkedList<>();
+		
+		for (ChronoUnit unit : EnumUtils.valuesBetween(ChronoUnit.class, smallestUnit, largestUnit)) {
+			long time = unit.between(start, end);
+			if (unit.equals(largestUnit)) {
+				if (showEvenIfLargestIs0 || time != 0) {
+					timeStrings.add(0, String.valueOf(time));
+				}
+			} else {
+				timeStrings.add(0, formatter.format(time % 60));
+			}
+		}
+		
+		return String.join(delimiter, timeStrings);
 	}
 
 }
