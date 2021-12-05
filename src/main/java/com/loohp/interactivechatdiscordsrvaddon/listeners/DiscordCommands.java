@@ -167,7 +167,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 					List<ValueTrios<UUID, Component, Integer>> player = new ArrayList<>();
 					for (Entry<OfflinePlayer, Integer> entry : players.entrySet()) {
 						OfflinePlayer offlineplayer = entry.getKey();
-						player.add(new ValueTrios<>(offlineplayer.getUniqueId(), LegacyComponentSerializer.legacySection().deserialize(PlaceholderAPI.setPlaceholders(offlineplayer, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandPlayerFormat)), entry.getValue()));
+						player.add(new ValueTrios<>(offlineplayer.getUniqueId(), LegacyComponentSerializer.legacySection().deserialize(ChatColorUtils.translatePopularHexFormats('&', PlaceholderAPI.setPlaceholders(offlineplayer, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandPlayerFormat))), entry.getValue()));
 					}
 					errorCode--;
 					BufferedImage image = ImageGeneration.getTabListImage(header, footer, player, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandAvatar, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandPing);
