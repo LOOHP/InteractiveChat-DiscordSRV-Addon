@@ -34,6 +34,8 @@ import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
 @SuppressWarnings("deprecation")
 public class GraphicsToPacketMapWrapper {
 	
+	public static final short MAP_ID = Short.MAX_VALUE;
+	
 	private static Class<?> nmsMapIconClass;
 	private static Class<?> nmsWorldMapClass;
 	private static Class<?> nmsWorldMapBClass;
@@ -54,7 +56,6 @@ public class GraphicsToPacketMapWrapper {
 	private ImageFrame[] frames;
 	private byte[][] colors;
 	private ItemStack mapItem;
-	private short mapId = Short.MAX_VALUE;
 	private int totalTime;
 	private boolean playbackBar;
 	
@@ -74,10 +75,10 @@ public class GraphicsToPacketMapWrapper {
 		this.colors = new byte[frames.length][];
 		this.mapItem = XMaterial.FILLED_MAP.parseItem();
 		if (InteractiveChat.version.isLegacy()) {
-			mapItem.setDurability(mapId);
+			mapItem.setDurability(MAP_ID);
 		} else {
 			MapMeta meta = (MapMeta) mapItem.getItemMeta();
-			meta.setMapId(mapId);
+			meta.setMapId(MAP_ID);
 			mapItem.setItemMeta(meta);
 		}
 		int totalTime = 0;
@@ -148,12 +149,12 @@ public class GraphicsToPacketMapWrapper {
 		
 		PacketContainer packet2 = protocollib.createPacket(PacketType.Play.Server.MAP);
 		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_17)) {
-			packet2.getIntegers().write(0, (int) mapId);
+			packet2.getIntegers().write(0, (int) MAP_ID);
 			packet2.getBytes().write(0, (byte) 0);
 			packet2.getBooleans().write(0, false);
 		} else {
 			int mapIconFieldPos = 2;
-			packet2.getIntegers().write(0, (int) mapId);
+			packet2.getIntegers().write(0, (int) MAP_ID);
 			packet2.getBytes().write(0, (byte) 0);
 			if (!InteractiveChat.version.isOld()) {
 				packet2.getBooleans().write(0, false);

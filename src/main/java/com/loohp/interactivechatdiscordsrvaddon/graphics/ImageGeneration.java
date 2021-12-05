@@ -1271,7 +1271,7 @@ public class ImageGeneration {
 			UUID uuid = trio.getFirst();
 			Component name = trio.getSecond();
 			int ping = trio.getThird();
-			BufferedImage image = new BufferedImage(1024, 16, BufferedImage.TYPE_INT_ARGB);
+			BufferedImage image = new BufferedImage(10240, 16, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g = image.createGraphics();
 			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 			int offsetX = 0;
@@ -1358,7 +1358,7 @@ public class ImageGeneration {
 		}
 		Map<BufferedImage, Integer> headerLines = new LinkedHashMap<>(header.size());
 		for (Component line : header) {
-			BufferedImage image = new BufferedImage(1024, 18, BufferedImage.TYPE_INT_ARGB);
+			BufferedImage image = new BufferedImage(10240, 18, BufferedImage.TYPE_INT_ARGB);
 			ImageUtils.printComponent(image, line, 0, -1, 16);
 			int lastX = 0;
 			for (int x = 0; x < image.getWidth(); x++) {
@@ -1378,7 +1378,7 @@ public class ImageGeneration {
 		}
 		Map<BufferedImage, Integer> footerLines = new LinkedHashMap<>(footer.size());
 		for (Component line : footer) {
-			BufferedImage image = new BufferedImage(1024, 18, BufferedImage.TYPE_INT_ARGB);
+			BufferedImage image = new BufferedImage(10240, 18, BufferedImage.TYPE_INT_ARGB);
 			ImageUtils.printComponent(image, line, 0, -1, 16);
 			int lastX = 0;
 			for (int x = 0; x < image.getWidth(); x++) {

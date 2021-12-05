@@ -3,6 +3,7 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 import java.awt.Color;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -12,6 +13,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
+import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.utils.NMSUtils;
 
 public class PotionUtils {
@@ -23,6 +25,9 @@ public class PotionUtils {
 	private static Method nmsItemHasGetMethod;
 	private static Class<?> nmsNbtTagCompoundClass;
 	private static Method nmsNbtTagGetStringMethod;
+	private static Class<?> craftPotionBrewerClass;
+	private static Object craftPotionBrewerInstance;
+	private static Method craftPotionBrewerGetEffectsFromDamageMethod;
 	private static Class<?> nmsPotionRegistryClass;
 	private static Method nmsPotionRegistryGetPotionRegistryFromStringMethod;
 	private static Method nmsPotionRegistryGetMobEffectListMethod;
@@ -53,12 +58,18 @@ public class PotionUtils {
 			} catch (Exception e) {
 				nmsNbtTagGetStringMethod = nmsNbtTagCompoundClass.getMethod("l", String.class);
 			}
-			nmsPotionRegistryClass = NMSUtils.getNMSClass("net.minecraft.server.%s.PotionRegistry", "net.minecraft.world.item.alchemy.PotionRegistry");
-			nmsPotionRegistryGetPotionRegistryFromStringMethod = nmsPotionRegistryClass.getMethod("a", String.class);
-			nmsPotionRegistryGetMobEffectListMethod = nmsPotionRegistryClass.getMethod("a");
-			craftPotionUtilClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.potion.CraftPotionUtil");
-			nmsMobEffectClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MobEffect", "net.minecraft.world.effect.MobEffect");
-			craftPotionUtilToBukkitMethod = craftPotionUtilClass.getMethod("toBukkit", nmsMobEffectClass);
+			if (InteractiveChat.version.isOld()) {
+				craftPotionBrewerClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.potion.CraftPotionBrewer");
+				craftPotionBrewerInstance = craftPotionBrewerClass.getConstructor().newInstance();
+				craftPotionBrewerGetEffectsFromDamageMethod = craftPotionBrewerClass.getMethod("getEffectsFromDamage", int.class);
+			} else {
+				nmsPotionRegistryClass = NMSUtils.getNMSClass("net.minecraft.server.%s.PotionRegistry", "net.minecraft.world.item.alchemy.PotionRegistry");
+				nmsPotionRegistryGetPotionRegistryFromStringMethod = nmsPotionRegistryClass.getMethod("a", String.class);
+				nmsPotionRegistryGetMobEffectListMethod = nmsPotionRegistryClass.getMethod("a");
+				craftPotionUtilClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.potion.CraftPotionUtil");
+				nmsMobEffectClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MobEffect", "net.minecraft.world.effect.MobEffect");
+				craftPotionUtilToBukkitMethod = craftPotionUtilClass.getMethod("toBukkit", nmsMobEffectClass);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -86,7 +97,7 @@ public class PotionUtils {
 	public static Color getPotionBaseColor(PotionType type) {
 		PotionEffectType effect = type.getEffectType();
 		if (effect == null) {
-			if (type.equals(PotionType.UNCRAFTABLE)) {
+			if (type.name().equalsIgnoreCase("UNCRAFTABLE")) {
 				return UNCRAFTABLE_COLOR;
 			} else {
 				return WATER_COLOR;
@@ -96,28 +107,33 @@ public class PotionUtils {
 		}
 	}
 
+	@SuppressWarnings({ "deprecation", "unchecked" })
 	public static List<PotionEffect> getBasePotionEffect(ItemStack potion) throws Exception {
-		Object nmsStack = asNMSCopyMethod.invoke(null, potion);
-		if (!(Boolean) nmsItemHasTagMethod.invoke(nmsStack)) {
-			return null;
+		if (InteractiveChat.version.isOld()) {
+			return new ArrayList<>((Collection<PotionEffect>) craftPotionBrewerGetEffectsFromDamageMethod.invoke(craftPotionBrewerInstance, potion.getDurability()));
+		} else {
+			Object nmsStack = asNMSCopyMethod.invoke(null, potion);
+			if (!(Boolean) nmsItemHasTagMethod.invoke(nmsStack)) {
+				return null;
+			}
+			String pName = (String) nmsNbtTagGetStringMethod.invoke(nmsItemHasGetMethod.invoke(nmsStack), "Potion");
+			if (pName == null) {
+				return null;
+			}
+			String[] split = pName.split(":");
+			if (split.length == 2) {
+				pName = split[1];
+			}
+			Object reg = nmsPotionRegistryGetPotionRegistryFromStringMethod.invoke(null, pName);
+			if (reg == null) {
+				return null;
+			}
+			List<PotionEffect> effects = new ArrayList<>();
+			for (Object me : (List<?>) nmsPotionRegistryGetMobEffectListMethod.invoke(reg)) {
+				effects.add((PotionEffect) craftPotionUtilToBukkitMethod.invoke(null, me));
+			}
+			return effects;
 		}
-		String pName = (String) nmsNbtTagGetStringMethod.invoke(nmsItemHasGetMethod.invoke(nmsStack), "Potion");
-		if (pName == null) {
-			return null;
-		}
-		String[] split = pName.split(":");
-		if (split.length == 2) {
-			pName = split[1];
-		}
-		Object reg = nmsPotionRegistryGetPotionRegistryFromStringMethod.invoke(null, pName);
-		if (reg == null) {
-			return null;
-		}
-		List<PotionEffect> effects = new ArrayList<>();
-		for (Object me : (List<?>) nmsPotionRegistryGetMobEffectListMethod.invoke(reg)) {
-			effects.add((PotionEffect) craftPotionUtilToBukkitMethod.invoke(null, me));
-		}
-		return effects;
 	}
 	
 	public static boolean isPositive(PotionEffectType type) {
