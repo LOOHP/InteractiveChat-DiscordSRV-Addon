@@ -29,6 +29,7 @@ public class MCFont {
 	private static final List<String> ORDER = new ArrayList<>();
     
     public synchronized static boolean reloadFonts() {
+    	Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] Loading fonts...");
     	try {
     		GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
     	} catch (Throwable e) {
@@ -81,6 +82,8 @@ public class MCFont {
         		FONTS.putAll(fonts);
             	ORDER.clear();
             	ORDER.addAll(order);
+            	
+            	Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] Loaded " + FONTS.size() + " fonts!");
         	});
 
             return working = true;
