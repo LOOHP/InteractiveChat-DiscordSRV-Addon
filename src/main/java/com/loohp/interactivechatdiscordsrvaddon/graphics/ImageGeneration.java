@@ -955,11 +955,11 @@ public class ImageGeneration {
 					Location target;
 					if (meta.hasLodestone()) {
 						Location lodestone = meta.getLodestone();
-						target = new Location(lodestone.getWorld(), lodestone.getBlockX() + 0.5, lodestone.getY(), lodestone.getZ() + 0.5, lodestone.getYaw(), lodestone.getPitch());
+						target = new Location(lodestone.getWorld(), lodestone.getBlockX() + 0.5, lodestone.getBlockY(), lodestone.getBlockZ() + 0.5, lodestone.getYaw(), lodestone.getPitch());
 						requiresEnchantmentGlint = true;
 					} else if (icplayer.getLocalPlayer().getWorld().getEnvironment().equals(Environment.NORMAL)) {
 						Location spawn = icplayer.getLocalPlayer().getWorld().getSpawnLocation();
-						target = new Location(spawn.getWorld(), spawn.getBlockX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, spawn.getYaw(), spawn.getPitch());
+						target = new Location(spawn.getWorld(), spawn.getBlockX() + 0.5, spawn.getBlockY(), spawn.getBlockZ() + 0.5, spawn.getYaw(), spawn.getPitch());
 					} else {
 						target = null;
 					}
@@ -980,7 +980,7 @@ public class ImageGeneration {
 				} else {
 					if (icplayer.getLocalPlayer().getWorld().getEnvironment().equals(Environment.NORMAL)) {
 						Location spawn = icplayer.getLocalPlayer().getWorld().getSpawnLocation();
-						Location target = new Location(spawn.getWorld(), spawn.getBlockX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, spawn.getYaw(), spawn.getPitch());
+						Location target = new Location(spawn.getWorld(), spawn.getBlockX() + 0.5, spawn.getBlockY(), spawn.getBlockZ() + 0.5, spawn.getYaw(), spawn.getPitch());
 						Location playerLocation = icplayer.getLocalPlayer().getEyeLocation();
 						playerLocation.setPitch(0);
 						Vector looking = playerLocation.getDirection();

@@ -124,7 +124,7 @@ public class AssetsDownloader {
 				String value = downloadedEntries.get(key).toString();
 				String fileName = getEntryName(key);
 				if (!InteractiveChatDiscordSrvAddon.plugin.reducedAssetsDownloadInfo) {
-					double percentage = ((double) ++i / (double) size ) * 100;
+					double percentage = ((double) ++i / (double) size) * 100;
 					Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Downloading " + value + "/" + fileName + " (" + FORMAT.format(percentage) + "%)");
 				}
 				File folder = new File(rootFolder, value);
