@@ -631,9 +631,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 						continue;
 					}
 					try {
-						BufferedImage guiImage = ImageIO.read(file);
+						BufferedImage bannerImage = ImageIO.read(file);
 						
-						if (guiImage == null) {
+						if (bannerImage == null) {
 							continue;
 						}
 						
@@ -643,7 +643,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 							name = name.substring(0, lastDot);
 						}
 						
-						banner.put(name, guiImage);
+						banner.put(name, bannerImage);
 					} catch (IOException e) {
 						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
 						e.printStackTrace();
@@ -655,9 +655,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 						continue;
 					}
 					try {
-						BufferedImage guiImage = ImageIO.read(file);
+						BufferedImage puppetImage = ImageIO.read(file);
 						
-						if (guiImage == null) {
+						if (puppetImage == null) {
 							continue;
 						}
 						
@@ -667,7 +667,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 							name = name.substring(0, lastDot);
 						}
 						
-						puppet.put(name, guiImage);
+						puppet.put(name, puppetImage);
 					} catch (IOException e) {
 						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
 						e.printStackTrace();
@@ -679,9 +679,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 						continue;
 					}
 					try {
-						BufferedImage guiImage = ImageIO.read(file);
+						BufferedImage armorImage = ImageIO.read(file);
 						
-						if (guiImage == null) {
+						if (armorImage == null) {
 							continue;
 						}
 						
@@ -691,7 +691,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 							name = name.substring(0, lastDot);
 						}
 						
-						armor.put(name, guiImage);
+						armor.put(name, armorImage);
 					} catch (IOException e) {
 						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
 						e.printStackTrace();

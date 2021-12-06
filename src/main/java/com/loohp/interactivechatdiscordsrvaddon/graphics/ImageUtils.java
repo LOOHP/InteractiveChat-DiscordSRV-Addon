@@ -421,8 +421,12 @@ public class ImageUtils {
 	}
 	
 	public static BufferedImage printComponentRightAligned(BufferedImage image, Component component, int topX, int topY, float fontSize) {
+		return printComponentRightAligned(image, component, topX, topY, fontSize, CHAT_COLOR_BACKGROUND_FACTOR);
+	}
+	
+	public static BufferedImage printComponentRightAligned(BufferedImage image, Component component, int topX, int topY, float fontSize, double shadowFactor) {
 		BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
-		textImage = printComponent(textImage, component, 0, 0, fontSize);
+		textImage = printComponent(textImage, component, 0, 0, fontSize, shadowFactor);
 		int lastX = 0;
 		for (int x = 0; x < textImage.getWidth() - 9; x++) {
 			for (int y = 0; y < textImage.getHeight(); y++) {
@@ -439,11 +443,15 @@ public class ImageUtils {
 	}
 	
 	public static BufferedImage printComponent(BufferedImage image, Component component, int topX, int topY, float fontSize) {
-		image = printComponent(image, component, (int) (topX + (fontSize * 0.15)), (int) (topY + (fontSize * 0.15)), fontSize, CHAT_COLOR_BACKGROUND_FACTOR);
-		return printComponent(image, component, topX, topY, fontSize, 1);
+		return printComponent(image, component, topX, topY, fontSize, CHAT_COLOR_BACKGROUND_FACTOR);
 	}
 	
-	private static BufferedImage printComponent(BufferedImage image, Component component, int topX, int topY, float fontSize, double factor) {
+	public static BufferedImage printComponent(BufferedImage image, Component component, int topX, int topY, float fontSize, double shadowFactor) {
+		image = printComponent0(image, component, (int) (topX + (fontSize * 0.15)), (int) (topY + (fontSize * 0.15)), fontSize, shadowFactor);
+		return printComponent0(image, component, topX, topY, fontSize, 1);
+	}
+	
+	private static BufferedImage printComponent0(BufferedImage image, Component component, int topX, int topY, float fontSize, double factor) {
 		String text = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(component, InteractiveChatDiscordSrvAddon.plugin.language);
 		text = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(LegacyComponentSerializer.legacySection().deserialize(ChatColorUtils.getFirstColors(text))) + text;
 		String striped = ChatColorUtils.stripColor(text);

@@ -82,6 +82,8 @@ public class ImageGeneration {
 	private static final int MAP_ICON_PER_ROLE = 16;
 	private static final int SPACING = 36;
 	
+	private static final double ITEM_AMOUNT_TEXT_DARKEN_FACTOR = 75.0 / 255.0;
+	
 	private static final double ENCHANTMENT_GLINT_FACTOR = 190.0 / 255.0;
 	
 	private static final String PLAYER_CAPE_KEY = "PlayerCapeTexture";
@@ -994,6 +996,12 @@ public class ImageGeneration {
 					}
 				}
 			} else {
+				if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
+					CompassMeta meta = (CompassMeta) item.getItemMeta();
+					if (meta.hasLodestone()) {
+						requiresEnchantmentGlint = true;
+					}
+				}
 				phase = 0;
 			}
 			itemImage = InteractiveChatDiscordSrvAddon.plugin.getItemTexture("compass_" + VARIATION_FORMAT.format(phase));
@@ -1104,18 +1112,8 @@ public class ImageGeneration {
 			Graphics2D g4 = newItemImage.createGraphics();
 			g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 			g4.drawImage(itemImage, 0, 0, null);
-			
-			String str = Integer.toString(amount);
-			int x = 22;
-			for (int i = str.length() - 1; i >= 0; i--) {
-				BufferedImage charImage = InteractiveChatDiscordSrvAddon.plugin.getFontTexture(str.substring(i, i + 1));
-				g4.drawImage(ImageUtils.darken(ImageUtils.copyImage(charImage), 180), x, 21, null);
-				g4.drawImage(charImage, x - 2, 19, null);
-				x -= 12;
-			}
-			
 			g4.dispose();
-			
+			newItemImage = ImageUtils.printComponentRightAligned(newItemImage, Component.text(amount), 33, 18, 16, ITEM_AMOUNT_TEXT_DARKEN_FACTOR);		
 			itemImage = newItemImage;
 		}
 		
