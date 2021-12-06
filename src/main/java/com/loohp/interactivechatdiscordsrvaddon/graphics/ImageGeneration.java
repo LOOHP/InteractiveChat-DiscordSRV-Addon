@@ -1271,7 +1271,7 @@ public class ImageGeneration {
 			UUID uuid = trio.getFirst();
 			Component name = trio.getSecond();
 			int ping = trio.getThird();
-			BufferedImage image = new BufferedImage(10240, 16, BufferedImage.TYPE_INT_ARGB);
+			BufferedImage image = new BufferedImage(4096, 16, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g = image.createGraphics();
 			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 			int offsetX = 0;
@@ -1334,18 +1334,19 @@ public class ImageGeneration {
 			playerImages.add(new ValuePairs<>(image, ping));
 		}
 		List<BufferedImage> playerRows = new ArrayList<>(playerImages.size());
+		if (showPing) {
+			masterOffsetX += 26;
+		} else {
+			masterOffsetX += 2;
+		}
 		for (ValuePairs<BufferedImage, Integer> pair : playerImages) {
 			BufferedImage image = pair.getFirst();
 			if (showPing) {
-				masterOffsetX += 4;
 				BufferedImage ping = getPingIcon(pair.getSecond());
 				Graphics2D g = image.createGraphics();
 				g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-				g.drawImage(ImageUtils.resizeImageAbs(ping, 20, 14), masterOffsetX, 3, null);
+				g.drawImage(ImageUtils.resizeImageAbs(ping, 20, 14), masterOffsetX - 22, 3, null);
 				g.dispose();
-				masterOffsetX += 22;
-			} else {
-				masterOffsetX += 2;
 			}
 			BufferedImage cropped = new BufferedImage(masterOffsetX, 16, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g = cropped.createGraphics();
@@ -1358,7 +1359,7 @@ public class ImageGeneration {
 		}
 		Map<BufferedImage, Integer> headerLines = new LinkedHashMap<>(header.size());
 		for (Component line : header) {
-			BufferedImage image = new BufferedImage(10240, 18, BufferedImage.TYPE_INT_ARGB);
+			BufferedImage image = new BufferedImage(4096, 18, BufferedImage.TYPE_INT_ARGB);
 			ImageUtils.printComponent(image, line, 0, -1, 16);
 			int lastX = 0;
 			for (int x = 0; x < image.getWidth(); x++) {
@@ -1378,7 +1379,7 @@ public class ImageGeneration {
 		}
 		Map<BufferedImage, Integer> footerLines = new LinkedHashMap<>(footer.size());
 		for (Component line : footer) {
-			BufferedImage image = new BufferedImage(10240, 18, BufferedImage.TYPE_INT_ARGB);
+			BufferedImage image = new BufferedImage(4096, 18, BufferedImage.TYPE_INT_ARGB);
 			ImageUtils.printComponent(image, line, 0, -1, 16);
 			int lastX = 0;
 			for (int x = 0; x < image.getWidth(); x++) {
