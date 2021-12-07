@@ -62,7 +62,9 @@ import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.api.events.InteractiveChatDiscordSRVConfigReloadEvent;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordMessageContent;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayType;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
@@ -253,6 +255,15 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 					ByteArrayOutputStream os = new ByteArrayOutputStream();
 					ImageIO.write(image, "png", os);
 					content.addAttachment("Inventory.png", os.toByteArray());
+					errorCode--;
+					if (InteractiveChatDiscordSrvAddon.plugin.invShowLevel) {
+						int level = offlineICPlayer.getExperienceLevel();
+						ByteArrayOutputStream bottleOut = new ByteArrayOutputStream();
+						ImageIO.write(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("experience_bottle"), "png", bottleOut);
+						content.addAttachment("Level.png", bottleOut.toByteArray());
+						content.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language).replaceFirst("%s", level + ""));
+						content.setFooterImageUrl("attachment://Level.png");
+					}
 					errorCode--;
 					event.getHook().editOriginal(PlainTextComponentSerializer.plainText().serialize(component)).and(content.toJDAMessageRestAction(channel)).queue();
 				}
