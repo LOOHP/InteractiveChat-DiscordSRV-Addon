@@ -488,12 +488,12 @@ public class OutboundToDiscordEvents implements Listener {
 			ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
 			ImageIO.write(image, "png", itemOs);
 			
-			DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
+			DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item, player);
 			
 			content.addAttachment("Item.png", itemOs.toByteArray());
 			
 			if (InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImage) {
-				DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item);
+				DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, player);
 				if (!discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
 					BufferedImage tooltip = ImageGeneration.getToolTipImage(discordToolTip.getComponents());
 					ByteArrayOutputStream tooltipOs = new ByteArrayOutputStream();
@@ -698,6 +698,7 @@ public class OutboundToDiscordEvents implements Listener {
 			}
 			
 			message.delete().queue();
+			Player player = DATA.get(matches.iterator().next()).getPlayer();
 			
 			List<DiscordDisplayData> dataList = new ArrayList<>();
 			
@@ -711,7 +712,7 @@ public class OutboundToDiscordEvents implements Listener {
 			Collections.sort(dataList, DISPLAY_DATA_COMPARATOR);
 			
 			Debug.debug("discordMessageSent creating contents");
-			List<DiscordMessageContent> contents = createContents(dataList);			
+			List<DiscordMessageContent> contents = createContents(dataList, player);			
 			
 			DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
 			TextChannel textChannel = discordImageEvent.getChannel();
@@ -782,7 +783,7 @@ public class OutboundToDiscordEvents implements Listener {
 			Collections.sort(dataList, DISPLAY_DATA_COMPARATOR);
 			
 			Debug.debug("onMessageReceived creating contents");
-			List<DiscordMessageContent> contents = createContents(dataList);
+			List<DiscordMessageContent> contents = createContents(dataList, player);
 			
 			List<WebhookMessageBuilder> messagesToSend = new ArrayList<>();
 			
@@ -832,7 +833,7 @@ public class OutboundToDiscordEvents implements Listener {
 		}
 	}
 	
-	private static List<DiscordMessageContent> createContents(List<DiscordDisplayData> dataList) {
+	private static List<DiscordMessageContent> createContents(List<DiscordDisplayData> dataList, Player player) {
 		List<DiscordMessageContent> contents = new ArrayList<>();
 		for (DiscordDisplayData data : dataList) {
 			if (data instanceof ImageDisplayData) {
@@ -851,14 +852,14 @@ public class OutboundToDiscordEvents implements Listener {
 						ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
 						ImageIO.write(image, "png", itemOs);
 						
-						DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item);
+						DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item, player);
 						
 						DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", color);
 						content.addAttachment("Item.png", itemOs.toByteArray());
 						contents.add(content);
 						
 						if (InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImage) {
-							DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item);
+							DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, player);
 							if (!discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
 								BufferedImage tooltip = ImageGeneration.getToolTipImage(discordToolTip.getComponents());
 								ByteArrayOutputStream tooltipOs = new ByteArrayOutputStream();

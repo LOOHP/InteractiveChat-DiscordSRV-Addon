@@ -18,6 +18,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Banner;
 import org.bukkit.block.banner.Pattern;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -34,6 +35,7 @@ import org.bukkit.map.MapView;
 import org.bukkit.potion.PotionEffect;
 
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechat.hooks.ecoenchants.EcoHook;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
@@ -122,8 +124,11 @@ public class DiscordItemStackUtils {
 		}
 	}
 	
-	public static DiscordDescription getDiscordDescription(ItemStack item) throws Exception {
+	public static DiscordDescription getDiscordDescription(ItemStack item, Player player) throws Exception {
 		String language = InteractiveChatDiscordSrvAddon.plugin.language;
+		if (!item.getType().equals(Material.AIR) && InteractiveChat.ecoHook) {
+			item = EcoHook.setEcoLores(item, player);
+		}
 		
 		if (item == null) {
 			item = new ItemStack(Material.AIR);
@@ -208,7 +213,7 @@ public class DiscordItemStackUtils {
 			List<ItemStack> charged = meta.getChargedProjectiles();
 			if (charged != null && !charged.isEmpty()) {
 				ItemStack charge = charged.get(0);
-				String chargeItemName = getDiscordDescription(charge).getName();
+				String chargeItemName = getDiscordDescription(charge, player).getName();
 				description += LanguageUtils.getTranslation(TranslationKeyUtils.getCrossbowProjectile(), language) + " [**" + chargeItemName + "**]\n\n";
 			}
 		}
@@ -508,8 +513,11 @@ public class DiscordItemStackUtils {
 		}
 	}
 	
-	public static DiscordToolTip getToolTip(ItemStack item) throws Exception {
+	public static DiscordToolTip getToolTip(ItemStack item, Player player) throws Exception {
 		String language = InteractiveChatDiscordSrvAddon.plugin.language;
+		if (!item.getType().equals(Material.AIR) && InteractiveChat.ecoHook) {
+			item = EcoHook.setEcoLores(item, player);
+		}
 		
 		List<Component> prints = new ArrayList<>();
 		boolean hasCustomName = true;
@@ -592,7 +600,7 @@ public class DiscordItemStackUtils {
 			List<ItemStack> charged = meta.getChargedProjectiles();
 			if (charged != null && !charged.isEmpty()) {
 				ItemStack charge = charged.get(0);
-				Component chargeItemName = getToolTip(charge).getComponents().get(0);
+				Component chargeItemName = getToolTip(charge, player).getComponents().get(0);
 				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.WHITE + LanguageUtils.getTranslation(TranslationKeyUtils.getCrossbowProjectile(), language) + " [" + InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(chargeItemName) + ChatColor.WHITE + "]"));
 			}
 		}
