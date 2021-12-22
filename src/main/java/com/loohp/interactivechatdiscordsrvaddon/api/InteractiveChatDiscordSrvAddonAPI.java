@@ -7,11 +7,20 @@ import java.util.UUID;
 
 import org.bukkit.entity.Player;
 
+import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents.DiscordAttachmentData;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.GraphicsToPacketMapWrapper;
 
 public class InteractiveChatDiscordSrvAddonAPI {
+	
+	/**
+	 * Whether the plugin is ready
+	 * @return true/false
+	 */
+	public static boolean isReady() {
+		return InteractiveChatDiscordSrvAddon.isReady;
+	}
 	
 	/**
 	 * Get all active discord attachments

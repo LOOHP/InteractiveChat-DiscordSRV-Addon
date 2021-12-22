@@ -1,6 +1,6 @@
 package com.loohp.interactivechatdiscordsrvaddon.api.events;
 
-import org.bukkit.entity.Player;
+import com.loohp.interactivechat.objectholders.ICPlayer;
 
 /**
  * This is the base class of all GameMessageProcessEvents
@@ -12,7 +12,7 @@ public class GameMessageProcessEvent extends GameMessageEvent {
 	private int processId;
 	private String title;
 
-	public GameMessageProcessEvent(Player sender, String title, String message, boolean cancel, int processId) {
+	public GameMessageProcessEvent(ICPlayer sender, String title, String message, boolean cancel, int processId) {
 		super(sender, message, cancel);
 		this.processId = processId;
 		this.title = title;

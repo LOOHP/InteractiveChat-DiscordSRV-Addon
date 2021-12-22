@@ -1,8 +1,10 @@
 package com.loohp.interactivechatdiscordsrvaddon;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -18,6 +20,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.ClickEvent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.api.events.InteractiveChatDiscordSRVConfigReloadEvent;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.MCFont;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents.DiscordAttachmentData;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
@@ -42,6 +45,27 @@ public class Commands implements CommandExecutor, TabCompleter {
 			return true;
 		}
 		
+		if (args[0].equalsIgnoreCase("status")) {
+			if (sender.hasPermission("interactivechatdiscordsrv.status")) {
+				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.defaultResourceHashLang.replaceFirst("%s", InteractiveChatDiscordSrvAddon.plugin.defaultResourceHash));
+				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.fontsActiveLang.replaceFirst("%s", MCFont.isWorking() ? InteractiveChatDiscordSrvAddon.plugin.trueLabel : InteractiveChatDiscordSrvAddon.plugin.falseLabel));
+				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.loadedResourcesLang);
+				List<String> list = new ArrayList<>(InteractiveChatDiscordSrvAddon.plugin.resourceStatus.keySet());
+				ListIterator<String> itr = list.listIterator(list.size());
+				while (itr.hasPrevious()) {
+					String key = itr.previous();
+					if (InteractiveChatDiscordSrvAddon.plugin.resourceStatus.getOrDefault(key, false)) {
+						sender.sendMessage(ChatColor.GREEN + " - " + key);
+					} else {
+						sender.sendMessage(ChatColor.RED + " - " + key);
+					}
+				}
+			} else {
+				sender.sendMessage(InteractiveChat.noPermissionMessage);
+			}
+			return true;
+		}
+		
 		if (args[0].equalsIgnoreCase("reloadconfig")) {
 			if (sender.hasPermission("interactivechatdiscordsrv.reloadconfig")) {
 				InteractiveChatDiscordSrvAddon.plugin.reloadConfig();
@@ -59,7 +83,7 @@ public class Commands implements CommandExecutor, TabCompleter {
 				redownload = true;
 			}
 			if (sender.hasPermission("interactivechatdiscordsrv.reloadtexture")) {
-				InteractiveChatDiscordSrvAddon.plugin.reloadTextures(redownload);
+				InteractiveChatDiscordSrvAddon.plugin.reloadTextures(redownload, sender);
 				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.reloadTextureMessage);
 			} else {
 				sender.sendMessage(InteractiveChat.noPermissionMessage);
@@ -125,6 +149,9 @@ public class Commands implements CommandExecutor, TabCompleter {
 			if (sender.hasPermission("interactivechatdiscordsrv.update")) {
 				tab.add("update");
 			}
+			if (sender.hasPermission("interactivechatdiscordsrv.status")) {
+				tab.add("status");
+			}
 			return tab;
 		case 1:
 			if (sender.hasPermission("interactivechatdiscordsrv.reloadconfig")) {
@@ -140,6 +167,11 @@ public class Commands implements CommandExecutor, TabCompleter {
 			if (sender.hasPermission("interactivechatdiscordsrv.update")) {
 				if ("update".startsWith(args[0].toLowerCase())) {
 					tab.add("update");
+				}
+			}
+			if (sender.hasPermission("interactivechatdiscordsrv.status")) {
+				if ("status".startsWith(args[0].toLowerCase())) {
+					tab.add("status");
 				}
 			}
 			return tab;

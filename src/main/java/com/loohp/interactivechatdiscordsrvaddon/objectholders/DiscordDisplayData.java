@@ -1,18 +1,18 @@
 package com.loohp.interactivechatdiscordsrvaddon.objectholders;
 
-import org.bukkit.entity.Player;
+import com.loohp.interactivechat.objectholders.ICPlayer;
 
 public abstract class DiscordDisplayData {
 	
-	protected final Player player;
+	protected final ICPlayer player;
 	protected final int postion;
 	
-	public DiscordDisplayData(Player player, int postion) {
+	public DiscordDisplayData(ICPlayer player, int postion) {
 		this.player = player;
 		this.postion = postion;
 	}
 	
-	public Player getPlayer() {
+	public ICPlayer getPlayer() {
 		return player;
 	}
 	

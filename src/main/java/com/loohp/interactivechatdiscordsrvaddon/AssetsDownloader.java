@@ -10,15 +10,19 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
+import com.loohp.interactivechat.libs.org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.utils.FileUtils;
@@ -34,7 +38,12 @@ public class AssetsDownloader {
 	private static final AtomicBoolean LOCK = new AtomicBoolean(false);
 	
 	@SuppressWarnings({ "unchecked", "deprecation" })
-	public static void loadAssets(File rootFolder, boolean force) throws Exception {
+	public static void loadAssets(File rootFolder, boolean force, CommandSender... senders) throws Exception {
+		if (!Arrays.asList(senders).contains(Bukkit.getConsoleSender())) {
+			List<CommandSender> senderList = new ArrayList<>(Arrays.asList(senders));
+			senderList.add(Bukkit.getConsoleSender());
+			senders = senderList.toArray(new CommandSender[senderList.size()]);
+		}
 		if (LOCK.get()) {
 			return;
 		}
@@ -56,7 +65,7 @@ public class AssetsDownloader {
 			new RuntimeException("Invalid hashes.json! It will be reset.", e).printStackTrace();
 			json = new JSONObject();
 		}
-		String oldHash = json.containsKey("assets") ? json.get("assets").toString() : "EMPTY";
+		String oldHash = InteractiveChatDiscordSrvAddon.plugin.defaultResourceHash = json.containsKey("assets") ? json.get("assets").toString() : "EMPTY";
 		
 		File assetsFolder = new File(rootFolder, "assets");
 		assetsFolder.mkdirs();
@@ -67,32 +76,29 @@ public class AssetsDownloader {
 		
 		if (force || !hash.equals(oldHash)) {
 			if (force && hash.equals(oldHash)) {
-				Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Forcibly re-downloading assets! Please wait... (" + oldHash + " -> " + hash + ")");
+				InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Forcibly re-downloading assets! Please wait... (" + oldHash + " -> " + hash + ")", senders);
 			} else {
-				Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Hash changed! Re-downloading assets! Please wait... (" + oldHash + " -> " + hash + ")");
+				InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Hash changed! Re-downloading assets! Please wait... (" + oldHash + " -> " + hash + ")", senders);
 			}
 			
 			JSONObject client = (JSONObject) data.get("client-entries");
 			
 			String clientUrl = client.get("url").toString();
-			JSONObject clientEntries = (JSONObject) client.get("entries");
 			
 			if (!InteractiveChatDiscordSrvAddon.plugin.reducedAssetsDownloadInfo) {
 				Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Downloading client jar");
 			}
-			try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(HTTPRequestUtils.download(clientUrl)))) {
+			try (ZipArchiveInputStream zip = new ZipArchiveInputStream(new ByteArrayInputStream(HTTPRequestUtils.download(clientUrl)), StandardCharsets.UTF_8.toString(), false, true, true)) {
 				while (true) {
-					ZipEntry entry = zip.getNextEntry();
+					ZipEntry entry = zip.getNextZipEntry();
 					if (entry == null) {
 						break;
 					}
 					String name = entry.getName();
-					Object outputObj = clientEntries.get(name);
-					if (outputObj != null) {
-						String output = outputObj.toString();
+					if (name.startsWith("assets") && !entry.isDirectory()) {
 						String fileName = getEntryName(name);
 						if (!InteractiveChatDiscordSrvAddon.plugin.reducedAssetsDownloadInfo) {
-							Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Extracting " + output + "/" + fileName);
+							Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Extracting " + name);
 						}
 						
 						ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -103,7 +109,7 @@ public class AssetsDownloader {
 						}
 						byte[] currentEntry = baos.toByteArray();
 						
-						File folder = new File(rootFolder, output);
+						File folder = new File(rootFolder, name).getParentFile();
 						folder.mkdirs();
 						File file = new File(folder, fileName);
 						if (file.exists()) {
@@ -149,6 +155,8 @@ public class AssetsDownloader {
 				} catch (Exception e) {}
 			}
 		}
+		
+		InteractiveChatDiscordSrvAddon.plugin.defaultResourceHash = hash;
 		
 		json.put("assets", hash);
 		

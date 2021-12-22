@@ -20,6 +20,9 @@ permissions:
   interactivechatdiscordsrv.reloadtexture:
     description: Allows you to reload the texture
     default: op
+  interactivechatdiscordsrv.status:
+    description: Allows you view the status of the plugin
+    default: true
   interactivechatdiscordsrv.update:
     description: Get updater notifications
     default: op

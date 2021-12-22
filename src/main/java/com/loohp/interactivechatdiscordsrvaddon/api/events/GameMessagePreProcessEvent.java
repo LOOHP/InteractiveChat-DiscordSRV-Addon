@@ -1,6 +1,6 @@
 package com.loohp.interactivechatdiscordsrvaddon.api.events;
 
-import org.bukkit.entity.Player;
+import com.loohp.interactivechat.objectholders.ICPlayer;
 
 /**
  * This event is called before the plugin process the placeholders within a
@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
  */
 public class GameMessagePreProcessEvent extends GameMessageEvent {
 
-	public GameMessagePreProcessEvent(Player sender, String message, boolean cancel) {
+	public GameMessagePreProcessEvent(ICPlayer sender, String message, boolean cancel) {
 		super(sender, message, cancel);
 	}
 

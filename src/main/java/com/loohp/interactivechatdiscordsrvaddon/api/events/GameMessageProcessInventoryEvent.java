@@ -1,7 +1,8 @@
 package com.loohp.interactivechatdiscordsrvaddon.api.events;
 
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+
+import com.loohp.interactivechat.objectholders.ICPlayer;
 
 /**
  * This event is called after the plugin translate a normal inventory
@@ -16,7 +17,7 @@ public class GameMessageProcessInventoryEvent extends GameMessageProcessEvent {
 
 	private Inventory inventory;
 
-	public GameMessageProcessInventoryEvent(Player sender, String title, String message, boolean cancel, int processId,
+	public GameMessageProcessInventoryEvent(ICPlayer sender, String title, String message, boolean cancel, int processId,
 			Inventory inventory) {
 		super(sender, title, message, cancel, processId);
 		this.inventory = inventory;

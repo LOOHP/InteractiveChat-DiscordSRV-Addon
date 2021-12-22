@@ -1,10 +1,11 @@
 package com.loohp.interactivechatdiscordsrvaddon.api.events;
 
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+
+import com.loohp.interactivechat.objectholders.ICPlayer;
 
 /**
  * This is the base class of all GameMessageEvents
@@ -13,11 +14,11 @@ import org.bukkit.event.HandlerList;
  */
 public class GameMessageEvent extends Event implements Cancellable {
 
-	private Player sender;
+	private ICPlayer sender;
 	private String message;
 	private boolean cancel;
 
-    public GameMessageEvent(Player sender, String message, boolean cancel) {
+    public GameMessageEvent(ICPlayer sender, String message, boolean cancel) {
     	super(!Bukkit.isPrimaryThread());
         this.sender = sender;
         this.message = message;
@@ -34,7 +35,7 @@ public class GameMessageEvent extends Event implements Cancellable {
 		this.cancel = cancel;
 	}
     
-    public Player getSender() {
+    public ICPlayer getSender() {
 		return sender;
 	}
 

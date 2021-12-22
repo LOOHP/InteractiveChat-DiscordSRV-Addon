@@ -2,10 +2,9 @@ package com.loohp.interactivechatdiscordsrvaddon.objectholders;
 
 import java.awt.Color;
 
-import org.bukkit.entity.Player;
-
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.objectholders.CustomPlaceholder.ClickEventAction;
+import com.loohp.interactivechat.objectholders.ICPlayer;
 
 public class HoverClickDisplayData extends DiscordDisplayData {
 	
@@ -15,7 +14,7 @@ public class HoverClickDisplayData extends DiscordDisplayData {
 	private ClickEventAction clickAction;
 	private String clickValue;
 
-	public HoverClickDisplayData(Player player, int position, Color color, String displayText, Component hoverText, ClickEventAction clickAction, String clickValue) {
+	public HoverClickDisplayData(ICPlayer player, int position, Color color, String displayText, Component hoverText, ClickEventAction clickAction, String clickValue) {
 		super(player, position);
 		this.displayText = displayText;
 		this.hoverText = hoverText;
@@ -54,7 +53,7 @@ public class HoverClickDisplayData extends DiscordDisplayData {
 	
 	public static class Builder {
 		
-		private Player player;
+		private ICPlayer player;
 		private Integer postion;
 		private String displayText;
 		private Component hoverText;
@@ -66,11 +65,11 @@ public class HoverClickDisplayData extends DiscordDisplayData {
 			
 		}
 
-		public Player getPlayer() {
+		public ICPlayer getPlayer() {
 			return player;
 		}
 
-		public Builder player(Player player) {
+		public Builder player(ICPlayer player) {
 			this.player = player;
 			return this;
 		}

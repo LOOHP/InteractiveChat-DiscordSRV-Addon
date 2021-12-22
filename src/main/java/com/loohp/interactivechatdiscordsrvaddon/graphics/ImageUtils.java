@@ -168,15 +168,19 @@ public class ImageUtils {
 	}
 	
 	public static BufferedImage multiply(BufferedImage image, double value) {
+		return multiply(image, value, value, value);
+	}
+	
+	public static BufferedImage multiply(BufferedImage image, double xValue, double yValue, double zValue) {
 		for (int y = 0; y < image.getHeight(); y++) {
 			for (int x = 0; x < image.getWidth(); x++) {
 				int colorValue = image.getRGB(x, y);
 				Color color = new Color(colorValue, true);
 				
 				if (color.getAlpha() != 0) {
-					int red = (int) (color.getRed() * value);
-					int green = (int) (color.getGreen() * value);
-					int blue = (int) (color.getBlue() * value);
+					int red = (int) (color.getRed() * xValue);
+					int green = (int) (color.getGreen() * yValue);
+					int blue = (int) (color.getBlue() * zValue);
 					color = new Color(red < 0 ? 0 : (red > 255 ? 255 : red), green < 0 ? 0 : (green > 255 ? 255 : green), blue < 0 ? 0 : (blue > 255 ? 255 : blue), color.getAlpha());
 					image.setRGB(x, y, color.getRGB());
 				}

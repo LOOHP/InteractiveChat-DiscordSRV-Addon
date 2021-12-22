@@ -170,6 +170,12 @@ Messages:
   AccountNotLinked: "&cYou must have you Discord account linked to your Minecraft account to use this!"
   UnableToRetrieveData: "&cUnable to retrieve data."
   InvalidDiscordChannel: "&cYou cannot do that in this channel."
+  TrueLabel: "&aTrue"
+  FalseLabel: "&cFalse"
+  StatusCommand:
+    DefaultResourceHash: "&bDefault Resource Hash: %s"
+    FontsActive: "&bFonts Active: %s"
+    LoadedResources: "&bLoaded Resources: &a"
 
 Settings:
   CacheTimeout: 300

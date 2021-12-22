@@ -1,37 +1,38 @@
 package com.loohp.interactivechatdiscordsrvaddon;
 
 import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
+import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-
-import javax.imageio.ImageIO;
+import java.util.zip.ZipEntry;
 
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.config.Config;
+import com.loohp.interactivechat.libs.org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import com.loohp.interactivechat.objectholders.PlaceholderCooldownManager;
 import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
+import com.loohp.interactivechat.utils.FileUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
-import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
-import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.MCFont;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordReadyEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
@@ -39,6 +40,7 @@ import com.loohp.interactivechatdiscordsrvaddon.listeners.OutboundToDiscordEvent
 import com.loohp.interactivechatdiscordsrvaddon.metrics.Charts;
 import com.loohp.interactivechatdiscordsrvaddon.metrics.Metrics;
 import com.loohp.interactivechatdiscordsrvaddon.registies.InteractiveChatRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
 
 import github.scarsz.discordsrv.DiscordSRV;
@@ -53,6 +55,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public static InteractiveChatDiscordSrvAddon plugin;
 	public static InteractiveChat interactivechat;
 	public static DiscordSRV discordsrv;
+	
+	public static boolean isReady = false;
 	
 	public static boolean debug = false;
 	
@@ -105,6 +109,12 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public String accountNotLinked;
 	public String unableToRetrieveData;
 	public String invalidDiscordChannel;
+	public String trueLabel;
+	public String falseLabel;
+	
+	public String defaultResourceHashLang;
+	public String fontsActiveLang;
+	public String loadedResourcesLang;
 	
 	public boolean convertDiscordAttachments = true;
 	public String discordAttachmentsFormattingText;
@@ -169,16 +179,11 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	
 	public PlaceholderCooldownManager placeholderCooldownManager = new PlaceholderCooldownManager();
 	
-	private List<String> resourceOrder = new ArrayList<>();
+	public String defaultResourceHash = "N/A";
+	public List<String> resourceOrder = new ArrayList<>();
+	public Map<String, Boolean> resourceStatus = new LinkedHashMap<>();
+	public ResourceManager resourceManager;
 	
-	private Map<String, BufferedImage> blocks = new HashMap<>();
-	private Map<String, BufferedImage> items = new HashMap<>();
-	private Map<String, BufferedImage> misc = new HashMap<>();
-	private Map<String, BufferedImage> gui = new HashMap<>();
-	private Map<String, BufferedImage> banner = new HashMap<>();	
-	private Map<String, BufferedImage> font = new HashMap<>();
-	private Map<String, BufferedImage> puppet = new HashMap<>();
-	private Map<String, BufferedImage> armor = new HashMap<>();
 	protected Map<String, byte[]> extras = new HashMap<>();
 	
 	@Override
@@ -232,16 +237,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		}
 		
 		reloadTextures(false);
-		/*
-		ProtocolLibrary.getProtocolManager().addPacketListener(new PacketAdapter(this, ListenerPriority.HIGHEST, PacketType.Play.Server.ENTITY_EQUIPMENT) {
-			public void onPacketSending(PacketEvent event) {
-				PacketContainer packet2 = event.getPacket();
-				System.out.println(packet2.getIntegers().read(0));
-				System.out.println(packet2.getIntegers().read(1));
-				System.out.println(packet2.getItemModifier().read(0));
-			}
-		});
-		*/
 	}
 	
 	@Override
@@ -265,16 +260,21 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		accountNotLinked = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.AccountNotLinked"));
 		unableToRetrieveData = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.UnableToRetrieveData"));
 		invalidDiscordChannel = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.InvalidDiscordChannel"));
+		trueLabel = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.TrueLabel"));
+		falseLabel = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.FalseLabel"));
+		
+		defaultResourceHashLang = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.StatusCommand.DefaultResourceHash"));
+		fontsActiveLang = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.StatusCommand.FontsActive"));
+		loadedResourcesLang = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.StatusCommand.LoadedResources"));
 		
 		debug = config.getConfiguration().getBoolean("Debug.PrintInfoToConsole");
 		
 		resourceOrder.clear();
 		List<String> order = config.getConfiguration().getStringList("Resources.Order");
 		ListIterator<String> itr = order.listIterator(order.size());
-		resourceOrder.add("assets");
 		while (itr.hasPrevious()) {
 			String pack = itr.previous();
-			resourceOrder.add("resources/" + pack);
+			resourceOrder.add(pack);
 		}
 		
 		itemImage = config.getConfiguration().getBoolean("InventoryImage.Item.Enabled");
@@ -367,360 +367,137 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		discordsrv.reloadRegexes();
 	}
 	
-	public boolean hasBlockTexture(String str) {
-		return blocks.get(str) != null;
-	}
-	
-	public BufferedImage getBlockTexture(String str) {
-		BufferedImage image = blocks.get(str);
-		if (image == null) {
-			return ImageGeneration.getMissingImage(32, 32);
-		}
-		return ImageUtils.copyImage(image);
-	}
-	
-	public boolean hasItemTexture(String str) {
-		return items.get(str) != null;
-	}
-	
-	public BufferedImage getItemTexture(String str) {
-		BufferedImage image = items.get(str);
-		if (image == null) {
-			return ImageGeneration.getMissingImage(32, 32);
-		}
-		return ImageUtils.copyImage(image);
-	}
-	
-	public boolean hasFontTexture(String str) {
-		return font.get(str) != null;
-	}
-	
-	public BufferedImage getFontTexture(String str) {
-		BufferedImage image = font.get(str);
-		if (image == null) {
-			return ImageGeneration.getMissingImage(14, 14);
-		}
-		return ImageUtils.copyImage(image);
-	}
-	
-	public boolean hasMiscTexture(String str) {
-		return misc.get(str) != null;
-	}
-	
-	public BufferedImage getMiscTexture(String str) {
-		BufferedImage image = misc.get(str);
-		if (image == null) {
-			return ImageGeneration.getMissingImage(512, 512);
-		}
-		return ImageUtils.copyImage(image);
-	}
-	
-	public boolean hasGUITexture(String str) {
-		return gui.get(str) != null;
-	}
-	
-	public BufferedImage getGUITexture(String str) {
-		BufferedImage image = gui.get(str);
-		if (image == null) {
-			return ImageGeneration.getMissingImage(512, 512);
-		}
-		return ImageUtils.copyImage(image);
-	}
-	
-	public boolean hasBannerTexture(String str) {
-		return banner.get(str) != null;
-	}
-	
-	public BufferedImage getBannerTexture(String str) {
-		BufferedImage image = banner.get(str);
-		if (image == null) {
-			return ImageGeneration.getMissingImage(512, 512);
-		}
-		return ImageUtils.copyImage(image);
-	}
-	
-	public boolean hasPuppetTexture(String str) {
-		return puppet.get(str) != null;
-	}
-	
-	public BufferedImage getPuppetTexture(String str) {
-		BufferedImage image = puppet.get(str);
-		if (image == null) {
-			return ImageGeneration.getMissingImage(512, 512);
-		}
-		return ImageUtils.copyImage(image);
-	}
-	
-	public boolean hasArmorTexture(String str) {
-		return armor.get(str) != null;
-	}
-	
-	public BufferedImage getArmorTexture(String str) {
-		BufferedImage image = armor.get(str);
-		if (image == null) {
-			return ImageGeneration.getMissingImage(512, 512);
-		}
-		return ImageUtils.copyImage(image);
-	}
-	
 	public byte[] getExtras(String str) {
 		return extras.get(str);
 	}
 	
-	public void reloadTextures(boolean redownload) {
+	public void reloadTextures(boolean redownload, CommandSender... receivers) {
+		isReady = false;
+		CommandSender[] senders = new CommandSender[receivers.length + 1];
+		for (int i = 0; i < receivers.length; i++) {
+			senders[i] = receivers[i];
+		}
+		senders[senders.length - 1] = Bukkit.getConsoleSender();
+		
 		Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
 			try {
-				AssetsDownloader.loadAssets(getDataFolder(), redownload);
+				AssetsDownloader.loadAssets(getDataFolder(), redownload, receivers);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			
-			Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] Loading textures...");
-			Map<String, BufferedImage> blocks = new HashMap<>();
-			Map<String, BufferedImage> items = new HashMap<>();
-			Map<String, BufferedImage> font = new HashMap<>();
-			Map<String, BufferedImage> misc = new HashMap<>();
-			Map<String, BufferedImage> gui = new HashMap<>();
-			Map<String, BufferedImage> banner = new HashMap<>();
-			Map<String, BufferedImage> puppet = new HashMap<>();
-			Map<String, BufferedImage> armor = new HashMap<>();
+			Map<String, Boolean> resourceStatus = new LinkedHashMap<>();
+			List<String> resourceList = new ArrayList<>();
+			resourceList.add("Default");
+			resourceList.addAll(resourceOrder);
+			sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Reloading ResourceManager: " + ChatColor.YELLOW + String.join(", ", resourceList), senders);
 			
-			for (String folder : resourceOrder) {
-				for (File file : new File(getDataFolder() + "/" + folder + "/blocks/").listFiles()) {
-					if (!file.exists() || file.isDirectory()) {
-						continue;
+			ResourceManager resourceManager = new ResourceManager();
+			Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"Default\" resources...");
+			resourceManager.loadResources(new File(getDataFolder(), "assets"));
+			resourceStatus.put("Default", true);
+			for (String resourceName : resourceOrder) {
+				try {
+					Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"" + resourceName + "\" resources...");
+					File resourceFile = new File(getDataFolder(), "resources/" + resourceName);
+					File assetsFolder;
+					if (extractIfNotFound(resourceFile) && (assetsFolder = new File(resourceFile, "assets")).exists() && assetsFolder.isDirectory()) {
+						resourceManager.loadResources(assetsFolder);
+						resourceStatus.put(resourceName, true);
 					}
-					try {
-						BufferedImage item_ori = ImageIO.read(file);
-						
-						if (item_ori == null) {
-							continue;
-						}
-						
-						item_ori = ImageUtils.squarify(item_ori);
-						
-						BufferedImage itemImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
-						Graphics2D g = itemImage.createGraphics();
-						g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-						g.drawImage(item_ori, 0, 0, 32, 32, null);
-						g.dispose();
-						
-						String name = file.getName();
-						int lastDot = name.lastIndexOf(".");
-						if (lastDot >= 0) {
-							name = name.substring(0, lastDot);
-						}
-						
-						blocks.put(name, itemImage);
-					} catch (IOException e) {
-						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
-						e.printStackTrace();
-					}
-				}
-				
-				for (File file : new File(getDataFolder() + "/" + folder + "/items/").listFiles()) {
-					if (!file.exists() || file.isDirectory()) {
-						continue;
-					}
-					try {
-						BufferedImage item_ori = ImageIO.read(file);
-						
-						if (item_ori == null) {
-							continue;
-						}
-						
-						BufferedImage itemImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
-						Graphics2D g = itemImage.createGraphics();
-						g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-						g.drawImage(item_ori, 0, 0, 32, 32, null);
-						g.dispose();
-						
-						String name = file.getName();
-						int lastDot = name.lastIndexOf(".");
-						if (lastDot >= 0) {
-							name = name.substring(0, lastDot);
-						}
-						
-						items.put(name, itemImage);
-					} catch (IOException e) {
-						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
-						e.printStackTrace();
-					}
-				}
-				
-				for (File file : new File(getDataFolder() + "/" + folder + "/font/").listFiles()) {
-					if (!file.exists() || file.isDirectory()) {
-						continue;
-					}
-					try {
-						BufferedImage font_ori = ImageIO.read(file);
-						
-						if (font_ori == null) {
-							continue;
-						}
-						
-						BufferedImage fontImage = new BufferedImage(14, 14, BufferedImage.TYPE_INT_ARGB);
-						Graphics2D g = fontImage.createGraphics();
-						g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-						g.drawImage(font_ori, 0, 0, 14, 14, null);
-						g.dispose();
-						
-						String name = file.getName();
-						int lastDot = name.lastIndexOf(".");
-						if (lastDot >= 0) {
-							name = name.substring(0, lastDot);
-						}
-						
-						font.put(name, fontImage);
-					} catch (IOException e) {
-						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
-						e.printStackTrace();
-					}
-				}
-				
-				for (File file : new File(getDataFolder() + "/" + folder + "/misc/").listFiles()) {
-					if (!file.exists() || file.isDirectory()) {
-						continue;
-					}
-					try {
-						BufferedImage miscImage = ImageIO.read(file);
-						
-						if (miscImage == null) {
-							continue;
-						}
-						
-						String name = file.getName();
-						int lastDot = name.lastIndexOf(".");
-						if (lastDot >= 0) {
-							name = name.substring(0, lastDot);
-						}
-						
-						misc.put(name, miscImage);
-					} catch (IOException e) {
-						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
-						e.printStackTrace();
-					}
-				}
-				
-				for (File file : new File(getDataFolder() + "/" + folder + "/gui/").listFiles()) {
-					if (!file.exists() || file.isDirectory()) {
-						continue;
-					}
-					try {
-						BufferedImage guiImage = ImageIO.read(file);
-						
-						if (guiImage == null) {
-							continue;
-						}
-						
-						String name = file.getName();
-						int lastDot = name.lastIndexOf(".");
-						if (lastDot >= 0) {
-							name = name.substring(0, lastDot);
-						}
-						
-						gui.put(name, guiImage);
-					} catch (IOException e) {
-						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
-						e.printStackTrace();
-					}
-				}
-				
-				for (File file : new File(getDataFolder() + "/" + folder + "/banner/").listFiles()) {
-					if (!file.exists() || file.isDirectory()) {
-						continue;
-					}
-					try {
-						BufferedImage bannerImage = ImageIO.read(file);
-						
-						if (bannerImage == null) {
-							continue;
-						}
-						
-						String name = file.getName();
-						int lastDot = name.lastIndexOf(".");
-						if (lastDot >= 0) {
-							name = name.substring(0, lastDot);
-						}
-						
-						banner.put(name, bannerImage);
-					} catch (IOException e) {
-						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
-						e.printStackTrace();
-					}
-				}
-				
-				for (File file : new File(getDataFolder() + "/" + folder + "/puppet/").listFiles()) {
-					if (!file.exists() || file.isDirectory()) {
-						continue;
-					}
-					try {
-						BufferedImage puppetImage = ImageIO.read(file);
-						
-						if (puppetImage == null) {
-							continue;
-						}
-						
-						String name = file.getName();
-						int lastDot = name.lastIndexOf(".");
-						if (lastDot >= 0) {
-							name = name.substring(0, lastDot);
-						}
-						
-						puppet.put(name, puppetImage);
-					} catch (IOException e) {
-						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
-						e.printStackTrace();
-					}
-				}
-				
-				for (File file : new File(getDataFolder() + "/" + folder + "/armor/").listFiles()) {
-					if (!file.exists() || file.isDirectory()) {
-						continue;
-					}
-					try {
-						BufferedImage armorImage = ImageIO.read(file);
-						
-						if (armorImage == null) {
-							continue;
-						}
-						
-						String name = file.getName();
-						int lastDot = name.lastIndexOf(".");
-						if (lastDot >= 0) {
-							name = name.substring(0, lastDot);
-						}
-						
-						armor.put(name, armorImage);
-					} catch (IOException e) {
-						Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Error while loading " + file.getPath());
-						e.printStackTrace();
-					}
+				} catch (Exception e) {
+					sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load \"" + resourceName + "\"", senders);
+					resourceStatus.put(resourceName, false);
+					e.printStackTrace();
 				}
 			}
 			
 			Bukkit.getScheduler().runTask(plugin, () -> {
-				InteractiveChatDiscordSrvAddon.plugin.blocks = blocks;
-				InteractiveChatDiscordSrvAddon.plugin.items = items;
-				InteractiveChatDiscordSrvAddon.plugin.font = font;
-				InteractiveChatDiscordSrvAddon.plugin.misc = misc;
-				InteractiveChatDiscordSrvAddon.plugin.gui = gui;
-				InteractiveChatDiscordSrvAddon.plugin.banner = banner;
-				InteractiveChatDiscordSrvAddon.plugin.puppet = puppet;
-				InteractiveChatDiscordSrvAddon.plugin.armor = armor;
+				InteractiveChatDiscordSrvAddon.plugin.resourceManager = resourceManager;
+				InteractiveChatDiscordSrvAddon.plugin.resourceStatus = resourceStatus;
 				
 				if (!MCFont.reloadFonts()) {
-					Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] As Fonts failed to load, features that requires it will be disabled.");
+					sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] As Fonts failed to load, features that requires it will be disabled.", senders);
 					itemUseTooltipImage = false;
 					hoverUseTooltipImage = false;
 				}
 				
 				Cache.clearAllCache();
 				
-				int total = blocks.size() + items.size() + font.size() + misc.size() + gui.size() + banner.size() + puppet.size() + armor.size();
-				Bukkit.getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] Loaded " + total + " textures!");
+				if (resourceStatus.values().stream().allMatch(each -> each)) {
+					sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loaded all resources!", senders);
+					isReady = true;
+				} else {
+					sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] There is a problem while loading resources.", senders);
+				}
 			});
 		});
+	}
+	
+	public void sendMessage(String message, CommandSender... senders) {
+		for (CommandSender sender : senders) {
+			sender.sendMessage(message);
+		}
+	}
+	
+	public boolean extractIfNotFound(File resourceFile) throws Exception {
+		if (resourceFile.exists()) {
+			return true;
+		} else {
+			resourceFile.mkdirs();
+			File zipFile = new File(resourceFile.getParent(), resourceFile.getName() + ".zip");
+			if (zipFile.exists()) {
+				try (ZipArchiveInputStream zip = new ZipArchiveInputStream(new FileInputStream(zipFile), StandardCharsets.UTF_8.toString(), false, true, true)) {
+					while (true) {
+						ZipEntry entry = zip.getNextZipEntry();
+						if (entry == null) {
+							break;
+						}
+						String name = entry.getName();
+						if (entry.isDirectory()) {
+							File folder = new File(resourceFile, name).getParentFile();
+							folder.mkdirs();
+						} else {
+							String fileName = getEntryName(name);
+							
+							ByteArrayOutputStream baos = new ByteArrayOutputStream();
+							byte[] byteChunk = new byte[4096];
+							int n;
+							while ((n = zip.read(byteChunk)) > 0) {
+								baos.write(byteChunk, 0, n);
+							}
+							byte[] currentEntry = baos.toByteArray();
+							
+							File folder = new File(resourceFile, name).getParentFile();
+							folder.mkdirs();
+							File file = new File(folder, fileName);
+							if (file.exists()) {
+								file.delete();
+							}
+							FileUtils.copy(new ByteArrayInputStream(currentEntry), file);
+						}
+					}
+					return true;
+				} catch (Exception e) {
+					e.printStackTrace();
+					return false;
+				}
+			} else {
+				return false;
+			}
+		}
+	}
+	
+	private static String getEntryName(String name) {
+		int pos = name.lastIndexOf("/");
+		if (pos >= 0) {
+			return name.substring(pos + 1);
+		}
+		pos = name.lastIndexOf("\\");
+		if (pos >= 0) {
+			return name.substring(pos + 1);
+		}
+		return name;
 	}
 
 }

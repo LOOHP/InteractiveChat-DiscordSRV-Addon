@@ -5,7 +5,7 @@
 	<groupId>com.loohp</groupId>
 	<artifactId>InteractiveChatDiscordSrvAddon</artifactId>
 	<name>InteractiveChatDiscordSrvAddon</name>
-	<version>4.0.4.11</version>
+	<version>4.1.0.0</version>
 
 	<description>Have InteractiveChat Placeholders translated on DiscordSRV discord messages.</description>
 	<url>https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon</url>
@@ -63,6 +63,10 @@
 								<relocation>
 									<pattern>okhttp3</pattern>
 									<shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.okhttp3</shadedPattern>
+								</relocation>
+								<relocation>
+									<pattern>com.madgag.gif</pattern>
+									<shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.com.madgag.gif</shadedPattern>
 								</relocation>
 							</relocations>
 						</configuration>
@@ -249,6 +253,12 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
+            <groupId>mineverse.aust1n46</groupId>
+            <artifactId>venturechat</artifactId>
+            <version>2.20.1</version>
+            <scope>provided</scope>
+        </dependency>
+		<dependency>
 			<groupId>com.comphenix.protocol</groupId>
 			<artifactId>ProtocolLib</artifactId>
 			<version>4.8.0-SNAPSHOT</version>
@@ -257,14 +267,20 @@
 		<dependency>
 			<groupId>me.clip</groupId>
 			<artifactId>placeholderapi</artifactId>
-			<version>2.10.10</version>
+			<version>2.10.11</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.loohp</groupId>
 			<artifactId>InteractiveChat</artifactId>
-			<version>4.0.4.11</version>
+			<version>4.1.0.0</version>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.loohp</groupId>
+			<artifactId>BlockModelRenderer</artifactId>
+			<version>1.0.0.0</version>
+			<scope>compile</scope>
 		</dependency>
 	</dependencies>
 </project>

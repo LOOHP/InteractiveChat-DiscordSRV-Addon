@@ -1,6 +1,6 @@
 package com.loohp.interactivechatdiscordsrvaddon.api.events;
 
-import org.bukkit.entity.Player;
+import com.loohp.interactivechat.objectholders.ICPlayer;
 
 /**
  * This event is called after all other GameMessageEvents and is ready to be sent to discord.
@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
  */
 public class GameMessagePostProcessEvent extends GameMessageEvent {
 
-	public GameMessagePostProcessEvent(Player sender, String message, boolean cancel) {
+	public GameMessagePostProcessEvent(ICPlayer sender, String message, boolean cancel) {
 		super(sender, message, cancel);
 	}
 

@@ -73,6 +73,9 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.IDProvider;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayType;
 import com.loohp.interactivechatdiscordsrvaddon.registies.DiscordDataRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resource.ModelRender;
+import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.utils.AchievementUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.AdvancementUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
@@ -133,29 +136,69 @@ public class OutboundToDiscordEvents implements Listener {
 	public void onGameToDiscord(GameChatMessagePreProcessEvent event) {
 		Debug.debug("Triggering onGameToDiscord");
 		InteractiveChatDiscordSrvAddon.plugin.messagesCounter.incrementAndGet();
-		boolean reserializer = DiscordSRV.config().getBoolean("Experiment_MCDiscordReserializer_ToDiscord");
 		
 		Player sender = event.getPlayer();
-		ICPlayer wrappedSender = new ICPlayer(sender);
+		ICPlayer icSender = new ICPlayer(sender);
 		String message = event.getMessage();
+		
+		message = processGameMessage(icSender, message);
+		
+		event.setMessage(message);
+	}
+	/*
+	@SuppressWarnings("deprecation")
+	@Subscribe(priority = ListenerPriority.HIGHEST)
+	public void onVentureChatHookToDiscord(VentureChatMessagePreProcessEvent event) {
+		UUID uuid;
+		MineverseChatPlayer mcPlayer = event.getVentureChatEvent().getMineverseChatPlayer();
+		if (mcPlayer != null) {
+			uuid = mcPlayer.getUUID();
+		} else {
+			Player bukkitPlayer = Bukkit.getPlayer(event.getVentureChatEvent().getUsername());
+			if (bukkitPlayer == null) {
+				return;
+			} else {
+				uuid = bukkitPlayer.getUniqueId();
+			}
+		}
+		ICPlayer player;
+		Player bukkitPlayer = Bukkit.getPlayer(uuid);
+		if (bukkitPlayer != null) {
+			player = new ICPlayer(bukkitPlayer);
+		} else {
+			player = InteractiveChat.remotePlayers.get(uuid);
+			if (player == null) {
+				return;
+			}
+		}
+		String message = event.getMessage();
+		
+		message = processGameMessage(player, message);
+		
+		event.setMessage(message);
+	}
+	*/
+	@SuppressWarnings("deprecation")
+	public String processGameMessage(ICPlayer icSender, String message) {
+		boolean reserializer = DiscordSRV.config().getBoolean("Experiment_MCDiscordReserializer_ToDiscord");
 		String originalMessage = message;
 		PlaceholderCooldownManager cooldownManager = InteractiveChatDiscordSrvAddon.plugin.placeholderCooldownManager;
-		long now = cooldownManager.checkMessage(sender.getUniqueId(), message).getTimeNow();
+		long now = cooldownManager.checkMessage(icSender.getUniqueId(), message).getTimeNow();
 
-		GameMessagePreProcessEvent gameMessagePreProcessEvent = new GameMessagePreProcessEvent(sender, message, false);
+		GameMessagePreProcessEvent gameMessagePreProcessEvent = new GameMessagePreProcessEvent(icSender, message, false);
 		Bukkit.getPluginManager().callEvent(gameMessagePreProcessEvent);
 		if (gameMessagePreProcessEvent.isCancelled()) {
-			return;
+			return null;
 		}
 		message = gameMessagePreProcessEvent.getMessage();
 
-		if (InteractiveChat.useItem && sender.hasPermission("interactivechat.module.item")) {
+		if (InteractiveChat.useItem && PlayerUtils.hasPermission(icSender.getUniqueId(), "interactivechat.module.item", true, 200)) {
 			Debug.debug("onGameToDiscord processing item display");
-			if (!cooldownManager.isPlaceholderOnCooldownAt(sender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.itemPlaceholder)).findFirst().get(), now)) {
+			if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.itemPlaceholder)).findFirst().get(), now)) {
 				String placeholder = InteractiveChat.itemPlaceholder;
 				int index = InteractiveChat.itemCaseSensitive ? message.indexOf(placeholder) : message.toLowerCase().indexOf(placeholder.toLowerCase());
 				if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\'))) {
-					ItemStack item = PlayerUtils.getHeldItem(sender);
+					ItemStack item = PlayerUtils.getHeldItem(icSender);
 					boolean isAir = item.getType().equals(Material.AIR);
 					XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
 					String itemStr;
@@ -178,7 +221,7 @@ public class OutboundToDiscordEvents implements Listener {
 						amount = 1;
 					}
 				
-					String replaceText = PlaceholderParser.parse(wrappedSender, (amount == 1 ? ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemSingularReplaceText) : ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemReplaceText).replace("{Amount}", String.valueOf(amount))).replace("{Item}", itemStr));
+					String replaceText = PlaceholderParser.parse(icSender, (amount == 1 ? ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemSingularReplaceText) : ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemReplaceText).replace("{Amount}", String.valueOf(amount))).replace("{Item}", itemStr));
 					if (reserializer) {
 						replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
 					}
@@ -187,7 +230,7 @@ public class OutboundToDiscordEvents implements Listener {
 						int inventoryId = DATA_ID_PROVIDER.getNext();
 						int position = InteractiveChat.itemCaseSensitive ? originalMessage.indexOf(InteractiveChat.itemPlaceholder) : originalMessage.toLowerCase().indexOf(InteractiveChat.itemPlaceholder.toLowerCase());
 						
-						String title = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemTitle));
+						String title = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemTitle));
 						
 						Inventory inv = null;
 						if (item.hasItemMeta() && item.getItemMeta() instanceof BlockStateMeta) {
@@ -207,15 +250,15 @@ public class OutboundToDiscordEvents implements Listener {
 							}
 						}
 						
-						GameMessageProcessItemEvent gameMessageProcessItemEvent = new GameMessageProcessItemEvent(sender, title, message, false, inventoryId, item.clone(), inv);
+						GameMessageProcessItemEvent gameMessageProcessItemEvent = new GameMessageProcessItemEvent(icSender, title, message, false, inventoryId, item.clone(), inv);
 						Bukkit.getPluginManager().callEvent(gameMessageProcessItemEvent);
 						if (!gameMessageProcessItemEvent.isCancelled()) {
 							message = gameMessageProcessItemEvent.getMessage();
 							title = gameMessageProcessItemEvent.getTitle();
 							if (gameMessageProcessItemEvent.hasInventory()) {
-								DATA.put(inventoryId, new ImageDisplayData(sender, position, title, ImageDisplayType.ITEM_CONTAINER, gameMessageProcessItemEvent.getItemStack().clone(), gameMessageProcessItemEvent.getInventory()));
+								DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.ITEM_CONTAINER, gameMessageProcessItemEvent.getItemStack().clone(), gameMessageProcessItemEvent.getInventory()));
 							} else {
-								DATA.put(inventoryId, new ImageDisplayData(sender, position, title, ImageDisplayType.ITEM, gameMessageProcessItemEvent.getItemStack().clone()));
+								DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.ITEM, gameMessageProcessItemEvent.getItemStack().clone()));
 							}
 						}
 						message += "<ICD=" + inventoryId + ">";
@@ -224,13 +267,13 @@ public class OutboundToDiscordEvents implements Listener {
 			}
 		}
 		
-		if (InteractiveChat.useInventory && sender.hasPermission("interactivechat.module.inventory")) {
+		if (InteractiveChat.useInventory && PlayerUtils.hasPermission(icSender.getUniqueId(), "interactivechat.module.inventory", true, 200)) {
 			Debug.debug("onGameToDiscord processing inventory display");
-			if (!cooldownManager.isPlaceholderOnCooldownAt(sender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.invPlaceholder)).findFirst().get(), now)) {
+			if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.invPlaceholder)).findFirst().get(), now)) {
 				String placeholder = InteractiveChat.invPlaceholder;
 				int index = InteractiveChat.invCaseSensitive ? message.indexOf(placeholder) : message.toLowerCase().indexOf(placeholder.toLowerCase());
 				if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\'))) {
-					String replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.invReplaceText));
+					String replaceText = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.invReplaceText));
 					if (reserializer) {
 						replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
 					}
@@ -240,21 +283,21 @@ public class OutboundToDiscordEvents implements Listener {
 						int position = InteractiveChat.invCaseSensitive ? originalMessage.indexOf(InteractiveChat.invPlaceholder) : originalMessage.toLowerCase().indexOf(InteractiveChat.invPlaceholder.toLowerCase());
 						
 						Inventory inv = Bukkit.createInventory(null, 45);
-						for (int j = 0; j < sender.getInventory().getSize(); j++) {
-							if (sender.getInventory().getItem(j) != null) {
-								if (!sender.getInventory().getItem(j).getType().equals(Material.AIR)) {
-									inv.setItem(j, sender.getInventory().getItem(j).clone());
+						for (int j = 0; j < icSender.getInventory().getSize(); j++) {
+							if (icSender.getInventory().getItem(j) != null) {
+								if (!icSender.getInventory().getItem(j).getType().equals(Material.AIR)) {
+									inv.setItem(j, icSender.getInventory().getItem(j).clone());
 								}
 							}
 						}
-						String title = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.invTitle));
+						String title = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.invTitle));
 						
-						GameMessageProcessPlayerInventoryEvent gameMessageProcessPlayerInventoryEvent = new GameMessageProcessPlayerInventoryEvent(sender, title, message, false, inventoryId, inv);
+						GameMessageProcessPlayerInventoryEvent gameMessageProcessPlayerInventoryEvent = new GameMessageProcessPlayerInventoryEvent(icSender, title, message, false, inventoryId, inv);
 						Bukkit.getPluginManager().callEvent(gameMessageProcessPlayerInventoryEvent);
 						if (!gameMessageProcessPlayerInventoryEvent.isCancelled()) {
 							message = gameMessageProcessPlayerInventoryEvent.getMessage();
 							title = gameMessageProcessPlayerInventoryEvent.getTitle();
-							DATA.put(inventoryId, new ImageDisplayData(sender, position, title, ImageDisplayType.INVENTORY, true, gameMessageProcessPlayerInventoryEvent.getInventory()));
+							DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.INVENTORY, true, gameMessageProcessPlayerInventoryEvent.getInventory()));
 						}
 						
 						message += "<ICD=" + inventoryId + ">";
@@ -263,13 +306,13 @@ public class OutboundToDiscordEvents implements Listener {
 			}
 		}
 		
-		if (InteractiveChat.useEnder && sender.hasPermission("interactivechat.module.enderchest")) {
+		if (InteractiveChat.useEnder && PlayerUtils.hasPermission(icSender.getUniqueId(), "interactivechat.module.enderchest", true, 200)) {
 			Debug.debug("onGameToDiscord processing enderchest display");
-			if (!cooldownManager.isPlaceholderOnCooldownAt(sender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.enderPlaceholder)).findFirst().get(), now)) {
+			if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.enderPlaceholder)).findFirst().get(), now)) {
 				String placeholder = InteractiveChat.enderPlaceholder;
 				int index = InteractiveChat.enderCaseSensitive ? message.indexOf(placeholder) : message.toLowerCase().indexOf(placeholder.toLowerCase());
 				if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\'))) {
-					String replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.enderReplaceText));
+					String replaceText = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.enderReplaceText));
 					if (reserializer) {
 						replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
 					}
@@ -278,22 +321,22 @@ public class OutboundToDiscordEvents implements Listener {
 						int inventoryId = DATA_ID_PROVIDER.getNext();
 						int position = InteractiveChat.enderCaseSensitive ? originalMessage.indexOf(InteractiveChat.enderPlaceholder) : originalMessage.toLowerCase().indexOf(InteractiveChat.enderPlaceholder.toLowerCase());
 						
-						Inventory inv = Bukkit.createInventory(null, InventoryUtils.toMultipleOf9(sender.getEnderChest().getSize()));
-						for (int j = 0; j < sender.getEnderChest().getSize(); j++) {
-							if (sender.getEnderChest().getItem(j) != null) {
-								if (!sender.getEnderChest().getItem(j).getType().equals(Material.AIR)) {
-									inv.setItem(j, sender.getEnderChest().getItem(j).clone());
+						Inventory inv = Bukkit.createInventory(null, InventoryUtils.toMultipleOf9(icSender.getEnderChest().getSize()));
+						for (int j = 0; j < icSender.getEnderChest().getSize(); j++) {
+							if (icSender.getEnderChest().getItem(j) != null) {
+								if (!icSender.getEnderChest().getItem(j).getType().equals(Material.AIR)) {
+									inv.setItem(j, icSender.getEnderChest().getItem(j).clone());
 								}
 							}
 						}
-						String title = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.enderTitle));
+						String title = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.enderTitle));
 						
-						GameMessageProcessInventoryEvent gameMessageProcessInventoryEvent = new GameMessageProcessInventoryEvent(sender, title, message, false, inventoryId, inv);
+						GameMessageProcessInventoryEvent gameMessageProcessInventoryEvent = new GameMessageProcessInventoryEvent(icSender, title, message, false, inventoryId, inv);
 						Bukkit.getPluginManager().callEvent(gameMessageProcessInventoryEvent);
 						if (!gameMessageProcessInventoryEvent.isCancelled()) {
 							message = gameMessageProcessInventoryEvent.getMessage();
 							title = gameMessageProcessInventoryEvent.getTitle();
-							DATA.put(inventoryId, new ImageDisplayData(sender, position, title, ImageDisplayType.ENDERCHEST, gameMessageProcessInventoryEvent.getInventory()));
+							DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.ENDERCHEST, gameMessageProcessInventoryEvent.getInventory()));
 						}
 						
 						message += "<ICD=" + inventoryId + ">";
@@ -306,13 +349,13 @@ public class OutboundToDiscordEvents implements Listener {
 		for (ICPlaceholder placeholder : InteractiveChatAPI.getICPlaceholderList()) {
 			if (!placeholder.isBuildIn()) {
 				CustomPlaceholder customP = (CustomPlaceholder) placeholder;
-				if (!InteractiveChat.useCustomPlaceholderPermissions || (InteractiveChat.useCustomPlaceholderPermissions && sender.hasPermission(customP.getPermission()))) {
-					boolean onCooldown = cooldownManager.isPlaceholderOnCooldownAt(sender.getUniqueId(), customP, now);
+				if (!InteractiveChat.useCustomPlaceholderPermissions || (InteractiveChat.useCustomPlaceholderPermissions && PlayerUtils.hasPermission(icSender.getUniqueId(), customP.getPermission(), true, 200))) {
+					boolean onCooldown = cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), customP, now);
 					int index = placeholder.isCaseSensitive() ? message.indexOf(placeholder.getKeyword()) : message.toLowerCase().indexOf(placeholder.getKeyword().toLowerCase());
 					if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\')) && !onCooldown) {
 						String replaceText = customP.getKeyword();
 						if (customP.getReplace().isEnabled()) {
-							replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
+							replaceText = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
 							if (reserializer) {
 								replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
 							}
@@ -320,12 +363,12 @@ public class OutboundToDiscordEvents implements Listener {
 						}
 						if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && !InteractiveChatDiscordSrvAddon.plugin.hoverIngore.contains(customP.getPosition())) {
 							int position = customP.isCaseSensitive() ? originalMessage.indexOf(customP.getKeyword()) : originalMessage.toLowerCase().indexOf(customP.getKeyword().toLowerCase());
-							HoverClickDisplayData.Builder hoverClick = new HoverClickDisplayData.Builder().player(sender).postion(position).color(DiscordDataRegistry.DISCORD_HOVER_COLOR).displayText(replaceText);
+							HoverClickDisplayData.Builder hoverClick = new HoverClickDisplayData.Builder().player(icSender).postion(position).color(DiscordDataRegistry.DISCORD_HOVER_COLOR).displayText(replaceText);
 							boolean usingHoverClick = false;
 							
 							if (customP.getHover().isEnabled()) {
 								usingHoverClick = true;
-								String hoverText = PlaceholderParser.parse(wrappedSender, customP.getHover().getText());
+								String hoverText = PlaceholderParser.parse(icSender, customP.getHover().getText());
 								Color color = ColorUtils.getFirstColor(customP.getHover().getText());
 								hoverClick.hoverText(LegacyComponentSerializer.legacySection().deserialize(hoverText));
 								if (color != null) {
@@ -351,12 +394,12 @@ public class OutboundToDiscordEvents implements Listener {
 		
 		if (InteractiveChat.t && WebData.getInstance() != null) {
 			for (CustomPlaceholder customP : WebData.getInstance().getSpecialPlaceholders()) {
-				boolean onCooldown = cooldownManager.isPlaceholderOnCooldownAt(sender.getUniqueId(), customP, now);
+				boolean onCooldown = cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), customP, now);
 				int index = customP.isCaseSensitive() ? message.indexOf(customP.getKeyword()) : message.toLowerCase().indexOf(customP.getKeyword().toLowerCase());
 				if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\')) && !onCooldown) {
 					String replaceText = customP.getKeyword();
 					if (customP.getReplace().isEnabled()) {
-						replaceText = PlaceholderParser.parse(wrappedSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
+						replaceText = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
 						if (reserializer) {
 							replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
 						}
@@ -364,12 +407,12 @@ public class OutboundToDiscordEvents implements Listener {
 					}
 					if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && !InteractiveChatDiscordSrvAddon.plugin.hoverIngore.contains(customP.getPosition())) {
 						int position = customP.isCaseSensitive() ? originalMessage.indexOf(customP.getKeyword()) : originalMessage.toLowerCase().indexOf(customP.getKeyword().toLowerCase());
-						HoverClickDisplayData.Builder hoverClick = new HoverClickDisplayData.Builder().player(sender).postion(position).color(DiscordDataRegistry.DISCORD_HOVER_COLOR).displayText(replaceText);
+						HoverClickDisplayData.Builder hoverClick = new HoverClickDisplayData.Builder().player(icSender).postion(position).color(DiscordDataRegistry.DISCORD_HOVER_COLOR).displayText(replaceText);
 						boolean usingHoverClick = false;
 						
 						if (customP.getHover().isEnabled()) {
 							usingHoverClick = true;
-							String hoverText = PlaceholderParser.parse(wrappedSender, customP.getHover().getText());
+							String hoverText = PlaceholderParser.parse(icSender, customP.getHover().getText());
 							Color color = ColorUtils.getFirstColor(customP.getHover().getText());
 							hoverClick.hoverText(LegacyComponentSerializer.legacySection().deserialize(hoverText));
 							if (color != null) {
@@ -396,7 +439,7 @@ public class OutboundToDiscordEvents implements Listener {
 		if (InteractiveChatDiscordSrvAddon.plugin.translateMentions) {
 			Debug.debug("onGameToDiscord processing mentions");
 			for (MentionPair pair : InteractiveChat.mentionPair.values()) {
-				if (pair.getSender().equals(sender.getUniqueId())) {
+				if (pair.getSender().equals(icSender.getUniqueId())) {
 					UUID recieverUUID = pair.getReciever();
 					Set<String> names = new HashSet<>();
 					Player reciever = Bukkit.getPlayer(recieverUUID);
@@ -428,14 +471,13 @@ public class OutboundToDiscordEvents implements Listener {
 			}
 		}
 		
-		GameMessagePostProcessEvent gameMessagePostProcessEvent = new GameMessagePostProcessEvent(sender, message, false);
+		GameMessagePostProcessEvent gameMessagePostProcessEvent = new GameMessagePostProcessEvent(icSender, message, false);
 		Bukkit.getPluginManager().callEvent(gameMessagePostProcessEvent);
 		if (gameMessagePostProcessEvent.isCancelled()) {
-			return;
+			return null;
 		}
 		message = gameMessagePostProcessEvent.getMessage();
-		
-		event.setMessage(message);
+		return message;
 	}
 	
 	//===== Death Message
@@ -698,7 +740,7 @@ public class OutboundToDiscordEvents implements Listener {
 			}
 			
 			message.delete().queue();
-			Player player = DATA.get(matches.iterator().next()).getPlayer();
+			ICPlayer player = DATA.get(matches.iterator().next()).getPlayer();
 			
 			List<DiscordDisplayData> dataList = new ArrayList<>();
 			
@@ -712,7 +754,7 @@ public class OutboundToDiscordEvents implements Listener {
 			Collections.sort(dataList, DISPLAY_DATA_COMPARATOR);
 			
 			Debug.debug("discordMessageSent creating contents");
-			List<DiscordMessageContent> contents = createContents(dataList, player);			
+			List<DiscordMessageContent> contents = createContents(dataList, player.isLocal() ? player.getLocalPlayer() : (Bukkit.getOnlinePlayers().isEmpty() ? null : Bukkit.getOnlinePlayers().iterator().next()));			
 			
 			DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
 			TextChannel textChannel = discordImageEvent.getChannel();
@@ -769,7 +811,7 @@ public class OutboundToDiscordEvents implements Listener {
 			}
 			
 			message.delete().queue();
-			Player player = DATA.get(matches.iterator().next()).getPlayer();
+			ICPlayer player = DATA.get(matches.iterator().next()).getPlayer();
 
 			List<DiscordDisplayData> dataList = new ArrayList<>();
 			
@@ -783,7 +825,7 @@ public class OutboundToDiscordEvents implements Listener {
 			Collections.sort(dataList, DISPLAY_DATA_COMPARATOR);
 			
 			Debug.debug("onMessageReceived creating contents");
-			List<DiscordMessageContent> contents = createContents(dataList, player);
+			List<DiscordMessageContent> contents = createContents(dataList, player.isLocal() ? player.getLocalPlayer() : (Bukkit.getOnlinePlayers().isEmpty() ? null : Bukkit.getOnlinePlayers().iterator().next()));
 			
 			List<WebhookMessageBuilder> messagesToSend = new ArrayList<>();
 			
@@ -800,11 +842,11 @@ public class OutboundToDiscordEvents implements Listener {
 				}
 			}
 			
-			String avatarUrl = DiscordSRV.getAvatarUrl(player);
+			String avatarUrl = player.isLocal() ? DiscordSRV.getAvatarUrl(player.getLocalPlayer()) : null;
             String username = DiscordSRV.config().getString("Experiment_WebhookChatMessageUsernameFormat")
                     .replace("%displayname%", MessageUtil.strip(player.getDisplayName()))
                     .replace("%username%", player.getName());
-            username = PlaceholderUtil.replacePlaceholders(username, player);
+            username = PlaceholderUtil.replacePlaceholders(username, player.isLocal() ? player.getLocalPlayer() : Bukkit.getOfflinePlayer(player.getUniqueId()));
             username = MessageUtil.strip(username);
 
             String userId = DiscordSRV.getPlugin().getAccountLinkManager().getDiscordId(player.getUniqueId());
@@ -848,7 +890,7 @@ public class OutboundToDiscordEvents implements Listener {
 						color = new Color(0xFFFFFE);
 					}
 					try {
-						BufferedImage image = ImageGeneration.getItemStackImage(item, new ICPlayer(data.getPlayer()), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
+						BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer(), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
 						ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
 						ImageIO.write(image, "png", itemOs);
 						
@@ -878,18 +920,18 @@ public class OutboundToDiscordEvents implements Listener {
 								content.getImageUrls().remove("attachment://ToolTip.png");
 								content.getAttachments().remove("ToolTip.png");
 							}
-							BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get(), new ICPlayer(data.getPlayer()));
+							BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get(), data.getPlayer());
 							ByteArrayOutputStream contentOs = new ByteArrayOutputStream();
 							ImageIO.write(container, "png", contentOs);
 							content.addAttachment("Container.png", contentOs.toByteArray());
 							content.addImageUrl("attachment://Container.png");
 						} else {
-							if (iData.isFilledMap()) {
+							if (iData.isFilledMap() && iData.getPlayer().isLocal()) {
 								if (!description.getDescription().isPresent()) {
 									content.getImageUrls().remove("attachment://ToolTip.png");
 									content.getAttachments().remove("ToolTip.png");
 								}
-								BufferedImage map = ImageGeneration.getMapImage(item, iData.getPlayer());
+								BufferedImage map = ImageGeneration.getMapImage(item, iData.getPlayer().getLocalPlayer());
 								ByteArrayOutputStream mapOs = new ByteArrayOutputStream();
 								ImageIO.write(map, "png", mapOs);
 								content.addAttachment("Map.png", mapOs.toByteArray());
@@ -906,12 +948,12 @@ public class OutboundToDiscordEvents implements Listener {
 						BufferedImage image;
 						if (iData.isPlayerInventory()) {
 							if (InteractiveChatDiscordSrvAddon.plugin.usePlayerInvView) {
-								image = ImageGeneration.getPlayerInventoryImage(inv, new ICPlayer(iData.getPlayer()));
+								image = ImageGeneration.getPlayerInventoryImage(inv, iData.getPlayer());
 							} else {
-								image = ImageGeneration.getInventoryImage(inv, new ICPlayer(data.getPlayer()));
+								image = ImageGeneration.getInventoryImage(inv, data.getPlayer());
 							}
 						} else {
-							image = ImageGeneration.getInventoryImage(inv, new ICPlayer(data.getPlayer()));
+							image = ImageGeneration.getInventoryImage(inv, data.getPlayer());
 						}
 						ByteArrayOutputStream os = new ByteArrayOutputStream();
 						Color color;
@@ -930,9 +972,9 @@ public class OutboundToDiscordEvents implements Listener {
 						DiscordMessageContent content = new DiscordMessageContent(title, null, null, "attachment://Inventory.png", color);
 						content.addAttachment("Inventory.png", os.toByteArray());
 						if (type.equals(ImageDisplayType.INVENTORY) && InteractiveChatDiscordSrvAddon.plugin.invShowLevel) {
-							int level = iData.getPlayer().getLevel();
+							int level = iData.getPlayer().getExperienceLevel();
 							ByteArrayOutputStream bottleOut = new ByteArrayOutputStream();
-							ImageIO.write(InteractiveChatDiscordSrvAddon.plugin.getItemTexture("experience_bottle"), "png", bottleOut);
+							ImageIO.write(ModelRender.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, "minecraft:item/experience_bottle", ModelDisplayPosition.GUI).getImage(), "png", bottleOut);
 							content.addAttachment("Level.png", bottleOut.toByteArray());
 							content.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language).replaceFirst("%s", level + ""));
 							content.setFooterImageUrl("attachment://Level.png");
@@ -988,7 +1030,7 @@ public class OutboundToDiscordEvents implements Listener {
 					}
 					content.addDescription(body);
 					if (InteractiveChatDiscordSrvAddon.plugin.hoverImage) {
-						BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.getMiscTexture("hover_cursor");
+						BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_MISC_LOCATION + "hover_cursor").getTexture();
 						ByteArrayOutputStream os = new ByteArrayOutputStream();
 						ImageIO.write(image, "png", os);
 						content.setAuthorIconUrl("attachment://Hover.png");

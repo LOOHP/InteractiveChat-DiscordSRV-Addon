@@ -18,6 +18,8 @@ import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
+import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resource.texture.TextureResource;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -37,15 +39,11 @@ public class MCFont {
     		return working = false;
     	}
         try {
-        	File fontFolder = new File(InteractiveChatDiscordSrvAddon.plugin.getDataFolder() + "/assets/font");
-        	if (!fontFolder.exists()) {
+        	TextureResource resource = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_FONT_LOCATION + "font.json");
+        	if (resource == null || !resource.hasFile()) {
         		return working = false;
         	}
-        	File fontDataFile = new File(fontFolder, "font.json");
-        	if (!fontDataFile.exists()) {
-        		return working = false;
-        	}
-        	InputStreamReader reader = new InputStreamReader(new FileInputStream(fontDataFile), StandardCharsets.UTF_8);
+        	InputStreamReader reader = new InputStreamReader(new FileInputStream(resource.getFile()), StandardCharsets.UTF_8);
         	JSONObject json = (JSONObject) new JSONParser().parse(reader);
         	reader.close();
         	
@@ -59,7 +57,7 @@ public class MCFont {
 	        		JSONObject provider = (JSONObject) obj;
 	        		String identifier = provider.get("identifier").toString();
 	                int type = getFontType(provider.get("type").toString());
-	                File file = new File(fontFolder, provider.get("file").toString());
+	                File file = new File(resource.getFile().getParent(), provider.get("file").toString());
 	                float size = (float) (double) provider.get("size");
 	                JSONArray offsetArray = (JSONArray) provider.get("offset");
 	                double offsetX = (double) offsetArray.get(0);
