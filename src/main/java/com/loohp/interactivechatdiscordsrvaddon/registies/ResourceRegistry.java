@@ -19,6 +19,10 @@ public class ResourceRegistry {
 	public static final String IC_ITEM_LOCATION = "minecraft:interactivechatdiscordsrvaddon/items/";
 	public static final String IC_MISC_LOCATION = "minecraft:interactivechatdiscordsrvaddon/misc/";
 	
+	public static final String BUILTIN_ENTITY_LOCATION = "minecraft:interactivechatdiscordsrvaddon/builtin_entity/";
+	
+	public static final String SKIN_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/skin";
+	
 	public static final double TINT_INDEX_0_X = (84.0 / 256.0) / (169.0 / 256.0);
 	public static final double TINT_INDEX_0_Y = (124.0 / 256.0) / (169.0 / 256.0);
 	public static final double TINT_INDEX_0_Z = (70.0 / 256.0) / (169.0 / 256.0);

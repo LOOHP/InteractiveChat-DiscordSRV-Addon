@@ -84,7 +84,6 @@ public class ImageGeneration {
 	private static final String OPTIFINE_CAPE_URL = "https://optifine.net/capes/%s.png";
 	private static final String TEXTURE_MINECRAFT_URL = "http://textures.minecraft.net/texture/";
 	private static final String PLAYER_RENDER_URL = "https://mc-heads.net/player/%s/64";
-	private static final String SKULL_RENDER_URL = "https://mc-heads.net/head/%s/96";
 	private static final String HEAD_2D_RENDER_URL = "https://mc-heads.net/avatar/%s/%s";
 	private static final String PLAYER_INFO_URL = "https://sessionserver.mojang.com/session/minecraft/profile/%s";
 	
@@ -100,7 +99,6 @@ public class ImageGeneration {
 	
 	private static final String PLAYER_CAPE_KEY = "PlayerCapeTexture";
 	private static final String FULL_BODY_IMAGE_KEY = "FullBodyImage";
-	private static final String PLAYER_HEAD_KEY = "PlayerHeadImage";
 	private static final String PLAYER_HEAD_2D_KEY = "PlayerHead2DImage";
 	private static final String INVENTORY_KEY = "Inventory";
 	private static final String PLAYER_INVENTORY_KEY = "PlayerInventory";
@@ -861,7 +859,7 @@ public class ImageGeneration {
 		if (xMaterial.equals(XMaterial.CHEST) || xMaterial.equals(XMaterial.TRAPPED_CHEST) || xMaterial.equals(XMaterial.ENDER_CHEST)) {
 			LocalDate time = LocalDate.now();
 			if (time.getMonth().equals(Month.DECEMBER) && (time.getDayOfMonth() == 24 || time.getDayOfMonth() == 25 || time.getDayOfMonth() == 26)) {
-				itemImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_BLOCK_LOCATION + "christmas_chest").getTexture(32, 32);
+				itemImage = ModelRender.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, ResourceRegistry.BUILTIN_ENTITY_LOCATION + "christmas_chest", ModelDisplayPosition.GUI, cmdPredicate).getImage();
 			}
 		} else if (xMaterial.isOneOf(Arrays.asList("CONTAINS:Banner"))) {
 			BufferedImage banner = BannerGraphics.generateBannerImage(item);
@@ -909,31 +907,20 @@ public class ImageGeneration {
 				g4.dispose();
 			}
 		} else if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
+			Map<String, BufferedImage> providedTextures = new HashMap<>();
+			providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_LOCATION + "steve").getTexture());
 			try {
 				String base64 = SkinUtils.getSkinValue(item.getItemMeta());
 				if (base64 != null) {
-					Cache<?> cache = Cache.getCache(base64 + PLAYER_HEAD_KEY);
-					if (cache == null) {
-						JSONObject json = (JSONObject) new JSONParser().parse(new String(Base64.getDecoder().decode(base64)));
-						String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace(TEXTURE_MINECRAFT_URL, "");
-						String url = SKULL_RENDER_URL.replaceFirst("%s", value);
-						BufferedImage newSkull = ImageUtils.multiply(ImageUtils.downloadImage(url), 0.9);
-						
-						BufferedImage newImage = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
-						Graphics2D g2 = newImage.createGraphics();
-						g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-						g2.drawImage(newSkull, 4, 3, 23, 28, null);
-						g2.dispose();
-						
-						Cache.putCache(base64 + PLAYER_HEAD_KEY, newImage, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
-						itemImage = ImageUtils.copyImage(newImage);
-					} else {
-						itemImage = ImageUtils.copyImage((BufferedImage) cache.getObject());
-					}
+					JSONObject json = (JSONObject) new JSONParser().parse(new String(Base64.getDecoder().decode(base64)));
+					String value = (String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url");
+					BufferedImage skinImage = ImageUtils.downloadImage(value);
+					providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, skinImage);
 				}
 			} catch (ParseException e) {
 				e.printStackTrace();
 			}
+			itemImage = ModelRender.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, ResourceRegistry.BUILTIN_ENTITY_LOCATION + "player_head", ModelDisplayPosition.GUI, cmdPredicate, providedTextures).getImage();
 		} else if (item.getItemMeta() instanceof LeatherArmorMeta) {
 			LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
 			Color color = new Color(meta.getColor().asRGB());

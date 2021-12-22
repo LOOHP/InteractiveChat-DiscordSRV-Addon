@@ -19,6 +19,7 @@ import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
+import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelElement.ModelElementRotation;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelFace.ModelFaceSide;
@@ -51,13 +52,6 @@ public class ModelManager {
 				key = key.substring(0, key.lastIndexOf("."));
 				JSONObject rootJson = (JSONObject) parser.parse(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
 				String parent = (String) rootJson.getOrDefault("parent", null);
-				JSONArray textureSizeArray = (JSONArray) rootJson.get("texture_size");
-				TextureSize textureSize;
-				if (textureSizeArray == null) {
-					textureSize = new TextureSize(16, 16);
-				} else {
-					textureSize = new TextureSize(((Number) textureSizeArray.get(0)).intValue(), ((Number) textureSizeArray.get(0)).intValue());
-				}
 				boolean ambientocclusion = (boolean) rootJson.getOrDefault("ambientocclusion", true);
 				Map<ModelDisplayPosition, ModelDisplay> display = new EnumMap<>(ModelDisplayPosition.class);
 				JSONObject displayJson = (JSONObject) rootJson.get("display");
@@ -166,7 +160,7 @@ public class ModelManager {
 						overrides.add(new ModelOverride(predicates, model));
 					}
 				}
-				models.put(key, new BlockModel(parent, textureSize, ambientocclusion, display, texture, elements, overrides));
+				models.put(key, new BlockModel(parent, ambientocclusion, display, texture, elements, overrides));
 			} catch (Exception e) {
 				new RuntimeException("Unable to load block model " + file.getAbsolutePath(), e).printStackTrace();
 			}
@@ -205,6 +199,9 @@ public class ModelManager {
 			while (model.getParent() != null) {
 				if (model.getRawParent().equals(ITEM_BASE)) {
 					break;
+				}
+				if (model.getRawParent().equals(BLOCK_ENTITY_BASE)) {
+					return resolveBlockModel(ResourceRegistry.BUILTIN_ENTITY_LOCATION + resourceLocation.substring(resourceLocation.lastIndexOf("/") + 1), predicates);
 				}
 				BlockModel parent = models.get(model.getParent());
 				if (parent == null) {

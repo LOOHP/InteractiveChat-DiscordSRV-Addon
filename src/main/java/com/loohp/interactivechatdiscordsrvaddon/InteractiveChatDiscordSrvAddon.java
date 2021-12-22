@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 
 import org.bukkit.Bukkit;
@@ -373,11 +374,16 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	
 	public void reloadTextures(boolean redownload, CommandSender... receivers) {
 		isReady = false;
-		CommandSender[] senders = new CommandSender[receivers.length + 1];
-		for (int i = 0; i < receivers.length; i++) {
-			senders[i] = receivers[i];
+		CommandSender[] senders;
+		if (Stream.of(receivers).noneMatch(each -> each.equals(Bukkit.getConsoleSender()))) {
+			senders = new CommandSender[receivers.length + 1];
+			for (int i = 0; i < receivers.length; i++) {
+				senders[i] = receivers[i];
+			}
+			senders[senders.length - 1] = Bukkit.getConsoleSender();
+		} else {
+			senders = receivers;
 		}
-		senders[senders.length - 1] = Bukkit.getConsoleSender();
 		
 		Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
 			try {

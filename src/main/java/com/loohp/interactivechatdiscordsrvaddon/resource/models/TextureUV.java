@@ -34,6 +34,10 @@ public class TextureUV {
 		return new TextureUV(x1 * scale, y1 * scale, x2 * scale, y2 * scale);
 	}
 	
+	public TextureUV getScaled(double scaleX, double scaleY) {
+		return new TextureUV(x1 * scaleX, y1 * scaleY, x2 * scaleX, y2 * scaleY);
+	}
+	
 	public double getXDiff() {
 		return x2 - x1;
 	}

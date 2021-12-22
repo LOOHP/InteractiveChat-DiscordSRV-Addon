@@ -326,6 +326,16 @@ public class ImageUtils {
 	    return b;
 	}
 	
+	public static BufferedImage resizeImageFillWidth(BufferedImage source, int width) {
+		int height = (int) (source.getHeight() * ((double) width / (double) source.getWidth()));
+		BufferedImage b = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+	    Graphics2D g = b.createGraphics();
+	    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+	    g.drawImage(source, 0, 0, width, height, null);
+	    g.dispose();
+	    return b;
+	}
+	
 	public static BufferedImage resizeImageStretch(BufferedImage source, int pixels) {
 		int w = source.getWidth() + pixels;
 		int h = source.getHeight() + pixels;

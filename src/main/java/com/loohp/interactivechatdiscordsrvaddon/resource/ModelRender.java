@@ -40,12 +40,16 @@ public class ModelRender {
 	public static final String CACHE_KEY = "ModelRender";
 	public static final String MODEL_NOT_FOUND = "notfound";
 	
-	public static RenderResult render(int w, int h, ResourceManager manager, String modelKey, ModelDisplayPosition displayPosition) {
-		return render(w, h, manager, modelKey, displayPosition, Collections.emptyMap());
+	public static RenderResult render(int width, int height, ResourceManager manager, String modelKey, ModelDisplayPosition displayPosition) {
+		return render(width, height, manager, modelKey, displayPosition, Collections.emptyMap());
 	}
 	
 	public static RenderResult render(int width, int height, ResourceManager manager, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Object> predicate) {
-		String cacheKey = CACHE_KEY + "/" + modelKey + "/" + predicate.entrySet().stream().map(entry -> entry.getKey().name().toLowerCase() + ":" + entry.getValue().toString()).collect(Collectors.joining(";"));
+		return render(width, height, manager, modelKey, displayPosition, predicate, Collections.emptyMap());
+	}
+	
+	public static RenderResult render(int width, int height, ResourceManager manager, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Object> predicate, Map<String, BufferedImage> providedTextures) {
+		String cacheKey = CACHE_KEY + "/" + modelKey + "/" + predicate.entrySet().stream().map(entry -> entry.getKey().name().toLowerCase() + ":" + entry.getValue().toString()).collect(Collectors.joining(";")) + "/" + providedTextures.entrySet().stream().map(entry -> entry.getKey() + ":" + hash(entry.getValue())).collect(Collectors.joining(":"));
 		Cache<?> cachedRender = Cache.getCache(cacheKey);
 		if (cachedRender != null) {
 			RenderResult cachedResult = (RenderResult) cachedRender.getObject();
@@ -61,7 +65,7 @@ public class ModelRender {
 			return new RenderResult(MODEL_NOT_FOUND, null);
 		}
 		if (blockModel.getRawParent() == null || blockModel.getRawParent().indexOf("/") < 0) {
-			render(blockModel, manager, image, displayPosition);
+			render(blockModel, manager, image, displayPosition, providedTextures);
 		} else if (blockModel.getRawParent().equals(ModelManager.ITEM_BASE)) {
 			Graphics2D g = image.createGraphics();
 			for (int i = 0; blockModel.getTextures().containsKey(ModelManager.ITEM_BASE_LAYER + i); i++) {
@@ -94,7 +98,7 @@ public class ModelRender {
 		return result;
 	}
 	
-	public static void render(BlockModel blockModel, ResourceManager manager, BufferedImage image, ModelDisplayPosition displayPosition) {
+	private static void render(BlockModel blockModel, ResourceManager manager, BufferedImage image, ModelDisplayPosition displayPosition, Map<String, BufferedImage> providedTextures) {
 		List<Hexahedron> hexahedrons = new ArrayList<>();
 		for (ModelElement element : blockModel.getElements()) {
 			ModelElementRotation rotation = element.getRotation();
@@ -110,13 +114,14 @@ public class ModelRender {
 				if (faceData == null) {
 					images[i] = null;
 				} else {
+					BufferedImage provided = providedTextures.get(faceData.getTexture());
 					TextureResource resource = manager.getTextureManager().getTexture(faceData.getTexture(), false);
-					if (resource == null) {
+					if (resource == null && provided == null) {
 						images[i] = null;
 					} else {
-						images[i] = resource.getTexture();
+						images[i] = provided == null ? resource.getTexture() : ImageUtils.copyImage(provided);
 						int textureW = TEXTURE_W;
-						images[i] = ImageUtils.resizeImageAbs(images[i], textureW, (int) (images[i].getHeight() * ((double) textureW / (double) images[i].getWidth())));
+						images[i] = ImageUtils.resizeImageFillWidth(images[i], textureW);
 						
 						TextureUV uv = faceData.getUV();
 						if (uv == null) {
@@ -164,7 +169,8 @@ public class ModelRender {
 							}
 							uv = new TextureUV(Math.min(x1, x2), Math.min(y1, y2), Math.max(x1, x2), Math.max(y1, y2));
 						}
-						uv = uv.getScaled((double) images[i].getWidth() / (double) blockModel.getTextureSize().getWidth());
+						uv = uv.getScaled(1, (double) images[i].getHeight() / (double) images[i].getWidth());
+						uv = uv.getScaled((double) images[i].getWidth() / 16.0);
 						double x1 = uv.getX1();
 						double y1 = uv.getY1();
 						double dX = Math.abs(uv.getXDiff());
@@ -222,6 +228,16 @@ public class ModelRender {
 		renderModel.updateLightingRatio(0.98, 0.98, 0.608, 0.8, 0.608, 0.8);
 		renderModel.render(image.getWidth(), image.getHeight(), g, image);
 		g.dispose();
+	}
+	
+	private static String hash(BufferedImage image) {
+		StringBuilder sb = new StringBuilder();
+		for (int y = 0; y < image.getHeight(); y++) {
+			for (int x = 0; x < image.getWidth(); x++) {
+				sb.append(Integer.toHexString(image.getRGB(x, y)));
+			}
+		}
+		return sb.toString();
 	}
 	
 	public static class RenderResult {
