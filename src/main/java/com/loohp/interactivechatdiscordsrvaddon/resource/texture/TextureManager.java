@@ -38,8 +38,11 @@ public class TextureManager {
 		for (File file : files) {
 			try {
 				String key = namespace + ":" + file.getParentFile().getAbsolutePath().replace("\\", "/").replace(root.getAbsolutePath().replace("\\", "/") + "/", "") + "/" + file.getName();
-				String extension = key.substring(key.lastIndexOf(".") + 1);
-				key = key.substring(0, key.lastIndexOf("."));
+				String extension = "";
+				if (key.lastIndexOf(".") >= 0) {
+					extension = key.substring(key.lastIndexOf(".") + 1);
+					key = key.substring(0, key.lastIndexOf("."));
+				}
 				if (extension.equalsIgnoreCase("png")) {
 					textures.put(key, new TextureResource(this, key, file, true));
 				} else if (extension.equalsIgnoreCase("mcmeta")) {

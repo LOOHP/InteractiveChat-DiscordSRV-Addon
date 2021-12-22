@@ -15,14 +15,16 @@ import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelFace.ModelF
 public class BlockModel {
 	
 	private String parent;
+	private TextureSize textureSize;
 	private boolean ambientocclusion;
 	private Map<ModelDisplayPosition, ModelDisplay> display;
 	private Map<String, String> textures;
 	private List<ModelElement> elements;
 	private List<ModelOverride> overrides;
 	
-	public BlockModel(String parent, boolean ambientocclusion, Map<ModelDisplayPosition, ModelDisplay> display, Map<String, String> textures, List<ModelElement> elements, List<ModelOverride> overrides) {
+	public BlockModel(String parent, TextureSize textureSize, boolean ambientocclusion, Map<ModelDisplayPosition, ModelDisplay> display, Map<String, String> textures, List<ModelElement> elements, List<ModelOverride> overrides) {
 		this.parent = parent;
+		this.textureSize = textureSize;
 		this.ambientocclusion = ambientocclusion;
 		this.display = Collections.unmodifiableMap(display);
 		this.textures = Collections.unmodifiableMap(textures);
@@ -64,7 +66,7 @@ public class BlockModel {
 			}
 			elements.set(i, new ModelElement(element.getFrom(), element.getTo(), element.getRotation(), element.isShade(), faces));
 		}
-		return new BlockModel(childrenModel.getRawParent(), ambientocclusion, display, textures, elements, childrenModel.getOverrides());
+		return new BlockModel(childrenModel.getRawParent(), childrenModel.getTextureSize(), ambientocclusion, display, textures, elements, childrenModel.getOverrides());
 	}
 	
 	public static BlockModel resolve(BlockModel parentModel, BlockModel childrenModel) {
@@ -104,7 +106,7 @@ public class BlockModel {
 			}
 			elements.set(i, new ModelElement(element.getFrom(), element.getTo(), element.getRotation(), element.isShade(), faces));
 		}
-		return new BlockModel(parent, ambientocclusion, display, textures, elements, parentModel.getOverrides());
+		return new BlockModel(parent, parentModel.getTextureSize(), ambientocclusion, display, textures, elements, parentModel.getOverrides());
 	}
 	
 	public String getRawParent() {
@@ -113,6 +115,10 @@ public class BlockModel {
 
 	public String getParent() {
 		return parent == null ? null : (parent.contains(":") ? parent : ResourceRegistry.DEFAULT_NAMESPACE + ":" + parent);
+	}
+
+	public TextureSize getTextureSize() {
+		return textureSize;
 	}
 
 	public boolean isAmbientocclusion() {

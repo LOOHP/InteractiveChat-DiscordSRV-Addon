@@ -35,7 +35,7 @@ public class ModelRender {
 	public static final int INTERNAL_W = 64;
 	public static final int INTERNAL_H = 64;
 	
-	public static final int TEXTURE_W = 600;
+	public static final int TEXTURE_W = 800;
 	
 	public static final String CACHE_KEY = "ModelRender";
 	public static final String MODEL_NOT_FOUND = "notfound";
@@ -60,7 +60,7 @@ public class ModelRender {
 		if (blockModel == null) {
 			return new RenderResult(MODEL_NOT_FOUND, null);
 		}
-		if (blockModel.getRawParent() == null) {
+		if (blockModel.getRawParent() == null || blockModel.getRawParent().indexOf("/") < 0) {
 			render(blockModel, manager, image, displayPosition);
 		} else if (blockModel.getRawParent().equals(ModelManager.ITEM_BASE)) {
 			Graphics2D g = image.createGraphics();
@@ -115,7 +115,8 @@ public class ModelRender {
 						images[i] = null;
 					} else {
 						images[i] = resource.getTexture();
-						images[i] = ImageUtils.resizeImageAbs(images[i], TEXTURE_W, (int) (images[i].getHeight() * ((double) TEXTURE_W / (double) images[i].getWidth())));
+						int textureW = TEXTURE_W;
+						images[i] = ImageUtils.resizeImageAbs(images[i], textureW, (int) (images[i].getHeight() * ((double) textureW / (double) images[i].getWidth())));
 						
 						TextureUV uv = faceData.getUV();
 						if (uv == null) {
@@ -163,26 +164,18 @@ public class ModelRender {
 							}
 							uv = new TextureUV(Math.min(x1, x2), Math.min(y1, y2), Math.max(x1, x2), Math.max(y1, y2));
 						}
-						uv = uv.getScaled(images[i].getWidth() / 16);
+						uv = uv.getScaled((double) images[i].getWidth() / (double) blockModel.getTextureSize().getWidth());
 						double x1 = uv.getX1();
 						double y1 = uv.getY1();
 						double dX = Math.abs(uv.getXDiff());
 						double dY = Math.abs(uv.getYDiff());
 						if (uv.isVerticallyFlipped()) {
 							images[i] = ImageUtils.flipVertically(images[i]);
-							y1 -= dY;
+							y1 = images[i].getHeight() - y1;
 						}
 						if (uv.isHorizontallyFlipped()) {
 							images[i] = ImageUtils.flipHorizontal(images[i]);
-							x1 -= dX;
-						}
-						if (x1 > images[i].getWidth() - 1) {
-							x1 = images[i].getWidth() - 1;
-							dX = 1;
-						}
-						if (y1 > images[i].getHeight() - 1) {
-							y1 = images[i].getHeight() - 1;
-							dY = 1;
+							x1 = images[i].getWidth() - x1;
 						}
 						images[i] = ImageUtils.rotateImageByDegrees(ImageUtils.copyAndGetSubImage(images[i], (int) x1, (int) y1, Math.max(1, (int) dX), Math.max(1, (int) dY)), faceData.getRotation());
 						if (faceData.getTintindex() == 0) {
