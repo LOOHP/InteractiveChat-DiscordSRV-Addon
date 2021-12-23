@@ -160,7 +160,7 @@ public class ImageGeneration {
 		Debug.debug("ImageGeneration creating inventory image of " + player.getName());
 		
 		String key = INVENTORY_KEY + HashUtils.createSha1("Inventory", inventory);
-		if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial()) && !Stream.of(inventory.getContents()).noneMatch(each -> NBTEditor.contains(each, "CustomModelData"))) {
+		if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial()) && !Stream.of(inventory.getContents()).noneMatch(each -> each != null && NBTEditor.contains(each, "CustomModelData"))) {
 			Cache<?> cache = Cache.getCache(key);
 			if (cache != null) {
 				return ImageUtils.copyImage((BufferedImage) cache.getObject());
