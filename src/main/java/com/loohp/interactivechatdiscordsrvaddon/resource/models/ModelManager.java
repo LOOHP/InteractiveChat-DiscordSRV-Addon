@@ -201,7 +201,11 @@ public class ModelManager {
 					break;
 				}
 				if (model.getRawParent().equals(BLOCK_ENTITY_BASE)) {
-					return resolveBlockModel(ResourceRegistry.BUILTIN_ENTITY_LOCATION + resourceLocation.substring(resourceLocation.lastIndexOf("/") + 1), predicates);
+					BlockModel builtinModel = resolveBlockModel(ResourceRegistry.BUILTIN_ENTITY_LOCATION + resourceLocation.substring(resourceLocation.lastIndexOf("/") + 1), predicates);
+					if (builtinModel != null) {
+						return builtinModel;
+					}
+					break;
 				}
 				BlockModel parent = models.get(model.getParent());
 				if (parent == null) {
