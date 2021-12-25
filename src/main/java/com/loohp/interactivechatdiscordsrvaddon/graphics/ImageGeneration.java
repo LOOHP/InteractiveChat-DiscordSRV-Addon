@@ -71,8 +71,7 @@ import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.BannerGraphics.BannerAssetResult;
 import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
-import com.loohp.interactivechatdiscordsrvaddon.resource.ModelRender;
-import com.loohp.interactivechatdiscordsrvaddon.resource.ModelRender.RenderResult;
+import com.loohp.interactivechatdiscordsrvaddon.resource.ModelRenderer.RenderResult;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelOverride.ModelOverrideType;
 import com.loohp.interactivechatdiscordsrvaddon.resource.texture.TextureResource;
@@ -853,13 +852,8 @@ public class ImageGeneration {
 			providedTextures.put(ResourceRegistry.BANNER_PATTERNS_TEXTURE_PLACEHOLDER, bannerAsset.getPatterns());
 		} else if (xMaterial.equals(XMaterial.SHIELD)) {
 			BannerAssetResult shieldAsset = BannerGraphics.generateShieldAssets(item);
-			if (shieldAsset == null) {
-				providedTextures.put(ResourceRegistry.SHIELD_BASE_TEXTURE_PLACEHOLDER, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_LOCATION + "shield_base_nopattern").getTexture());
-				providedTextures.put(ResourceRegistry.SHIELD_PATTERNS_TEXTURE_PLACEHOLDER, new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB));
-			} else {
-				providedTextures.put(ResourceRegistry.SHIELD_BASE_TEXTURE_PLACEHOLDER, shieldAsset.getBase());
-				providedTextures.put(ResourceRegistry.SHIELD_PATTERNS_TEXTURE_PLACEHOLDER, shieldAsset.getPatterns());
-			}
+			providedTextures.put(ResourceRegistry.SHIELD_BASE_TEXTURE_PLACEHOLDER, shieldAsset.getBase());
+			providedTextures.put(ResourceRegistry.SHIELD_PATTERNS_TEXTURE_PLACEHOLDER, shieldAsset.getPatterns());
 		} else if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
 			providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_LOCATION + "steve").getTexture());
 			try {
@@ -972,7 +966,7 @@ public class ImageGeneration {
 		}
 		
 		BufferedImage itemImage;
-		RenderResult renderResult = ModelRender.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, directLocation == null ? "minecraft:item/" + key : directLocation, ModelDisplayPosition.GUI, predicates, providedTextures);
+		RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, directLocation == null ? "minecraft:item/" + key : directLocation, ModelDisplayPosition.GUI, predicates, providedTextures);
 		if (renderResult.isSuccessful() && !xMaterial.isOneOf(Arrays.asList("CONTAINS:spawn_egg"))) {
 			itemImage = renderResult.getImage();
 		} else {

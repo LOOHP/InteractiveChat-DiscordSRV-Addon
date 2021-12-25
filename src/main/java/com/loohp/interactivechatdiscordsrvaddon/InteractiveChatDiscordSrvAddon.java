@@ -41,6 +41,7 @@ import com.loohp.interactivechatdiscordsrvaddon.listeners.OutboundToDiscordEvent
 import com.loohp.interactivechatdiscordsrvaddon.metrics.Charts;
 import com.loohp.interactivechatdiscordsrvaddon.metrics.Metrics;
 import com.loohp.interactivechatdiscordsrvaddon.registies.InteractiveChatRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resource.ModelRenderer;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
 
@@ -184,6 +185,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public List<String> resourceOrder = new ArrayList<>();
 	public Map<String, Boolean> resourceStatus = new LinkedHashMap<>();
 	public ResourceManager resourceManager;
+	public ModelRenderer modelRenderer;
 	
 	protected Map<String, byte[]> extras = new HashMap<>();
 	
@@ -238,10 +240,12 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		}
 		
 		reloadTextures(false);
+		modelRenderer = new ModelRenderer(8);
 	}
 	
 	@Override
 	public void onDisable() {
+		modelRenderer.close();
 		getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon has been Disabled!");
 	}
 	

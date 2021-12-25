@@ -70,6 +70,9 @@ public class ImageUtils {
 	}
 	
 	public static BufferedImage rotateImageByDegrees(BufferedImage img, double angle) {
+		if (angle % 360 == 0) {
+			return img;
+		}
 	    double rads = Math.toRadians(angle);
 	    double sin = Math.abs(Math.sin(rads));
 	    double cos = Math.abs(Math.cos(rads));
@@ -325,7 +328,7 @@ public class ImageUtils {
 	    return b;
 	}
 	
-	public static BufferedImage copyImage(BufferedImage source){
+	public static BufferedImage copyImage(BufferedImage source) {
 	    BufferedImage b = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
 	    Graphics2D g = b.createGraphics();
 	    g.drawImage(source, 0, 0, null);
@@ -345,12 +348,7 @@ public class ImageUtils {
 	public static BufferedImage resizeImage(BufferedImage source, double factor) {
 		int w = (int) (source.getWidth() * factor);
 		int h = (int) (source.getHeight() * factor);
-		BufferedImage b = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-	    Graphics2D g = b.createGraphics();
-	    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-	    g.drawImage(source, 0, 0, w, h, null);
-	    g.dispose();
-	    return b;
+	    return resizeImageAbs(source, w, h);
 	}
 	
 	public static BufferedImage resizeImageQuality(BufferedImage source, int width, int height) {
@@ -373,23 +371,18 @@ public class ImageUtils {
 	
 	public static BufferedImage resizeImageFillWidth(BufferedImage source, int width) {
 		int height = (int) (source.getHeight() * ((double) width / (double) source.getWidth()));
-		BufferedImage b = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-	    Graphics2D g = b.createGraphics();
-	    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-	    g.drawImage(source, 0, 0, width, height, null);
-	    g.dispose();
-	    return b;
+	    return resizeImageAbs(source, width, height);
+	}
+	
+	public static BufferedImage resizeImageFillHeight(BufferedImage source, int height) {
+		int width = (int) (source.getWidth() * ((double) height / (double) source.getHeight()));
+	    return resizeImageAbs(source, width, height);
 	}
 	
 	public static BufferedImage resizeImageStretch(BufferedImage source, int pixels) {
 		int w = source.getWidth() + pixels;
 		int h = source.getHeight() + pixels;
-		BufferedImage b = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-	    Graphics2D g = b.createGraphics();
-	    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-	    g.drawImage(source, 0, 0, w, h, null);
-	    g.dispose();
-	    return b;
+	    return resizeImageAbs(source, w, h);
 	}
 	
 	public static BufferedImage printComponentNoShadow(BufferedImage image, Component component, int centerX, int topY, float fontSize, boolean dynamicFontSize) {

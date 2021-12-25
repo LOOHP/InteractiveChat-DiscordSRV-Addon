@@ -196,6 +196,11 @@ public class ModelManager {
 		if (model == null) {
 			return null;
 		}
+		for (ModelOverride override : model.getOverrides()) {
+			if (override.test(predicates)) {
+				return resolveBlockModel(override.getModel(), null);
+			}
+		}
 		if (model.getParent() != null) {
 			while (model.getParent() != null) {
 				if (model.getRawParent().equals(ITEM_BASE)) {
@@ -218,11 +223,6 @@ public class ModelManager {
 					}
 				}
 				model = BlockModel.resolve(parent, model);
-			}
-		}
-		for (ModelOverride override : model.getOverrides()) {
-			if (override.test(predicates)) {
-				return resolveBlockModel(override.getModel(), null);
 			}
 		}
 		model = BlockModel.resolve(model);

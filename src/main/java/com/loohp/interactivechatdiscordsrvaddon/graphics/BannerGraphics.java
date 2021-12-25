@@ -75,18 +75,18 @@ public class BannerGraphics {
 	@SuppressWarnings("deprecation")
 	public static BannerAssetResult generateShieldAssets(ItemStack item) {		
 		if (!item.hasItemMeta()) {
-			return null;
+			return getDefaultShieldAssets();
 		}
 		
 		List<Pattern> patterns;
 		Color baseColor;
 		if (!(item.getItemMeta() instanceof BannerMeta)) {
 			if (!(item.getItemMeta() instanceof BlockStateMeta)) {
-				return null;
+				return getDefaultShieldAssets();
 			}
 			BlockStateMeta bmeta = (BlockStateMeta) item.getItemMeta();
 			if (!bmeta.hasBlockState()) {
-				return null;
+				return getDefaultShieldAssets();
 			}
             Banner bannerBlockMeta = (Banner) bmeta.getBlockState();
             patterns = bannerBlockMeta.getPatterns();
@@ -125,6 +125,10 @@ public class BannerGraphics {
 		g2.dispose();
 		
 		return new BannerAssetResult(baseImage, patternsImage);
+	}
+	
+	private static BannerAssetResult getDefaultShieldAssets() {
+		return new BannerAssetResult(InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_LOCATION + "shield_base_nopattern").getTexture(), new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB));
 	}
 	
 	public static class BannerAssetResult {
