@@ -149,17 +149,18 @@ public class ModelManager {
 					for (Object obj : overridesArray) {
 						JSONObject overrideJson = (JSONObject) obj;
 						JSONObject predicateJson = (JSONObject) overrideJson.get("predicate");
-						Map<ModelOverrideType, Object> predicates = new HashMap<>();
+						Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
 						for (Object obj1 : predicateJson.keySet()) {
 							String predicateTypeKey = obj1.toString();
 							ModelOverrideType type = ModelOverrideType.fromKey(predicateTypeKey);
 							Object value = predicateJson.get(predicateTypeKey);
-							predicates.put(type, value);
+							predicates.put(type, ((Number) value).floatValue());
 						}
 						String model = (String) overrideJson.get("model");
 						overrides.add(new ModelOverride(predicates, model));
 					}
 				}
+				Collections.reverse(overrides);
 				models.put(key, new BlockModel(parent, ambientocclusion, display, texture, elements, overrides));
 			} catch (Exception e) {
 				new RuntimeException("Unable to load block model " + file.getAbsolutePath(), e).printStackTrace();
@@ -184,8 +185,8 @@ public class ModelManager {
 		models.clear();
 	}
 	
-	public BlockModel resolveBlockModel(String resourceLocation, Map<ModelOverrideType, Object> predicates) {
-		String cacheKey = CACHE_KEY + "/" + resourceLocation + "/" + predicates.entrySet().stream().map(entry -> entry.getKey().name().toLowerCase() + ":" + entry.getValue().toString()).collect(Collectors.joining(";"));
+	public BlockModel resolveBlockModel(String resourceLocation, Map<ModelOverrideType, Float> predicates) {
+		String cacheKey = CACHE_KEY + "/" + resourceLocation + "/" + (predicates == null ? "null" : predicates.entrySet().stream().map(entry -> entry.getKey().name().toLowerCase() + ":" + entry.getValue().toString()).collect(Collectors.joining(";")));
 		Cache<?> cachedModel = Cache.getCache(cacheKey);
 		if (cachedModel != null) {
 			return (BlockModel) cachedModel.getObject();
@@ -213,7 +214,7 @@ public class ModelManager {
 				}
 				for (ModelOverride override : model.getOverrides()) {
 					if (override.test(predicates)) {
-						return resolveBlockModel(override.getModel(), Collections.emptyMap());
+						return resolveBlockModel(override.getModel(), null);
 					}
 				}
 				model = BlockModel.resolve(parent, model);
@@ -221,7 +222,7 @@ public class ModelManager {
 		}
 		for (ModelOverride override : model.getOverrides()) {
 			if (override.test(predicates)) {
-				return resolveBlockModel(override.getModel(), Collections.emptyMap());
+				return resolveBlockModel(override.getModel(), null);
 			}
 		}
 		model = BlockModel.resolve(model);

@@ -55,12 +55,12 @@ public class TextureResource {
 	
 	public BufferedImage getTexture(int w, int h) {
 		loadImage();
-		return ImageUtils.resizeImageAbs(texture, w, h);
+		return ImageUtils.toCompatibleImage(ImageUtils.resizeImageAbs(texture, w, h));
 	}
 
 	public BufferedImage getTexture() {
 		loadImage();
-		return ImageUtils.copyImage(texture);
+		return ImageUtils.toCompatibleImage(ImageUtils.copyImage(texture));
 	}
 	
 	public boolean hasFile() {

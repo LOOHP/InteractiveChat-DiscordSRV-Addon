@@ -1,6 +1,7 @@
 package com.loohp.interactivechatdiscordsrvaddon.resource;
 
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,6 +36,8 @@ public class ModelRender {
 	public static final int INTERNAL_W = 64;
 	public static final int INTERNAL_H = 64;
 	
+	public static final int QUALITY_THRESHOLD = 70;
+	
 	public static final int TEXTURE_W = 800;
 	
 	public static final String CACHE_KEY = "ModelRender";
@@ -44,11 +47,11 @@ public class ModelRender {
 		return render(width, height, manager, modelKey, displayPosition, Collections.emptyMap());
 	}
 	
-	public static RenderResult render(int width, int height, ResourceManager manager, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Object> predicate) {
+	public static RenderResult render(int width, int height, ResourceManager manager, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate) {
 		return render(width, height, manager, modelKey, displayPosition, predicate, Collections.emptyMap());
 	}
 	
-	public static RenderResult render(int width, int height, ResourceManager manager, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Object> predicate, Map<String, BufferedImage> providedTextures) {
+	public static RenderResult render(int width, int height, ResourceManager manager, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, BufferedImage> providedTextures) {
 		String cacheKey = CACHE_KEY + "/" + modelKey + "/" + predicate.entrySet().stream().map(entry -> entry.getKey().name().toLowerCase() + ":" + entry.getValue().toString()).collect(Collectors.joining(";")) + "/" + providedTextures.entrySet().stream().map(entry -> entry.getKey() + ":" + hash(entry.getValue())).collect(Collectors.joining(":"));
 		Cache<?> cachedRender = Cache.getCache(cacheKey);
 		if (cachedRender != null) {
@@ -58,12 +61,12 @@ public class ModelRender {
 			}
 		}
 		
-		BufferedImage image = new BufferedImage(INTERNAL_W, INTERNAL_H, BufferedImage.TYPE_INT_ARGB);
 		String rejectedReason = null;
 		BlockModel blockModel = manager.getModelManager().resolveBlockModel(modelKey, predicate);
 		if (blockModel == null) {
 			return new RenderResult(MODEL_NOT_FOUND, null);
 		}
+		BufferedImage image = new BufferedImage(INTERNAL_W, INTERNAL_H, BufferedImage.TYPE_INT_ARGB);
 		if (blockModel.getRawParent() == null || blockModel.getRawParent().indexOf("/") < 0) {
 			render(blockModel, manager, image, displayPosition, providedTextures);
 		} else if (blockModel.getRawParent().equals(ModelManager.ITEM_BASE)) {
@@ -92,7 +95,7 @@ public class ModelRender {
 		if (rejectedReason == null) {
 			result = new RenderResult(ImageUtils.resizeImageQuality(image, width, height), blockModel);
 		} else {
-			result = new RenderResult(rejectedReason, blockModel);
+			result = new RenderResult(rejectedReason == null ? "null" : rejectedReason, blockModel);
 		}
 		Cache.putCache(cacheKey, result, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
 		return result;
@@ -213,6 +216,10 @@ public class ModelRender {
 		Model renderModel = new Model(hexahedrons);
 		
 		Graphics2D g = image.createGraphics();
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+		g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
+		g.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED);
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 		g.translate(image.getWidth() / 2, image.getHeight() / 2);
 		g.scale(image.getWidth() / 16, image.getHeight() / 16);
 		renderModel.translate(-16 / 2, -16 / 2, -16 / 2);
@@ -226,7 +233,7 @@ public class ModelRender {
 			renderModel.translate(transform.getX(), transform.getY(), transform.getZ());
 		}
 		renderModel.updateLightingRatio(0.98, 0.98, 0.608, 0.8, 0.608, 0.8);
-		renderModel.render(image.getWidth(), image.getHeight(), g, image);
+		renderModel.render(image.getWidth(), image.getHeight(), g, image, blockModel.getElements().size() <= QUALITY_THRESHOLD);
 		g.dispose();
 	}
 	

@@ -12,6 +12,7 @@ import java.time.Month;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -833,10 +834,10 @@ public class ImageGeneration {
 			requiresEnchantmentGlint = true;
 		}
 		
-		Map<ModelOverrideType, Object> cmdPredicate = new HashMap<>();
+		Map<ModelOverrideType, Float> cmdPredicate = new EnumMap<>(ModelOverrideType.class);
 		if (NBTEditor.contains(item, "CustomModelData")) {
 			int customModelData = NBTEditor.getInt(item, "CustomModelData");
-			cmdPredicate.put(ModelOverrideType.CUSTOM_MODEL_DATA, customModelData);
+			cmdPredicate.put(ModelOverrideType.CUSTOM_MODEL_DATA, (float) customModelData);
 		}
 		
 		BufferedImage itemImage;
@@ -938,9 +939,10 @@ public class ImageGeneration {
 			}
 		} else if (xMaterial.equals(XMaterial.ELYTRA)) {
 			int durability = item.getType().getMaxDurability() - (InteractiveChat.version.isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
-			Map<ModelOverrideType, Object> predicate = new HashMap<>();
+			Map<ModelOverrideType, Float> predicate = new EnumMap<>(ModelOverrideType.class);
+			predicate.putAll(cmdPredicate);
 			if (durability <= 1) {
-				predicate.put(ModelOverrideType.BROKEN, 1);
+				predicate.put(ModelOverrideType.BROKEN, 1F);
 			}
 			itemImage = ModelRender.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, "minecraft:item/elytra", ModelDisplayPosition.GUI, predicate).getImage();
 		} else if (FilledMapUtils.isFilledMap(item)) {
@@ -949,13 +951,14 @@ public class ImageGeneration {
 		} else if (xMaterial.equals(XMaterial.CROSSBOW)) {
 			CrossbowMeta meta = (CrossbowMeta) item.getItemMeta();
 			List<ItemStack> charged = meta.getChargedProjectiles();
-			Map<ModelOverrideType, Object> predicate = new HashMap<>();
+			Map<ModelOverrideType, Float> predicate = new EnumMap<>(ModelOverrideType.class);
+			predicate.putAll(cmdPredicate);
 			if (charged != null && !charged.isEmpty()) {
-				predicate.put(ModelOverrideType.CHARGED, 1);
+				predicate.put(ModelOverrideType.CHARGED, 1F);
 				ItemStack charge = charged.get(0);
 				XMaterial chargeType = XMaterialUtils.matchXMaterial(charge);
 				if (chargeType.equals(XMaterial.FIREWORK_ROCKET)) {
-					predicate.put(ModelOverrideType.FIREWORK, 1);
+					predicate.put(ModelOverrideType.FIREWORK, 1F);
 				}
 			}
 			itemImage = ModelRender.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, "minecraft:item/crossbow", ModelDisplayPosition.GUI, predicate).getImage();
@@ -965,8 +968,9 @@ public class ImageGeneration {
 				time += 24000;
 			}
 			double timePhase = (double) time / 24000;
-			Map<ModelOverrideType, Object> predicate = new HashMap<>();
-			predicate.put(ModelOverrideType.TIME, timePhase - 0.0078125);
+			Map<ModelOverrideType, Float> predicate = new EnumMap<>(ModelOverrideType.class);
+			predicate.putAll(cmdPredicate);
+			predicate.put(ModelOverrideType.TIME, (float) (timePhase - 0.0078125));
 			itemImage = ModelRender.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, "minecraft:item/clock", ModelDisplayPosition.GUI, predicate).getImage();
 		} else if (xMaterial.equals(XMaterial.COMPASS)) {
 			double angle;
@@ -1027,8 +1031,9 @@ public class ImageGeneration {
 				angle = 0;
 			}
 			
-			Map<ModelOverrideType, Object> predicate = new HashMap<>();
-			predicate.put(ModelOverrideType.ANGLE, angle - 0.015625);
+			Map<ModelOverrideType, Float> predicate = new EnumMap<>(ModelOverrideType.class);
+			predicate.putAll(cmdPredicate);
+			predicate.put(ModelOverrideType.ANGLE, (float) (angle - 0.015625));
 			itemImage = ModelRender.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, "minecraft:item/compass", ModelDisplayPosition.GUI, predicate).getImage();
 		} else if (xMaterial.equals(XMaterial.LIGHT)) {
 			int level = 15;
@@ -1042,8 +1047,9 @@ public class ImageGeneration {
 					} catch (NumberFormatException e) {}
 				}
 			}
-			Map<ModelOverrideType, Object> predicate = new HashMap<>();
-			predicate.put(ModelOverrideType.LEVEL, level);
+			Map<ModelOverrideType, Float> predicate = new EnumMap<>(ModelOverrideType.class);
+			predicate.putAll(cmdPredicate);
+			predicate.put(ModelOverrideType.LEVEL, (float) level);
 			itemImage = ModelRender.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, "minecraft:item/light", ModelDisplayPosition.GUI, predicate).getImage();
 		}
 		

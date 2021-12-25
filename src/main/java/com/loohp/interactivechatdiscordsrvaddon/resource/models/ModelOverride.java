@@ -1,7 +1,7 @@
 package com.loohp.interactivechatdiscordsrvaddon.resource.models;
 
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -9,15 +9,15 @@ import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
 
 public class ModelOverride {
 	
-	private Map<ModelOverrideType, Object> predicates;
+	private Map<ModelOverrideType, Float> predicates;
 	private String model;
 	
-	public ModelOverride(Map<ModelOverrideType, Object> predicates, String model) {
+	public ModelOverride(Map<ModelOverrideType, Float> predicates, String model) {
 		this.predicates = Collections.unmodifiableMap(predicates);
 		this.model = model;
 	}
 
-	public Map<ModelOverrideType, Object> getPredicates() {
+	public Map<ModelOverrideType, Float> getPredicates() {
 		return predicates;
 	}
 	
@@ -29,27 +29,22 @@ public class ModelOverride {
 		return model == null ? null : (model.contains(":") ? model : ResourceRegistry.DEFAULT_NAMESPACE + ":" + model);
 	}
 
-	public boolean test(Map<ModelOverrideType, Object> data) {
+	public boolean test(Map<ModelOverrideType, Float> data) {
+		if (data == null) {
+			return false;
+		}
 		boolean result = true;
-		Map<ModelOverrideType, Object> dataCopy = new HashMap<>();
+		Map<ModelOverrideType, Float> dataCopy = new EnumMap<>(ModelOverrideType.class);
 		dataCopy.putAll(data);
-		for (Entry<ModelOverrideType, Object> entry : predicates.entrySet()) {
-			Object value = dataCopy.remove(entry.getKey());
+		for (Entry<ModelOverrideType, Float> entry : predicates.entrySet()) {
+			Float value = dataCopy.remove(entry.getKey());
 			if (value == null) {
+				value = 0F;
+			}
+			float valueComparing = entry.getValue();
+			if (value < valueComparing) {
 				result = false;
 				break;
-			}
-			Object valueComparing = entry.getValue();
-			if (value instanceof Number && valueComparing instanceof Number) {
-				if (((Number) value).doubleValue() > ((Number) valueComparing).doubleValue()) {
-					result = false;
-					break;
-				}
-			} else {
-				if (!value.equals(valueComparing)) {
-					result = false;
-					break;
-				}
 			}
 		}
 		return result && dataCopy.isEmpty();
@@ -64,6 +59,7 @@ public class ModelOverride {
 		COOLDOWN,
 		DAMAGE,
 		DAMAGED,
+		FILLED,
 		LEFTHANDED,
 		PULL,
 		PULLING,

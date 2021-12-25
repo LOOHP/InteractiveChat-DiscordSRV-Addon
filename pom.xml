@@ -5,7 +5,7 @@
 	<groupId>com.loohp</groupId>
 	<artifactId>InteractiveChatDiscordSrvAddon</artifactId>
 	<name>InteractiveChatDiscordSrvAddon</name>
-	<version>4.1.0.3</version>
+	<version>4.1.0.4</version>
 
 	<description>Have InteractiveChat Placeholders translated on DiscordSRV discord messages.</description>
 	<url>https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon</url>
@@ -257,7 +257,7 @@
             <artifactId>venturechat</artifactId>
             <version>2.20.1</version>
             <scope>provided</scope>
-        </dependency>
+		</dependency>
 		<dependency>
 			<groupId>com.comphenix.protocol</groupId>
 			<artifactId>ProtocolLib</artifactId>
@@ -273,13 +273,13 @@
 		<dependency>
 			<groupId>com.loohp</groupId>
 			<artifactId>InteractiveChat</artifactId>
-			<version>4.1.0.0</version>
+			<version>4.1.0.3</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.loohp</groupId>
 			<artifactId>BlockModelRenderer</artifactId>
-			<version>1.0.2.0</version>
+			<version>1.0.3.0</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>

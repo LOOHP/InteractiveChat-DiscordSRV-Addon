@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsEnvironment;
 import java.awt.RenderingHints;
 import java.awt.font.TextAttribute;
 import java.awt.geom.AffineTransform;
@@ -31,6 +33,27 @@ public class ImageUtils {
 	
 	public static final Color TEXT_BACKGROUND_COLOR = new Color(0, 0, 0, 180);
 	public static final double CHAT_COLOR_BACKGROUND_FACTOR = 0.19;
+	
+	public static BufferedImage toCompatibleImage(BufferedImage image) {
+	    try {
+		    GraphicsConfiguration gfxConfig = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
+	
+		    if (image.getColorModel().equals(gfxConfig.getColorModel())) {
+		        return image;
+		    }
+	
+		    BufferedImage newImage = gfxConfig.createCompatibleImage(image.getWidth(), image.getHeight(), image.getTransparency());
+	
+		    Graphics2D g2d = newImage.createGraphics();
+	
+		    g2d.drawImage(image, 0, 0, null);
+		    g2d.dispose();
+	
+		    return newImage;
+	    } catch (Exception e) {
+	    	return image;
+	    }
+	}
 	
 	public static BufferedImage downloadImage(String link) throws IOException {
 		URL url = new URL(link);
