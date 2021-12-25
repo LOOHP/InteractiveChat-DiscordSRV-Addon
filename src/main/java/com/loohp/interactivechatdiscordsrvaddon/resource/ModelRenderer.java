@@ -216,7 +216,6 @@ public class ModelRenderer implements AutoCloseable {
 								}
 								uv = new TextureUV(Math.min(x1, x2), Math.min(y1, y2), Math.max(x1, x2), Math.max(y1, y2));
 							}
-							long start = System.currentTimeMillis();
 							uv = uv.getScaled(1, (double) images[i].getHeight() / (double) images[i].getWidth());
 							uv = uv.getScaled((double) images[i].getWidth() / 16.0);
 							double x1 = uv.getX1();
