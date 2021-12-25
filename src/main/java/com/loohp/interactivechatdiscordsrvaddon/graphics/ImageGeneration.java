@@ -968,7 +968,7 @@ public class ImageGeneration {
 					} catch (NumberFormatException e) {}
 				}
 			}
-			predicates.put(ModelOverrideType.LEVEL, (float) level);
+			predicates.put(ModelOverrideType.LEVEL, (float) level / 16F);
 		}
 		
 		BufferedImage itemImage;
