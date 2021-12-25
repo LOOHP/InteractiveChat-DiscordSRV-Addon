@@ -117,16 +117,18 @@ public class ModelRender {
 				if (faceData == null) {
 					images[i] = null;
 				} else {
+					TextureUV uv = faceData.getUV();
 					BufferedImage provided = providedTextures.get(faceData.getTexture());
 					TextureResource resource = manager.getTextureManager().getTexture(faceData.getTexture(), false);
 					if (resource == null && provided == null) {
+						images[i] = null;
+					} else if (uv != null && (uv.getXDiff() == 0 || uv.getYDiff() == 0)) {
 						images[i] = null;
 					} else {
 						images[i] = provided == null ? resource.getTexture() : ImageUtils.copyImage(provided);
 						int textureW = TEXTURE_W;
 						images[i] = ImageUtils.resizeImageFillWidth(images[i], textureW);
 						
-						TextureUV uv = faceData.getUV();
 						if (uv == null) {
 							Point3D[] points;
 							switch (side) {

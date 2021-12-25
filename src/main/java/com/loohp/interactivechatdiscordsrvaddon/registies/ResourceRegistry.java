@@ -5,6 +5,7 @@ public class ResourceRegistry {
 	public static final String DEFAULT_NAMESPACE = "minecraft";
 	
 	public static final String BANNER_LOCATION = "minecraft:entity/banner/";
+	public static final String SHIELD_LOCATION = "minecraft:entity/shield/";
 	public static final String ITEM_LOCATION = "minecraft:item/";
 	public static final String ARMOR_LOCATION = "minecraft:models/armor/";
 	public static final String BLOCK_LOCATION = "minecraft:block/";
@@ -22,6 +23,10 @@ public class ResourceRegistry {
 	public static final String BUILTIN_ENTITY_LOCATION = "minecraft:interactivechatdiscordsrvaddon/builtin_entity/";
 	
 	public static final String SKIN_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/skin";
+	public static final String BANNER_BASE_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/banner_base";
+	public static final String BANNER_PATTERNS_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/banner_patterns";
+	public static final String SHIELD_BASE_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/shield_base";
+	public static final String SHIELD_PATTERNS_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/shield_patterns";
 	
 	public static final double TINT_INDEX_0_X = (84.0 / 256.0) / (169.0 / 256.0);
 	public static final double TINT_INDEX_0_Y = (124.0 / 256.0) / (169.0 / 256.0);
