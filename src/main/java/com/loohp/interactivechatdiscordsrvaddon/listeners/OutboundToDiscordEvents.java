@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.imageio.ImageIO;
 
@@ -39,6 +40,7 @@ import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import com.loohp.interactivechat.objectholders.CustomPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlayer;
@@ -47,6 +49,8 @@ import com.loohp.interactivechat.objectholders.PlaceholderCooldownManager;
 import com.loohp.interactivechat.objectholders.WebData;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
+import com.loohp.interactivechat.utils.ComponentFlattening;
+import com.loohp.interactivechat.utils.ComponentReplacing;
 import com.loohp.interactivechat.utils.CustomStringUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.InventoryUtils;
@@ -130,7 +134,6 @@ public class OutboundToDiscordEvents implements Listener {
 		}
 	}
 	
-	@SuppressWarnings("deprecation")
 	@Subscribe(priority = ListenerPriority.HIGHEST)
 	public void onGameToDiscord(GameChatMessagePreProcessEvent event) {
 		Debug.debug("Triggering onGameToDiscord");
@@ -138,11 +141,11 @@ public class OutboundToDiscordEvents implements Listener {
 		
 		Player sender = event.getPlayer();
 		ICPlayer icSender = new ICPlayer(sender);
-		String message = event.getMessage();
+		Component message = ComponentStringUtils.toRegularComponent(event.getMessageComponent());
 		
 		message = processGameMessage(icSender, message);
 		
-		event.setMessage(message);
+		event.setMessageComponent(ComponentStringUtils.toDiscordSRVComponent(message));
 	}
 	/*
 	@SuppressWarnings("deprecation")
@@ -170,33 +173,38 @@ public class OutboundToDiscordEvents implements Listener {
 				return;
 			}
 		}
-		String message = event.getMessage();
+		Component message = ComponentStringUtils.toRegularComponent(event.getMessageComponent());
 		
-		message = processGameMessage(player, message);
+		message = processGameMessage(icSender, message);
 		
-		event.setMessage(message);
+		event.setMessageComponent(ComponentStringUtils.toDiscordSRVComponent(message));
 	}
 	*/
 	@SuppressWarnings("deprecation")
-	public String processGameMessage(ICPlayer icSender, String message) {
+	public Component processGameMessage(ICPlayer icSender, Component component) {
 		boolean reserializer = DiscordSRV.config().getBoolean("Experiment_MCDiscordReserializer_ToDiscord");
-		String originalMessage = message;
+		String originalMessage = PlainTextComponentSerializer.plainText().serialize(component);
 		PlaceholderCooldownManager cooldownManager = InteractiveChatDiscordSrvAddon.plugin.placeholderCooldownManager;
-		long now = cooldownManager.checkMessage(icSender.getUniqueId(), message).getTimeNow();
+		long now = cooldownManager.checkMessage(icSender.getUniqueId(), PlainTextComponentSerializer.plainText().serialize(component)).getTimeNow();
 
-		GameMessagePreProcessEvent gameMessagePreProcessEvent = new GameMessagePreProcessEvent(icSender, message, false);
+		GameMessagePreProcessEvent gameMessagePreProcessEvent = new GameMessagePreProcessEvent(icSender, component, false);
 		Bukkit.getPluginManager().callEvent(gameMessagePreProcessEvent);
 		if (gameMessagePreProcessEvent.isCancelled()) {
 			return null;
 		}
-		message = gameMessagePreProcessEvent.getMessage();
+		component = ComponentFlattening.flatten(gameMessagePreProcessEvent.getComponent());
 
 		if (InteractiveChat.useItem && PlayerUtils.hasPermission(icSender.getUniqueId(), "interactivechat.module.item", true, 200)) {
 			Debug.debug("onGameToDiscord processing item display");
 			if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.itemPlaceholder)).findFirst().get(), now)) {
 				String placeholder = InteractiveChat.itemPlaceholder;
-				int index = InteractiveChat.itemCaseSensitive ? message.indexOf(placeholder) : message.toLowerCase().indexOf(placeholder.toLowerCase());
-				if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\'))) {
+				String regex = InteractiveChat.itemCaseSensitive ? CustomStringUtils.escapeMetaCharacters(placeholder) : "(?i)" + CustomStringUtils.escapeMetaCharacters(placeholder);
+				AtomicBoolean usedPlaceholder = new AtomicBoolean(false);
+				component = ComponentReplacing.replace(component, regex, true, result -> {
+					usedPlaceholder.set(true);
+					return LegacyComponentSerializer.legacySection().deserialize(placeholder);
+				});
+				if (usedPlaceholder.get()) {
 					ItemStack item = PlayerUtils.getHeldItem(icSender);
 					boolean isAir = item.getType().equals(Material.AIR);
 					XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
@@ -224,7 +232,8 @@ public class OutboundToDiscordEvents implements Listener {
 					if (reserializer) {
 						replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
 					}
-					message = message.replaceAll((InteractiveChat.itemCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.itemPlaceholder), CustomStringUtils.escapeReplaceAllMetaCharacters(replaceText));
+					
+					component = ComponentReplacing.replace(component, (InteractiveChat.itemCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.itemPlaceholder), true, LegacyComponentSerializer.legacySection().deserialize(replaceText));
 					if (InteractiveChatDiscordSrvAddon.plugin.itemImage) {
 						int inventoryId = DATA_ID_PROVIDER.getNext();
 						int position = InteractiveChat.itemCaseSensitive ? originalMessage.indexOf(InteractiveChat.itemPlaceholder) : originalMessage.toLowerCase().indexOf(InteractiveChat.itemPlaceholder.toLowerCase());
@@ -249,10 +258,10 @@ public class OutboundToDiscordEvents implements Listener {
 							}
 						}
 						
-						GameMessageProcessItemEvent gameMessageProcessItemEvent = new GameMessageProcessItemEvent(icSender, title, message, false, inventoryId, item.clone(), inv);
+						GameMessageProcessItemEvent gameMessageProcessItemEvent = new GameMessageProcessItemEvent(icSender, title, component, false, inventoryId, item.clone(), inv);
 						Bukkit.getPluginManager().callEvent(gameMessageProcessItemEvent);
 						if (!gameMessageProcessItemEvent.isCancelled()) {
-							message = gameMessageProcessItemEvent.getMessage();
+							component = gameMessageProcessItemEvent.getComponent();
 							title = gameMessageProcessItemEvent.getTitle();
 							if (gameMessageProcessItemEvent.hasInventory()) {
 								DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.ITEM_CONTAINER, gameMessageProcessItemEvent.getItemStack().clone(), gameMessageProcessItemEvent.getInventory()));
@@ -260,7 +269,7 @@ public class OutboundToDiscordEvents implements Listener {
 								DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.ITEM, gameMessageProcessItemEvent.getItemStack().clone()));
 							}
 						}
-						message += "<ICD=" + inventoryId + ">";
+						component = component.append(Component.text("<ICD=" + inventoryId + ">"));
 					}
 				}
 			}
@@ -270,13 +279,18 @@ public class OutboundToDiscordEvents implements Listener {
 			Debug.debug("onGameToDiscord processing inventory display");
 			if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.invPlaceholder)).findFirst().get(), now)) {
 				String placeholder = InteractiveChat.invPlaceholder;
-				int index = InteractiveChat.invCaseSensitive ? message.indexOf(placeholder) : message.toLowerCase().indexOf(placeholder.toLowerCase());
-				if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\'))) {
+				String regex = InteractiveChat.invCaseSensitive ? CustomStringUtils.escapeMetaCharacters(placeholder) : "(?i)" + CustomStringUtils.escapeMetaCharacters(placeholder);
+				AtomicBoolean usedPlaceholder = new AtomicBoolean(false);
+				component = ComponentReplacing.replace(component, regex, true, result -> {
+					usedPlaceholder.set(true);
+					return LegacyComponentSerializer.legacySection().deserialize(placeholder);
+				});
+				if (usedPlaceholder.get()) {
 					String replaceText = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.invReplaceText));
 					if (reserializer) {
 						replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
 					}
-					message = message.replaceAll((InteractiveChat.invCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.invPlaceholder), CustomStringUtils.escapeReplaceAllMetaCharacters(replaceText));
+					component = ComponentReplacing.replace(component, (InteractiveChat.invCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.invPlaceholder), true, LegacyComponentSerializer.legacySection().deserialize(replaceText));
 					if (InteractiveChatDiscordSrvAddon.plugin.invImage) {
 						int inventoryId = DATA_ID_PROVIDER.getNext();
 						int position = InteractiveChat.invCaseSensitive ? originalMessage.indexOf(InteractiveChat.invPlaceholder) : originalMessage.toLowerCase().indexOf(InteractiveChat.invPlaceholder.toLowerCase());
@@ -291,15 +305,15 @@ public class OutboundToDiscordEvents implements Listener {
 						}
 						String title = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.invTitle));
 						
-						GameMessageProcessPlayerInventoryEvent gameMessageProcessPlayerInventoryEvent = new GameMessageProcessPlayerInventoryEvent(icSender, title, message, false, inventoryId, inv);
+						GameMessageProcessPlayerInventoryEvent gameMessageProcessPlayerInventoryEvent = new GameMessageProcessPlayerInventoryEvent(icSender, title, component, false, inventoryId, inv);
 						Bukkit.getPluginManager().callEvent(gameMessageProcessPlayerInventoryEvent);
 						if (!gameMessageProcessPlayerInventoryEvent.isCancelled()) {
-							message = gameMessageProcessPlayerInventoryEvent.getMessage();
+							component = gameMessageProcessPlayerInventoryEvent.getComponent();
 							title = gameMessageProcessPlayerInventoryEvent.getTitle();
 							DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.INVENTORY, true, gameMessageProcessPlayerInventoryEvent.getInventory()));
 						}
 						
-						message += "<ICD=" + inventoryId + ">";
+						component = component.append(Component.text("<ICD=" + inventoryId + ">"));
 					}
 				}
 			}
@@ -309,13 +323,18 @@ public class OutboundToDiscordEvents implements Listener {
 			Debug.debug("onGameToDiscord processing enderchest display");
 			if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.enderPlaceholder)).findFirst().get(), now)) {
 				String placeholder = InteractiveChat.enderPlaceholder;
-				int index = InteractiveChat.enderCaseSensitive ? message.indexOf(placeholder) : message.toLowerCase().indexOf(placeholder.toLowerCase());
-				if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\'))) {
+				String regex = InteractiveChat.enderCaseSensitive ? CustomStringUtils.escapeMetaCharacters(placeholder) : "(?i)" + CustomStringUtils.escapeMetaCharacters(placeholder);
+				AtomicBoolean usedPlaceholder = new AtomicBoolean(false);
+				component = ComponentReplacing.replace(component, regex, true, result -> {
+					usedPlaceholder.set(true);
+					return LegacyComponentSerializer.legacySection().deserialize(placeholder);
+				});
+				if (usedPlaceholder.get()) {
 					String replaceText = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.enderReplaceText));
 					if (reserializer) {
 						replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
 					}
-					message = message.replaceAll((InteractiveChat.enderCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.enderPlaceholder), CustomStringUtils.escapeReplaceAllMetaCharacters(replaceText));
+					component = ComponentReplacing.replace(component, (InteractiveChat.enderCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.enderPlaceholder), true, LegacyComponentSerializer.legacySection().deserialize(replaceText));
 					if (InteractiveChatDiscordSrvAddon.plugin.enderImage) {
 						int inventoryId = DATA_ID_PROVIDER.getNext();
 						int position = InteractiveChat.enderCaseSensitive ? originalMessage.indexOf(InteractiveChat.enderPlaceholder) : originalMessage.toLowerCase().indexOf(InteractiveChat.enderPlaceholder.toLowerCase());
@@ -330,15 +349,15 @@ public class OutboundToDiscordEvents implements Listener {
 						}
 						String title = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.enderTitle));
 						
-						GameMessageProcessInventoryEvent gameMessageProcessInventoryEvent = new GameMessageProcessInventoryEvent(icSender, title, message, false, inventoryId, inv);
+						GameMessageProcessInventoryEvent gameMessageProcessInventoryEvent = new GameMessageProcessInventoryEvent(icSender, title, component, false, inventoryId, inv);
 						Bukkit.getPluginManager().callEvent(gameMessageProcessInventoryEvent);
 						if (!gameMessageProcessInventoryEvent.isCancelled()) {
-							message = gameMessageProcessInventoryEvent.getMessage();
+							component = gameMessageProcessInventoryEvent.getComponent();
 							title = gameMessageProcessInventoryEvent.getTitle();
 							DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.ENDERCHEST, gameMessageProcessInventoryEvent.getInventory()));
 						}
 						
-						message += "<ICD=" + inventoryId + ">";
+						component = component.append(Component.text("<ICD=" + inventoryId + ">"));
 					}
 				}
 			}
@@ -350,15 +369,20 @@ public class OutboundToDiscordEvents implements Listener {
 				CustomPlaceholder customP = (CustomPlaceholder) placeholder;
 				if (!InteractiveChat.useCustomPlaceholderPermissions || (InteractiveChat.useCustomPlaceholderPermissions && PlayerUtils.hasPermission(icSender.getUniqueId(), customP.getPermission(), true, 200))) {
 					boolean onCooldown = cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), customP, now);
-					int index = placeholder.isCaseSensitive() ? message.indexOf(placeholder.getKeyword()) : message.toLowerCase().indexOf(placeholder.getKeyword().toLowerCase());
-					if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\')) && !onCooldown) {
+					String regex = customP.isCaseSensitive() ? CustomStringUtils.escapeMetaCharacters(customP.getKeyword()) : "(?i)" + CustomStringUtils.escapeMetaCharacters(customP.getKeyword());
+					AtomicBoolean usedPlaceholder = new AtomicBoolean(false);
+					component = ComponentReplacing.replace(component, regex, true, result -> {
+						usedPlaceholder.set(true);
+						return LegacyComponentSerializer.legacySection().deserialize(customP.getKeyword());
+					});
+					if (usedPlaceholder.get() && !onCooldown) {
 						String replaceText = customP.getKeyword();
 						if (customP.getReplace().isEnabled()) {
 							replaceText = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
 							if (reserializer) {
 								replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
 							}
-							message = message.replaceAll((customP.isCaseSensitive() ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(customP.getKeyword()), CustomStringUtils.escapeReplaceAllMetaCharacters(replaceText));
+							component = ComponentReplacing.replace(component, (customP.isCaseSensitive() ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(customP.getKeyword()), true, LegacyComponentSerializer.legacySection().deserialize(replaceText));
 						}
 						if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && !InteractiveChatDiscordSrvAddon.plugin.hoverIngore.contains(customP.getPosition())) {
 							int position = customP.isCaseSensitive() ? originalMessage.indexOf(customP.getKeyword()) : originalMessage.toLowerCase().indexOf(customP.getKeyword().toLowerCase());
@@ -383,7 +407,7 @@ public class OutboundToDiscordEvents implements Listener {
 							if (usingHoverClick) {
 								int hoverId = DATA_ID_PROVIDER.getNext();
 								DATA.put(hoverId, hoverClick.build());
-								message += "<ICD=" + hoverId + ">";
+								component = component.append(Component.text("<ICD=" + hoverId + ">"));
 							}
 						}
 					}
@@ -394,15 +418,20 @@ public class OutboundToDiscordEvents implements Listener {
 		if (InteractiveChat.t && WebData.getInstance() != null) {
 			for (CustomPlaceholder customP : WebData.getInstance().getSpecialPlaceholders()) {
 				boolean onCooldown = cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), customP, now);
-				int index = customP.isCaseSensitive() ? message.indexOf(customP.getKeyword()) : message.toLowerCase().indexOf(customP.getKeyword().toLowerCase());
-				if (index >= 0 && !((index > 0 && message.charAt(index - 1) == '\\') && (index < 2 || message.charAt(index - 2) != '\\')) && !onCooldown) {
+				String regex = customP.isCaseSensitive() ? CustomStringUtils.escapeMetaCharacters(customP.getKeyword()) : "(?i)" + CustomStringUtils.escapeMetaCharacters(customP.getKeyword());
+				AtomicBoolean usedPlaceholder = new AtomicBoolean(false);
+				component = ComponentReplacing.replace(component, regex, true, result -> {
+					usedPlaceholder.set(true);
+					return LegacyComponentSerializer.legacySection().deserialize(customP.getKeyword());
+				});
+				if (usedPlaceholder.get() && !onCooldown) {
 					String replaceText = customP.getKeyword();
 					if (customP.getReplace().isEnabled()) {
 						replaceText = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
 						if (reserializer) {
 							replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
 						}
-						message = message.replaceAll((customP.isCaseSensitive() ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(customP.getKeyword()), CustomStringUtils.escapeReplaceAllMetaCharacters(replaceText));
+						component = ComponentReplacing.replace(component, (customP.isCaseSensitive() ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(customP.getKeyword()), true, LegacyComponentSerializer.legacySection().deserialize(replaceText));
 					}
 					if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && !InteractiveChatDiscordSrvAddon.plugin.hoverIngore.contains(customP.getPosition())) {
 						int position = customP.isCaseSensitive() ? originalMessage.indexOf(customP.getKeyword()) : originalMessage.toLowerCase().indexOf(customP.getKeyword().toLowerCase());
@@ -427,7 +456,7 @@ public class OutboundToDiscordEvents implements Listener {
 						if (usingHoverClick) {
 							int hoverId = DATA_ID_PROVIDER.getNext();
 							DATA.put(hoverId, hoverClick.build());
-							message += "<ICD=" + hoverId + ">";
+							component = component.append(Component.text("<ICD=" + hoverId + ">"));
 						}
 					}
 				}
@@ -460,9 +489,7 @@ public class OutboundToDiscordEvents implements Listener {
 						if (user != null) {
 							String discordMention = user.getAsMention();
 							for (String name : names) {
-								if (message.contains(InteractiveChat.mentionPrefix + name)) {
-									message = message.replace(InteractiveChat.mentionPrefix + name, discordMention);
-								}
+								component = ComponentReplacing.replace(component, CustomStringUtils.escapeMetaCharacters(InteractiveChat.mentionPrefix + name), true, LegacyComponentSerializer.legacySection().deserialize(discordMention));
 							}
 						}
 					}
@@ -470,13 +497,13 @@ public class OutboundToDiscordEvents implements Listener {
 			}
 		}
 		
-		GameMessagePostProcessEvent gameMessagePostProcessEvent = new GameMessagePostProcessEvent(icSender, message, false);
+		GameMessagePostProcessEvent gameMessagePostProcessEvent = new GameMessagePostProcessEvent(icSender, component, false);
 		Bukkit.getPluginManager().callEvent(gameMessagePostProcessEvent);
 		if (gameMessagePostProcessEvent.isCancelled()) {
 			return null;
 		}
-		message = gameMessagePostProcessEvent.getMessage();
-		return message;
+		component = gameMessagePostProcessEvent.getComponent();
+		return component;
 	}
 	
 	//===== Death Message

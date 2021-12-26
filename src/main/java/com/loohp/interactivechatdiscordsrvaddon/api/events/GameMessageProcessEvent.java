@@ -1,5 +1,6 @@
 package com.loohp.interactivechatdiscordsrvaddon.api.events;
 
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 
 /**
@@ -12,8 +13,8 @@ public class GameMessageProcessEvent extends GameMessageEvent {
 	private int processId;
 	private String title;
 
-	public GameMessageProcessEvent(ICPlayer sender, String title, String message, boolean cancel, int processId) {
-		super(sender, message, cancel);
+	public GameMessageProcessEvent(ICPlayer sender, String title, Component component, boolean cancel, int processId) {
+		super(sender, component, cancel);
 		this.processId = processId;
 		this.title = title;
 	}

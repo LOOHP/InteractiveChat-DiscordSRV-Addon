@@ -5,6 +5,8 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 
 /**
@@ -15,13 +17,13 @@ import com.loohp.interactivechat.objectholders.ICPlayer;
 public class GameMessageEvent extends Event implements Cancellable {
 
 	private ICPlayer sender;
-	private String message;
+	private Component component;
 	private boolean cancel;
 
-    public GameMessageEvent(ICPlayer sender, String message, boolean cancel) {
+    public GameMessageEvent(ICPlayer sender, Component component, boolean cancel) {
     	super(!Bukkit.isPrimaryThread());
         this.sender = sender;
-        this.message = message;
+        this.component = component;
         this.cancel = cancel;
     }
     
@@ -38,13 +40,23 @@ public class GameMessageEvent extends Event implements Cancellable {
     public ICPlayer getSender() {
 		return sender;
 	}
+    
+    public Component getComponent() {
+    	return component;
+    }
+    
+    public void setComponent(Component component) {
+    	this.component = component;
+    }
 
+    @Deprecated
 	public String getMessage() {
-		return message;
+		return PlainTextComponentSerializer.plainText().serialize(component);
 	}
 
+    @Deprecated
 	public void setMessage(String message) {
-		this.message = message;
+		this.component = PlainTextComponentSerializer.plainText().deserialize(message);
 	}
 
 	private static final HandlerList HANDLERS = new HandlerList();

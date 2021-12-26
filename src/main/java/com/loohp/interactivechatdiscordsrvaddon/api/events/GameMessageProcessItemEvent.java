@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 
 /**
@@ -21,14 +22,14 @@ public class GameMessageProcessItemEvent extends GameMessageProcessEvent {
 	private ItemStack itemstack;
 	private Optional<Inventory> inventory;
 	
-	public GameMessageProcessItemEvent(ICPlayer sender, String title, String message, boolean cancel, int processId, ItemStack itemstack, Inventory inventory) {
-		super(sender, title, message, cancel, processId);
+	public GameMessageProcessItemEvent(ICPlayer sender, String title, Component component, boolean cancel, int processId, ItemStack itemstack, Inventory inventory) {
+		super(sender, title, component, cancel, processId);
 		this.itemstack = itemstack;
 		this.inventory = Optional.ofNullable(inventory);
 	}
 	
-	public GameMessageProcessItemEvent(ICPlayer sender, String title, String message, boolean cancel, int processId, ItemStack itemstack) {
-		this(sender, title, message, cancel, processId, itemstack, null);
+	public GameMessageProcessItemEvent(ICPlayer sender, String title, Component component, boolean cancel, int processId, ItemStack itemstack) {
+		this(sender, title, component, cancel, processId, itemstack, null);
 	}
 	
 	public ItemStack getItemStack() {

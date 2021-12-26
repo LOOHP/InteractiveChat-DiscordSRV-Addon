@@ -1,5 +1,6 @@
 package com.loohp.interactivechatdiscordsrvaddon.api.events;
 
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 
 /**
@@ -10,8 +11,8 @@ import com.loohp.interactivechat.objectholders.ICPlayer;
  */
 public class GameMessagePreProcessEvent extends GameMessageEvent {
 
-	public GameMessagePreProcessEvent(ICPlayer sender, String message, boolean cancel) {
-		super(sender, message, cancel);
+	public GameMessagePreProcessEvent(ICPlayer sender, Component component, boolean cancel) {
+		super(sender, component, cancel);
 	}
 
 }

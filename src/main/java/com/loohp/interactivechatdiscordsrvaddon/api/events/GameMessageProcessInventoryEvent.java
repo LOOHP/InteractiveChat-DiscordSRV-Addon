@@ -2,6 +2,7 @@ package com.loohp.interactivechatdiscordsrvaddon.api.events;
 
 import org.bukkit.inventory.Inventory;
 
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 
 /**
@@ -17,9 +18,9 @@ public class GameMessageProcessInventoryEvent extends GameMessageProcessEvent {
 
 	private Inventory inventory;
 
-	public GameMessageProcessInventoryEvent(ICPlayer sender, String title, String message, boolean cancel, int processId,
+	public GameMessageProcessInventoryEvent(ICPlayer sender, String title, Component component, boolean cancel, int processId,
 			Inventory inventory) {
-		super(sender, title, message, cancel, processId);
+		super(sender, title, component, cancel, processId);
 		this.inventory = inventory;
 	}
 
