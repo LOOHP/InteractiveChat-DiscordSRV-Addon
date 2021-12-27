@@ -79,8 +79,8 @@ public class ModelRenderer implements AutoCloseable {
 		return render(width, height, manager, modelKey, displayPosition, predicate, Collections.emptyMap());
 	}
 	
-	public RenderResult render(int width, int height, ResourceManager manager, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, BufferedImage> providedTextures) {
-		String cacheKey = CACHE_KEY + "/" + modelKey + "/" + predicate.entrySet().stream().map(entry -> entry.getKey().name().toLowerCase() + ":" + entry.getValue().toString()).collect(Collectors.joining(";")) + "/" + providedTextures.entrySet().stream().map(entry -> entry.getKey() + ":" + hash(entry.getValue())).collect(Collectors.joining(":"));
+	public RenderResult render(int width, int height, ResourceManager manager, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures) {
+		String cacheKey = CACHE_KEY + "/" + modelKey + "/" + predicate.entrySet().stream().map(entry -> entry.getKey().name().toLowerCase() + ":" + entry.getValue().toString()).collect(Collectors.joining(";")) + "/" + providedTextures.entrySet().stream().map(entry -> entry.getKey() + ":" + (entry.getValue().isTexture() ? hash(entry.getValue().getTexture()) : "null")).collect(Collectors.joining(":"));
 		Cache<?> cachedRender = Cache.getCache(cacheKey);
 		if (cachedRender != null) {
 			RenderResult cachedResult = (RenderResult) cachedRender.getObject();
@@ -129,7 +129,7 @@ public class ModelRenderer implements AutoCloseable {
 		return result;
 	}
 	
-	private void render(BlockModel blockModel, ResourceManager manager, BufferedImage image, ModelDisplayPosition displayPosition, Map<String, BufferedImage> providedTextures) {
+	private void render(BlockModel blockModel, ResourceManager manager, BufferedImage image, ModelDisplayPosition displayPosition, Map<String, TextureResource> providedTextures) {
 		Map<String, BufferedImage> cachedResize = new ConcurrentHashMap<>();
 		List<ModelElement> elements = new ArrayList<>(blockModel.getElements());
 		List<Hexahedron> hexahedrons = new ArrayList<>(elements.size());
@@ -152,20 +152,33 @@ public class ModelRenderer implements AutoCloseable {
 						images[i] = null;
 					} else {
 						TextureUV uv = faceData.getUV();
-						BufferedImage provided = providedTextures.get(faceData.getTexture());
-						TextureResource resource = manager.getTextureManager().getTexture(faceData.getTexture(), false);
-						if (resource == null && provided == null) {
+						TextureResource resource = providedTextures.get(faceData.getTexture());
+						if (resource == null) {
+							resource = manager.getTextureManager().getTexture(faceData.getTexture(), false);
+						}
+						if (resource == null || !resource.isTexture()) {
 							images[i] = null;
 						} else if (uv != null && (uv.getXDiff() == 0 || uv.getYDiff() == 0)) {
 							images[i] = null;
 						} else {
-							images[i] = provided == null ? resource.getTexture() : ImageUtils.copyImage(provided);
 							BufferedImage cached = cachedResize.get(faceData.getTexture());
 							if (cached == null) {
-								if (images[i].getWidth() > images[i].getHeight()) {
-									cached = ImageUtils.resizeImageFillWidth(images[i], TEXTURE_RESOLUTION);
+								cached = resource.getTexture();
+								if (resource.hasTextureMeta()) {
+									TextureMeta meta = resource.getTextureMeta();
+									if (meta.hasAnimation()) {
+										TextureAnimation animation = meta.getAnimation();
+										if (animation.hasWidth() && animation.hasHeight()) {
+											cached = ImageUtils.copyAndGetSubImage(cached, 0, 0, animation.getWidth(), animation.getHeight());
+										} else {
+											cached = ImageUtils.copyAndGetSubImage(cached, 0, 0, cached.getWidth(), cached.getWidth());
+										}
+									}
+								}
+								if (cached.getWidth() > cached.getHeight()) {
+									cached = ImageUtils.resizeImageFillWidth(cached, TEXTURE_RESOLUTION);
 								} else {
-									cached = ImageUtils.resizeImageFillHeight(images[i], TEXTURE_RESOLUTION);
+									cached = ImageUtils.resizeImageFillHeight(cached, TEXTURE_RESOLUTION);
 								}
 								cachedResize.put(faceData.getTexture(), cached);
 							}

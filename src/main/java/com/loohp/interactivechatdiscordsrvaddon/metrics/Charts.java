@@ -187,6 +187,13 @@ public class Charts {
 	        }
 	    }));
 		
+		metrics.addCustomChart(new Metrics.SingleLineChart("resource_packs_installed", new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return Math.max(0, InteractiveChatDiscordSrvAddon.plugin.resourceStatus.size() - 1);
+            }
+        }));
+		
 		metrics.addCustomChart(new Metrics.SingleLineChart("total_messages_processed_per_interval", new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {

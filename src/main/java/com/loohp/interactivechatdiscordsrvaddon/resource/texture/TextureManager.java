@@ -21,7 +21,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resource.texture.TextureAnimatio
 public class TextureManager {
 
 	public static final String SKIN_REQUIRED = "interactivechatdiscordsrvaddon/skin";
-	public static final TextureResource MISSING_TEXTURE = new TextureResource(null, null, null, ImageGeneration.getMissingImage(16, 16));
+	public static final TextureResource MISSING_TEXTURE = new GeneratedTextureResource(ImageGeneration.getMissingImage(16, 16));
 	private Map<String, TextureResource> textures;
 	
 	public TextureManager() {

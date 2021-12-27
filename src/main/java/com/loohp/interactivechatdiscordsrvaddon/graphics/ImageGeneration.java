@@ -74,6 +74,7 @@ import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ModelRenderer.RenderResult;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.resource.texture.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resource.texture.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.PotionUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.VectorUtils;
@@ -836,7 +837,7 @@ public class ImageGeneration {
 		}
 		
 		Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
-		Map<String, BufferedImage> providedTextures = new HashMap<>();
+		Map<String, TextureResource> providedTextures = new HashMap<>();
 		if (NBTEditor.contains(item, "CustomModelData")) {
 			int customModelData = NBTEditor.getInt(item, "CustomModelData");
 			predicates.put(ModelOverrideType.CUSTOM_MODEL_DATA, (float) customModelData);
@@ -848,21 +849,21 @@ public class ImageGeneration {
 			}
 		} else if (xMaterial.isOneOf(Arrays.asList("CONTAINS:Banner"))) {
 			BannerAssetResult bannerAsset = BannerGraphics.generateBannerAssets(item);
-			providedTextures.put(ResourceRegistry.BANNER_BASE_TEXTURE_PLACEHOLDER, bannerAsset.getBase());
-			providedTextures.put(ResourceRegistry.BANNER_PATTERNS_TEXTURE_PLACEHOLDER, bannerAsset.getPatterns());
+			providedTextures.put(ResourceRegistry.BANNER_BASE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(bannerAsset.getBase()));
+			providedTextures.put(ResourceRegistry.BANNER_PATTERNS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(bannerAsset.getPatterns()));
 		} else if (xMaterial.equals(XMaterial.SHIELD)) {
 			BannerAssetResult shieldAsset = BannerGraphics.generateShieldAssets(item);
-			providedTextures.put(ResourceRegistry.SHIELD_BASE_TEXTURE_PLACEHOLDER, shieldAsset.getBase());
-			providedTextures.put(ResourceRegistry.SHIELD_PATTERNS_TEXTURE_PLACEHOLDER, shieldAsset.getPatterns());
+			providedTextures.put(ResourceRegistry.SHIELD_BASE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(shieldAsset.getBase()));
+			providedTextures.put(ResourceRegistry.SHIELD_PATTERNS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(shieldAsset.getPatterns()));
 		} else if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
-			providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_LOCATION + "steve").getTexture());
+			providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_LOCATION + "steve"));
 			try {
 				String base64 = SkinUtils.getSkinValue(item.getItemMeta());
 				if (base64 != null) {
 					JSONObject json = (JSONObject) new JSONParser().parse(new String(Base64.getDecoder().decode(base64)));
 					String value = (String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url");
 					BufferedImage skinImage = ImageUtils.downloadImage(value);
-					providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, skinImage);
+					providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(skinImage));
 				}
 			} catch (ParseException e) {
 				e.printStackTrace();
