@@ -1420,6 +1420,7 @@ public class ImageGeneration {
 				offsetY += 18;
 			}
 			if (playerRows.size() % 2 == 1) {
+				g.setColor(TABLIST_PLAYER_BACKGROUND);
 				g.fillRect(masterOffsetX + 4, offsetY, masterOffsetX, 16);
 			}
 			g.dispose();
