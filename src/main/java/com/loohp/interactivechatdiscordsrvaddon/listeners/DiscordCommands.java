@@ -96,7 +96,9 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 	}
 	
 	public void reload() {
-		discordsrv.getMainGuild().retrieveCommands().complete().stream().map(each -> each.delete()).reduce(RestAction::and).ifPresent(action -> action.complete());
+		discordsrv.getMainGuild().retrieveCommands().complete().stream().filter(each -> {
+			return each.getName().equals(PLAYERLIST_LABEL) || each.getName().equals(INVENTORY_LABEL) || each.getName().equals(ENDERCHEST_LABEL);
+		}).map(each -> each.delete()).reduce(RestAction::and).ifPresent(action -> action.complete());
 		if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandEnabled) {
 			discordsrv.getMainGuild().upsertCommand(PLAYERLIST_LABEL, ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandDescription)).queue();
 		}
