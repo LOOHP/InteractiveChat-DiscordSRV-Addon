@@ -486,8 +486,8 @@ public class ImageGeneration {
 				leggingsImage2 = ImageUtils.additionNonTransparent(leggingsImage2, tintImage, ENCHANTMENT_GLINT_FACTOR);
 			}
 			
-			g.drawImage(leggingsImage1, 20, 98, 36, 24, null);
-			g.drawImage(leggingsImage2, 20, 114, 36, 30, null);
+			g.drawImage(leggingsImage1, 20, 98, 36, 22, null);
+			g.drawImage(leggingsImage2, 20, 114, 36, 40, null);
 		}
 		
 		if (ItemStackUtils.isWearable(boots)) {
@@ -533,7 +533,7 @@ public class ImageGeneration {
 			default:
 				break;
 			}
-			BufferedImage bootsLeft = ImageUtils.copyAndGetSubImage(bootsImage, 4 * scale, 26 * scale, 4 * scale, 4 * scale);
+			BufferedImage bootsLeft = ImageUtils.copyAndGetSubImage(bootsImage, 4 * scale, 26 * scale, 4 * scale, 6 * scale);
 			BufferedImage bootsRight = ImageUtils.flipHorizontal(bootsLeft);
 			bootsImage = new BufferedImage(bootsLeft.getWidth() + bootsRight.getWidth(), bootsLeft.getHeight(), BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g2 = bootsImage.createGraphics();
@@ -553,7 +553,7 @@ public class ImageGeneration {
 				bootsImage = ImageUtils.additionNonTransparent(bootsImage, tintImage, ENCHANTMENT_GLINT_FACTOR);
 			}
 
-			g.drawImage(bootsImage, 18, 144, 40, 32, null);
+			g.drawImage(bootsImage, 18, 144, 40, 30, null);
 		}
 		
 		if (ItemStackUtils.isWearable(chestplate)) {
@@ -664,9 +664,9 @@ public class ImageGeneration {
 					chestplateImage3 = ImageUtils.additionNonTransparent(chestplateImage3, tintImage, ENCHANTMENT_GLINT_FACTOR);
 				}
 				
-				g.drawImage(chestplateImage1, 18, 64, 40, 56, null);
-				g.drawImage(chestplateImage2, 2, 64, 24, 56, null);
-				g.drawImage(chestplateImage3, 50, 64, 24, 56, null);
+				g.drawImage(chestplateImage1, 18, 64, 40, 60, null);
+				g.drawImage(chestplateImage2, 4, 64, 20, 60, null);
+				g.drawImage(chestplateImage3, 52, 64, 20, 60, null);
 			}
 		}
 		

@@ -265,7 +265,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 						content.setFooterImageUrl("attachment://Level.png");
 					}
 					errorCode--;
-					event.getHook().editOriginal(PlainTextComponentSerializer.plainText().serialize(component)).and(content.toJDAMessageRestAction(channel)).queue();
+					event.getHook().editOriginal(PlainTextComponentSerializer.plainText().serialize(component)).queue(sucess -> content.toJDAMessageRestAction(channel).queue());
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -335,7 +335,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 					ImageIO.write(image, "png", os);
 					content.addAttachment("Inventory.png", os.toByteArray());
 					errorCode--;
-					event.getHook().editOriginal(PlainTextComponentSerializer.plainText().serialize(component)).and(content.toJDAMessageRestAction(channel)).queue();
+					event.getHook().editOriginal(PlainTextComponentSerializer.plainText().serialize(component)).queue(queue -> content.toJDAMessageRestAction(channel).queue());
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
