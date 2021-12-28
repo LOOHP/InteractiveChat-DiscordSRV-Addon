@@ -60,8 +60,8 @@ public class MCFont {
 	                File file = new File(resource.getFile().getParent(), provider.get("file").toString());
 	                float size = (float) (double) provider.get("size");
 	                JSONArray offsetArray = (JSONArray) provider.get("offset");
-	                double offsetX = (double) offsetArray.get(0);
-	                double offsetY = (double) offsetArray.get(1);
+	                double offsetX = ((Number) offsetArray.get(0)).doubleValue();
+	                double offsetY = ((Number) offsetArray.get(1)).doubleValue();
 	                
 	                Font font = Font.createFont(type, file).deriveFont(size);
 	                GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(font);

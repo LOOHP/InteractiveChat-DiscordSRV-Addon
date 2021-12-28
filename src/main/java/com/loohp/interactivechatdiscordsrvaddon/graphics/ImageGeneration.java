@@ -1428,24 +1428,38 @@ public class ImageGeneration {
 		if (maxOffsetX <= 0) {
 			return image;
 		} else {
-			BufferedImage decoration = new BufferedImage(Math.max(image.getWidth(), maxOffsetX + 4), (headerLines.isEmpty() ? 0 : headerLines.size() * 18 + 2) + image.getHeight() + (footerLines.isEmpty() ? 2 : footerLines.size() * 18 + 2), BufferedImage.TYPE_INT_ARGB);
+			BufferedImage decoration = new BufferedImage(Math.max(image.getWidth(), maxOffsetX + 4), (headerLines.isEmpty() ? 0 : headerLines.size() * 18 + 2) + image.getHeight() + (footerLines.isEmpty() ? 2 : footerLines.size() * 18 + 4), BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g = decoration.createGraphics();
 			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-			g.setColor(TABLIST_BACKGROUND);
-			g.fillRect(0, 0, decoration.getWidth(), decoration.getHeight());
 			int offsetY = 2;
 			for (BufferedImage each : headerLines.keySet()) {
 				g.drawImage(each, (decoration.getWidth() / 2) - (each.getWidth() / 2), offsetY, null);
 				offsetY += 18;
 			}
 			g.drawImage(image, (decoration.getWidth() / 2) - (image.getWidth() / 2), offsetY, null);
-			offsetY += image.getHeight();
+			offsetY += image.getHeight() + 2;
 			for (BufferedImage each : footerLines.keySet()) {
 				g.drawImage(each, (decoration.getWidth() / 2) - (each.getWidth() / 2), offsetY, null);
 				offsetY += 18;
 			}
 			g.dispose();
-			return decoration;
+			int lastY = 0;
+			for (int y = 0; y < decoration.getHeight(); y++) {
+				for (int x = 0; x < decoration.getWidth(); x++) {
+					if (decoration.getRGB(x, y) != 0) {
+						lastY = y;
+						break;
+					}
+				}
+			}
+			BufferedImage finalDecoration = new BufferedImage(decoration.getWidth(), lastY + 3, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g2 = finalDecoration.createGraphics();
+			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+			g2.setColor(TABLIST_BACKGROUND);
+			g2.fillRect(0, 0, finalDecoration.getWidth(), finalDecoration.getHeight());
+			g2.drawImage(decoration, 0, 0, null);
+			g2.dispose();
+			return finalDecoration;
 		}
 	}
 	
