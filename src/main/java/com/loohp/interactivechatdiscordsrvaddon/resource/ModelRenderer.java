@@ -4,6 +4,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -27,6 +28,7 @@ import com.loohp.blockmodelrenderer.render.Model;
 import com.loohp.blockmodelrenderer.render.Point3D;
 import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.BlockModel;
@@ -56,6 +58,12 @@ public class ModelRenderer implements AutoCloseable {
 	public static final String CACHE_KEY = "ModelRender";
 	public static final String MODEL_NOT_FOUND = "notfound";
 	
+	private static final double[] OVERLAY_ADDITION_FACTORS = new double[6];
+	
+	static {
+		Arrays.fill(OVERLAY_ADDITION_FACTORS, ImageGeneration.ENCHANTMENT_GLINT_FACTOR);
+	}
+	
 	private ExecutorService executor;
 	private AtomicBoolean isValid;
 	
@@ -80,7 +88,11 @@ public class ModelRenderer implements AutoCloseable {
 	}
 	
 	public RenderResult render(int width, int height, ResourceManager manager, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures) {
-		String cacheKey = CACHE_KEY + "/" + modelKey + "/" + predicate.entrySet().stream().map(entry -> entry.getKey().name().toLowerCase() + ":" + entry.getValue().toString()).collect(Collectors.joining(";")) + "/" + providedTextures.entrySet().stream().map(entry -> entry.getKey() + ":" + (entry.getValue().isTexture() ? hash(entry.getValue().getTexture()) : "null")).collect(Collectors.joining(":"));
+		return render(width, height, manager, modelKey, displayPosition, predicate, providedTextures, false);
+	}
+	
+	public RenderResult render(int width, int height, ResourceManager manager, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, boolean enchanted) {
+		String cacheKey = CACHE_KEY + "/" + modelKey + "/" + predicate.entrySet().stream().map(entry -> entry.getKey().name().toLowerCase() + ":" + entry.getValue().toString()).collect(Collectors.joining(";")) + "/" + providedTextures.entrySet().stream().map(entry -> entry.getKey() + ":" + (entry.getValue().isTexture() ? hash(entry.getValue().getTexture()) : "null")).collect(Collectors.joining(":")) + "/" + enchanted;
 		Cache<?> cachedRender = Cache.getCache(cacheKey);
 		if (cachedRender != null) {
 			RenderResult cachedResult = (RenderResult) cachedRender.getObject();
@@ -96,11 +108,19 @@ public class ModelRenderer implements AutoCloseable {
 		}
 		BufferedImage image = new BufferedImage(INTERNAL_W, INTERNAL_H, BufferedImage.TYPE_INT_ARGB);
 		if (blockModel.getRawParent() == null || blockModel.getRawParent().indexOf("/") < 0) {
-			render(blockModel, manager, image, displayPosition, providedTextures);
+			render(blockModel, manager, image, displayPosition, providedTextures, enchanted);
 		} else if (blockModel.getRawParent().equals(ModelManager.ITEM_BASE)) {
 			Graphics2D g = image.createGraphics();
+			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 			for (int i = 0; blockModel.getTextures().containsKey(ModelManager.ITEM_BASE_LAYER + i); i++) {
-				TextureResource resource = manager.getTextureManager().getTexture(blockModel.getTextures().get(ModelManager.ITEM_BASE_LAYER + i));
+				String resourceLocation = blockModel.getTextures().get(ModelManager.ITEM_BASE_LAYER + i);
+				if (!resourceLocation.contains(":")) {
+					resourceLocation = ResourceRegistry.DEFAULT_NAMESPACE + ":" + resourceLocation;
+				}
+				TextureResource resource = providedTextures.get(resourceLocation);
+				if (resource == null) {
+					resource = manager.getTextureManager().getTexture(resourceLocation);
+				}
 				BufferedImage texture = resource.getTexture();
 				if (resource.hasTextureMeta()) {
 					TextureMeta meta = resource.getTextureMeta();
@@ -113,9 +133,16 @@ public class ModelRenderer implements AutoCloseable {
 						}
 					}
 				}
-				g.drawImage(texture, 0, 0, image.getWidth(), image.getHeight(), null);
+				if (resourceLocation.equals(ResourceRegistry.MAP_MARKINGS_LOCATION)) {
+					ImageUtils.xor(image, ImageUtils.resizeImageAbs(texture, image.getWidth(), image.getHeight()), 200);
+				} else {
+					g.drawImage(texture, 0, 0, image.getWidth(), image.getHeight(), null);
+				}
 			}
 			g.dispose();
+			if (enchanted) {
+				image = ImageGeneration.getEnchantedImage(image);
+			}
 		} else {
 			rejectedReason = blockModel.getRawParent();
 		}
@@ -129,7 +156,7 @@ public class ModelRenderer implements AutoCloseable {
 		return result;
 	}
 	
-	private void render(BlockModel blockModel, ResourceManager manager, BufferedImage image, ModelDisplayPosition displayPosition, Map<String, TextureResource> providedTextures) {
+	private void render(BlockModel blockModel, ResourceManager manager, BufferedImage image, ModelDisplayPosition displayPosition, Map<String, TextureResource> providedTextures, boolean enchanted) {
 		Map<String, BufferedImage> cachedResize = new ConcurrentHashMap<>();
 		List<ModelElement> elements = new ArrayList<>(blockModel.getElements());
 		List<Hexahedron> hexahedrons = new ArrayList<>(elements.size());
@@ -145,6 +172,7 @@ public class ModelRenderer implements AutoCloseable {
 				}
 				Hexahedron hexahedron = Hexahedron.fromCorners(new Point3D(element.getFrom().getX(), element.getFrom().getY(), element.getFrom().getZ()), new Point3D(element.getTo().getX(), element.getTo().getY(), element.getTo().getZ()), ignoreZFight, new BufferedImage[6]);
 				BufferedImage[] images = new BufferedImage[6];
+				BufferedImage[] overlayImages = new BufferedImage[6];
 				int i = 0;
 				for (ModelFaceSide side : ModelFaceSide.values()) {
 					ModelFace faceData = element.getFace(side);
@@ -247,11 +275,16 @@ public class ModelRenderer implements AutoCloseable {
 							if (faceData.getTintindex() == 0) {
 								images[i] = ImageUtils.multiply(images[i], ResourceRegistry.TINT_INDEX_0_X, ResourceRegistry.TINT_INDEX_0_Y, ResourceRegistry.TINT_INDEX_0_Z);
 							}
+							if (enchanted) {
+								overlayImages[i] = ImageGeneration.getRawEnchantedImage(images[i]);
+							}
 						}
 					}
 					i++;
 				}
 				hexahedron.setImage(images);
+				hexahedron.setOverlay(overlayImages);
+				hexahedron.setOverlayAdditionFactor(OVERLAY_ADDITION_FACTORS);
 				if (rotation != null) {
 					hexahedron.translate(-rotation.getOrigin().getX(), -rotation.getOrigin().getY(), -rotation.getOrigin().getZ());
 					switch (rotation.getAxis()) {
@@ -289,9 +322,6 @@ public class ModelRenderer implements AutoCloseable {
 		Model renderModel = new Model(hexahedrons);
 		
 		Graphics2D g = image.createGraphics();
-		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-		g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
-		g.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED);
 		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 		g.translate(image.getWidth() / 2, image.getHeight() / 2);
 		g.scale(image.getWidth() / 16, image.getHeight() / 16);

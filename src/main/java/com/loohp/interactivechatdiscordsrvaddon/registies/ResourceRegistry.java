@@ -28,6 +28,17 @@ public class ResourceRegistry {
 	public static final String SHIELD_BASE_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/shield_base";
 	public static final String SHIELD_PATTERNS_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/shield_patterns";
 	
+	public static final String LEATHER_HELMET_PLACEHOLDER = "minecraft:item/leather_helmet";
+	public static final String LEATHER_CHESTPLATE_PLACEHOLDER = "minecraft:item/leather_chestplate";
+	public static final String LEATHER_LEGGINGS_PLACEHOLDER = "minecraft:item/leather_leggings";
+	public static final String LEATHER_BOOTS_PLACEHOLDER = "minecraft:item/leather_boots";
+	public static final String LEATHER_HORSE_ARMOR_PLACEHOLDER = "minecraft:item/leather_horse_armor";
+	
+	public static final String TIPPED_ARROW_HEAD_PLACEHOLDER = "minecraft:item/tipped_arrow_head";
+	public static final String POTION_OVERLAY_PLACEHOLDER = "minecraft:item/potion_overlay";
+	
+	public static final String MAP_MARKINGS_LOCATION = ITEM_LOCATION + "filled_map_markings";
+	
 	public static final double TINT_INDEX_0_X = (84.0 / 256.0) / (169.0 / 256.0);
 	public static final double TINT_INDEX_0_Y = (124.0 / 256.0) / (169.0 / 256.0);
 	public static final double TINT_INDEX_0_Z = (70.0 / 256.0) / (169.0 / 256.0);
