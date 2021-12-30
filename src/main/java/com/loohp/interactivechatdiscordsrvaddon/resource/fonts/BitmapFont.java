@@ -20,6 +20,7 @@ public class BitmapFont extends MinecraftFont {
 	private String resourceLocation;
 	private int height;
 	private int ascent;
+	private int scale;
 	private List<String> chars;
 	private Map<String, BufferedImage> charImages;
 	
@@ -42,7 +43,7 @@ public class BitmapFont extends MinecraftFont {
 		BufferedImage fontFileImage = manager.getFontManager().getFontResource(resourceLocation).getTexture();
 		
 		int yIncrement = fontFileImage.getHeight() / chars.size();
-		int scale = yIncrement / height;
+		this.scale = yIncrement / height;
 		int y = 0;
 		for (String line : chars) {
 			if (!line.isEmpty()) {
@@ -80,6 +81,10 @@ public class BitmapFont extends MinecraftFont {
 
 	public int getAscent() {
 		return ascent;
+	}
+	
+	public int getScale() {
+		return scale;
 	}
 
 	public List<String> getChars() {
@@ -156,7 +161,7 @@ public class BitmapFont extends MinecraftFont {
 		Graphics2D g = image.createGraphics();
 		g.drawImage(charImage, x, (int) (y - ascent * scale), null);
 		g.dispose();
-		return new FontRenderResult(image, w, h, pixelSize);
+		return new FontRenderResult(image, w, h, pixelSize * this.scale);
 	}
 
 }
