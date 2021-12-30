@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.resource.texture;
+package com.loohp.interactivechatdiscordsrvaddon.resource.textures;
 
 import java.awt.image.BufferedImage;
 import java.io.File;

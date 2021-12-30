@@ -3,7 +3,6 @@ package com.loohp.interactivechatdiscordsrvaddon.metrics;
 import java.util.concurrent.Callable;
 
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import com.loohp.interactivechatdiscordsrvaddon.graphics.MCFont;
 
 import github.scarsz.discordsrv.dependencies.jda.api.JDA;
 
@@ -171,17 +170,6 @@ public class Charts {
 	        	String string = "Disabled";
 	        	if (InteractiveChatDiscordSrvAddon.plugin.translateMentions) {
 	        		string = "Enabled";
-	        	}
-	            return string;
-	        }
-	    }));
-		
-		metrics.addCustomChart(new Metrics.SimplePie("fonts_active", new Callable<String>() {
-	        @Override
-	        public String call() throws Exception {
-	        	String string = "Inactive";
-	        	if (MCFont.isWorking()) {
-	        		string = "Active";
 	        	}
 	            return string;
 	        }

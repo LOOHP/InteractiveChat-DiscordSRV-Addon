@@ -2,43 +2,67 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 
-import com.google.common.base.CharMatcher;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.TextReplacementConfig;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.TranslatableComponent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent.ShowItem;
+import com.loohp.interactivechat.libs.org.apache.commons.lang.RandomStringUtils;
+import com.loohp.interactivechat.utils.ComponentCompacting;
 import com.loohp.interactivechat.utils.ComponentFlattening;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.ItemNBTUtils;
+import com.loohp.interactivechat.utils.LanguageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
 
 import net.md_5.bungee.api.ChatColor;
 
 public class ComponentStringUtils {
 	
-	public static String toMagic(String str) {
-		Random random = ThreadLocalRandom.current();
-		StringBuilder sb = new StringBuilder();
-		CharMatcher matcher = CharMatcher.ascii();
-		for (int i = 0; i < str.length(); i++) {
-			char c = str.charAt(i);
-			if (matcher.matches(c)) {
-				sb.append((char) (random.nextInt(93) + 33));
-			} else {
-				sb.append(RandomStringUtils.random(1));
+	public static Component convertTranslatables(Component component, String language) {
+		component = ComponentFlattening.flatten(component);
+		List<Component> children = new ArrayList<>(component.children());
+		for (int i = 0; i < children.size(); i++) {
+			Component current = children.get(i);
+			if (current instanceof TranslatableComponent) {
+				TranslatableComponent trans = (TranslatableComponent) current;
+				Component translated = Component.text(LanguageUtils.getTranslation(trans.key(), language)).style(trans.style());
+				for (Component arg : trans.args()) {
+					translated = translated.replaceText(TextReplacementConfig.builder().matchLiteral("%s").replacement(convertTranslatables(arg, language)).once().build());
+				}
+				children.set(i, translated);
 			}
+		}
+		return ComponentCompacting.optimize(component.children(children));
+	}
+	
+	public static String toMagic(String str) {
+		return toMagic(null, str);
+	}
+	
+	public static String toMagic(ResourceManager manager, String str) {
+		if (manager == null) {
+			return RandomStringUtils.random(str.length());
+		}
+		List<String> list = manager.getFontManager().getDisplayableUnicodes();
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < str.length(); i++) {
+			sb.append(list.get(ThreadLocalRandom.current().nextInt(list.size())));
 		}
 		return sb.toString();
 	}
 	
 	public static String stripColorAndConvertMagic(String str) {
+		return stripColorAndConvertMagic(null, str);
+	}
+	
+	public static String stripColorAndConvertMagic(ResourceManager manager, String str) {
 		StringBuilder sb = new StringBuilder();
 		str = str.replaceAll(ChatColor.COLOR_CHAR + "[l-o]", "").replaceAll(ChatColor.COLOR_CHAR + "[0-9a-fxA-F]", ChatColor.COLOR_CHAR + "r");
 		boolean magic = false;
@@ -53,10 +77,10 @@ public class ComponentStringUtils {
 					magic = true;
 					i++;
 				} else {
-					sb.append(magic ? toMagic(current) : current);
+					sb.append(magic ? toMagic(manager, current) : current);
 				}
 			} else {
-				sb.append(magic ? toMagic(current) : current);
+				sb.append(magic ? toMagic(manager, current) : current);
 			}
 		}
 		return sb.toString();

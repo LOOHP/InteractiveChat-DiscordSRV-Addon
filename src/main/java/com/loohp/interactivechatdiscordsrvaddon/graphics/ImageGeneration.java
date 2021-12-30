@@ -74,8 +74,8 @@ import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ModelRenderer.RenderResult;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelOverride.ModelOverrideType;
-import com.loohp.interactivechatdiscordsrvaddon.resource.texture.GeneratedTextureResource;
-import com.loohp.interactivechatdiscordsrvaddon.resource.texture.TextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.resource.textures.GeneratedTextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.resource.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.PotionUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.VectorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper;
@@ -1099,17 +1099,13 @@ public class ImageGeneration {
 			Graphics2D g4 = newItemImage.createGraphics();
 			g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 			g4.drawImage(itemImage, 0, 0, null);
-			if (MCFont.isWorking()) {
-				newItemImage = ImageUtils.printComponentRightAligned(newItemImage, Component.text(amount), 33, 18, 16, ITEM_AMOUNT_TEXT_DARKEN_FACTOR);
-			} else {
-				String str = Integer.toString(amount);
-				int x = 22;
-				for (int i = str.length() - 1; i >= 0; i--) {
-					BufferedImage charImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_FONT_LOCATION + str.substring(i, i + 1)).getTexture();
-					g4.drawImage(ImageUtils.darken(ImageUtils.copyImage(charImage), 180), x, 21, null);
-					g4.drawImage(charImage, x - 2, 19, null);
-					x -= 12;
-				}
+			String str = Integer.toString(amount);
+			int x = 22;
+			for (int i = str.length() - 1; i >= 0; i--) {
+				BufferedImage charImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_FONT_LOCATION + str.substring(i, i + 1)).getTexture();
+				g4.drawImage(ImageUtils.darken(ImageUtils.copyImage(charImage), 180), x, 21, null);
+				g4.drawImage(charImage, x - 2, 19, null);
+				x -= 12;
 			}
 			g4.dispose();
 			itemImage = newItemImage;
@@ -1186,8 +1182,8 @@ public class ImageGeneration {
             
             g2.drawImage(iconCan, imageX - (iconCan.getWidth() / 2), imageY - (iconCan.getHeight() / 2), 96, 96, null);
             
-            if (component != null && MCFont.isWorking()) {
-            	ImageUtils.printComponentNoShadow(image, component, imageX, imageY + 32, 30, true);
+            if (component != null) {
+            	ImageUtils.printComponentNoShadow(InteractiveChatDiscordSrvAddon.plugin.resourceManager, image, component, imageX, imageY + 32, 30, true);
             }
 		}
 		g2.dispose();
@@ -1224,13 +1220,9 @@ public class ImageGeneration {
 		
 		BufferedImage image = new BufferedImage(1120, prints.size() * 20 + 15, BufferedImage.TYPE_INT_ARGB);
 		
-		if (!MCFont.isWorking()) {
-			return getMissingImage(image.getWidth(), image.getHeight());
-		}
-		
 		for (int i = 0; i < prints.size(); i++) {
 			Component text = prints.get(i);
-			ImageUtils.printComponent(image, text, 8, 8 + 20 * i, 16);
+			ImageUtils.printComponent(InteractiveChatDiscordSrvAddon.plugin.resourceManager, image, text, 8, 8 + 20 * i, 16);
 		}
 		
 		int lastX = 0;
@@ -1314,7 +1306,7 @@ public class ImageGeneration {
 				offsetX += 2;
 			}
 			g.dispose();
-			ImageUtils.printComponent(image, name, offsetX, -1, 16);
+			ImageUtils.printComponent(InteractiveChatDiscordSrvAddon.plugin.resourceManager, image, name, offsetX, -1, 16);
 			int lastX = 0;
 			for (int x = 0; x < image.getWidth(); x++) {
 				for (int y = 0; y < image.getHeight(); y++) {
@@ -1356,7 +1348,7 @@ public class ImageGeneration {
 		Map<BufferedImage, Integer> headerLines = new LinkedHashMap<>(header.size());
 		for (Component line : header) {
 			BufferedImage image = new BufferedImage(4096, 18, BufferedImage.TYPE_INT_ARGB);
-			ImageUtils.printComponent(image, line, 0, -1, 16);
+			ImageUtils.printComponent(InteractiveChatDiscordSrvAddon.plugin.resourceManager, image, line, 0, -1, 16);
 			int lastX = 0;
 			for (int x = 0; x < image.getWidth(); x++) {
 				for (int y = 0; y < image.getHeight(); y++) {
@@ -1376,7 +1368,7 @@ public class ImageGeneration {
 		Map<BufferedImage, Integer> footerLines = new LinkedHashMap<>(footer.size());
 		for (Component line : footer) {
 			BufferedImage image = new BufferedImage(4096, 18, BufferedImage.TYPE_INT_ARGB);
-			ImageUtils.printComponent(image, line, 0, -1, 16);
+			ImageUtils.printComponent(InteractiveChatDiscordSrvAddon.plugin.resourceManager, image, line, 0, -1, 16);
 			int lastX = 0;
 			for (int x = 0; x < image.getWidth(); x++) {
 				for (int y = 0; y < image.getHeight(); y++) {

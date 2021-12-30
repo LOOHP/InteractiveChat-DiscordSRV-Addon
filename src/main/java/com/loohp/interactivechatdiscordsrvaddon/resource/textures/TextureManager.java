@@ -1,4 +1,4 @@
-package com.loohp.interactivechatdiscordsrvaddon.resource.texture;
+package com.loohp.interactivechatdiscordsrvaddon.resource.textures;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,7 +16,8 @@ import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
-import com.loohp.interactivechatdiscordsrvaddon.resource.texture.TextureAnimation.TextureAnimationFrames;
+import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.resource.textures.TextureAnimation.TextureAnimationFrames;
 
 public class TextureManager {
 
@@ -24,7 +25,7 @@ public class TextureManager {
 	public static final TextureResource MISSING_TEXTURE = new GeneratedTextureResource(ImageGeneration.getMissingImage(16, 16));
 	private Map<String, TextureResource> textures;
 	
-	public TextureManager() {
+	public TextureManager(ResourceManager manager) {
 		this.textures = new HashMap<>();
 	}
 	
@@ -101,6 +102,9 @@ public class TextureManager {
 	public TextureResource getTexture(String resourceLocation, boolean returnMissingTexture) {
 		if (!resourceLocation.contains(":")) {
 			resourceLocation = ResourceRegistry.DEFAULT_NAMESPACE + ":" + resourceLocation;
+		}
+		if (resourceLocation.endsWith(".png")) {
+			resourceLocation = resourceLocation.substring(0, resourceLocation.length() - 4);
 		}
 		if (returnMissingTexture) {
 			return textures.getOrDefault(resourceLocation, MISSING_TEXTURE);

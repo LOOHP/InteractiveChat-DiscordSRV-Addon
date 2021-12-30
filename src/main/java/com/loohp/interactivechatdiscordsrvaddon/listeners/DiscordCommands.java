@@ -189,6 +189,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 						}
 					});
 				} catch (Exception e) {
+					e.printStackTrace();
 					event.getHook().editOriginal(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.unableToRetrieveData) + " (" + errorCode + ")").queue();
 					return;
 				}

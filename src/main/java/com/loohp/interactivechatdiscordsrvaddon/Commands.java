@@ -20,7 +20,6 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.ClickEvent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.api.events.InteractiveChatDiscordSRVConfigReloadEvent;
-import com.loohp.interactivechatdiscordsrvaddon.graphics.MCFont;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents.DiscordAttachmentData;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
@@ -48,7 +47,6 @@ public class Commands implements CommandExecutor, TabCompleter {
 		if (args[0].equalsIgnoreCase("status")) {
 			if (sender.hasPermission("interactivechatdiscordsrv.status")) {
 				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.defaultResourceHashLang.replaceFirst("%s", InteractiveChatDiscordSrvAddon.plugin.defaultResourceHash));
-				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.fontsActiveLang.replaceFirst("%s", MCFont.isWorking() ? InteractiveChatDiscordSrvAddon.plugin.trueLabel : InteractiveChatDiscordSrvAddon.plugin.falseLabel));
 				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.loadedResourcesLang);
 				List<String> list = new ArrayList<>(InteractiveChatDiscordSrvAddon.plugin.resourceStatus.keySet());
 				ListIterator<String> itr = list.listIterator(list.size());

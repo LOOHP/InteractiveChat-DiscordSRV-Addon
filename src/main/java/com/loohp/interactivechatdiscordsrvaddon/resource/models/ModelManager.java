@@ -20,6 +20,7 @@ import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelElement.ModelElementRotation;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelFace.ModelFaceSide;
@@ -34,7 +35,7 @@ public class ModelManager {
 	
 	private Map<String, BlockModel> models;
 
-	public ModelManager() {
+	public ModelManager(ResourceManager manager) {
 		this.models = new HashMap<>();
 	}
 	

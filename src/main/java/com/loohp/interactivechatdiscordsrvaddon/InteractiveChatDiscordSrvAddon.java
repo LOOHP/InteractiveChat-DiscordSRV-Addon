@@ -34,7 +34,6 @@ import com.loohp.interactivechat.utils.ColorUtils;
 import com.loohp.interactivechat.utils.FileUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
-import com.loohp.interactivechatdiscordsrvaddon.graphics.MCFont;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordReadyEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.OutboundToDiscordEvents;
@@ -425,12 +424,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 			Bukkit.getScheduler().runTask(plugin, () -> {
 				InteractiveChatDiscordSrvAddon.plugin.resourceManager = resourceManager;
 				InteractiveChatDiscordSrvAddon.plugin.resourceStatus = resourceStatus;
-				
-				if (!MCFont.reloadFonts()) {
-					sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] As Fonts failed to load, features that requires it will be disabled.", senders);
-					itemUseTooltipImage = false;
-					hoverUseTooltipImage = false;
-				}
 				
 				Cache.clearAllCache();
 				

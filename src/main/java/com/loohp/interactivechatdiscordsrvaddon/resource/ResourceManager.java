@@ -2,17 +2,20 @@ package com.loohp.interactivechatdiscordsrvaddon.resource;
 
 import java.io.File;
 
+import com.loohp.interactivechatdiscordsrvaddon.resource.fonts.FontManager;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelManager;
-import com.loohp.interactivechatdiscordsrvaddon.resource.texture.TextureManager;
+import com.loohp.interactivechatdiscordsrvaddon.resource.textures.TextureManager;
 
 public class ResourceManager {
 	
 	private ModelManager modelManager;
 	private TextureManager textureManager;
+	private FontManager fontManager;
 	
 	public ResourceManager() {
-		this.modelManager = new ModelManager();
-		this.textureManager = new TextureManager();
+		this.modelManager = new ModelManager(this);
+		this.textureManager = new TextureManager(this);
+		this.fontManager = new FontManager(this);
 	}
 	
 	public void loadResources(File resourcePack) {
@@ -30,8 +33,13 @@ public class ResourceManager {
 				if (textures.exists() && textures.isDirectory()) {
 					textureManager.loadDirectory(namespace, textures);
 				}
+				File font = new File(folder, "font");
+				if (font.exists() && font.isDirectory()) {
+					fontManager.loadDirectory(namespace, font);
+				}
 			}
 		}
+		fontManager.reloadFonts();
 	}
 
 	public ModelManager getModelManager() {
@@ -40,6 +48,10 @@ public class ResourceManager {
 
 	public TextureManager getTextureManager() {
 		return textureManager;
+	}
+
+	public FontManager getFontManager() {
+		return fontManager;
 	}
 
 }

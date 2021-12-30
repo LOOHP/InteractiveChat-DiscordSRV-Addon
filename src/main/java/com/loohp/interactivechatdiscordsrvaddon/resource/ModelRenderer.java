@@ -41,10 +41,10 @@ import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelFace;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelFace.ModelFaceSide;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelManager;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.resource.textures.TextureAnimation;
+import com.loohp.interactivechatdiscordsrvaddon.resource.textures.TextureMeta;
+import com.loohp.interactivechatdiscordsrvaddon.resource.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.TextureUV;
-import com.loohp.interactivechatdiscordsrvaddon.resource.texture.TextureAnimation;
-import com.loohp.interactivechatdiscordsrvaddon.resource.texture.TextureMeta;
-import com.loohp.interactivechatdiscordsrvaddon.resource.texture.TextureResource;
 
 public class ModelRenderer implements AutoCloseable {
 	
