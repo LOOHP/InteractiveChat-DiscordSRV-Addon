@@ -1099,14 +1099,7 @@ public class ImageGeneration {
 			Graphics2D g4 = newItemImage.createGraphics();
 			g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 			g4.drawImage(itemImage, 0, 0, null);
-			String str = Integer.toString(amount);
-			int x = 22;
-			for (int i = str.length() - 1; i >= 0; i--) {
-				BufferedImage charImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_FONT_LOCATION + str.substring(i, i + 1)).getTexture();
-				g4.drawImage(ImageUtils.darken(ImageUtils.copyImage(charImage), 180), x, 21, null);
-				g4.drawImage(charImage, x - 2, 19, null);
-				x -= 12;
-			}
+			newItemImage = ImageUtils.printComponentRightAligned(InteractiveChatDiscordSrvAddon.plugin.resourceManager, newItemImage, Component.text(amount), 33, 18, 16, ITEM_AMOUNT_TEXT_DARKEN_FACTOR);
 			g4.dispose();
 			itemImage = newItemImage;
 		}

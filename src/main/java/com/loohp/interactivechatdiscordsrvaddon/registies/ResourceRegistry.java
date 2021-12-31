@@ -16,7 +16,6 @@ public class ResourceRegistry {
 	public static final String IC_BLOCK_LOCATION = "minecraft:interactivechatdiscordsrvaddon/blocks/";
 	public static final String IC_GUI_LOCATION = "minecraft:interactivechatdiscordsrvaddon/gui/";
 	public static final String IC_PUPPET_LOCATION = "minecraft:interactivechatdiscordsrvaddon/puppet/";
-	public static final String IC_FONT_LOCATION = "minecraft:interactivechatdiscordsrvaddon/font/";
 	public static final String IC_ITEM_LOCATION = "minecraft:interactivechatdiscordsrvaddon/items/";
 	public static final String IC_MISC_LOCATION = "minecraft:interactivechatdiscordsrvaddon/misc/";
 	
