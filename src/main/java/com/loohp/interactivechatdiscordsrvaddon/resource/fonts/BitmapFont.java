@@ -141,14 +141,14 @@ public class BitmapFont extends MinecraftFont {
 				charImage = italicImage;
 				break;
 			case STRIKETHROUGH:
-				charImage = ImageUtils.expandCenterAligned(charImage, 0, 0, 0, pixelSize);
+				charImage = ImageUtils.expandCenterAligned(charImage, 0, 0, 0, pixelSize * this.scale);
 				g = charImage.createGraphics();
 				g.setColor(awtColor);
 				g.fillRect(0, (int) (fontSize / 2), charImage.getWidth(), strikeSize);
 				g.dispose();
 				break;
 			case UNDERLINED:
-				charImage = ImageUtils.expandCenterAligned(charImage, 0, strikeSize * 2, 0, pixelSize);
+				charImage = ImageUtils.expandCenterAligned(charImage, 0, strikeSize * 2, 0, pixelSize * this.scale);
 				g = charImage.createGraphics();
 				g.setColor(awtColor);
 				g.fillRect(0, (int) (fontSize), charImage.getWidth(), strikeSize);

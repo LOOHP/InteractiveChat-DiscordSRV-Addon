@@ -23,6 +23,11 @@ public class ResourceRegistry {
 	public static final String BUILTIN_ENTITY_LOCATION = "minecraft:interactivechatdiscordsrvaddon/builtin_entity/";
 	
 	public static final String SKIN_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/skin";
+	public static final String BOOTS_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/boots";
+	public static final String LEGGINGS_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/leggins";
+	public static final String CHESTPLATE_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/chestplate";
+	public static final String HELMET_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/helmet";
+	
 	public static final String BANNER_BASE_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/banner_base";
 	public static final String BANNER_PATTERNS_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/banner_patterns";
 	public static final String SHIELD_BASE_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/shield_base";
