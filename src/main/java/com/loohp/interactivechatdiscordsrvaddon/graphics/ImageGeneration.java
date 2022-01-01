@@ -628,11 +628,11 @@ public class ImageGeneration {
 		
 		RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.renderPlyer(image.getWidth(), image.getHeight(), InteractiveChatDiscordSrvAddon.plugin.resourceManager, slim, helmetModelKey, helmetPredicate, helmetEnchanted, providedTextures);
 		Graphics2D g = image.createGraphics();
-		g.drawImage(ImageUtils.resizeImage(renderResult.getImage(), 0.25), 7, 0, null);
+		g.drawImage(ImageUtils.resizeImage(renderResult.getImage(), 0.25), 6, 0, null);
 		g.dispose();
 		
 		if (elytraImage != null) {
-			ImageUtils.drawTransparent(image, elytraImage, -9, 68);
+			ImageUtils.drawTransparent(image, elytraImage, -10, 68);
 		}
 		
 		return image;
