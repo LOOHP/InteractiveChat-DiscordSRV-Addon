@@ -15,15 +15,15 @@ public class ResourceRegistry {
 	public static final String MAP_LOCATION = "minecraft:map/";
 	public static final String IC_BLOCK_LOCATION = "minecraft:interactivechatdiscordsrvaddon/blocks/";
 	public static final String IC_GUI_LOCATION = "minecraft:interactivechatdiscordsrvaddon/gui/";
-	public static final String IC_PUPPET_LOCATION = "minecraft:interactivechatdiscordsrvaddon/puppet/";
 	public static final String IC_ITEM_LOCATION = "minecraft:interactivechatdiscordsrvaddon/items/";
 	public static final String IC_MISC_LOCATION = "minecraft:interactivechatdiscordsrvaddon/misc/";
 	
 	public static final String BUILTIN_ENTITY_LOCATION = "minecraft:interactivechatdiscordsrvaddon/builtin_entity/";
 	
 	public static final String SKIN_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/skin";
+	public static final String SKIN_FULL_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/skin_full";
 	public static final String BOOTS_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/boots";
-	public static final String LEGGINGS_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/leggins";
+	public static final String LEGGINGS_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/leggings";
 	public static final String CHESTPLATE_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/chestplate";
 	public static final String HELMET_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/helmet";
 	
