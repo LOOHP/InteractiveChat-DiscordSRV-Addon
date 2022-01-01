@@ -461,7 +461,7 @@ public class ModelRenderer implements AutoCloseable {
 		g.translate(image.getWidth() / 2, (double) image.getHeight() / 4 * 3);
 		g.scale(image.getWidth() / 18, image.getWidth() / 18);
 		renderModel.translate(-16 / 2, -16 / 2, -16 / 2);
-		renderModel.updateLightingRatio(0.8, 0.8, 0.8, 0.8, 0.8, 0.8);
+		renderModel.updateLightingRatio(0.7, 0.7, 0.7, 0.7, 0.7, 0.7);
 		renderModel.render(image.getWidth(), image.getHeight(), g, image, false);
 		g.dispose();
 	}
