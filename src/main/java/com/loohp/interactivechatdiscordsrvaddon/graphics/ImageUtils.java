@@ -417,9 +417,6 @@ public class ImageUtils {
 				for (int i = 0; i < content.length(); i++) {
 					String character = content.substring(i, i + 1);
 					List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
-					if (decorations.contains(TextDecoration.OBFUSCATED)) {
-						character = ComponentStringUtils.toMagic(manager, character);
-					}
 					MinecraftFont fontProvider = manager.getFontManager().getFontProviders(font.asString()).forCharacter(character);
 					FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, color, decorations);
 					textImage = result.getImage();
@@ -436,9 +433,6 @@ public class ImageUtils {
 				for (int i = 0; i < content.length(); i++) {
 					String character = content.substring(i, i + 1);
 					List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
-					if (decorations.contains(TextDecoration.OBFUSCATED)) {
-						character = ComponentStringUtils.toMagic(manager, character);
-					}
 					MinecraftFont fontProvider = manager.getFontManager().getFontProviders(font.asString()).forCharacter(character);
 					FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, color, decorations);
 					textImage = result.getImage();
@@ -528,9 +522,6 @@ public class ImageUtils {
 				for (int i = 0; i < content.length(); i++) {
 					String character = content.substring(i, i + 1);
 					List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
-					if (decorations.contains(TextDecoration.OBFUSCATED)) {
-						character = ComponentStringUtils.toMagic(manager, character);
-					}
 					MinecraftFont fontProvider = manager.getFontManager().getFontProviders(font.asString()).forCharacter(character);
 					FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, color, decorations);
 					textImage = result.getImage();
@@ -544,9 +535,6 @@ public class ImageUtils {
 				for (int i = 0; i < content.length(); i++) {
 					String character = content.substring(i, i + 1);
 					List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
-					if (decorations.contains(TextDecoration.OBFUSCATED)) {
-						character = ComponentStringUtils.toMagic(manager, character);
-					}
 					MinecraftFont fontProvider = manager.getFontManager().getFontProviders(font.asString()).forCharacter(character);
 					FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, color, decorations);
 					textImage = result.getImage();

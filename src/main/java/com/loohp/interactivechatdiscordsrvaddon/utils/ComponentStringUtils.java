@@ -19,7 +19,7 @@ import com.loohp.interactivechat.utils.ComponentFlattening;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.ItemNBTUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
-import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.resource.fonts.FontProvider;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -46,11 +46,11 @@ public class ComponentStringUtils {
 		return toMagic(null, str);
 	}
 	
-	public static String toMagic(ResourceManager manager, String str) {
-		if (manager == null) {
+	public static String toMagic(FontProvider provider, String str) {
+		if (provider == null) {
 			return RandomStringUtils.random(str.length());
 		}
-		List<String> list = manager.getFontManager().getDisplayableUnicodes();
+		List<String> list = provider.getDisplayableCharacters();
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < str.length(); i++) {
 			sb.append(list.get(ThreadLocalRandom.current().nextInt(list.size())));
@@ -62,7 +62,7 @@ public class ComponentStringUtils {
 		return stripColorAndConvertMagic(null, str);
 	}
 	
-	public static String stripColorAndConvertMagic(ResourceManager manager, String str) {
+	public static String stripColorAndConvertMagic(FontProvider provider, String str) {
 		StringBuilder sb = new StringBuilder();
 		str = str.replaceAll(ChatColor.COLOR_CHAR + "[l-o]", "").replaceAll(ChatColor.COLOR_CHAR + "[0-9a-fxA-F]", ChatColor.COLOR_CHAR + "r");
 		boolean magic = false;
@@ -77,10 +77,10 @@ public class ComponentStringUtils {
 					magic = true;
 					i++;
 				} else {
-					sb.append(magic ? toMagic(manager, current) : current);
+					sb.append(magic ? toMagic(provider, current) : current);
 				}
 			} else {
-				sb.append(magic ? toMagic(manager, current) : current);
+				sb.append(magic ? toMagic(provider, current) : current);
 			}
 		}
 		return sb.toString();

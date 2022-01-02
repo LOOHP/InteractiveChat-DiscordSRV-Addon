@@ -9,26 +9,32 @@ import java.awt.font.TextAttribute;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 
 public class TrueTypeFont extends MinecraftFont {
 	
-	private ResourceManager manager;
 	private String resourceLocation;
 	private AffineTransform shift;
 	private float size;
 	private float oversample;
 	private String exclude;
+	private Set<String> displayableCharacters;
 	
 	private Font font;
 	
-	public TrueTypeFont(ResourceManager manager, String resourceLocation, AffineTransform shift, float size, float oversample, String exclude) throws Exception {
-		this.manager = manager;
+	public TrueTypeFont(ResourceManager manager, FontProvider provider, String resourceLocation, AffineTransform shift, float size, float oversample, String exclude) throws Exception {
+		super(manager, provider);
 		this.resourceLocation = resourceLocation;
 		this.shift = shift;
 		this.size = size;
@@ -41,6 +47,15 @@ public class TrueTypeFont extends MinecraftFont {
     		throw new RuntimeException("No fonts provided by the JVM or the Operating System!\nCheck the Q&A section in https://www.spigotmc.org/resources/83917/ for more information", e);
     	}
 		reloadFonts();
+		
+		Set<String> displayableCharacters = new HashSet<>();
+		for (int i = 0; i < 0x10000; i += 1) {
+			String character = new String(Character.toChars(i));
+			if (!this.exclude.contains(character) && canDisplayCharacter(character)) {
+				displayableCharacters.add(character);
+			}
+		}
+		this.displayableCharacters = Collections.unmodifiableSet(displayableCharacters);
 	}
 	
 	@Override
@@ -84,6 +99,11 @@ public class TrueTypeFont extends MinecraftFont {
 		}
 		return font.canDisplayUpTo(character) < 0;
 	}
+	
+	@Override
+	public Collection<String> getDisplayableCharacters() {
+		return displayableCharacters;
+	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
@@ -93,8 +113,16 @@ public class TrueTypeFont extends MinecraftFont {
 		g.setFont(font);
 		int w = g.getFontMetrics().stringWidth(character);
 		Font fontToPrint = font.deriveFont(fontSize);
+		BufferedImage[] magicCharImages = null;
 		for (TextDecoration decoration : decorations) {
 			switch (decoration) {
+			case OBFUSCATED:
+				magicCharImages = new BufferedImage[OBFUSCATE_OVERLAP_COUNT];
+				for (int i = 0; i < magicCharImages.length; i++) {
+					String magicCharater = ComponentStringUtils.toMagic(provider, character);
+					magicCharImages[i] = provider.forCharacter(magicCharater).getCharacterImage(magicCharater, fontSize, color);
+				}
+				break;
 			case BOLD:
 				fontToPrint = fontToPrint.deriveFont(Font.BOLD);
 				break;
@@ -118,11 +146,30 @@ public class TrueTypeFont extends MinecraftFont {
 		g.setColor(new Color(color.value()));
 		g.setFont(fontToPrint);
 		int height = g.getFontMetrics().getHeight() / 2;
-		g.drawString(character, x, y + height);
 		int newW = g.getFontMetrics().stringWidth(character);
-		FontRenderResult result = new FontRenderResult(image, newW, height, Math.round((float) newW / (float) w));
+		if (magicCharImages == null) {
+			g.drawString(character, x, y + height);
+		} else {
+			for (int i = 0; i < magicCharImages.length; i++) {
+				g.drawImage(magicCharImages[i], x, y, newW, height, null);
+			}
+		}
 		g.dispose();
-		return result;
+		return new FontRenderResult(image, newW, height, Math.round((float) newW / (float) w));
+	}
+
+	@Override
+	public BufferedImage getCharacterImage(String character, float fontSize, TextColor color) {
+		BufferedImage image = new BufferedImage((int) (10 * fontSize), (int) (10 * fontSize), BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = image.createGraphics();
+		Font fontToPrint = font.deriveFont(fontSize);
+		g.setColor(new Color(color.value()));
+		g.setFont(fontToPrint);
+		int height = g.getFontMetrics().getHeight() / 2;
+		g.drawString(character, 0, height);
+		image = ImageUtils.copyAndGetSubImage(image, 0, 0, g.getFontMetrics().stringWidth(character), height);
+		g.dispose();
+		return image;
 	}
 
 }

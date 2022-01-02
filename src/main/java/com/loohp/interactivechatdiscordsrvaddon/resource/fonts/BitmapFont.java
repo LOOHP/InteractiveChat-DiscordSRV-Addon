@@ -5,6 +5,8 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,10 +15,10 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 
 public class BitmapFont extends MinecraftFont {
 	
-	private ResourceManager manager;
 	private String resourceLocation;
 	private int height;
 	private int ascent;
@@ -24,8 +26,8 @@ public class BitmapFont extends MinecraftFont {
 	private List<String> chars;
 	private Map<String, BufferedImage> charImages;
 	
-	public BitmapFont(ResourceManager manager, String resourceLocation, int height, int ascent, List<String> chars) {
-		this.manager = manager;
+	public BitmapFont(ResourceManager manager, FontProvider provider, String resourceLocation, int height, int ascent, List<String> chars) {
+		super(manager, provider);
 		this.resourceLocation = resourceLocation;
 		this.height = height;
 		this.ascent = ascent;
@@ -114,6 +116,15 @@ public class BitmapFont extends MinecraftFont {
 		int strikeSize = (int) (fontSize / 8);
 		for (TextDecoration decoration : decorations) {
 			switch (decoration) {
+			case OBFUSCATED:
+				Graphics2D g = charImage.createGraphics();
+				for (int i = 0; i < OBFUSCATE_OVERLAP_COUNT; i++) {
+					String magicCharater = ComponentStringUtils.toMagic(provider, character);
+					BufferedImage magicImage = provider.forCharacter(magicCharater).getCharacterImage(magicCharater, fontSize, color);
+					g.drawImage(magicImage, 0, 0, charImage.getWidth(), charImage.getHeight(), null);
+				}
+				g.dispose();
+				break;
 			case BOLD:
 				BufferedImage boldImage = new BufferedImage(charImage.getWidth() + 2, charImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
 				for (int x0 = 0; x0 < charImage.getWidth(); x0++) {
@@ -133,7 +144,7 @@ public class BitmapFont extends MinecraftFont {
 			case ITALIC:
 				int extraWidth = (int) ((double) charImage.getHeight() * (4.0 / 14.0));
 				BufferedImage italicImage = new BufferedImage(charImage.getWidth() + extraWidth * 2, charImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
-				Graphics2D g = italicImage.createGraphics();
+				g = italicImage.createGraphics();
 				g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 				g.transform(AffineTransform.getShearInstance(-4.0 / 14.0, 0));
 				g.drawImage(charImage, extraWidth, 0, null);
@@ -162,6 +173,21 @@ public class BitmapFont extends MinecraftFont {
 		g.drawImage(charImage, x, (int) (y - ascent * scale), null);
 		g.dispose();
 		return new FontRenderResult(image, w, h, pixelSize * this.scale);
+	}
+
+	@Override
+	public BufferedImage getCharacterImage(String character, float fontSize, TextColor color) {
+		Color awtColor = new Color(color.value());
+		BufferedImage charImage = ImageUtils.copyImage(charImages.get(character));
+		float descent = height - this.ascent - 1;
+		charImage = ImageUtils.resizeImageFillHeight(charImage, Math.round(fontSize + (ascent + descent) * scale));
+		charImage = ImageUtils.changeColorTo(charImage, awtColor);
+		return charImage;
+	}
+
+	@Override
+	public Collection<String> getDisplayableCharacters() {
+		return Collections.unmodifiableSet(charImages.keySet());
 	}
 
 }

@@ -5,6 +5,8 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +17,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecora
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resource.textures.TextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 
 public class LegacyUnicodeFont extends MinecraftFont {
 	
@@ -27,13 +30,12 @@ public class LegacyUnicodeFont extends MinecraftFont {
 		g.dispose();
 	}
 
-	private ResourceManager manager;
 	private Map<String, GlyphSize> sizes;
 	private String template;
 	private Map<String, BufferedImage> charImages;
 	
-	public LegacyUnicodeFont(ResourceManager manager, Map<String, GlyphSize> sizes, String template) {
-		this.manager = manager;
+	public LegacyUnicodeFont(ResourceManager manager, FontProvider provider, Map<String, GlyphSize> sizes, String template) {
+		super(manager, provider);
 		this.sizes = sizes;
 		this.template = template;
 		reloadFonts();
@@ -52,7 +54,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
 			int u = 0;
 			for (int y = 0; y < 256; y += 16) {
 				for (int x = 0; x < 256; x += 16) {
-					String character = Character.toString(i + u);
+					String character = new String(Character.toChars(i + u));
 					GlyphSize size = sizes.get(character);
 					if (size.getEnd() - size.getStart() > 0) {
 						charImages.put(character, ImageUtils.copyAndGetSubImage(fontFileImage, x + size.getStart(), y, size.getEnd() - size.getStart() + 1, 16));
@@ -99,6 +101,15 @@ public class LegacyUnicodeFont extends MinecraftFont {
 		int strikeSize = (int) (fontSize / 8);
 		for (TextDecoration decoration : decorations) {
 			switch (decoration) {
+			case OBFUSCATED:
+				Graphics2D g = charImage.createGraphics();
+				for (int i = 0; i < OBFUSCATE_OVERLAP_COUNT; i++) {
+					String magicCharater = ComponentStringUtils.toMagic(provider, character);
+					BufferedImage magicImage = provider.forCharacter(magicCharater).getCharacterImage(magicCharater, fontSize, color);
+					g.drawImage(magicImage, 0, 0, charImage.getWidth(), charImage.getHeight(), null);
+				}
+				g.dispose();
+				break;
 			case BOLD:
 				BufferedImage boldImage = new BufferedImage(charImage.getWidth() + 2, charImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
 				for (int x0 = 0; x0 < charImage.getWidth(); x0++) {
@@ -118,7 +129,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
 			case ITALIC:
 				int extraWidth = (int) ((double) charImage.getHeight() * (4.0 / 14.0));
 				BufferedImage italicImage = new BufferedImage(charImage.getWidth() + extraWidth * 2, charImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
-				Graphics2D g = italicImage.createGraphics();
+				g = italicImage.createGraphics();
 				g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 				g.transform(AffineTransform.getShearInstance(-4.0 / 14.0, 0));
 				g.drawImage(charImage, extraWidth, 0, null);
@@ -147,6 +158,20 @@ public class LegacyUnicodeFont extends MinecraftFont {
 		g.drawImage(charImage, x, y, null);
 		g.dispose();
 		return new FontRenderResult(image, w, h, pixelSize);
+	}
+	
+	@Override
+	public BufferedImage getCharacterImage(String character, float fontSize, TextColor color) {
+		Color awtColor = new Color(color.value());
+		BufferedImage charImage = ImageUtils.copyImage(charImages.getOrDefault(character, ImageUtils.copyImage(MISSING_CHARACTER)));
+		charImage = ImageUtils.resizeImageFillHeight(charImage, Math.round(fontSize));
+		charImage = ImageUtils.changeColorTo(charImage, awtColor);
+		return charImage;
+	}
+	
+	@Override
+	public Collection<String> getDisplayableCharacters() {
+		return Collections.unmodifiableSet(charImages.keySet());
 	}
 	
 	public static class GlyphSize {

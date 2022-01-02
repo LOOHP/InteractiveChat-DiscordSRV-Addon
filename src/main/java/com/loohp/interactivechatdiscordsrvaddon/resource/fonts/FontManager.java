@@ -10,7 +10,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,13 +32,11 @@ public class FontManager {
 	private ResourceManager manager;
 	private Map<String, FontProvider> fonts;
 	private Map<String, Map<String, File>> files;
-	private List<String> displayableUnicodes;
 	
 	public FontManager(ResourceManager manager) {
 		this.manager = manager;
 		this.fonts = new HashMap<>();
 		this.files = new HashMap<>();
-		this.displayableUnicodes = new ArrayList<>();
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -75,7 +72,7 @@ public class FontManager {
 								int height = ((Number) fontJson.getOrDefault("height", 8)).intValue();
 								int ascent = ((Number) fontJson.get("ascent")).intValue();
 								List<String> chars = (List<String>) ((JSONArray) fontJson.get("chars")).stream().map(each -> each.toString()).collect(Collectors.toList());
-								providedFonts.add(new BitmapFont(manager, resourceLocation, height, ascent, chars));
+								providedFonts.add(new BitmapFont(manager, null, resourceLocation, height, ascent, chars));
 								break;
 							case "legacy_unicode":
 								String template = fontJson.get("template").toString();
@@ -86,15 +83,13 @@ public class FontManager {
 										byte b = sizesInput.readByte();
 										byte start = (byte) ((b >> 4) & 15);
 										byte end = (byte) (b & 15);
-										sizes.put(Character.toString(i), new GlyphSize(start, end));
+										sizes.put(new String(Character.toChars(i)), new GlyphSize(start, end));
 									} catch (EOFException e) {
 										break;
 									}
 								}
 								sizesInput.close();
-								LegacyUnicodeFont unicodeFont = new LegacyUnicodeFont(manager, sizes, template);
-								providedFonts.add(unicodeFont);
-								displayableUnicodes.addAll(unicodeFont.getCharacterSets());
+								providedFonts.add(new LegacyUnicodeFont(manager, null, sizes, template));
 								break;
 							case "ttf":
 								resourceLocation = fontJson.get("file").toString();
@@ -105,14 +100,18 @@ public class FontManager {
 								float size = ((Number) fontJson.get("size")).floatValue();
 								float oversample = ((Number) fontJson.get("oversample")).floatValue();
 								String skip = fontJson.get("skip").toString();
-								providedFonts.add(new TrueTypeFont(manager, resourceLocation, shift, size, oversample, skip));
+								providedFonts.add(new TrueTypeFont(manager, null, resourceLocation, shift, size, oversample, skip));
 								break;
 							}
 						} catch (Exception e) {
 							throw new RuntimeException("Unable to load font provider " + index + " in " + file.getAbsolutePath(), e);
 						}
 					}
-					fonts.put(key, new FontProvider(key, providedFonts));
+					FontProvider provider = new FontProvider(key, providedFonts);
+					for (MinecraftFont mcFont : provider.getProviders()) {
+						mcFont.setProvider(provider);
+					}
+					fonts.put(key, provider);
 				} catch (Exception e) {
 					new RuntimeException("Unable to load font " + file.getAbsolutePath(), e).printStackTrace();
 				}
@@ -125,10 +124,6 @@ public class FontManager {
 		for (FontProvider provider : fonts.values()) {
 			provider.reloadFonts();
 		}
-	}
-	
-	public List<String> getDisplayableUnicodes() {
-		return Collections.unmodifiableList(displayableUnicodes);
 	}
 	
 	public TextureResource getFontResource(String resourceLocation) {
