@@ -158,14 +158,15 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 			} else {
 				int errorCode = -2;
 				try {
+					OfflinePlayer firstPlayer = players.keySet().iterator().next();
 					List<Component> header = new ArrayList<>();
 					if (!InteractiveChatDiscordSrvAddon.plugin.playerlistCommandHeader.isEmpty()) {
-						header = ComponentStyling.splitAtLineBreaks(LegacyComponentSerializer.legacySection().deserialize(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandHeader.replace("{OnlinePlayers}", players.size() + "")));
+						header = ComponentStyling.splitAtLineBreaks(LegacyComponentSerializer.legacySection().deserialize(PlaceholderAPI.setPlaceholders(firstPlayer, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandHeader.replace("{OnlinePlayers}", players.size() + ""))));
 					}
 					errorCode--;
 					List<Component> footer = new ArrayList<>();
 					if (!InteractiveChatDiscordSrvAddon.plugin.playerlistCommandFooter.isEmpty()) {
-						footer = ComponentStyling.splitAtLineBreaks(LegacyComponentSerializer.legacySection().deserialize(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandFooter.replace("{OnlinePlayers}", players.size() + "")));
+						footer = ComponentStyling.splitAtLineBreaks(LegacyComponentSerializer.legacySection().deserialize(PlaceholderAPI.setPlaceholders(firstPlayer, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandFooter.replace("{OnlinePlayers}", players.size() + ""))));
 					}
 					errorCode--;
 					List<ValueTrios<UUID, Component, Integer>> player = new ArrayList<>();

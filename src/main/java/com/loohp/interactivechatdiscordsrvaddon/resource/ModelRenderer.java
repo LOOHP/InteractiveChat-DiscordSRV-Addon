@@ -54,6 +54,7 @@ public class ModelRenderer implements AutoCloseable {
 	
 	public static final int QUALITY_THRESHOLD = 70;
 	
+	public static final int SKIN_RESOLUTION = 1600;
 	public static final int TEXTURE_RESOLUTION = 800;
 	
 	public static final String CACHE_KEY = "ModelRender";
@@ -88,7 +89,7 @@ public class ModelRenderer implements AutoCloseable {
 		Model helmetRenderModel = null;
 		if (helmetBlockModel != null) {
 			if (helmetBlockModel.getRawParent() == null || helmetBlockModel.getRawParent().indexOf("/") < 0) {
-				helmetRenderModel = generateStandardRenderModel(helmetBlockModel, manager, providedTextures, helmetEnchanted);
+				helmetRenderModel = generateStandardRenderModel(helmetBlockModel, manager, providedTextures, helmetEnchanted, false);
 			} else if (helmetBlockModel.getRawParent().equals(ModelManager.ITEM_BASE)) {
 				BufferedImage image = new BufferedImage(INTERNAL_W, INTERNAL_H, BufferedImage.TYPE_INT_ARGB);
 				if (helmetModelKey.contains("spawn_egg")) {
@@ -143,7 +144,7 @@ public class ModelRenderer implements AutoCloseable {
 		if (playerModel == null) {
 			return new RenderResult(MODEL_NOT_FOUND, null);
 		}
-		Model playerRenderModel = generateStandardRenderModel(playerModel, manager, providedTextures, false);
+		Model playerRenderModel = generateStandardRenderModel(playerModel, manager, providedTextures, false, true);
 		if (helmetRenderModel != null) {
 			helmetRenderModel.translate(-16 / 2, -16 / 2, -16 / 2);
 			ModelDisplay displayData = helmetBlockModel.getDisplay(ModelDisplayPosition.HEAD);
@@ -199,7 +200,7 @@ public class ModelRenderer implements AutoCloseable {
 		}
 		BufferedImage image = new BufferedImage(INTERNAL_W, INTERNAL_H, BufferedImage.TYPE_INT_ARGB);
 		if (blockModel.getRawParent() == null || blockModel.getRawParent().indexOf("/") < 0) {
-			renderBlockModel(generateStandardRenderModel(blockModel, manager, providedTextures, enchanted), image, blockModel.getDisplay(displayPosition));
+			renderBlockModel(generateStandardRenderModel(blockModel, manager, providedTextures, enchanted, false), image, blockModel.getDisplay(displayPosition));
 		} else if (blockModel.getRawParent().equals(ModelManager.ITEM_BASE)) {
 			if (modelKey.contains("spawn_egg")) {
 				BufferedImage itemImage = null;
@@ -289,7 +290,7 @@ public class ModelRenderer implements AutoCloseable {
 		return new Model(hexahedrons);
 	}
 	
-	private Model generateStandardRenderModel(BlockModel blockModel, ResourceManager manager, Map<String, TextureResource> providedTextures, boolean enchanted) {
+	private Model generateStandardRenderModel(BlockModel blockModel, ResourceManager manager, Map<String, TextureResource> providedTextures, boolean enchanted, boolean skin) {
 		Map<String, BufferedImage> cachedResize = new ConcurrentHashMap<>();
 		List<ModelElement> elements = new ArrayList<>(blockModel.getElements());
 		List<Hexahedron> hexahedrons = new ArrayList<>(elements.size());
@@ -337,9 +338,9 @@ public class ModelRenderer implements AutoCloseable {
 									}
 								}
 								if (cached.getWidth() > cached.getHeight()) {
-									cached = ImageUtils.resizeImageFillWidth(cached, TEXTURE_RESOLUTION);
+									cached = ImageUtils.resizeImageFillWidth(cached, skin ? SKIN_RESOLUTION : TEXTURE_RESOLUTION);
 								} else {
-									cached = ImageUtils.resizeImageFillHeight(cached, TEXTURE_RESOLUTION);
+									cached = ImageUtils.resizeImageFillHeight(cached, skin ? SKIN_RESOLUTION : TEXTURE_RESOLUTION);
 								}
 								cachedResize.put(faceData.getTexture(), cached);
 							}

@@ -628,11 +628,11 @@ public class ImageGeneration {
 		
 		RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.renderPlyer(image.getWidth(), image.getHeight(), InteractiveChatDiscordSrvAddon.plugin.resourceManager, slim, helmetModelKey, helmetPredicate, helmetEnchanted, providedTextures);
 		Graphics2D g = image.createGraphics();
-		g.drawImage(ImageUtils.resizeImage(renderResult.getImage(), 0.25), 6, 0, null);
+		g.drawImage(ImageUtils.resizeImageAbs(renderResult.getImage(), 54, 148), 11, 14, null);
 		g.dispose();
 		
 		if (elytraImage != null) {
-			ImageUtils.drawTransparent(image, elytraImage, -10, 68);
+			ImageUtils.drawTransparent(image, ImageUtils.resizeImage(elytraImage, 0.9), -6, 75);
 		}
 		
 		return image;
@@ -952,7 +952,7 @@ public class ImageGeneration {
 					}
 				}
 			}
-			BufferedImage cropped = new BufferedImage(lastX, 18, BufferedImage.TYPE_INT_ARGB);
+			BufferedImage cropped = new BufferedImage(Math.max(1, lastX), 18, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g = cropped.createGraphics();
 			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 			g.drawImage(image, 0, 0, null);
@@ -972,7 +972,7 @@ public class ImageGeneration {
 					}
 				}
 			}
-			BufferedImage cropped = new BufferedImage(lastX, 18, BufferedImage.TYPE_INT_ARGB);
+			BufferedImage cropped = new BufferedImage(Math.max(1, lastX), 18, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g = cropped.createGraphics();
 			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 			g.drawImage(image, 0, 0, null);
