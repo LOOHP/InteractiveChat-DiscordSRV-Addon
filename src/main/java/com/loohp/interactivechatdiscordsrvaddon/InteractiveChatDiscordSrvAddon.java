@@ -154,6 +154,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	
 	public String language = "en_us";
 	
+	public boolean respondToCommandsInInvalidChannels = true;
+	
 	public boolean playerlistCommandEnabled = true;
 	public String playerlistCommandDescription = "";
 	public boolean playerlistCommandIsMainServer = true;
@@ -345,6 +347,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		playbackBarEnabled = config.getConfiguration().getBoolean("DiscordAttachments.PlaybackBar.Enabled");
 		playbackBarFilledColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordAttachments.PlaybackBar.FilledColor"));
 		playbackBarEmptyColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordAttachments.PlaybackBar.EmptyColor"));
+		
+		respondToCommandsInInvalidChannels = config.getConfiguration().getBoolean("DiscordCommands.GlobalSettings.RespondToCommandsInInvalidChannels");
 		
 		playerlistCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.PlayerList.Enabled");
 		playerlistCommandDescription = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.PlayerList.Description"));

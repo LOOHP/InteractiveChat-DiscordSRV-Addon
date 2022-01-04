@@ -122,7 +122,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 		if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandEnabled && label.equalsIgnoreCase(PLAYERLIST_LABEL)) {
 			String minecraftChannel = discordsrv.getChannels().entrySet().stream().filter(entry -> channel.getId().equals(entry.getValue())).map(Map.Entry::getKey).findFirst().orElse(null);
 			if (minecraftChannel == null) {
-				if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandIsMainServer) {
+				if (InteractiveChatDiscordSrvAddon.plugin.respondToCommandsInInvalidChannels && InteractiveChatDiscordSrvAddon.plugin.playerlistCommandIsMainServer) {
 					event.reply(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.invalidDiscordChannel)).setEphemeral(true).queue();
 				}
 				return;
@@ -199,7 +199,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 		} else if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandEnabled && label.equalsIgnoreCase(INVENTORY_LABEL)) {
 			String minecraftChannel = discordsrv.getChannels().entrySet().stream().filter(entry -> channel.getId().equals(entry.getValue())).map(Map.Entry::getKey).findFirst().orElse(null);
 			if (minecraftChannel == null) {
-				if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandIsMainServer) {
+				if (InteractiveChatDiscordSrvAddon.plugin.respondToCommandsInInvalidChannels && InteractiveChatDiscordSrvAddon.plugin.shareInvCommandIsMainServer) {
 					event.reply(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.invalidDiscordChannel)).setEphemeral(true).queue();
 				}
 				return;
@@ -279,7 +279,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 		} else if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandEnabled && label.equals(ENDERCHEST_LABEL)) {
 			String minecraftChannel = discordsrv.getChannels().entrySet().stream().filter(entry -> channel.getId().equals(entry.getValue())).map(Map.Entry::getKey).findFirst().orElse(null);
 			if (minecraftChannel == null) {
-				if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandIsMainServer) {
+				if (InteractiveChatDiscordSrvAddon.plugin.respondToCommandsInInvalidChannels && InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandIsMainServer) {
 					event.reply(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.invalidDiscordChannel)).setEphemeral(true).queue();
 				}
 				return;

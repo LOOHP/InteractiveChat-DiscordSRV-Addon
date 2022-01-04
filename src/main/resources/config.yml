@@ -60,7 +60,7 @@ DiscordAttachments:
         - "&eOpen Original"
   #Whether or not to allow previwing images in game using maps
   ShowImageUsingMaps: true
-  # When enabled, Only websites from the list below is allowed to be shown through in game maps
+  # When enabled, Only websites from the list below is allowed to be shown through in-game maps
   RestrictImageUrl:
     Enabled: false
     Whitelist:
@@ -81,8 +81,14 @@ DiscordAttachments:
     EmptyColor: "#938B86"
 
 DiscordCommands:
+  #These settings apply to all discord commands below 
+  GlobalSettings:
+    #Set this to true ONLY IF you use have multiple servers with interactivechatdiscordsrvaddon AND
+    #you use a DIFFERENT channel for each server (i.e not one shared channel for all servers)
+    RespondToCommandsInInvalidChannels: true
+  #Settings for /playerlist
   PlayerList:
-    #Enable the /playerlist command to show all online players in a tablist style
+    #Enable the /playerlist command to show all online players in a tablist style image
     Enabled: true
     #The description of this command on discord
     Description: "Show all online players!"
@@ -94,7 +100,7 @@ DiscordCommands:
     ListBungeecordPlayers: true
     #Message to display when no one is online
     EmptyServer: "There are no players online."
-    #Delete the tablist message after X seconds (Set to 0 to not have it deleted)
+    #Delete the tablist message after X seconds (Set to 0 to not have it automatically deleted)
     DeleteAfter: 0
     TablistOptions:
       SidebarColor: "#999999"
@@ -105,11 +111,14 @@ DiscordCommands:
       #Whether to show player ping
       ShowPlayerPing: true
       #Leave a single blank line to disable
+      #PlaceholderAPI placeholders in the header are parsed as THE FIRST PLAYER in the playerlist
       HeaderText:
         - "&aOnline Players ({OnlinePlayers}/100)"
       #Leave a single blank line to disable
+      #PlaceholderAPI placeholders in the footer are parsed as THE FIRST PLAYER in the playerlist
       FooterText:
         - ""
+  #Settings for /inv
   ShareInventory:
     #Enable the /inv command on discord
     Enabled: true
@@ -123,6 +132,7 @@ DiscordCommands:
         - "&bClick to view!"
     InventoryTitle: "{Player}'s Inventory"
     SkullDisplayName: "&e{Player}"
+  #Settings for /ender
   ShareEnderChest:
     #Enable the /ender command on discord
     Enabled: true
@@ -178,6 +188,7 @@ Messages:
     LoadedResources: "&bLoaded Resources: &a"
 
 Settings:
+  #This is in seconds
   CacheTimeout: 300
   EscapePlaceholdersSentFromDiscord: true
   EscapeDiscordMarkdownFormattingInItems: true
@@ -187,7 +198,13 @@ Debug:
   PrintInfoToConsole: false
 
 Resources:
+  #Which language should be used in places like the item tooltip
+  #Visit this page for all the languages that Minecraft offers:
+  #https://minecraft.fandom.com/wiki/Language
   Language: en_us
+  #Set which resource pack should be installed and in what order
+  #Visit this page for more info:
+  #https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon/wiki/Resource-Pack
   Order: []
 
 Options:
