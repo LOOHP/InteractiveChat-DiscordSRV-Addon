@@ -71,8 +71,6 @@ import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper;
 public class ImageGeneration {
 	
 	private static final String OPTIFINE_CAPE_URL = "https://optifine.net/capes/%s.png";
-	private static final String TEXTURE_MINECRAFT_URL = "http://textures.minecraft.net/texture/";
-	private static final String HEAD_2D_RENDER_URL = "https://mc-heads.net/avatar/%s/%s";
 	private static final String PLAYER_INFO_URL = "https://sessionserver.mojang.com/session/minecraft/profile/%s";
 	
 	public static final int MAP_ICON_PER_ROLE = 16;
@@ -92,8 +90,8 @@ public class ImageGeneration {
 	private static final String PLAYER_INVENTORY_KEY = "PlayerInventory";
 	
 	public static final int TABLIST_SINGLE_COLUMN_LIMIT = 10;
-	public static final Color TABLIST_BACKGROUND = new Color(68, 71, 68);
-	public static final Color TABLIST_PLAYER_BACKGROUND = new Color(91, 94, 91);
+	public static final Color TABLIST_BACKGROUND = new Color(68, 68, 68);
+	public static final Color TABLIST_PLAYER_BACKGROUND = new Color(107, 107, 107);
 	
 	public static BufferedImage getMissingImage(int width, int length) {
 		Debug.debug("ImageGeneration creating missing texture image");
@@ -862,11 +860,11 @@ public class ImageGeneration {
 				try {
 					Player onlinePlayer = Bukkit.getPlayer(uuid);
 					if (onlinePlayer == null) {
-						Cache<?> cache = Cache.getCache(uuid + PLAYER_HEAD_2D_KEY);
+						Cache<?> cache = Cache.getCache(uuid + PLAYER_HEAD_2D_KEY + "8");
 						if (cache == null) {
-							String url = HEAD_2D_RENDER_URL.replaceFirst("%s", uuid.toString()).replaceFirst("%s", "16");
-							avatar = ImageUtils.multiply(ImageUtils.downloadImage(url), 0.9);
-							Cache.putCache(uuid + PLAYER_HEAD_2D_KEY + "16", avatar, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+							String value = SkinUtils.getSkinURLFromUUID(uuid);
+							avatar = ImageUtils.copyAndGetSubImage(ImageUtils.downloadImage(value), 8, 8, 8, 8);
+							Cache.putCache(uuid + PLAYER_HEAD_2D_KEY + "8", avatar, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
 							avatar = ImageUtils.copyImage(avatar);
 						} else {
 							avatar = ImageUtils.copyImage((BufferedImage) cache.getObject());
@@ -874,21 +872,18 @@ public class ImageGeneration {
 					} else {
 						try {
 							JSONObject json = (JSONObject) new JSONParser().parse(SkinUtils.getSkinJsonFromProfile(onlinePlayer));
-							String value = ((String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url")).replace(TEXTURE_MINECRAFT_URL, "");
-							Cache<?> cache = Cache.getCache(onlinePlayer.getUniqueId() + value + PLAYER_HEAD_2D_KEY + "16");
+							String value = (String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url");
+							Cache<?> cache = Cache.getCache(onlinePlayer.getUniqueId() + value + PLAYER_HEAD_2D_KEY + "8");
 							if (cache == null) {
-								String url = HEAD_2D_RENDER_URL.replaceFirst("%s", value).replaceFirst("%s", "16");
-								avatar = ImageUtils.downloadImage(url);
-								Cache.putCache(onlinePlayer.getUniqueId() + value + PLAYER_HEAD_2D_KEY + "16", avatar, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+								avatar = ImageUtils.copyAndGetSubImage(ImageUtils.downloadImage(value), 8, 8, 8, 8);
+								Cache.putCache(onlinePlayer.getUniqueId() + value + PLAYER_HEAD_2D_KEY + "8", avatar, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
 							} else {
 								avatar = (BufferedImage) cache.getObject();
 							}
 							avatar = ImageUtils.copyImage(avatar);
 						} catch (Exception e) {
-							String url = HEAD_2D_RENDER_URL.replaceFirst("%s", uuid.toString()).replaceFirst("%s", "16");
-							avatar = ImageUtils.downloadImage(url);
-							Cache.putCache(uuid + "e" + PLAYER_HEAD_2D_KEY + "16", avatar, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
-							avatar = ImageUtils.copyImage(avatar);
+							String value = SkinUtils.getSkinURLFromUUID(uuid);
+							avatar = ImageUtils.copyAndGetSubImage(ImageUtils.downloadImage(value), 8, 8, 8, 8);
 						}
 					}
 				} catch (Exception e) {

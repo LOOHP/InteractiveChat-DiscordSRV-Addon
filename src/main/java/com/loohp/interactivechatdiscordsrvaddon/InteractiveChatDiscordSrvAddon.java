@@ -16,7 +16,10 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -183,6 +186,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public String shareEnderCommandTitle = "";
 	
 	public PlaceholderCooldownManager placeholderCooldownManager = new PlaceholderCooldownManager();
+	
+	private final ReentrantLock resourceReloadLock = new ReentrantLock(true);
 	
 	public String defaultResourceHash = "N/A";
 	public List<String> resourceOrder = new ArrayList<>();
@@ -388,7 +393,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	}
 	
 	public void reloadTextures(boolean redownload, CommandSender... receivers) {
-		isReady = false;
 		CommandSender[] senders;
 		if (Stream.of(receivers).noneMatch(each -> each.equals(Bukkit.getConsoleSender()))) {
 			senders = new CommandSender[receivers.length + 1];
@@ -402,50 +406,62 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		
 		Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
 			try {
-				AssetsDownloader.loadAssets(getDataFolder(), redownload, receivers);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			
-			Map<String, Boolean> resourceStatus = new LinkedHashMap<>();
-			List<String> resourceList = new ArrayList<>();
-			resourceList.add("Default");
-			resourceList.addAll(resourceOrder);
-			sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Reloading ResourceManager: " + ChatColor.YELLOW + String.join(", ", resourceList), senders);
-			
-			ResourceManager resourceManager = new ResourceManager();
-			Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"Default\" resources...");
-			resourceManager.loadResources(new File(getDataFolder(), "assets"));
-			resourceStatus.put("Default", true);
-			for (String resourceName : resourceOrder) {
+				if (!resourceReloadLock.tryLock(0, TimeUnit.MILLISECONDS)) {
+					sendMessage(ChatColor.YELLOW + "Resource reloading already in progress!", senders);
+					return;
+				}
+				isReady = false;
 				try {
-					Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"" + resourceName + "\" resources...");
-					File resourceFile = new File(getDataFolder(), "resources/" + resourceName);
-					File assetsFolder;
-					if (extractIfNotFound(resourceFile) && (assetsFolder = new File(resourceFile, "assets")).exists() && assetsFolder.isDirectory()) {
-						resourceManager.loadResources(assetsFolder);
-						resourceStatus.put(resourceName, true);
-					}
+					AssetsDownloader.loadAssets(getDataFolder(), redownload, receivers);
 				} catch (Exception e) {
-					sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load \"" + resourceName + "\"", senders);
-					resourceStatus.put(resourceName, false);
 					e.printStackTrace();
 				}
-			}
-			
-			Bukkit.getScheduler().runTask(plugin, () -> {
-				InteractiveChatDiscordSrvAddon.plugin.resourceManager = resourceManager;
-				InteractiveChatDiscordSrvAddon.plugin.resourceStatus = resourceStatus;
 				
-				Cache.clearAllCache();
+				Map<String, Boolean> resourceStatus = new LinkedHashMap<>();
+				List<String> resourceList = new ArrayList<>();
+				resourceList.add("Default");
+				resourceList.addAll(resourceOrder);
+				sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Reloading ResourceManager: " + ChatColor.YELLOW + String.join(", ", resourceList), senders);
 				
-				if (resourceStatus.values().stream().allMatch(each -> each)) {
-					sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loaded all resources!", senders);
-					isReady = true;
-				} else {
-					sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] There is a problem while loading resources.", senders);
+				ResourceManager resourceManager = new ResourceManager();
+				Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"Default\" resources...");
+				resourceManager.loadResources(new File(getDataFolder(), "assets"));
+				resourceStatus.put("Default", true);
+				for (String resourceName : resourceOrder) {
+					try {
+						Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"" + resourceName + "\" resources...");
+						File resourceFile = new File(getDataFolder(), "resources/" + resourceName);
+						File assetsFolder;
+						if (extractIfNotFound(resourceFile) && (assetsFolder = new File(resourceFile, "assets")).exists() && assetsFolder.isDirectory()) {
+							resourceManager.loadResources(assetsFolder);
+							resourceStatus.put(resourceName, true);
+						}
+					} catch (Exception e) {
+						sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load \"" + resourceName + "\"", senders);
+						resourceStatus.put(resourceName, false);
+						e.printStackTrace();
+					}
 				}
-			});
+				
+				Bukkit.getScheduler().callSyncMethod(plugin, () -> {
+					InteractiveChatDiscordSrvAddon.plugin.resourceManager = resourceManager;
+					InteractiveChatDiscordSrvAddon.plugin.resourceStatus = resourceStatus;
+					
+					Cache.clearAllCache();
+					
+					if (resourceStatus.values().stream().allMatch(each -> each)) {
+						sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loaded all resources!", senders);
+						isReady = true;
+					} else {
+						sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] There is a problem while loading resources.", senders);
+					}
+					return null;
+				}).get();
+				
+				resourceReloadLock.unlock();
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+			}
 		});
 	}
 	

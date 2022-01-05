@@ -2,6 +2,7 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import java.awt.Color;
 import java.lang.reflect.Method;
+import java.text.DecimalFormat;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,6 +70,7 @@ public class DiscordItemStackUtils {
 	public static final String DISCORD_EMPTY = "\u200e";
 	
 	private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.builder().extractUrls().hexColors().useUnusualXRepeatedCharacterHexFormat().build();
+	private static final DecimalFormat ATTRIBUTE_FORMAT = new DecimalFormat("0");
 	
 	private static Method bukkitBukkitClassGetMapShortMethod = null;
 	private static Method bukkitMapViewClassGetIdMethod = null;
@@ -359,11 +361,17 @@ public class DiscordItemStackUtils {
 		}
 		
 		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && NBTEditor.contains(item, "AttributeModifiers") && NBTEditor.getSize(item, "AttributeModifiers") > 0 && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
+			boolean useMainHand = false;
 			List<String> mainHand = new LinkedList<>();
+			boolean useOffhand = false;
 			List<String> offHand = new LinkedList<>();
+			boolean useFeet = false;
 			List<String> feet = new LinkedList<>();
+			boolean useLegs = false;
 			List<String> legs = new LinkedList<>();
+			boolean useChest = false;
 			List<String> chest = new LinkedList<>();
+			boolean useHead = false;
 			List<String> head = new LinkedList<>();
 			@SuppressWarnings("unchecked")
 			ListTag<CompoundTag> attributeList = (ListTag<CompoundTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "AttributeModifiers").toJson());
@@ -371,67 +379,93 @@ public class DiscordItemStackUtils {
 				String attributeName = attributeTag.getString("AttributeName").replace("minecraft:", "");
 				double amount = attributeTag.getDouble("Amount");
 				int operation = attributeTag.containsKey("Operation") ? attributeTag.getInt("Operation") : 0;
-				String attributeComponent = LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeModifierKey(amount, operation), language).replaceFirst("%s", amount + "").replaceFirst("%s", LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeKey(attributeName), language)).replace("%%", "%");
+				String attributeComponent = LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeModifierKey(amount, operation), language).replaceFirst("%s", ATTRIBUTE_FORMAT.format(Math.abs(amount)) + "").replaceFirst("%s", LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeKey(attributeName), language)).replace("%%", "%");
 				if (attributeTag.containsKey("Slot")) {
 					String slot = attributeTag.getString("Slot");
 					if (slot.equals("mainhand")) {
-						mainHand.add(attributeComponent);
+						if (amount != 0) {
+							mainHand.add(attributeComponent);
+						}
+						useMainHand = true;
 					} else if (slot.equals("offhand")) {
-						offHand.add(attributeComponent);
+						if (amount != 0) {
+							offHand.add(attributeComponent);
+						}
+						useOffhand = true;
 					} else if (slot.equals("feet")) {
-						feet.add(attributeComponent);
+						if (amount != 0) {
+							feet.add(attributeComponent);
+						}
+						useFeet = true;
 					} else if (slot.equals("legs")) {
-						legs.add(attributeComponent);
+						if (amount != 0) {
+							legs.add(attributeComponent);
+						}
+						useLegs = true;
 					} else if (slot.equals("chest")) {
-						chest.add(attributeComponent);
+						if (amount != 0) {
+							chest.add(attributeComponent);
+						}
+						useChest = true;
 					} else if (slot.equals("head")) {
-						head.add(attributeComponent);
+						if (amount != 0) {
+							head.add(attributeComponent);
+						}
+						useHead = true;
 					}
 				} else {
-					mainHand.add(attributeComponent);
-					offHand.add(attributeComponent);
-					feet.add(attributeComponent);
-					legs.add(attributeComponent);
-					chest.add(attributeComponent);
-					head.add(attributeComponent);
+					if (amount != 0) {
+						mainHand.add(attributeComponent);
+						offHand.add(attributeComponent);
+						feet.add(attributeComponent);
+						legs.add(attributeComponent);
+						chest.add(attributeComponent);
+						head.add(attributeComponent);
+					}
+					useMainHand = true;
+					useOffhand = true;
+					useFeet = true;
+					useLegs = true;
+					useChest = true;
+					useHead = true;
 				}
 			}
-			if (!mainHand.isEmpty()) {
+			if (useMainHand) {
 				description += "\n";
 				description += LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HAND), language) + "\n";
 				for (String each : mainHand) {
 					description += each + "\n";
 				}
 			}
-			if (!offHand.isEmpty()) {
+			if (useOffhand) {
 				description += "\n";
 				description += LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.OFF_HAND), language) + "\n";
 				for (String each : offHand) {
 					description += each + "\n";
 				}
 			}
-			if (!feet.isEmpty()) {
+			if (useFeet) {
 				description += "\n";
 				description += LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.FEET), language) + "\n";
 				for (String each : feet) {
 					description += each + "\n";
 				}
 			}
-			if (!legs.isEmpty()) {
+			if (useLegs) {
 				description += "\n";
 				description += LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.LEGS), language) + "\n";
 				for (String each : legs) {
 					description += each + "\n";
 				}
 			}
-			if (!chest.isEmpty()) {
+			if (useChest) {
 				description += "\n";
 				description += LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.CHEST), language) + "\n";
 				for (String each : chest) {
 					description += each + "\n";
 				}
 			}
-			if (!head.isEmpty()) {
+			if (useHead) {
 				description += "\n";
 				description += LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HEAD), language) + "\n";
 				for (String each : head) {
@@ -727,11 +761,17 @@ public class DiscordItemStackUtils {
 		}
 		
 		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && NBTEditor.contains(item, "AttributeModifiers") && NBTEditor.getSize(item, "AttributeModifiers") > 0 && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
+			boolean useMainHand = false;
 			List<Component> mainHand = new LinkedList<>();
+			boolean useOffhand = false;
 			List<Component> offHand = new LinkedList<>();
+			boolean useFeet = false;
 			List<Component> feet = new LinkedList<>();
+			boolean useLegs = false;
 			List<Component> legs = new LinkedList<>();
+			boolean useChest = false;
 			List<Component> chest = new LinkedList<>();
+			boolean useHead = false;
 			List<Component> head = new LinkedList<>();
 			@SuppressWarnings("unchecked")
 			ListTag<CompoundTag> attributeList = (ListTag<CompoundTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "AttributeModifiers").toJson());
@@ -739,67 +779,93 @@ public class DiscordItemStackUtils {
 				String attributeName = attributeTag.getString("AttributeName").replace("minecraft:", "");
 				double amount = attributeTag.getDouble("Amount");
 				int operation = attributeTag.containsKey("Operation") ? attributeTag.getInt("Operation") : 0;
-				Component attributeComponent = LegacyComponentSerializer.legacySection().deserialize(ChatColor.BLUE + LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeModifierKey(amount, operation), language).replaceFirst("%s", amount + "").replaceFirst("%s", LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeKey(attributeName), language)).replace("%%", "%"));
+				Component attributeComponent = LegacyComponentSerializer.legacySection().deserialize((amount < 0 ? ChatColor.RED : ChatColor.BLUE) + LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeModifierKey(amount, operation), language).replaceFirst("%s", ATTRIBUTE_FORMAT.format(Math.abs(amount)) + "").replaceFirst("%s", LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeKey(attributeName), language)).replace("%%", "%"));
 				if (attributeTag.containsKey("Slot")) {
 					String slot = attributeTag.getString("Slot");
 					if (slot.equals("mainhand")) {
-						mainHand.add(attributeComponent);
+						if (amount != 0) {
+							mainHand.add(attributeComponent);
+						}
+						useMainHand = true;
 					} else if (slot.equals("offhand")) {
-						offHand.add(attributeComponent);
+						if (amount != 0) {
+							offHand.add(attributeComponent);
+						}
+						useOffhand = true;
 					} else if (slot.equals("feet")) {
-						feet.add(attributeComponent);
+						if (amount != 0) {
+							feet.add(attributeComponent);
+						}
+						useFeet = true;
 					} else if (slot.equals("legs")) {
-						legs.add(attributeComponent);
+						if (amount != 0) {
+							legs.add(attributeComponent);
+						}
+						useLegs = true;
 					} else if (slot.equals("chest")) {
-						chest.add(attributeComponent);
+						if (amount != 0) {
+							chest.add(attributeComponent);
+						}
+						useChest = true;
 					} else if (slot.equals("head")) {
-						head.add(attributeComponent);
+						if (amount != 0) {
+							head.add(attributeComponent);
+						}
+						useHead = true;
 					}
 				} else {
-					mainHand.add(attributeComponent);
-					offHand.add(attributeComponent);
-					feet.add(attributeComponent);
-					legs.add(attributeComponent);
-					chest.add(attributeComponent);
-					head.add(attributeComponent);
+					if (amount != 0) {
+						mainHand.add(attributeComponent);
+						offHand.add(attributeComponent);
+						feet.add(attributeComponent);
+						legs.add(attributeComponent);
+						chest.add(attributeComponent);
+						head.add(attributeComponent);
+					}
+					useMainHand = true;
+					useOffhand = true;
+					useFeet = true;
+					useLegs = true;
+					useChest = true;
+					useHead = true;
 				}
 			}
-			if (!mainHand.isEmpty()) {
+			if (useMainHand) {
 				prints.add(Component.empty());
 				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HAND), language)));
 				for (Component each : mainHand) {
 					prints.add(each);
 				}
 			}
-			if (!offHand.isEmpty()) {
+			if (useOffhand) {
 				prints.add(Component.empty());
 				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.OFF_HAND), language)));
 				for (Component each : offHand) {
 					prints.add(each);
 				}
 			}
-			if (!feet.isEmpty()) {
+			if (useFeet) {
 				prints.add(Component.empty());
 				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.FEET), language)));
 				for (Component each : feet) {
 					prints.add(each);
 				}
 			}
-			if (!legs.isEmpty()) {
+			if (useLegs) {
 				prints.add(Component.empty());
 				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.LEGS), language)));
 				for (Component each : legs) {
 					prints.add(each);
 				}
 			}
-			if (!chest.isEmpty()) {
+			if (useChest) {
 				prints.add(Component.empty());
 				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.CHEST), language)));
 				for (Component each : chest) {
 					prints.add(each);
 				}
 			}
-			if (!head.isEmpty()) {
+			if (useHead) {
 				prints.add(Component.empty());
 				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HEAD), language)));
 				for (Component each : head) {

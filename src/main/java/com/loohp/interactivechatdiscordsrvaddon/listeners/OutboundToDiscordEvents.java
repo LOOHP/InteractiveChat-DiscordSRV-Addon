@@ -466,7 +466,17 @@ public class OutboundToDiscordEvents implements Listener {
 		DiscordSRV srv = InteractiveChatDiscordSrvAddon.discordsrv;
 		if (InteractiveChatDiscordSrvAddon.plugin.translateMentions) {
 			Debug.debug("onGameToDiscord processing mentions");
-			for (MentionPair pair : InteractiveChat.mentionPair.values()) {
+			List<MentionPair> distinctMentionPairs = new ArrayList<>();
+			Set<UUID> processedRecievers = new HashSet<>();
+			synchronized (InteractiveChat.mentionPair) {
+				for (MentionPair pair : InteractiveChat.mentionPair) {
+					if (!processedRecievers.contains(pair.getReciever())) {
+						distinctMentionPairs.add(pair);
+						processedRecievers.add(pair.getReciever());
+					}
+				}
+			}
+			for (MentionPair pair : distinctMentionPairs) {
 				if (pair.getSender().equals(icSender.getUniqueId())) {
 					UUID recieverUUID = pair.getReciever();
 					Set<String> names = new HashSet<>();
