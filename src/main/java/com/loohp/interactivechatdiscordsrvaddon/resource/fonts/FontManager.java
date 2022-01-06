@@ -59,7 +59,9 @@ public class FontManager {
 				try {
 					String key = namespace + ":" + file.getName();
 					key = key.substring(0, key.lastIndexOf("."));
-					JSONObject rootJson = (JSONObject) parser.parse(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
+					InputStreamReader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
+					JSONObject rootJson = (JSONObject) parser.parse(reader);
+					reader.close();
 					List<MinecraftFont> providedFonts = new ArrayList<>();
 					int index = -1;
 					for (Object obj : (JSONArray) rootJson.get("providers")) {

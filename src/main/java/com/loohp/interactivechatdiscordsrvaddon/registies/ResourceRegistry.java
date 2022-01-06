@@ -13,9 +13,8 @@ public class ResourceRegistry {
 	public static final String MISC_LOCATION = "minecraft:misc/";
 	public static final String GUI_LOCATION = "minecraft:gui/";
 	public static final String MAP_LOCATION = "minecraft:map/";
-	public static final String IC_BLOCK_LOCATION = "minecraft:interactivechatdiscordsrvaddon/blocks/";
+	public static final String IC_BLOCK_LOCATION = "minecraft:interactivechatdiscordsrvaddon/block/";
 	public static final String IC_GUI_LOCATION = "minecraft:interactivechatdiscordsrvaddon/gui/";
-	public static final String IC_ITEM_LOCATION = "minecraft:interactivechatdiscordsrvaddon/items/";
 	public static final String IC_MISC_LOCATION = "minecraft:interactivechatdiscordsrvaddon/misc/";
 	
 	public static final String BUILTIN_ENTITY_LOCATION = "minecraft:interactivechatdiscordsrvaddon/builtin_entity/";
@@ -38,13 +37,12 @@ public class ResourceRegistry {
 	public static final String LEATHER_BOOTS_PLACEHOLDER = "minecraft:item/leather_boots";
 	public static final String LEATHER_HORSE_ARMOR_PLACEHOLDER = "minecraft:item/leather_horse_armor";
 	
+	public static final String SPAWN_EGG_PLACEHOLDER = "minecraft:item/spawn_egg";
+	public static final String SPAWN_EGG_OVERLAY_PLACEHOLDER = "minecraft:item/spawn_egg_overlay";
+	
 	public static final String TIPPED_ARROW_HEAD_PLACEHOLDER = "minecraft:item/tipped_arrow_head";
 	public static final String POTION_OVERLAY_PLACEHOLDER = "minecraft:item/potion_overlay";
 	
 	public static final String MAP_MARKINGS_LOCATION = ITEM_LOCATION + "filled_map_markings";
-	
-	public static final double TINT_INDEX_0_X = (84.0 / 256.0) / (169.0 / 256.0);
-	public static final double TINT_INDEX_0_Y = (124.0 / 256.0) / (169.0 / 256.0);
-	public static final double TINT_INDEX_0_Z = (70.0 / 256.0) / (169.0 / 256.0);
 
 }

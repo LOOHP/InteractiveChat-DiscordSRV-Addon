@@ -46,6 +46,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resource.models.TextureUV;
 import com.loohp.interactivechatdiscordsrvaddon.resource.textures.TextureAnimation;
 import com.loohp.interactivechatdiscordsrvaddon.resource.textures.TextureMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resource.textures.TextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils;
 
 public class ModelRenderer implements AutoCloseable {
 	
@@ -92,48 +93,36 @@ public class ModelRenderer implements AutoCloseable {
 				helmetRenderModel = generateStandardRenderModel(helmetBlockModel, manager, providedTextures, helmetEnchanted, false);
 			} else if (helmetBlockModel.getRawParent().equals(ModelManager.ITEM_BASE)) {
 				BufferedImage image = new BufferedImage(INTERNAL_W, INTERNAL_H, BufferedImage.TYPE_INT_ARGB);
-				if (helmetModelKey.contains("spawn_egg")) {
-					TextureResource texture = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_BLOCK_LOCATION + helmetModelKey.replace("minecraft:item/", ""), false);
-					if (texture != null && texture.isTexture()) {
-						image = texture.getTexture(image.getWidth(), image.getHeight());
-					} else {
-						texture = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_ITEM_LOCATION + helmetModelKey.replace("minecraft:item/", ""), false);
-						if (texture != null && texture.isTexture()) {
-							image = texture.getTexture(image.getWidth(), image.getHeight());
-						}
+				Graphics2D g = image.createGraphics();
+				g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+				for (int i = 0; helmetBlockModel.getTextures().containsKey(ModelManager.ITEM_BASE_LAYER + i); i++) {
+					String resourceLocation = helmetBlockModel.getTextures().get(ModelManager.ITEM_BASE_LAYER + i);
+					if (!resourceLocation.contains(":")) {
+						resourceLocation = ResourceRegistry.DEFAULT_NAMESPACE + ":" + resourceLocation;
 					}
-				} else {
-					Graphics2D g = image.createGraphics();
-					g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-					for (int i = 0; helmetBlockModel.getTextures().containsKey(ModelManager.ITEM_BASE_LAYER + i); i++) {
-						String resourceLocation = helmetBlockModel.getTextures().get(ModelManager.ITEM_BASE_LAYER + i);
-						if (!resourceLocation.contains(":")) {
-							resourceLocation = ResourceRegistry.DEFAULT_NAMESPACE + ":" + resourceLocation;
-						}
-						TextureResource resource = providedTextures.get(resourceLocation);
-						if (resource == null) {
-							resource = manager.getTextureManager().getTexture(resourceLocation);
-						}
-						BufferedImage texture = resource.getTexture();
-						if (resource.hasTextureMeta()) {
-							TextureMeta meta = resource.getTextureMeta();
-							if (meta.hasAnimation()) {
-								TextureAnimation animation = meta.getAnimation();
-								if (animation.hasWidth() && animation.hasHeight()) {
-									texture = ImageUtils.copyAndGetSubImage(texture, 0, 0, animation.getWidth(), animation.getHeight());
-								} else {
-									texture = ImageUtils.copyAndGetSubImage(texture, 0, 0, texture.getWidth(), texture.getWidth());
-								}
+					TextureResource resource = providedTextures.get(resourceLocation);
+					if (resource == null) {
+						resource = manager.getTextureManager().getTexture(resourceLocation);
+					}
+					BufferedImage texture = resource.getTexture();
+					if (resource.hasTextureMeta()) {
+						TextureMeta meta = resource.getTextureMeta();
+						if (meta.hasAnimation()) {
+							TextureAnimation animation = meta.getAnimation();
+							if (animation.hasWidth() && animation.hasHeight()) {
+								texture = ImageUtils.copyAndGetSubImage(texture, 0, 0, animation.getWidth(), animation.getHeight());
+							} else {
+								texture = ImageUtils.copyAndGetSubImage(texture, 0, 0, texture.getWidth(), texture.getWidth());
 							}
 						}
-						if (resourceLocation.equals(ResourceRegistry.MAP_MARKINGS_LOCATION)) {
-							ImageUtils.xor(image, ImageUtils.resizeImageAbs(texture, image.getWidth(), image.getHeight()), 200);
-						} else {
-							g.drawImage(texture, 0, 0, image.getWidth(), image.getHeight(), null);
-						}
 					}
-					g.dispose();
+					if (resourceLocation.equals(ResourceRegistry.MAP_MARKINGS_LOCATION)) {
+						ImageUtils.xor(image, ImageUtils.resizeImageAbs(texture, image.getWidth(), image.getHeight()), 200);
+					} else {
+						g.drawImage(texture, 0, 0, image.getWidth(), image.getHeight(), null);
+					}
 				}
+				g.dispose();
 				if (helmetEnchanted) {
 					image = ImageGeneration.getEnchantedImage(image);
 				}
@@ -202,24 +191,6 @@ public class ModelRenderer implements AutoCloseable {
 		if (blockModel.getRawParent() == null || blockModel.getRawParent().indexOf("/") < 0) {
 			renderBlockModel(generateStandardRenderModel(blockModel, manager, providedTextures, enchanted, false), image, blockModel.getDisplay(displayPosition));
 		} else if (blockModel.getRawParent().equals(ModelManager.ITEM_BASE)) {
-			if (modelKey.contains("spawn_egg")) {
-				BufferedImage itemImage = null;
-				TextureResource texture = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_BLOCK_LOCATION + modelKey.replace("minecraft:item/", ""), false);
-				if (texture != null && texture.isTexture()) {
-					itemImage = texture.getTexture(width, height);
-				} else {
-					texture = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_ITEM_LOCATION + modelKey.replace("minecraft:item/", ""), false);
-					if (texture != null && texture.isTexture()) {
-						itemImage = texture.getTexture(width, height);
-					}
-				}
-				if (enchanted) {
-					itemImage = ImageGeneration.getEnchantedImage(itemImage);
-				}
-				if (itemImage != null) {
-					return new RenderResult(itemImage, null);
-				}
-			}
 			Graphics2D g = image.createGraphics();
 			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 			for (int i = 0; blockModel.getTextures().containsKey(ModelManager.ITEM_BASE_LAYER + i); i++) {
@@ -406,9 +377,7 @@ public class ModelRenderer implements AutoCloseable {
 								x1 = images[i].getWidth() - x1;
 							}
 							images[i] = ImageUtils.rotateImageByDegrees(ImageUtils.copyAndGetSubImage(images[i], (int) x1, (int) y1, Math.max(1, (int) dX), Math.max(1, (int) dY)), faceData.getRotation());
-							if (faceData.getTintindex() == 0) {
-								images[i] = ImageUtils.multiply(images[i], ResourceRegistry.TINT_INDEX_0_X, ResourceRegistry.TINT_INDEX_0_Y, ResourceRegistry.TINT_INDEX_0_Z);
-							}
+							images[i] = TintUtils.applyTint(images[i], faceData.getTintindex());
 							if (enchanted) {
 								overlayImages[i] = ImageGeneration.getRawEnchantedImage(images[i]);
 							}

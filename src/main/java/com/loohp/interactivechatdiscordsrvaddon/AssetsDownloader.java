@@ -39,7 +39,7 @@ public class AssetsDownloader {
 	private static final ReentrantLock LOCK = new ReentrantLock(true);
 	
 	@SuppressWarnings({ "unchecked", "deprecation" })
-	public static void loadAssets(File rootFolder, boolean force, CommandSender... senders) throws Exception {
+	public static void loadAssets(File rootFolder, boolean force, boolean clean, CommandSender... senders) throws Exception {
 		if (!Arrays.asList(senders).contains(Bukkit.getConsoleSender())) {
 			List<CommandSender> senderList = new ArrayList<>(Arrays.asList(senders));
 			senderList.add(Bukkit.getConsoleSender());
@@ -76,6 +76,11 @@ public class AssetsDownloader {
 			String hash = data.get("hash").toString();
 			
 			if (force || !hash.equals(oldHash)) {
+				if (clean) {
+					InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Cleaning old assets!", senders);
+					FileUtils.removeFolderRecursively(assetsFolder);
+					assetsFolder.mkdirs();
+				}
 				if (force && hash.equals(oldHash)) {
 					InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Forcibly re-downloading assets! Please wait... (" + oldHash + " -> " + hash + ")", senders);
 				} else {

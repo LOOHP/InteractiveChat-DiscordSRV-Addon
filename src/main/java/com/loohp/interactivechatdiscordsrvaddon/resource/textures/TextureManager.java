@@ -48,7 +48,9 @@ public class TextureManager {
 				if (extension.equalsIgnoreCase("png")) {
 					textures.put(key, new TextureResource(this, key, file, true));
 				} else if (extension.equalsIgnoreCase("mcmeta")) {
-					JSONObject rootJson = (JSONObject) parser.parse(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
+					InputStreamReader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
+					JSONObject rootJson = (JSONObject) parser.parse(reader);
+					reader.close();
 					TextureAnimation animation = null;
 					if (rootJson.containsKey("animation")) {
 						JSONObject animationJson = (JSONObject) rootJson.get("animation");

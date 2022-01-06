@@ -45,6 +45,7 @@ import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelOverride.ModelOverrideType;
 import com.loohp.interactivechatdiscordsrvaddon.resource.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resource.textures.TextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.SpawnEggTintData;
 
 @SuppressWarnings("deprecation")
 public class ItemRenderUtils {
@@ -78,7 +79,7 @@ public class ItemRenderUtils {
 			if (time.getMonth().equals(Month.DECEMBER) && (time.getDayOfMonth() == 24 || time.getDayOfMonth() == 25 || time.getDayOfMonth() == 26)) {
 				directLocation = ResourceRegistry.BUILTIN_ENTITY_LOCATION + "christmas_chest";
 			}
-		} else if (xMaterial.isOneOf(Arrays.asList("CONTAINS:Banner"))) {
+		} else if (xMaterial.isOneOf(Arrays.asList("CONTAINS:banner"))) {
 			BannerAssetResult bannerAsset = BannerGraphics.generateBannerAssets(item);
 			providedTextures.put(ResourceRegistry.BANNER_BASE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(bannerAsset.getBase()));
 			providedTextures.put(ResourceRegistry.BANNER_PATTERNS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(bannerAsset.getPatterns()));
@@ -263,6 +264,21 @@ public class ItemRenderUtils {
 						requiresEnchantmentGlint = true;
 					}
 				}
+			}
+		} else if (xMaterial.isOneOf(Arrays.asList("CONTAINS:spawn_egg"))) {
+			SpawnEggTintData tintData = TintUtils.getSpawnEggTint(xMaterial);
+			if (tintData != null) {
+				BufferedImage baseImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_LOCATION + "spawn_egg").getTexture();
+				BufferedImage overlayImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_LOCATION + "spawn_egg_overlay").getTexture(baseImage.getWidth(), baseImage.getHeight());
+				
+				BufferedImage colorBase = ImageUtils.changeColorTo(ImageUtils.copyImage(baseImage), tintData.getBase());
+				BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(overlayImage), tintData.getOverlay());
+				
+				baseImage = ImageUtils.multiply(baseImage, colorBase);
+				overlayImage = ImageUtils.multiply(overlayImage, colorOverlay);
+				
+				providedTextures.put(ResourceRegistry.SPAWN_EGG_PLACEHOLDER, new GeneratedTextureResource(baseImage));
+				providedTextures.put(ResourceRegistry.SPAWN_EGG_OVERLAY_PLACEHOLDER, new GeneratedTextureResource(overlayImage));
 			}
 		}
 		return new ItemStackProcessResult(requiresEnchantmentGlint, predicates, providedTextures, directLocation);

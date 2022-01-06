@@ -70,13 +70,12 @@ public class Commands implements CommandExecutor, TabCompleter {
 		}
 		
 		if (args[0].equalsIgnoreCase("reloadtexture")) {
-			boolean redownload = false;
-			if (Arrays.asList(args).contains("--redownload")) {
-				redownload = true;
-			}
+			List<String> argList = Arrays.asList(args);
+			boolean clean = argList.contains("--reset");
+			boolean redownload = argList.contains("--redownload") || clean;
 			if (sender.hasPermission("interactivechatdiscordsrv.reloadtexture")) {
 				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.reloadTextureMessage);
-				InteractiveChatDiscordSrvAddon.plugin.reloadTextures(redownload, sender);
+				InteractiveChatDiscordSrvAddon.plugin.reloadTextures(redownload, clean, sender);
 			} else {
 				sender.sendMessage(InteractiveChat.noPermissionMessage);
 			}
@@ -172,6 +171,9 @@ public class Commands implements CommandExecutor, TabCompleter {
 				if ("reloadtexture".equals(args[0].toLowerCase())) {
 					if ("--redownload".startsWith(args[1].toLowerCase())) {
 						tab.add("--redownload");
+					}
+					if ("--reset".startsWith(args[1].toLowerCase())) {
+						tab.add("--reset");
 					}
 				}
 			}

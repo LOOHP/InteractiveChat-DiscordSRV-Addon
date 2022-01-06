@@ -654,20 +654,7 @@ public class ImageGeneration {
 		if (renderResult.isSuccessful()) {
 			itemImage = renderResult.getImage();
 		} else {
-			TextureResource texture = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_BLOCK_LOCATION + key, false);
-			if (texture != null && texture.isTexture()) {
-				itemImage = texture.getTexture(32, 32);
-			} else {
-				texture = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_ITEM_LOCATION + key, false);
-				if (texture != null && texture.isTexture()) {
-					itemImage = texture.getTexture(32, 32);
-				} else {
-					return null;
-				}
-			}
-			if (requiresEnchantmentGlint) {
-				itemImage = getEnchantedImage(itemImage);
-			}
+			return null;
 		}
 		
 		if (item.getType().getMaxDurability() > 0) {

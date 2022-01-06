@@ -51,7 +51,9 @@ public class ModelManager {
 			try {
 				String key = namespace + ":" + file.getParentFile().getAbsolutePath().replace("\\", "/").replace(root.getAbsolutePath().replace("\\", "/") + "/", "") + "/" + file.getName();
 				key = key.substring(0, key.lastIndexOf("."));
-				JSONObject rootJson = (JSONObject) parser.parse(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
+				InputStreamReader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
+				JSONObject rootJson = (JSONObject) parser.parse(reader);
+				reader.close();
 				String parent = (String) rootJson.getOrDefault("parent", null);
 				boolean ambientocclusion = (boolean) rootJson.getOrDefault("ambientocclusion", true);
 				Map<ModelDisplayPosition, ModelDisplay> display = new EnumMap<>(ModelDisplayPosition.class);
