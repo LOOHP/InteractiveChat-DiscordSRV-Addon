@@ -101,7 +101,7 @@ public class FontManager {
 								AffineTransform shift = AffineTransform.getTranslateInstance(leftShift, downShift);
 								float size = ((Number) fontJson.get("size")).floatValue();
 								float oversample = ((Number) fontJson.get("oversample")).floatValue();
-								String skip = fontJson.get("skip").toString();
+								String skip = fontJson.getOrDefault("skip", "").toString();
 								providedFonts.add(new TrueTypeFont(manager, null, resourceLocation, shift, size, oversample, skip));
 								break;
 							}
@@ -109,6 +109,7 @@ public class FontManager {
 							throw new RuntimeException("Unable to load font provider " + index + " in " + file.getAbsolutePath(), e);
 						}
 					}
+					providedFonts.add(new BackingEmptyFont(manager, null));
 					FontProvider provider = new FontProvider(key, providedFonts);
 					for (MinecraftFont mcFont : provider.getProviders()) {
 						mcFont.setProvider(provider);

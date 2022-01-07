@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
@@ -50,7 +51,7 @@ public abstract class MinecraftFont {
 	
 	public abstract void reloadFonts();
 	
-	public abstract BufferedImage getCharacterImage(String character, float fontSize, TextColor color);
+	public abstract Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color);
 	
 	public abstract Collection<String> getDisplayableCharacters();
 	

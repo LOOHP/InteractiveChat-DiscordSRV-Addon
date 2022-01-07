@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
@@ -24,7 +25,7 @@ public class BitmapFont extends MinecraftFont {
 	private int ascent;
 	private int scale;
 	private List<String> chars;
-	private Map<String, BufferedImage> charImages;
+	protected Map<String, BufferedImage> charImages;
 	
 	public BitmapFont(ResourceManager manager, FontProvider provider, String resourceLocation, int height, int ascent, List<String> chars) {
 		super(manager, provider);
@@ -120,7 +121,7 @@ public class BitmapFont extends MinecraftFont {
 				Graphics2D g = charImage.createGraphics();
 				for (int i = 0; i < OBFUSCATE_OVERLAP_COUNT; i++) {
 					String magicCharater = ComponentStringUtils.toMagic(provider, character);
-					BufferedImage magicImage = provider.forCharacter(magicCharater).getCharacterImage(magicCharater, fontSize, color);
+					BufferedImage magicImage = provider.forCharacter(magicCharater).getCharacterImage(magicCharater, fontSize, color).orElse(new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB));
 					g.drawImage(magicImage, 0, 0, charImage.getWidth(), charImage.getHeight(), null);
 				}
 				g.dispose();
@@ -176,13 +177,13 @@ public class BitmapFont extends MinecraftFont {
 	}
 
 	@Override
-	public BufferedImage getCharacterImage(String character, float fontSize, TextColor color) {
+	public Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color) {
 		Color awtColor = new Color(color.value());
 		BufferedImage charImage = ImageUtils.copyImage(charImages.get(character));
 		float descent = height - this.ascent - 1;
 		charImage = ImageUtils.resizeImageFillHeight(charImage, Math.round(fontSize + (ascent + descent) * scale));
 		charImage = ImageUtils.changeColorTo(charImage, awtColor);
-		return charImage;
+		return Optional.of(charImage);
 	}
 
 	@Override
