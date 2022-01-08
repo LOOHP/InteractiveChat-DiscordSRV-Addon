@@ -12,7 +12,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
 
 public abstract class MinecraftFont {
 	
-	public static final int OBFUSCATE_OVERLAP_COUNT = 2;
+	public static final int OBFUSCATE_OVERLAP_COUNT = 3;
 	private static final List<TextDecoration> DECORATIONS_ORDER = new ArrayList<>();
 	
 	static {

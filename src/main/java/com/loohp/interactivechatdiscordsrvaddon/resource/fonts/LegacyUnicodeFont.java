@@ -115,6 +115,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
 			for (TextDecoration decoration : decorations) {
 				switch (decoration) {
 				case OBFUSCATED:
+					charImage = new BufferedImage(charImage.getWidth(), charImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
 					Graphics2D g = charImage.createGraphics();
 					for (int i = 0; i < OBFUSCATE_OVERLAP_COUNT; i++) {
 						String magicCharater = ComponentStringUtils.toMagic(provider, character);
