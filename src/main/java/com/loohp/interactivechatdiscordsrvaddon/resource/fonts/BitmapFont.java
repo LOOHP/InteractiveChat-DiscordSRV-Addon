@@ -112,7 +112,7 @@ public class BitmapFont extends MinecraftFont {
 		charImage = ImageUtils.resizeImageFillHeight(charImage, Math.round(fontSize + (ascent + descent) * scale));
 		int w = charImage.getWidth();
 		int h = charImage.getHeight();
-		charImage = ImageUtils.changeColorTo(charImage, awtColor);
+		charImage = ImageUtils.multiply(charImage, ImageUtils.changeColorTo(ImageUtils.copyImage(charImage), awtColor));
 		int beforeTransformW = w;
 		int pixelSize = Math.round((float) beforeTransformW / (float) originalW);
 		int strikeSize = (int) (fontSize / 8);
