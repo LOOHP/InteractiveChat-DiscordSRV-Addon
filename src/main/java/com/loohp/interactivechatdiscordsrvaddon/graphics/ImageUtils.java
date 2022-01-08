@@ -414,8 +414,9 @@ public class ImageUtils {
 				if (content.isEmpty()) {
 					continue;
 				}
-				for (int i = 0; i < content.length(); i++) {
-					String character = content.substring(i, i + 1);
+				for (int i = 0; i < content.length();) {
+					String character = new String(Character.toChars(content.codePointAt(i)));
+					i += Math.max(1, character.length());
 					List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
 					MinecraftFont fontProvider = manager.getFontManager().getFontProviders(font.asString()).forCharacter(character);
 					FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, color, decorations);
@@ -430,8 +431,9 @@ public class ImageUtils {
 				if (content.isEmpty()) {
 					continue;
 				}
-				for (int i = 0; i < content.length(); i++) {
-					String character = content.substring(i, i + 1);
+				for (int i = 0; i < content.length();) {
+					String character = new String(Character.toChars(content.codePointAt(i)));
+					i += Math.max(1, character.length());
 					List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
 					MinecraftFont fontProvider = manager.getFontManager().getFontProviders(font.asString()).forCharacter(character);
 					FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, color, decorations);
@@ -519,8 +521,9 @@ public class ImageUtils {
 				if (content.isEmpty()) {
 					continue;
 				}
-				for (int i = 0; i < content.length(); i++) {
-					String character = content.substring(i, i + 1);
+				for (int i = 0; i < content.length();) {
+					String character = new String(Character.toChars(content.codePointAt(i)));
+					i += Math.max(1, character.length());
 					List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
 					MinecraftFont fontProvider = manager.getFontManager().getFontProviders(font.asString()).forCharacter(character);
 					FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, color, decorations);
@@ -532,8 +535,9 @@ public class ImageUtils {
 				if (content.isEmpty()) {
 					continue;
 				}
-				for (int i = 0; i < content.length(); i++) {
-					String character = content.substring(i, i + 1);
+				for (int i = 0; i < content.length();) {
+					String character = new String(Character.toChars(content.codePointAt(i)));
+					i += Math.max(1, character.length());
 					List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
 					MinecraftFont fontProvider = manager.getFontManager().getFontProviders(font.asString()).forCharacter(character);
 					FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, color, decorations);

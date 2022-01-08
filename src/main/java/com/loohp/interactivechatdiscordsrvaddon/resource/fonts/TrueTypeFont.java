@@ -69,7 +69,7 @@ public class TrueTypeFont extends MinecraftFont {
 			this.internalGraphics.setFont(font.deriveFont(size));
 			
 			Set<String> displayableCharacters = new HashSet<>();
-			for (int i = 0; i < 0x10000; i += 1) {
+			for (int i = 0; i < 0x10F800; i += 1) {
 				String character = new String(Character.toChars(i));
 				if (!this.exclude.contains(character) && canDisplayCharacter(character)) {
 					displayableCharacters.add(character);

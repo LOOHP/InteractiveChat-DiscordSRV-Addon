@@ -50,10 +50,11 @@ public class BitmapFont extends MinecraftFont {
 		int y = 0;
 		for (String line : chars) {
 			if (!line.isEmpty()) {
-				int xIncrement = fontFileImage.getWidth() / line.length();
+				int xIncrement = fontFileImage.getWidth() / line.codePointCount(0, line.length());
 				int x = 0;
-				for (int i = 0; i < line.length(); i++) {
-					String character = line.substring(i, i + 1);
+				for (int i = 0; i < line.length();) {
+					String character = new String(Character.toChars(line.codePointAt(i)));
+					i += Math.max(1, character.length());
 					int lastX = 3 * scale;
 					for (int x0 = x; x0 < x + xIncrement; x0++) {
 						for (int y0 = y; y0 < y + yIncrement; y0++) {
