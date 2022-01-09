@@ -140,10 +140,13 @@ public class AssetsDownloader {
 					String fileName = getEntryName(key);
 					if (!InteractiveChatDiscordSrvAddon.plugin.reducedAssetsDownloadInfo) {
 						double percentage = ((double) ++i / (double) size) * 100;
-						String trimmedValue = value.startsWith("/") ? value.substring(1) : value;
-						Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Downloading " + trimmedValue + "/" + fileName + " (" + FORMAT.format(percentage) + "%)");
+						String trimmedValue = (value.startsWith("/") ? value.substring(1) : value).trim();
+						if (!trimmedValue.isEmpty()) {
+							trimmedValue += "/";
+						}
+						Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Downloading " + trimmedValue + fileName + " (" + FORMAT.format(percentage) + "%)");
 					}
-					File folder = new File(defaultAssetsFolder, value);
+					File folder = value.isEmpty() || value.equals("/") ? defaultAssetsFolder : new File(defaultAssetsFolder, value);
 					folder.mkdirs();
 					File file = new File(folder, fileName);
 					if (file.exists()) {

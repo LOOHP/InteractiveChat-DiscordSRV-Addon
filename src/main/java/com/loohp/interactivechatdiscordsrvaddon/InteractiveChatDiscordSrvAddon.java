@@ -431,7 +431,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 				
 				ResourceManager resourceManager = new ResourceManager();
 				Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"Default\" resources...");
-				resourceManager.loadResources("Default", new File(getDataFolder() + "/built-in", "default"));
+				resourceManager.loadResources("Default", new File(getDataFolder() + "/built-in", "Default"));
 				for (String resourceName : resourceOrder) {
 					try {
 						Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"" + resourceName + "\" resources...");
