@@ -12,7 +12,7 @@ import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 
 public class URLRequestUtils {
 	
-	public static final Pattern IMAGE_URL_PATTERN = Pattern.compile("https?:\\/(?:\\/[^\\/]+)+\\.(?:jpg|jpeg|gif|png)");
+	public static final Pattern IMAGE_URL_PATTERN = Pattern.compile("https?:\\/(?:\\/[^\\/]+)+\\.(jpg|jpeg|gif|png)(?:\\?.*)*");
 	
 	public static InputStream getInputStream(String link) {
 		InputStream stream = getInputStream0(link);

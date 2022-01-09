@@ -37,10 +37,11 @@ import org.bukkit.inventory.ItemStack;
 
 import com.loohp.interactivechat.api.events.PrePacketComponentProcessEvent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.TextReplacementConfig;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.ClickEvent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import com.loohp.interactivechat.utils.ComponentReplacing;
+import com.loohp.interactivechat.utils.CustomStringUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.api.events.DiscordAttachmentConversionEvent;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
@@ -185,7 +186,6 @@ public class InboundToGameEvents implements Listener {
 						if (URLRequestUtils.isAllowed(attachment.getProxyUrl())) {
 							methods.add(() -> URLRequestUtils.getInputStream0(attachment.getProxyUrl()));
 						}
-						
 						try (InputStream stream = URLRequestUtils.retrieveInputStreamUntilSuccessful(methods)) {
 							GraphicsToPacketMapWrapper map;
 							if (url.toLowerCase().endsWith(".gif")) {
@@ -221,18 +221,20 @@ public class InboundToGameEvents implements Listener {
 			Matcher matcher = URLRequestUtils.IMAGE_URL_PATTERN.matcher(message.getContentRaw());
 			while (matcher.find()) {
 				String url = matcher.group();
+				String extension = matcher.group(1);
 				if (!processedUrl.contains(url) && URLRequestUtils.isAllowed(url)) {
 					InteractiveChatDiscordSrvAddon.plugin.attachmentImageCounter.incrementAndGet();
 					try (InputStream stream = URLRequestUtils.getInputStream(url)) {
 						GraphicsToPacketMapWrapper map;
-						if (url.toLowerCase().endsWith(".gif")) {
+						if (extension.equals("gif")) {
 							ImageFrame[] frames = GifReader.readGif(stream);
 							map = new GraphicsToPacketMapWrapper(frames, InteractiveChatDiscordSrvAddon.plugin.playbackBarEnabled, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
 						} else {
 							BufferedImage image = ImageIO.read(stream);
 							map = new GraphicsToPacketMapWrapper(image, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
 						}
-						String name = url.lastIndexOf("/") < 0 ? url : url.substring(url.lastIndexOf("/") + 1);
+						int end = matcher.end(1);
+						String name = url.lastIndexOf("/") < 0 ? url.substring(0, end) : url.substring(url.lastIndexOf("/") + 1, end);
 						DiscordAttachmentData data = new DiscordAttachmentData(name, url, map);
 						DiscordAttachmentConversionEvent dace = new DiscordAttachmentConversionEvent(url, data);
 						Bukkit.getPluginManager().callEvent(dace);
@@ -272,7 +274,7 @@ public class InboundToGameEvents implements Listener {
 					textComponent = textComponent.clickEvent(ClickEvent.openUrl(url));
 				}
 				
-				component = component.replaceText(TextReplacementConfig.builder().matchLiteral(url).replacement(textComponent).build());
+				component = ComponentReplacing.replace(component, CustomStringUtils.escapeMetaCharacters(url), textComponent);
 				
 				event.setComponent(component);
 			}

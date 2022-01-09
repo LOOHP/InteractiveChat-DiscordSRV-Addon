@@ -685,7 +685,7 @@ public class ImageGeneration {
 			if (amount <= 0) {
 				component = component.color(NamedTextColor.RED);
 			}
-			newItemImage = ImageUtils.printComponentRightAligned(InteractiveChatDiscordSrvAddon.plugin.resourceManager, newItemImage, component, 33, 18, 16, ITEM_AMOUNT_TEXT_DARKEN_FACTOR);
+			newItemImage = ImageUtils.printComponentRightAligned(InteractiveChatDiscordSrvAddon.plugin.resourceManager, newItemImage, component, 33, 17, 16, ITEM_AMOUNT_TEXT_DARKEN_FACTOR);
 			g4.dispose();
 			itemImage = newItemImage;
 		}
