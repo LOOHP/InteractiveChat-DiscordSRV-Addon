@@ -46,6 +46,7 @@ import com.loohp.interactivechatdiscordsrvaddon.metrics.Metrics;
 import com.loohp.interactivechatdiscordsrvaddon.registies.InteractiveChatRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ModelRenderer;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.resource.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
 
 import github.scarsz.discordsrv.DiscordSRV;
@@ -436,7 +437,14 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 					try {
 						Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"" + resourceName + "\" resources...");
 						File resourceFile = new File(getDataFolder(), "resources/" + resourceName);
-						resourceManager.loadResources(resourceName, resourceFile);
+						ResourcePackInfo info = resourceManager.loadResources(resourceName, resourceFile);
+						if (!info.getStatus()) {
+							if (info.getRejectedReason() == null) {
+								sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load \"" + resourceName + "\"", senders);
+							} else {
+								sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load \"" + resourceName + "\", Reason: " + info.getRejectedReason(), senders);
+							}
+						}
 					} catch (Exception e) {
 						sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load \"" + resourceName + "\"", senders);
 						e.printStackTrace();
