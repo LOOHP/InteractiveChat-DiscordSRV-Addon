@@ -66,25 +66,28 @@ public class AssetsDownloader {
 				new RuntimeException("Invalid hashes.json! It will be reset.", e).printStackTrace();
 				json = new JSONObject();
 			}
-			String oldHash = InteractiveChatDiscordSrvAddon.plugin.defaultResourceHash = json.containsKey("assets") ? json.get("assets").toString() : "EMPTY";
+			String oldHash = InteractiveChatDiscordSrvAddon.plugin.defaultResourceHash = json.containsKey("Default") ? json.get("Default").toString() : "EMPTY";
+			String oldVersion = json.containsKey("version") ? json.get("version").toString() : "EMPTY";
 			
-			File assetsFolder = new File(rootFolder, "assets");
-			assetsFolder.mkdirs();
+			File defaultAssetsFolder = new File(rootFolder + "/built-in", "Default");
+			defaultAssetsFolder.mkdirs();
 			
 			JSONObject data = HTTPRequestUtils.getJSONResponse(ASSETS_DATA_URL);
 			
 			String hash = data.get("hash").toString();
 			
-			if (force || !hash.equals(oldHash)) {
+			if (force || !hash.equals(oldHash) || !InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion().equals(oldVersion)) {
 				if (clean) {
-					InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Cleaning old assets!", senders);
-					FileUtils.removeFolderRecursively(assetsFolder);
-					assetsFolder.mkdirs();
+					InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Cleaning old default resources!", senders);
+					FileUtils.removeFolderRecursively(defaultAssetsFolder);
+					defaultAssetsFolder.mkdirs();
 				}
-				if (force && hash.equals(oldHash)) {
-					InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Forcibly re-downloading assets! Please wait... (" + oldHash + " -> " + hash + ")", senders);
+				if (force) {
+					InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Forcibly re-downloading default resources! Please wait... (" + oldHash + " -> " + hash + ")", senders);
+				} else if (!hash.equals(oldHash)) {
+					InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Hash changed! Re-downloading default resources! Please wait... (" + oldHash + " -> " + hash + ")", senders);
 				} else {
-					InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Hash changed! Re-downloading assets! Please wait... (" + oldHash + " -> " + hash + ")", senders);
+					InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Plugin version changed! Re-downloading default resources! Please wait... (" + oldHash + " -> " + hash + ")", senders);
 				}
 				
 				JSONObject client = (JSONObject) data.get("client-entries");
@@ -115,7 +118,7 @@ public class AssetsDownloader {
 							}
 							byte[] currentEntry = baos.toByteArray();
 							
-							File folder = new File(rootFolder, name).getParentFile();
+							File folder = new File(defaultAssetsFolder, name).getParentFile();
 							folder.mkdirs();
 							File file = new File(folder, fileName);
 							if (file.exists()) {
@@ -137,9 +140,10 @@ public class AssetsDownloader {
 					String fileName = getEntryName(key);
 					if (!InteractiveChatDiscordSrvAddon.plugin.reducedAssetsDownloadInfo) {
 						double percentage = ((double) ++i / (double) size) * 100;
-						Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Downloading " + value + "/" + fileName + " (" + FORMAT.format(percentage) + "%)");
+						String trimmedValue = value.startsWith("/") ? value.substring(1) : value;
+						Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Downloading " + trimmedValue + "/" + fileName + " (" + FORMAT.format(percentage) + "%)");
 					}
-					File folder = new File(rootFolder, value);
+					File folder = new File(defaultAssetsFolder, value);
 					folder.mkdirs();
 					File file = new File(folder, fileName);
 					if (file.exists()) {
@@ -164,7 +168,8 @@ public class AssetsDownloader {
 			
 			InteractiveChatDiscordSrvAddon.plugin.defaultResourceHash = hash;
 			
-			json.put("assets", hash);
+			json.put("Default", hash);
+			json.put("version", InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion());
 			
 			try (PrintWriter pw = new PrintWriter(new OutputStreamWriter(new FileOutputStream(hashes), StandardCharsets.UTF_8))) {
 				Gson g = new GsonBuilder().setPrettyPrinting().create();

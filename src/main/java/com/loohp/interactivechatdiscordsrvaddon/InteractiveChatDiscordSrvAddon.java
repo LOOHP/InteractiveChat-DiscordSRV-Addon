@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -193,7 +192,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	
 	public String defaultResourceHash = "N/A";
 	public List<String> resourceOrder = new ArrayList<>();
-	public Map<String, Boolean> resourceStatus = new LinkedHashMap<>();
 	public ResourceManager resourceManager;
 	public ModelRenderer modelRenderer;
 	
@@ -426,7 +424,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 					e.printStackTrace();
 				}
 				
-				Map<String, Boolean> resourceStatus = new LinkedHashMap<>();
 				List<String> resourceList = new ArrayList<>();
 				resourceList.add("Default");
 				resourceList.addAll(resourceOrder);
@@ -434,31 +431,24 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 				
 				ResourceManager resourceManager = new ResourceManager();
 				Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"Default\" resources...");
-				resourceManager.loadResources(new File(getDataFolder(), "assets"));
-				resourceStatus.put("Default", true);
+				resourceManager.loadResources("Default", new File(getDataFolder() + "/built-in", "default"));
 				for (String resourceName : resourceOrder) {
 					try {
 						Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"" + resourceName + "\" resources...");
 						File resourceFile = new File(getDataFolder(), "resources/" + resourceName);
-						File assetsFolder;
-						if (extractIfNotFound(resourceFile) && (assetsFolder = new File(resourceFile, "assets")).exists() && assetsFolder.isDirectory()) {
-							resourceManager.loadResources(assetsFolder);
-							resourceStatus.put(resourceName, true);
-						}
+						resourceManager.loadResources(resourceName, resourceFile);
 					} catch (Exception e) {
 						sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load \"" + resourceName + "\"", senders);
-						resourceStatus.put(resourceName, false);
 						e.printStackTrace();
 					}
 				}
 				
 				Bukkit.getScheduler().callSyncMethod(plugin, () -> {
 					InteractiveChatDiscordSrvAddon.plugin.resourceManager = resourceManager;
-					InteractiveChatDiscordSrvAddon.plugin.resourceStatus = resourceStatus;
 					
 					Cache.clearAllCache();
 					
-					if (resourceStatus.values().stream().allMatch(each -> each)) {
+					if (resourceManager.getResourcePackInfo().stream().allMatch(each -> each.getStatus())) {
 						sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loaded all resources!", senders);
 						isReady = true;
 					} else {

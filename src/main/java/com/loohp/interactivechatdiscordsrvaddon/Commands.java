@@ -1,10 +1,8 @@
 package com.loohp.interactivechatdiscordsrvaddon;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -15,10 +13,16 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechat.api.InteractiveChatAPI;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.utils.ChatColorUtils;
+import com.loohp.interactivechat.utils.ComponentStyling;
 import com.loohp.interactivechatdiscordsrvaddon.api.events.InteractiveChatDiscordSRVConfigReloadEvent;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents.DiscordAttachmentData;
+import com.loohp.interactivechatdiscordsrvaddon.resource.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater.UpdaterResponse;
 
@@ -42,14 +46,26 @@ public class Commands implements CommandExecutor, TabCompleter {
 			if (sender.hasPermission("interactivechatdiscordsrv.status")) {
 				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.defaultResourceHashLang.replaceFirst("%s", InteractiveChatDiscordSrvAddon.plugin.defaultResourceHash));
 				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.loadedResourcesLang);
-				List<String> list = new ArrayList<>(InteractiveChatDiscordSrvAddon.plugin.resourceStatus.keySet());
-				ListIterator<String> itr = list.listIterator(list.size());
-				while (itr.hasPrevious()) {
-					String key = itr.previous();
-					if (InteractiveChatDiscordSrvAddon.plugin.resourceStatus.getOrDefault(key, false)) {
-						sender.sendMessage(ChatColor.GREEN + " - " + key);
+				for (ResourcePackInfo info : InteractiveChatDiscordSrvAddon.plugin.resourceManager.getResourcePackInfo()) {
+					String name = info.getName();
+					if (info.getStatus()) {
+						Component component = Component.text(" - " + name).color(NamedTextColor.GREEN);
+						component = component.hoverEvent(HoverEvent.showText(info.getDescription()));
+						InteractiveChatAPI.sendMessage(sender, component);
+						if (!(sender instanceof Player)) {
+							for (Component each : ComponentStyling.splitAtLineBreaks(info.getDescription())) {
+								InteractiveChatAPI.sendMessage(sender, Component.text("   - ").color(NamedTextColor.GRAY).append(each));
+							}
+						}
 					} else {
-						sender.sendMessage(ChatColor.RED + " - " + key);
+						Component component = Component.text(" - " + name).color(NamedTextColor.RED);
+						if (info.getRejectedReason() != null) {
+							component = component.hoverEvent(HoverEvent.showText(Component.text(info.getRejectedReason()).color(NamedTextColor.RED)));
+						}
+						InteractiveChatAPI.sendMessage(sender, component);
+						if (!(sender instanceof Player)) {
+							InteractiveChatAPI.sendMessage(sender, Component.text("   - ").append(Component.text(info.getRejectedReason()).color(NamedTextColor.RED)).color(NamedTextColor.RED));
+						}
 					}
 				}
 			} else {

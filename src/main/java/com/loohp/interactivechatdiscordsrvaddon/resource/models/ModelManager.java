@@ -180,14 +180,6 @@ public class ModelManager {
 		return Collections.unmodifiableMap(models);
 	}
 	
-	public void clear() {
-		clearModels();
-	}
-	
-	public void clearModels() {
-		models.clear();
-	}
-	
 	public BlockModel resolveBlockModel(String resourceLocation, Map<ModelOverrideType, Float> predicates) {
 		String cacheKey = CACHE_KEY + "/" + resourceLocation + "/" + (predicates == null ? "null" : predicates.entrySet().stream().map(entry -> entry.getKey().name().toLowerCase() + ":" + entry.getValue().toString()).collect(Collectors.joining(";")));
 		Cache<?> cachedModel = Cache.getCache(cacheKey);

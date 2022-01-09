@@ -89,14 +89,6 @@ public class TextureManager {
 		this.textures.putAll(textures);
 	}
 	
-	public void clear() {
-		clearTextures();
-	}
-	
-	public void clearTextures() {
-		textures.clear();
-	}
-	
 	public TextureResource getTexture(String resourceLocation) {
 		return getTexture(resourceLocation, true);
 	}
