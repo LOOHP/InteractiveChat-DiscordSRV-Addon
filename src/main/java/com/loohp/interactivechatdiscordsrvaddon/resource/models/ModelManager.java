@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.loohp.interactivechat.libs.org.apache.commons.io.FileUtils;
+import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream;
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
@@ -51,7 +52,7 @@ public class ModelManager {
 			try {
 				String key = namespace + ":" + file.getParentFile().getAbsolutePath().replace("\\", "/").replace(root.getAbsolutePath().replace("\\", "/") + "/", "") + "/" + file.getName();
 				key = key.substring(0, key.lastIndexOf("."));
-				InputStreamReader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
+				InputStreamReader reader = new InputStreamReader(new BOMInputStream(new FileInputStream(file)), StandardCharsets.UTF_8);
 				JSONObject rootJson = (JSONObject) parser.parse(reader);
 				reader.close();
 				String parent = (String) rootJson.getOrDefault("parent", null);

@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.loohp.interactivechat.libs.org.apache.commons.io.FileUtils;
+import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream;
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
@@ -59,7 +60,7 @@ public class FontManager {
 				try {
 					String key = namespace + ":" + file.getName();
 					key = key.substring(0, key.lastIndexOf("."));
-					InputStreamReader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
+					InputStreamReader reader = new InputStreamReader(new BOMInputStream(new FileInputStream(file)), StandardCharsets.UTF_8);
 					JSONObject rootJson = (JSONObject) parser.parse(reader);
 					reader.close();
 					List<MinecraftFont> providedFonts = new ArrayList<>();

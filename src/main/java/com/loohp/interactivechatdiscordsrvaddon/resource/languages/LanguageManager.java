@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.utils.LanguageUtils;
@@ -34,7 +35,7 @@ public class LanguageManager {
 		for (File file : root.listFiles()) {
 			if (file.getName().endsWith(".json")) {
 				try {
-					InputStreamReader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
+					InputStreamReader reader = new InputStreamReader(new BOMInputStream(new FileInputStream(file)), StandardCharsets.UTF_8);
 					JSONObject json = (JSONObject) parser.parse(reader);
 					reader.close();
 					Map<String, String> mapping = new HashMap<>();

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.loohp.interactivechat.libs.org.apache.commons.io.FileUtils;
+import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream;
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
@@ -48,7 +49,7 @@ public class TextureManager {
 				if (extension.equalsIgnoreCase("png")) {
 					textures.put(key, new TextureResource(this, key, file, true));
 				} else if (extension.equalsIgnoreCase("mcmeta")) {
-					InputStreamReader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
+					InputStreamReader reader = new InputStreamReader(new BOMInputStream(new FileInputStream(file)), StandardCharsets.UTF_8);
 					JSONObject rootJson = (JSONObject) parser.parse(reader);
 					reader.close();
 					TextureAnimation animation = null;
