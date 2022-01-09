@@ -184,7 +184,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
 		if (optCharImage.isPresent()) {
 			BufferedImage charImage = ImageUtils.copyImage(optCharImage.get());
 			charImage = ImageUtils.resizeImageFillHeight(charImage, Math.round(fontSize));
-			charImage = ImageUtils.changeColorTo(charImage, awtColor);
+			charImage = ImageUtils.multiply(charImage, ImageUtils.changeColorTo(ImageUtils.copyImage(charImage), awtColor));
 			return Optional.of(charImage);
 		} else {
 			return Optional.empty();

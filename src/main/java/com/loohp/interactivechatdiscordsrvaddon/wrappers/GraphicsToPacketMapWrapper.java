@@ -1,5 +1,6 @@
 package com.loohp.interactivechatdiscordsrvaddon.wrappers;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.lang.reflect.Array;
@@ -58,17 +59,17 @@ public class GraphicsToPacketMapWrapper {
 	private ItemStack mapItem;
 	private int totalTime;
 	private boolean playbackBar;
+	private Color backgroundColor;
 	
-	public GraphicsToPacketMapWrapper(ImageFrame[] frames, boolean playbackBar) {
+	public GraphicsToPacketMapWrapper(ImageFrame[] frames, boolean playbackBar, Color backgroundColor) {
 		this.frames = frames;
 		this.playbackBar = playbackBar;
+		this.backgroundColor = backgroundColor;
 		update();
 	}
 	
-	public GraphicsToPacketMapWrapper(BufferedImage image) {
-		this.frames = new ImageFrame[] {new ImageFrame(image)};
-		this.playbackBar = false;
-		update();
+	public GraphicsToPacketMapWrapper(BufferedImage image, Color backgroundColor) {
+		this(new ImageFrame[] {new ImageFrame(image)}, false, backgroundColor);
 	}
 	
 	public void update() {
@@ -97,6 +98,15 @@ public class GraphicsToPacketMapWrapper {
 				g.setColor(InteractiveChatDiscordSrvAddon.plugin.playbackBarFilledColor);
 				g.fillRect(0, 126, (int) (((double) currentTime / (double) totalTime) * 128), 2);
 				g.dispose();
+			}
+			if (backgroundColor != null) {
+				BufferedImage background = new BufferedImage(processedFrame.getWidth(), processedFrame.getHeight(), BufferedImage.TYPE_INT_ARGB);
+				Graphics2D g = background.createGraphics();
+				g.setColor(backgroundColor);
+				g.fillRect(0, 0, background.getWidth(), background.getHeight());
+				g.drawImage(processedFrame, 0, 0, null);
+				g.dispose();
+				processedFrame = background;
 			}
 			this.colors[i] = MapPalette.imageToBytes(processedFrame);
 			currentTime += frame.getDelay();

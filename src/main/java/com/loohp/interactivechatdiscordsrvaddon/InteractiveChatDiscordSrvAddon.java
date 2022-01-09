@@ -131,6 +131,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 	public String discordAttachmentsFormattingImageAppend;
 	public String discordAttachmentsFormattingImageAppendHover;
 	
+	public Color discordAttachmentsMapBackgroundColor = null;
+	
 	public boolean imageWhitelistEnabled = false;
 	public List<String> whitelistedImageUrls = new ArrayList<>();
 	
@@ -323,6 +325,13 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		discordAttachmentTimeout = config.getConfiguration().getInt("DiscordAttachments.Timeout") * 20;
 		discordAttachmentsFormattingImageAppend = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordAttachments.Formatting.ImageOriginal"));
 		discordAttachmentsFormattingImageAppendHover = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getStringList("DiscordAttachments.Formatting.Hover.ImageOriginalHover").stream().collect(Collectors.joining("\n")));
+		
+		boolean transparent = config.getConfiguration().getBoolean("DiscordAttachments.ImageMapBackground.Transparent");
+		if (transparent) {
+			discordAttachmentsMapBackgroundColor = null;
+		} else {
+			discordAttachmentsMapBackgroundColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordAttachments.ImageMapBackground.Color"));
+		}
 		
 		imageWhitelistEnabled = config.getConfiguration().getBoolean("DiscordAttachments.RestrictImageUrl.Enabled");
 		whitelistedImageUrls = config.getConfiguration().getStringList("DiscordAttachments.RestrictImageUrl.Whitelist");

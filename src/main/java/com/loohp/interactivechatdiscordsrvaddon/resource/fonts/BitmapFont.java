@@ -184,7 +184,7 @@ public class BitmapFont extends MinecraftFont {
 		BufferedImage charImage = ImageUtils.copyImage(charImages.get(character));
 		float descent = height - this.ascent - 1;
 		charImage = ImageUtils.resizeImageFillHeight(charImage, Math.round(fontSize + (ascent + descent) * scale));
-		charImage = ImageUtils.changeColorTo(charImage, awtColor);
+		charImage = ImageUtils.multiply(charImage, ImageUtils.changeColorTo(ImageUtils.copyImage(charImage), awtColor));
 		return Optional.of(charImage);
 	}
 

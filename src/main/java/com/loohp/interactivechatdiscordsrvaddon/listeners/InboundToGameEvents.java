@@ -190,10 +190,10 @@ public class InboundToGameEvents implements Listener {
 							GraphicsToPacketMapWrapper map;
 							if (url.toLowerCase().endsWith(".gif")) {
 								ImageFrame[] frames = GifReader.readGif(stream);
-								map = new GraphicsToPacketMapWrapper(frames, InteractiveChatDiscordSrvAddon.plugin.playbackBarEnabled);
+								map = new GraphicsToPacketMapWrapper(frames, InteractiveChatDiscordSrvAddon.plugin.playbackBarEnabled, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
 							} else {
 								BufferedImage image = ImageIO.read(stream);
-								map = new GraphicsToPacketMapWrapper(image);
+								map = new GraphicsToPacketMapWrapper(image, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
 							}
 							DiscordAttachmentData data = new DiscordAttachmentData(attachment.getFileName(), url, map);
 							DiscordAttachmentConversionEvent dace = new DiscordAttachmentConversionEvent(url, data);
@@ -227,10 +227,10 @@ public class InboundToGameEvents implements Listener {
 						GraphicsToPacketMapWrapper map;
 						if (url.toLowerCase().endsWith(".gif")) {
 							ImageFrame[] frames = GifReader.readGif(stream);
-							map = new GraphicsToPacketMapWrapper(frames, InteractiveChatDiscordSrvAddon.plugin.playbackBarEnabled);
+							map = new GraphicsToPacketMapWrapper(frames, InteractiveChatDiscordSrvAddon.plugin.playbackBarEnabled, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
 						} else {
 							BufferedImage image = ImageIO.read(stream);
-							map = new GraphicsToPacketMapWrapper(image);
+							map = new GraphicsToPacketMapWrapper(image, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
 						}
 						String name = url.lastIndexOf("/") < 0 ? url : url.substring(url.lastIndexOf("/") + 1);
 						DiscordAttachmentData data = new DiscordAttachmentData(name, url, map);
