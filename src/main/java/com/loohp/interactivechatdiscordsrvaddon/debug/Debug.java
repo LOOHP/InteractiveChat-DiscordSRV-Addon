@@ -19,7 +19,7 @@ public class Debug implements Listener {
 	
 	public static void debug(String info) {
 		if (InteractiveChatDiscordSrvAddon.debug) {
-			Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] " + info);
+			Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon|DEBUG] " + info);
 		}
 	}
 

@@ -1,6 +1,7 @@
 package com.loohp.interactivechatdiscordsrvaddon;
 
 import java.awt.Color;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -20,17 +22,27 @@ import java.util.stream.Stream;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.config.Config;
+import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
+import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.libs.org.simpleyaml.exceptions.InvalidConfigurationException;
+import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.PlaceholderCooldownManager;
 import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
+import com.loohp.interactivechat.utils.SkinUtils;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordReadyEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.OutboundToDiscordEvents;
@@ -46,7 +58,7 @@ import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.dependencies.jda.api.Permission;
 import net.md_5.bungee.api.ChatColor;
 
-public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
+public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listener {
 	
 	public static final int BSTATS_PLUGIN_ID = 8863;
 	public static final String CONFIG_ID = "interactivechatdiscordsrvaddon_config";
@@ -227,6 +239,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		DiscordSRV.api.subscribe(new OutboundToDiscordEvents());
 		DiscordSRV.api.subscribe(new InboundToGameEvents());
 		
+		getServer().getPluginManager().registerEvents(this, this);
 		getServer().getPluginManager().registerEvents(new InboundToGameEvents(), this);
 		getServer().getPluginManager().registerEvents(new OutboundToDiscordEvents(), this);
 		getServer().getPluginManager().registerEvents(new Debug(), this);
@@ -249,6 +262,44 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		
 		reloadTextures(false, false);
 		modelRenderer = new ModelRenderer(8);
+		
+		Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
+			for (Player player : Bukkit.getOnlinePlayers()) {
+				cachePlayerSkin(new ICPlayer(player));
+			}
+			synchronized (InteractiveChat.remotePlayers) {
+				for (ICPlayer player : InteractiveChat.remotePlayers.values()) {
+					if (!player.isLocal()) {
+						cachePlayerSkin(player);
+					}
+				}
+			}
+		}, 600, 6000);
+	}
+	
+	@EventHandler
+	public void onJoin(PlayerJoinEvent event) {
+		Bukkit.getScheduler().runTaskLaterAsynchronously(this, () -> cachePlayerSkin(new ICPlayer(event.getPlayer())), 40);
+	}
+	
+	private void cachePlayerSkin(ICPlayer player) {
+		Debug.debug("Caching skin for player " + player.getName() + " (" + player.getUniqueId() + ")");
+		if (player.isLocal()) {
+			try {
+				UUID uuid = player.getUniqueId();
+				JSONObject json = (JSONObject) new JSONParser().parse(SkinUtils.getSkinJsonFromProfile(player.getLocalPlayer()));
+				String value = (String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url");
+				BufferedImage skin = ImageUtils.downloadImage(value);
+				Cache.putCache(uuid + value + ImageGeneration.PLAYER_SKIN_CACHE_KEY, skin, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+			} catch (Exception e) {}
+		} else {
+			try {
+				UUID uuid = player.getUniqueId();
+				String value = SkinUtils.getSkinURLFromUUID(uuid);
+				BufferedImage skin = ImageUtils.downloadImage(value);
+				Cache.putCache(uuid + "null" + ImageGeneration.PLAYER_SKIN_CACHE_KEY, skin, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+			} catch (Exception e) {}
+		}
 	}
 	
 	@Override

@@ -83,11 +83,10 @@ public class ImageGeneration {
 	private static final Color MISSING_TEXTURE_0 = new Color(0, 0, 0);
 	private static final Color MISSING_TEXTURE_1 = new Color(248, 0, 248);
 	
-	private static final String PLAYER_CAPE_KEY = "PlayerCapeTexture";
-	private static final String FULL_BODY_IMAGE_KEY = "FullBodyImage";
-	private static final String PLAYER_HEAD_2D_KEY = "PlayerHead2DImage";
-	private static final String INVENTORY_KEY = "Inventory";
-	private static final String PLAYER_INVENTORY_KEY = "PlayerInventory";
+	public static final String PLAYER_CAPE_CACHE_KEY = "PlayerCapeTexture";
+	public static final String PLAYER_SKIN_CACHE_KEY = "PlayerSkinTexture";
+	public static final String INVENTORY_CACHE_KEY = "Inventory";
+	public static final String PLAYER_INVENTORY_CACHE_KEY = "PlayerInventory";
 	
 	public static final int TABLIST_SINGLE_COLUMN_LIMIT = 10;
 	public static final Color TABLIST_BACKGROUND = new Color(68, 68, 68);
@@ -158,7 +157,7 @@ public class ImageGeneration {
 		InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();		
 		Debug.debug("ImageGeneration creating inventory image of " + player.getName());
 		
-		String key = INVENTORY_KEY + HashUtils.createSha1("Inventory", inventory);
+		String key = INVENTORY_CACHE_KEY + HashUtils.createSha1("Inventory", inventory);
 		if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial()) && !Stream.of(inventory.getContents()).noneMatch(each -> each != null && NBTEditor.contains(each, "CustomModelData"))) {
 			Cache<?> cache = Cache.getCache(key);
 			if (cache != null) {
@@ -198,7 +197,7 @@ public class ImageGeneration {
 		InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();
 		Debug.debug("ImageGeneration creating player inventory image of " + player.getName());
 		
-		String key = PLAYER_INVENTORY_KEY + HashUtils.createSha1(player.getUniqueId().toString(), inventory);
+		String key = PLAYER_INVENTORY_CACHE_KEY + HashUtils.createSha1(player.getUniqueId().toString(), inventory);
 		if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial()) && !Stream.of(inventory.getContents()).noneMatch(each -> each != null && NBTEditor.contains(each, "CustomModelData"))) {
 			Cache<?> cache = Cache.getCache(key);
 			if (cache != null) {
@@ -342,20 +341,20 @@ public class ImageGeneration {
 				try {
 					if (((JSONObject) json.get("textures")).containsKey("CAPE")) {
 						String url = (String) ((JSONObject) ((JSONObject) json.get("textures")).get("CAPE")).get("url");
-						Cache<?> cache = Cache.getCache(player.getUniqueId().toString() + url + PLAYER_CAPE_KEY);
+						Cache<?> cache = Cache.getCache(player.getUniqueId().toString() + url + PLAYER_CAPE_CACHE_KEY);
 						if (cache == null) {
 							cape = ImageUtils.downloadImage(url);
-							Cache.putCache(player.getUniqueId().toString() + url + PLAYER_CAPE_KEY, cape, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+							Cache.putCache(player.getUniqueId().toString() + url + PLAYER_CAPE_CACHE_KEY, cape, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
 						} else {
 							cape = (BufferedImage) cache.getObject();
 						}
 					} else {
 						String url = OPTIFINE_CAPE_URL.replaceAll("%s", CustomStringUtils.escapeReplaceAllMetaCharacters(player.getName()));
-						Cache<?> cache = Cache.getCache(player.getUniqueId().toString() + url + PLAYER_CAPE_KEY);
+						Cache<?> cache = Cache.getCache(player.getUniqueId().toString() + url + PLAYER_CAPE_CACHE_KEY);
 						if (cache == null) {
 							try {
 								cape = ImageUtils.downloadImage(url);
-								Cache.putCache(player.getUniqueId().toString() + url + PLAYER_CAPE_KEY, cape, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+								Cache.putCache(player.getUniqueId().toString() + url + PLAYER_CAPE_CACHE_KEY, cape, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
 							} catch (Throwable ignore) {
 								cape = null;
 							}
@@ -372,10 +371,10 @@ public class ImageGeneration {
 					if (((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).containsKey("metadata")) {
 						slim = ((JSONObject) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("metadata")).get("model").toString().equals("slim");
 					}
-					Cache<?> cache = Cache.getCache(player.getUniqueId().toString() + value + FULL_BODY_IMAGE_KEY);
+					Cache<?> cache = Cache.getCache(player.getUniqueId().toString() + value + PLAYER_SKIN_CACHE_KEY);
 					if (cache == null) {
 						skin = ImageUtils.downloadImage(value);
-						Cache.putCache(player.getUniqueId().toString() + value + FULL_BODY_IMAGE_KEY, skin, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+						Cache.putCache(player.getUniqueId().toString() + value + PLAYER_SKIN_CACHE_KEY, skin, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
 					} else {
 						skin = (BufferedImage) cache.getObject();
 					}
@@ -843,39 +842,40 @@ public class ImageGeneration {
 			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 			int offsetX = 0;
 			if (showAvatar) {
-				BufferedImage avatar;
+				BufferedImage skin;
 				try {
 					Player onlinePlayer = Bukkit.getPlayer(uuid);
 					if (onlinePlayer == null) {
-						Cache<?> cache = Cache.getCache(uuid + PLAYER_HEAD_2D_KEY + "8");
+						Cache<?> cache = Cache.getCache(uuid + "null" + PLAYER_SKIN_CACHE_KEY);
 						if (cache == null) {
 							String value = SkinUtils.getSkinURLFromUUID(uuid);
-							avatar = ImageUtils.copyAndGetSubImage(ImageUtils.downloadImage(value), 8, 8, 8, 8);
-							Cache.putCache(uuid + PLAYER_HEAD_2D_KEY + "8", avatar, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
-							avatar = ImageUtils.copyImage(avatar);
+							skin = ImageUtils.downloadImage(value);
+							Cache.putCache(uuid + "null" + PLAYER_SKIN_CACHE_KEY, skin, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+							skin = ImageUtils.copyImage(skin);
 						} else {
-							avatar = ImageUtils.copyImage((BufferedImage) cache.getObject());
+							skin = ImageUtils.copyImage((BufferedImage) cache.getObject());
 						}
 					} else {
 						try {
 							JSONObject json = (JSONObject) new JSONParser().parse(SkinUtils.getSkinJsonFromProfile(onlinePlayer));
 							String value = (String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url");
-							Cache<?> cache = Cache.getCache(onlinePlayer.getUniqueId() + value + PLAYER_HEAD_2D_KEY + "8");
+							Cache<?> cache = Cache.getCache(uuid + value + PLAYER_SKIN_CACHE_KEY);
 							if (cache == null) {
-								avatar = ImageUtils.copyAndGetSubImage(ImageUtils.downloadImage(value), 8, 8, 8, 8);
-								Cache.putCache(onlinePlayer.getUniqueId() + value + PLAYER_HEAD_2D_KEY + "8", avatar, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+								skin = ImageUtils.downloadImage(value);
+								Cache.putCache(uuid + value + PLAYER_SKIN_CACHE_KEY, skin, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
 							} else {
-								avatar = (BufferedImage) cache.getObject();
+								skin = (BufferedImage) cache.getObject();
 							}
-							avatar = ImageUtils.copyImage(avatar);
+							skin = ImageUtils.copyImage(skin);
 						} catch (Exception e) {
 							String value = SkinUtils.getSkinURLFromUUID(uuid);
-							avatar = ImageUtils.copyAndGetSubImage(ImageUtils.downloadImage(value), 8, 8, 8, 8);
+							skin = ImageUtils.downloadImage(value);
 						}
 					}
 				} catch (Exception e) {
-					avatar = ImageUtils.copyAndGetSubImage(InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_LOCATION + "steve").getTexture(64, 64), 8, 8, 8, 8);
+					skin = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_LOCATION + "steve").getTexture(64, 64);
 				}
+				BufferedImage avatar = ImageUtils.copyAndGetSubImage(skin, 8, 8, 8, 8);
 				g.drawImage(avatar, offsetX, 0, 16, 16, null);
 				offsetX += 18;
 			} else {

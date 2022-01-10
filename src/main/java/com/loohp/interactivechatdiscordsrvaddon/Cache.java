@@ -29,6 +29,38 @@ public class Cache<T> {
 		return object;
 	}
 	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((object == null) ? 0 : object.hashCode());
+		result = prime * result + (int) (timeCreated ^ (timeCreated >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof Cache)) {
+			return false;
+		}
+		@SuppressWarnings("rawtypes")
+		Cache other = (Cache) obj;
+		if (object == null) {
+			if (other.object != null) {
+				return false;
+			}
+		} else if (!object.equals(other.object)) {
+			return false;
+		}
+		if (timeCreated != other.timeCreated) {
+			return false;
+		}
+		return true;
+	}
+
 	public static Cache<?> getCache(String key) {
 		return DATA.get(key);
 	}
