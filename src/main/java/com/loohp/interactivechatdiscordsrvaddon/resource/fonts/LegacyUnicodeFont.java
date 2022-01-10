@@ -133,12 +133,11 @@ public class LegacyUnicodeFont extends MinecraftFont {
 							if (alpha != 0) {
 								boldImage.setRGB(x0, y0, pixelColor);
 								boldImage.setRGB(x0 + 1, y0, pixelColor);
-								boldImage.setRGB(x0 + 2, y0, pixelColor);
 							}
 						}
 					}
 					charImage = boldImage;
-					w += 2;
+					w += 1;
 					break;
 				case ITALIC:
 					int extraWidth = (int) ((double) charImage.getHeight() * (4.0 / 14.0));
