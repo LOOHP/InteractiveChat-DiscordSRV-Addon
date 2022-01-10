@@ -15,8 +15,15 @@ import com.loohp.interactivechat.utils.FilledMapUtils;
 
 public class ItemMapWrapper {
 	
-	@SuppressWarnings("deprecation")
-	private static final Comparator<MapCursor> ICON_ORDER = Comparator.comparing(each -> each.getRawType());
+	private static final Comparator<MapCursor> ICON_ORDER;
+	
+	static {
+		@SuppressWarnings("deprecation")
+		Comparator<MapCursor> first = Comparator.comparing(each -> each.getRawType());
+		Comparator<MapCursor> second = Collections.reverseOrder(Comparator.comparing(each -> each.getY()));
+		Comparator<MapCursor> third = Collections.reverseOrder(Comparator.comparing(each -> each.getX()));
+		ICON_ORDER = first.thenComparing(second).thenComparing(third);
+	}
 	
 	private ItemStack itemStack;
 	private byte[] colors;
