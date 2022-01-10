@@ -1,12 +1,8 @@
 package com.loohp.interactivechatdiscordsrvaddon;
 
 import java.awt.Color;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,7 +17,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -29,13 +24,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.config.Config;
-import com.loohp.interactivechat.libs.org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import com.loohp.interactivechat.libs.org.simpleyaml.exceptions.InvalidConfigurationException;
 import com.loohp.interactivechat.objectholders.PlaceholderCooldownManager;
 import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
-import com.loohp.interactivechat.utils.FileUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordReadyEvents;
@@ -476,66 +469,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin {
 		for (CommandSender sender : senders) {
 			sender.sendMessage(message);
 		}
-	}
-	
-	public boolean extractIfNotFound(File resourceFile) throws Exception {
-		if (resourceFile.exists()) {
-			return true;
-		} else {
-			resourceFile.mkdirs();
-			File zipFile = new File(resourceFile.getParent(), resourceFile.getName() + ".zip");
-			if (zipFile.exists()) {
-				try (ZipArchiveInputStream zip = new ZipArchiveInputStream(new FileInputStream(zipFile), StandardCharsets.UTF_8.toString(), false, true, true)) {
-					while (true) {
-						ZipEntry entry = zip.getNextZipEntry();
-						if (entry == null) {
-							break;
-						}
-						String name = entry.getName();
-						if (entry.isDirectory()) {
-							File folder = new File(resourceFile, name).getParentFile();
-							folder.mkdirs();
-						} else {
-							String fileName = getEntryName(name);
-							
-							ByteArrayOutputStream baos = new ByteArrayOutputStream();
-							byte[] byteChunk = new byte[4096];
-							int n;
-							while ((n = zip.read(byteChunk)) > 0) {
-								baos.write(byteChunk, 0, n);
-							}
-							byte[] currentEntry = baos.toByteArray();
-							
-							File folder = new File(resourceFile, name).getParentFile();
-							folder.mkdirs();
-							File file = new File(folder, fileName);
-							if (file.exists()) {
-								file.delete();
-							}
-							FileUtils.copy(new ByteArrayInputStream(currentEntry), file);
-						}
-					}
-					return true;
-				} catch (Exception e) {
-					e.printStackTrace();
-					return false;
-				}
-			} else {
-				return false;
-			}
-		}
-	}
-	
-	private static String getEntryName(String name) {
-		int pos = name.lastIndexOf("/");
-		if (pos >= 0) {
-			return name.substring(pos + 1);
-		}
-		pos = name.lastIndexOf("\\");
-		if (pos >= 0) {
-			return name.substring(pos + 1);
-		}
-		return name;
 	}
 
 }
