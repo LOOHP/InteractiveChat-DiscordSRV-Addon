@@ -88,7 +88,7 @@ public class ImageGeneration {
 	public static final String INVENTORY_CACHE_KEY = "Inventory";
 	public static final String PLAYER_INVENTORY_CACHE_KEY = "PlayerInventory";
 	
-	public static final int TABLIST_SINGLE_COLUMN_LIMIT = 10;
+	public static final int TABLIST_SINGLE_COLUMN_LIMIT = 24;
 	public static final Color TABLIST_BACKGROUND = new Color(68, 68, 68);
 	public static final Color TABLIST_PLAYER_BACKGROUND = new Color(107, 107, 107);
 	
