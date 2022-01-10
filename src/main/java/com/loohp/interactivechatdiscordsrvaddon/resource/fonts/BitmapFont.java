@@ -115,7 +115,8 @@ public class BitmapFont extends MinecraftFont {
 		charImage = ImageUtils.multiply(charImage, ImageUtils.changeColorTo(ImageUtils.copyImage(charImage), awtColor));
 		int beforeTransformW = w;
 		int pixelSize = Math.round((float) beforeTransformW / (float) originalW);
-		int strikeSize = (int) (fontSize / 8);
+		int strikeSize = (int) (fontSize / 8.0);
+		int boldSize = (int) (fontSize / 16.0 * 3);
 		for (TextDecoration decoration : decorations) {
 			switch (decoration) {
 			case OBFUSCATED:
@@ -135,14 +136,14 @@ public class BitmapFont extends MinecraftFont {
 						int pixelColor = charImage.getRGB(x0, y0);
 						int alpha = (pixelColor >> 24) & 0xff;
 						if (alpha != 0) {
-							boldImage.setRGB(x0, y0, pixelColor);
-							boldImage.setRGB(x0 + 1, y0, pixelColor);
-							boldImage.setRGB(x0 + 2, y0, pixelColor);
+							for (int i = 0; i < boldSize; i++) {
+								boldImage.setRGB(x0 + i, y0, pixelColor);
+							}
 						}
 					}
 				}
 				charImage = boldImage;
-				w += 2;
+				w += boldSize - 1;
 				break;
 			case ITALIC:
 				int extraWidth = (int) ((double) charImage.getHeight() * (4.0 / 14.0));
