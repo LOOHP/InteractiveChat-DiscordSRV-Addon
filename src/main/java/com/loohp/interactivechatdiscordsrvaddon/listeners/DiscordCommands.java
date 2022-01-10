@@ -58,6 +58,7 @@ import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.PlayerUtils;
 import com.loohp.interactivechat.utils.SkinUtils;
+import com.loohp.interactivechat.utils.VanishUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.api.events.InteractiveChatDiscordSRVConfigReloadEvent;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
@@ -143,7 +144,9 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 					List<ValueTrios<UUID, String, Integer>> bungeePlayers = InteractiveChatAPI.getBungeecordPlayerList().get();
 					players = new LinkedHashMap<>(bungeePlayers.size());
 					for (ValueTrios<UUID, String, Integer> playerinfo : bungeePlayers) {
-						players.put(Bukkit.getOfflinePlayer(playerinfo.getFirst()), playerinfo.getThird());
+						if (!VanishUtils.isVanished(playerinfo.getFirst())) {
+							players.put(Bukkit.getOfflinePlayer(playerinfo.getFirst()), playerinfo.getThird());
+						}
 					}
 				} catch (InterruptedException | ExecutionException e) {
 					e.printStackTrace();
@@ -151,7 +154,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 					return;
 				}
 			} else {
-				players = Bukkit.getOnlinePlayers().stream().collect(Collectors.toMap(each -> each, each -> each.getPing()));
+				players = Bukkit.getOnlinePlayers().stream().filter(each -> !VanishUtils.isVanished(each.getUniqueId())).collect(Collectors.toMap(each -> each, each -> each.getPing()));
 			}
 			if (players.isEmpty()) {
 				event.getHook().editOriginal(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandEmptyServer)).queue();
