@@ -16,19 +16,22 @@ import java.util.zip.ZipFile;
 
 public class ResourcePackZipEntryFile implements ResourcePackFile {
 	
+	private String absoluteRootPath;
 	private ZipFile zipRoot;
 	private String path;
 	private boolean isDirectory;
 	private ZipEntry entry;
 	
 	public ResourcePackZipEntryFile(File resourcePackZip) throws ZipException, IOException {
+		this.absoluteRootPath = resourcePackZip.getAbsolutePath();
 		this.zipRoot = new ZipFile(resourcePackZip);
 		this.path = "";
 		this.isDirectory = true;
 		this.entry = null;
 	}
 
-	public ResourcePackZipEntryFile(ZipFile zipRoot, String path, boolean isDirectory, ZipEntry entry) {
+	public ResourcePackZipEntryFile(String absoluteRootPath, ZipFile zipRoot, String path, boolean isDirectory, ZipEntry entry) {
+		this.absoluteRootPath = absoluteRootPath;
 		this.zipRoot = zipRoot;
 		this.path = path;
 		this.isDirectory = isDirectory;
@@ -57,7 +60,7 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
 
 	@Override
 	public ResourcePackFile getParentFile() {
-		return new ResourcePackZipEntryFile(zipRoot, getParent(), true, null);
+		return new ResourcePackZipEntryFile(absoluteRootPath, zipRoot, getParent(), true, null);
 	}
 
 	@Override
@@ -71,11 +74,10 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
 		if (!path.startsWith("/")) {
 			path = "/" + path;
 		}
-		String prepend = zipRoot.getName();
-		if (prepend.contains("\\")) {
+		if (absoluteRootPath.contains("\\")) {
 			path = path.replace("/", "\\");
 		}
-		return prepend + path;
+		return absoluteRootPath + path;
 	}
 
 	@Override
@@ -102,9 +104,9 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
 				}
 				if (relativePath.contains("/")) {
 					String folderName = relativePath.substring(0, relativePath.indexOf("/"));
-					set.add(new ResourcePackZipEntryFile(zipRoot, (path.isEmpty() ? path : (path + "/")) + folderName, true, null));
+					set.add(new ResourcePackZipEntryFile(absoluteRootPath, zipRoot, (path.isEmpty() ? path : (path + "/")) + folderName, true, null));
 				} else {
-					set.add(new ResourcePackZipEntryFile(zipRoot, entryPath, false, entry));
+					set.add(new ResourcePackZipEntryFile(absoluteRootPath, zipRoot, entryPath, false, entry));
 				}
 			}
 		}
@@ -119,7 +121,7 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
 				return zipEntryFile;
 			}
 		}
-		return new ResourcePackZipEntryFile(zipRoot, (path.isEmpty() ? path : (path + "/")) + name, false, null);
+		return new ResourcePackZipEntryFile(absoluteRootPath, zipRoot, (path.isEmpty() ? path : (path + "/")) + name, false, null);
 	}
 
 	@Override
@@ -176,7 +178,7 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
 			String entryPath = entry.getName();
 			if (!entryPath.equals(path) && entryPath.startsWith(path)) {
 				if (extensions == null || Stream.of(extensions).anyMatch(each -> entryPath.endsWith("." + each))) {
-					list.add(new ResourcePackZipEntryFile(zipRoot, entryPath, false, entry));
+					list.add(new ResourcePackZipEntryFile(absoluteRootPath, zipRoot, entryPath, false, entry));
 				}
 			}
 		}
