@@ -25,6 +25,8 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.BlockStateMeta;
+import org.bukkit.inventory.meta.BookMeta;
+import org.bukkit.inventory.meta.BookMeta.Generation;
 import org.bukkit.inventory.meta.CrossbowMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
@@ -145,6 +147,20 @@ public class DiscordItemStackUtils {
 		
 		boolean hasMeta = item.hasItemMeta();
 		String description = "";
+		
+		if (xMaterial.equals(XMaterial.WRITTEN_BOOK) && hasMeta && item.getItemMeta() instanceof BookMeta) {
+			BookMeta meta = (BookMeta) item.getItemMeta();
+			String author = meta.getAuthor();
+			if (author != null) {
+				description += LanguageUtils.getTranslation(TranslationKeyUtils.getBookAuthor(), language).replaceFirst("%1\\$s", ChatColorUtils.stripColor(author)) + "\n";
+			}
+			Generation generation = meta.getGeneration();
+			if (generation == null) {
+				generation = Generation.ORIGINAL;
+			}
+			description += LanguageUtils.getTranslation(TranslationKeyUtils.getBookGeneration(generation), language) + "\n";
+			description += "\n";
+		}
 		
 		if (xMaterial.equals(XMaterial.SHIELD) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
 			if (NBTEditor.contains(item, "BlockEntityTag")) {
@@ -565,6 +581,19 @@ public class DiscordItemStackUtils {
 	    prints.add(itemDisplayNameComponent);
 		
 		boolean hasMeta = item.hasItemMeta();
+		
+		if (xMaterial.equals(XMaterial.WRITTEN_BOOK) && hasMeta && item.getItemMeta() instanceof BookMeta) {
+			BookMeta meta = (BookMeta) item.getItemMeta();
+			String author = meta.getAuthor();
+			if (author != null) {
+				prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getBookAuthor(), language).replaceFirst("%1\\$s", author)));
+			}
+			Generation generation = meta.getGeneration();
+			if (generation == null) {
+				generation = Generation.ORIGINAL;
+			}
+			prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getBookGeneration(generation), language)));
+		}
 		
 		if (xMaterial.equals(XMaterial.SHIELD) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
 			if (NBTEditor.contains(item, "BlockEntityTag")) {

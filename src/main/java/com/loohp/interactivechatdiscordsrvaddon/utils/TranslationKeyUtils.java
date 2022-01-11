@@ -16,6 +16,7 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.TropicalFish.Pattern;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BookMeta.Generation;
 import org.bukkit.potion.PotionEffectType;
 
 import com.loohp.interactivechat.InteractiveChat;
@@ -377,6 +378,24 @@ public class TranslationKeyUtils {
 	
 	public static String getCanPlace() {
 		return "item.canPlace";
+	}
+	
+	public static String getBookAuthor() {
+		return "book.byAuthor";
+	}
+	
+	public static String getBookGeneration(Generation generation) {
+		switch (generation) {
+		case COPY_OF_ORIGINAL:
+			return "book.generation.1";
+		case COPY_OF_COPY:
+			return "book.generation.2";
+		case TATTERED:
+			return "book.generation.3";
+		case ORIGINAL:
+		default:
+			return "book.generation.0";
+		}
 	}
 
 }
