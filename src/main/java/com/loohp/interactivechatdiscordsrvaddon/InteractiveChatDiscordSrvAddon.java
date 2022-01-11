@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -209,16 +211,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 		interactivechat = InteractiveChat.plugin;
 		discordsrv = DiscordSRV.getPlugin();
 		
-		//Rename old folder
-		File pluginFolder = new File(Bukkit.getWorldContainer(), "plugins");
-		if (pluginFolder.exists() && pluginFolder.isDirectory()) {
-			for (File file : pluginFolder.listFiles()) {
-				if (file.isDirectory() && file.getName().equals("InteractiveChatDiscordSRVAddon")) {
-					file.renameTo(new File(pluginFolder, getName()));
-				}
-			}
-		}
-		
 		if (!getDataFolder().exists()) {
 			getDataFolder().mkdirs();
 		}
@@ -246,9 +238,21 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 		getServer().getPluginManager().registerEvents(new Updater(), this);
 		getCommand("interactivechatdiscordsrv").setExecutor(new Commands());
 		
-		File resources = new File(getDataFolder(), "resources");
-		if (!resources.exists()) {
-			resources.mkdirs();
+		File resourcepacks = new File(getDataFolder(), "resourcepacks");
+		if (!resourcepacks.exists()) {
+			File resources = new File(getDataFolder(), "resources");
+			if (resources.exists() && resources.isDirectory()) {
+				try {
+					Files.move(resources.toPath(), resourcepacks.toPath(), StandardCopyOption.ATOMIC_MOVE);
+				} catch (IOException e) {
+					getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to move folder, are any files opened?");
+					e.printStackTrace();
+					getServer().getPluginManager().disablePlugin(this);
+					return;
+				}
+			} else {
+				resourcepacks.mkdirs();
+			}
 		}
 		
 		if (!compatible()) {
@@ -256,6 +260,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 				getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] VERSION NOT COMPATIBLE WITH INSTALLED INTERACTIVECHAT VERSION, PLEASE UPDATE BOTH TO LATEST!!!!");
 			}
 			getServer().getPluginManager().disablePlugin(this);
+			return;
 		} else {
 			getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon has been Enabled!");
 		}
@@ -489,8 +494,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 				for (String resourceName : resourceOrder) {
 					try {
 						Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"" + resourceName + "\" resources...");
-						File resourceFile = new File(getDataFolder(), "resources/" + resourceName);
-						ResourcePackInfo info = resourceManager.loadResources(resourceFile);
+						File resourcePackFile = new File(getDataFolder(), "resourcepacks/" + resourceName);
+						ResourcePackInfo info = resourceManager.loadResources(resourcePackFile);
 						if (!info.getStatus()) {
 							if (info.getRejectedReason() == null) {
 								sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load \"" + resourceName + "\"", senders);
