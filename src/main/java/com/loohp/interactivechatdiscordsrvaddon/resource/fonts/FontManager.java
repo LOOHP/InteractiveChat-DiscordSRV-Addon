@@ -4,8 +4,6 @@ import java.awt.geom.AffineTransform;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -15,13 +13,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.loohp.interactivechat.libs.org.apache.commons.io.FileUtils;
 import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream;
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.resource.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resource.fonts.LegacyUnicodeFont.GlyphSize;
 import com.loohp.interactivechatdiscordsrvaddon.resource.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resource.textures.TextureResource;
@@ -32,7 +30,7 @@ public class FontManager {
 	
 	private ResourceManager manager;
 	private Map<String, FontProvider> fonts;
-	private Map<String, Map<String, File>> files;
+	private Map<String, Map<String, ResourcePackFile>> files;
 	
 	public FontManager(ResourceManager manager) {
 		this.manager = manager;
@@ -41,26 +39,26 @@ public class FontManager {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void loadDirectory(String namespace, File root) {
+	public void loadDirectory(String namespace, ResourcePackFile root) {
 		if (!root.exists() || !root.isDirectory()) {
 			throw new IllegalArgumentException(root.getAbsolutePath() + " is not a directory.");
 		}
-		Map<String, File> fileList = files.get(namespace);
+		Map<String, ResourcePackFile> fileList = files.get(namespace);
 		if (fileList == null) {
 			files.put(namespace, fileList = new HashMap<>());
 		}
 		JSONParser parser = new JSONParser();
 		Map<String, FontProvider> fonts = new HashMap<>();
-		Collection<File> files = FileUtils.listFiles(root, null, true);
-		for (File file : files) {
+		Collection<ResourcePackFile> files = root.listFilesRecursively();
+		for (ResourcePackFile file : files) {
 			fileList.put(file.getName(), file);
 		}
-		for (File file : files) {
+		for (ResourcePackFile file : files) {
 			if (file.getName().endsWith("json")) {
 				try {
 					String key = namespace + ":" + file.getName();
 					key = key.substring(0, key.lastIndexOf("."));
-					InputStreamReader reader = new InputStreamReader(new BOMInputStream(new FileInputStream(file)), StandardCharsets.UTF_8);
+					InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
 					JSONObject rootJson = (JSONObject) parser.parse(reader);
 					reader.close();
 					List<MinecraftFont> providedFonts = new ArrayList<>();
@@ -79,7 +77,7 @@ public class FontManager {
 								break;
 							case "legacy_unicode":
 								String template = fontJson.get("template").toString();
-								DataInputStream sizesInput = new DataInputStream(new BufferedInputStream(new FileInputStream(getFontResource(fontJson.get("sizes").toString()).getFile())));
+								DataInputStream sizesInput = new DataInputStream(new BufferedInputStream(getFontResource(fontJson.get("sizes").toString()).getFile().getInputStream()));
 								Map<String, GlyphSize> sizes = new HashMap<>();
 								for (int i = 0;; i++) {
 									try {
@@ -141,15 +139,15 @@ public class FontManager {
 			key = resourceLocation;
 		}
 		
-		Map<String, File> fileList = files.get(namespace);
+		Map<String, ResourcePackFile> fileList = files.get(namespace);
 		if (fileList == null) {
 			return null;
 		}
-		File current0 = fileList.get(key);
+		ResourcePackFile current0 = fileList.get(key);
 		if (current0 != null && current0.exists()) {
 			return new GeneratedTextureResource(current0);
 		}
-		File current1 = fileList.get(key.replace("font/", ""));
+		ResourcePackFile current1 = fileList.get(key.replace("font/", ""));
 		if (current1 != null && current1.exists()) {
 			return new GeneratedTextureResource(current1);
 		}

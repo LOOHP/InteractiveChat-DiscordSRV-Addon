@@ -1,13 +1,13 @@
 package com.loohp.interactivechatdiscordsrvaddon.resource.textures;
 
-import java.io.File;
+import com.loohp.interactivechatdiscordsrvaddon.resource.ResourcePackFile;
 
 public class TextureMeta extends TextureResource {
 	
 	private TextureAnimation animation;
 	private TextureProperties properties;
 	
-	public TextureMeta(TextureManager manager, String resourceKey, File file, TextureAnimation animation, TextureProperties properties) {
+	public TextureMeta(TextureManager manager, String resourceKey, ResourcePackFile file, TextureAnimation animation, TextureProperties properties) {
 		super(manager, resourceKey, file, false);
 		this.animation = animation;
 		this.properties = properties;

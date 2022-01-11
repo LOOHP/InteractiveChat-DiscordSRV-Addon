@@ -463,6 +463,12 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 					return;
 				}
 				isReady = false;
+				if (InteractiveChatDiscordSrvAddon.plugin.resourceManager != null) {
+					Bukkit.getScheduler().callSyncMethod(plugin, () -> {
+						InteractiveChatDiscordSrvAddon.plugin.resourceManager.close();
+						return null;
+					}).get();
+				}
 				try {
 					AssetsDownloader.loadAssets(getDataFolder(), redownload, clean, receivers);
 				} catch (Exception e) {
@@ -476,12 +482,12 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 				
 				ResourceManager resourceManager = new ResourceManager();
 				Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"Default\" resources...");
-				resourceManager.loadResources("Default", new File(getDataFolder() + "/built-in", "Default"));
+				resourceManager.loadResources(new File(getDataFolder() + "/built-in", "Default"));
 				for (String resourceName : resourceOrder) {
 					try {
 						Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"" + resourceName + "\" resources...");
 						File resourceFile = new File(getDataFolder(), "resources/" + resourceName);
-						ResourcePackInfo info = resourceManager.loadResources(resourceName, resourceFile);
+						ResourcePackInfo info = resourceManager.loadResources(resourceFile);
 						if (!info.getStatus()) {
 							if (info.getRejectedReason() == null) {
 								sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load \"" + resourceName + "\"", senders);

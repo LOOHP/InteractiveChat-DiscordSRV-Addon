@@ -63,7 +63,7 @@ public class TrueTypeFont extends MinecraftFont {
 			this.internalGraphics = null;
 		}
 		try {
-			this.font = Font.createFont(Font.TRUETYPE_FONT, manager.getFontManager().getFontResource(resourceLocation).getFile()).deriveFont(shift);
+			this.font = Font.createFont(Font.TRUETYPE_FONT, manager.getFontManager().getFontResource(resourceLocation).getFile().getInputStream()).deriveFont(shift);
 			GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(this.font);
 			this.internalGraphics = INTERNAL_IMAGE.createGraphics();
 			this.internalGraphics.setFont(font.deriveFont(size));

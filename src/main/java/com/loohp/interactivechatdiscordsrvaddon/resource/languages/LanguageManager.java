@@ -14,6 +14,7 @@ import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.resource.ResourcePackFile;
 
 @SuppressWarnings("unused")
 public class LanguageManager {
@@ -26,16 +27,16 @@ public class LanguageManager {
 		this.translations = new HashMap<>();
 	}
 	
-	public void loadDirectory(String namespace, File root) {
+	public void loadDirectory(String namespace, ResourcePackFile root) {
 		if (!root.exists() || !root.isDirectory()) {
 			throw new IllegalArgumentException(root.getAbsolutePath() + " is not a directory.");
 		}
 		JSONParser parser = new JSONParser();
 		Map<String, Map<String, String>> translations = new HashMap<>();
-		for (File file : root.listFiles()) {
+		for (ResourcePackFile file : root.listFilesRecursively()) {
 			if (file.getName().endsWith(".json")) {
 				try {
-					InputStreamReader reader = new InputStreamReader(new BOMInputStream(new FileInputStream(file)), StandardCharsets.UTF_8);
+					InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
 					JSONObject json = (JSONObject) parser.parse(reader);
 					reader.close();
 					Map<String, String> mapping = new HashMap<>();

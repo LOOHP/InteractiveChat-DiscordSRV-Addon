@@ -1,7 +1,8 @@
 package com.loohp.interactivechatdiscordsrvaddon.resource.textures;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
+
+import com.loohp.interactivechatdiscordsrvaddon.resource.ResourcePackFile;
 
 public class GeneratedTextureResource extends TextureResource {
 
@@ -9,7 +10,7 @@ public class GeneratedTextureResource extends TextureResource {
 		super(null, null, null, image);
 	}
 	
-	public GeneratedTextureResource(File file) {
+	public GeneratedTextureResource(ResourcePackFile file) {
 		super(null, null, file, false);
 	}
 

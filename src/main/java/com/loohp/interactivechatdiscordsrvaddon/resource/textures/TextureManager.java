@@ -1,7 +1,5 @@
 package com.loohp.interactivechatdiscordsrvaddon.resource.textures;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -10,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.loohp.interactivechat.libs.org.apache.commons.io.FileUtils;
 import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream;
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
@@ -18,6 +15,7 @@ import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.resource.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resource.textures.TextureAnimation.TextureAnimationFrames;
 
 public class TextureManager {
@@ -31,14 +29,14 @@ public class TextureManager {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void loadDirectory(String namespace, File root) {
+	public void loadDirectory(String namespace, ResourcePackFile root) {
 		if (!root.exists() || !root.isDirectory()) {
 			throw new IllegalArgumentException(root.getAbsolutePath() + " is not a directory.");
 		}
 		JSONParser parser = new JSONParser();
 		Map<String, TextureResource> textures = new HashMap<>();
-		Collection<File> files = FileUtils.listFiles(root, null, true);
-		for (File file : files) {
+		Collection<ResourcePackFile> files = root.listFilesRecursively();
+		for (ResourcePackFile file : files) {
 			try {
 				String key = namespace + ":" + file.getParentFile().getAbsolutePath().replace("\\", "/").replace(root.getAbsolutePath().replace("\\", "/") + "/", "") + "/" + file.getName();
 				String extension = "";
@@ -49,7 +47,7 @@ public class TextureManager {
 				if (extension.equalsIgnoreCase("png")) {
 					textures.put(key, new TextureResource(this, key, file, true));
 				} else if (extension.equalsIgnoreCase("mcmeta")) {
-					InputStreamReader reader = new InputStreamReader(new BOMInputStream(new FileInputStream(file)), StandardCharsets.UTF_8);
+					InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
 					JSONObject rootJson = (JSONObject) parser.parse(reader);
 					reader.close();
 					TextureAnimation animation = null;

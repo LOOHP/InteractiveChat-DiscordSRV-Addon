@@ -1,7 +1,5 @@
 package com.loohp.interactivechatdiscordsrvaddon.resource.models;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -13,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.loohp.interactivechat.libs.org.apache.commons.io.FileUtils;
 import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream;
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
@@ -22,6 +19,7 @@ import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.resource.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelElement.ModelElementRotation;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelFace.ModelFaceSide;
@@ -41,18 +39,18 @@ public class ModelManager {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void loadDirectory(String namespace, File root) {
+	public void loadDirectory(String namespace, ResourcePackFile root) {
 		if (!root.exists() || !root.isDirectory()) {
 			throw new IllegalArgumentException(root.getAbsolutePath() + " is not a directory.");
 		}
 		JSONParser parser = new JSONParser();
 		Map<String, BlockModel> models = new HashMap<>();
-		Collection<File> files = FileUtils.listFiles(root, new String[] {"json"}, true);
-		for (File file : files) {
+		Collection<ResourcePackFile> files = root.listFilesRecursively(new String[] {"json"});
+		for (ResourcePackFile file : files) {
 			try {
 				String key = namespace + ":" + file.getParentFile().getAbsolutePath().replace("\\", "/").replace(root.getAbsolutePath().replace("\\", "/") + "/", "") + "/" + file.getName();
 				key = key.substring(0, key.lastIndexOf("."));
-				InputStreamReader reader = new InputStreamReader(new BOMInputStream(new FileInputStream(file)), StandardCharsets.UTF_8);
+				InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
 				JSONObject rootJson = (JSONObject) parser.parse(reader);
 				reader.close();
 				String parent = (String) rootJson.getOrDefault("parent", null);

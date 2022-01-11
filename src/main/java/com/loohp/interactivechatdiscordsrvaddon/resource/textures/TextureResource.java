@@ -1,12 +1,12 @@
 package com.loohp.interactivechatdiscordsrvaddon.resource.textures;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.resource.ResourcePackFile;
 
 public class TextureResource {
 	
@@ -15,11 +15,11 @@ public class TextureResource {
 	
 	private TextureManager manager;
 	private String resourceKey;
-	private File file;
+	private ResourcePackFile file;
 	private boolean isTexture;
 	private BufferedImage texture;
 
-	public TextureResource(TextureManager manager, String resourceKey, File file, boolean isTexture) {
+	public TextureResource(TextureManager manager, String resourceKey, ResourcePackFile file, boolean isTexture) {
 		this.manager = manager;
 		this.resourceKey = resourceKey;
 		this.file = file;
@@ -27,7 +27,7 @@ public class TextureResource {
 		this.texture = null;
 	}
 	
-	public TextureResource(TextureManager manager, String resourceKey, File file, BufferedImage image) {
+	public TextureResource(TextureManager manager, String resourceKey, ResourcePackFile file, BufferedImage image) {
 		this.manager = manager;
 		this.resourceKey = resourceKey;
 		this.file = file;
@@ -35,14 +35,14 @@ public class TextureResource {
 		this.texture = image;
 	}
 	
-	public TextureResource(TextureManager manager, String resourceKey, File file) {
+	public TextureResource(TextureManager manager, String resourceKey, ResourcePackFile file) {
 		this(manager, resourceKey, file, false);
 	}
 	
 	private void loadImage() {
 		if (isTexture && texture == null) {
 			try {
-				this.texture = ImageIO.read(file);
+				this.texture = ImageIO.read(file.getInputStream());
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -67,7 +67,7 @@ public class TextureResource {
 		return file != null;
 	}
 	
-	public File getFile() {
+	public ResourcePackFile getFile() {
 		return file;
 	}
 	
