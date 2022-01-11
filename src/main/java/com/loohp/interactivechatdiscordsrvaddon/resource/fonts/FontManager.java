@@ -96,8 +96,8 @@ public class FontManager {
 								resourceLocation = fontJson.get("file").toString();
 								JSONArray shiftArray = (JSONArray) fontJson.get("shift");
 								float leftShift = ((Number) shiftArray.get(0)).floatValue();
-								float downShift = ((Number) shiftArray.get(0)).floatValue();
-								AffineTransform shift = AffineTransform.getTranslateInstance(leftShift, downShift);
+								float downShift = ((Number) shiftArray.get(1)).floatValue();
+								AffineTransform shift = AffineTransform.getTranslateInstance(-leftShift, downShift);
 								float size = ((Number) fontJson.get("size")).floatValue();
 								float oversample = ((Number) fontJson.get("oversample")).floatValue();
 								String skip = fontJson.getOrDefault("skip", "").toString();

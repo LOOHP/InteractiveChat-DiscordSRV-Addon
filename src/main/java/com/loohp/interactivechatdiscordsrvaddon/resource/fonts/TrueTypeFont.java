@@ -124,13 +124,16 @@ public class TrueTypeFont extends MinecraftFont {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, TextColor color, List<TextDecoration> decorations) {
+		float scale = fontSize / 16;
+		fontSize = fontSize - (13 - this.size);
 		decorations = sortDecorations(decorations);
 		Graphics2D g = image.createGraphics();
 		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
 		g.setFont(font.deriveFont(this.size));
 		int w = g.getFontMetrics().stringWidth(character);
-		Font fontToPrint = font.deriveFont(fontSize + (this.size - 7));
+		Font fontToPrint = font.deriveFont(fontSize);
 		BufferedImage[] magicCharImages = null;
+		boolean bold = false;
 		for (TextDecoration decoration : decorations) {
 			switch (decoration) {
 			case OBFUSCATED:
@@ -141,7 +144,7 @@ public class TrueTypeFont extends MinecraftFont {
 				}
 				break;
 			case BOLD:
-				fontToPrint = fontToPrint.deriveFont(Font.BOLD);
+				bold = true;
 				break;
 			case ITALIC:
 				fontToPrint = fontToPrint.deriveFont(Font.ITALIC);
@@ -164,16 +167,27 @@ public class TrueTypeFont extends MinecraftFont {
 		g.setFont(fontToPrint);
 		int height = g.getFontMetrics().getHeight() / 2;
 		int newW = g.getFontMetrics().stringWidth(character);
+		int finalWidth = newW;
 		if (magicCharImages == null) {
 			g.drawString(character, x, y + height);
+			if (bold) {
+				g.drawString(character, x + (scale * 2), y + height);
+				finalWidth += scale * 2;
+			}
 		} else {
 			for (int i = 0; i < magicCharImages.length; i++) {
 				g.drawImage(magicCharImages[i], x, y, newW, height, null);
 			}
+			if (bold) {
+				for (int i = 0; i < magicCharImages.length; i++) {
+					g.drawImage(magicCharImages[i], (int) (x + (scale * 2)), y, newW, height, null);
+				}
+				finalWidth += scale * 2;
+			}
 		}
 		g.dispose();
-		int spaceWidth = Math.round((float) newW / (float) w);
-		return new FontRenderResult(image, newW, height + (int) Math.round(shift.getTranslateY()), spaceWidth + (int) Math.round(shift.getTranslateX()));
+		float spaceWidth = (float) newW / (float) w;
+		return new FontRenderResult(image, finalWidth, height + (int) Math.round(shift.getTranslateY()), (int) Math.round(spaceWidth + shift.getTranslateX()));
 	}
 
 	@Override
