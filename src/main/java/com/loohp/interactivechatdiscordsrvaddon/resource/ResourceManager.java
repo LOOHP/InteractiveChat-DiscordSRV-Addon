@@ -39,6 +39,12 @@ public class ResourceManager implements AutoCloseable {
 	
 	public ResourcePackInfo loadResources(File resourcePackFile) {
 		String resourcePackName = resourcePackFile.getName();
+		if (!resourcePackFile.exists()) {
+			new IllegalArgumentException(resourcePackFile.getAbsolutePath() + " is not a directory nor is a zip file.").printStackTrace();
+			ResourcePackInfo info = new ResourcePackInfo(null, resourcePackName, "Resource Pack is not a directory nor a zip file.");
+			resourcePackInfo.add(0, info);
+			return info;
+		}
 		ResourcePackFile resourcePack;
 		if (resourcePackFile.isDirectory()) {
 			resourcePack = new ResourcePackSystemFile(resourcePackFile);
@@ -51,12 +57,6 @@ public class ResourceManager implements AutoCloseable {
 				resourcePackInfo.add(0, info);
 				return info;
 			}
-		}
-		if (!resourcePack.exists() || !resourcePack.isDirectory()) {
-			new IllegalArgumentException(resourcePack.getAbsolutePath() + " is not a directory nor is a zip file.").printStackTrace();
-			ResourcePackInfo info = new ResourcePackInfo(resourcePack, resourcePackName, "Resource Pack is not a directory nor a zip file.");
-			resourcePackInfo.add(0, info);
-			return info;
 		}
 		ResourcePackFile packMcmeta = resourcePack.getChild("pack.mcmeta");
 		if (!packMcmeta.exists()) {
