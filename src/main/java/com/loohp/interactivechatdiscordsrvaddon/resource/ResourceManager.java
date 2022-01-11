@@ -121,7 +121,7 @@ public class ResourceManager implements AutoCloseable {
 		if (!assetsFolder.exists() || !assetsFolder.isDirectory()) {
 			throw new IllegalArgumentException(assetsFolder.getAbsolutePath() + " is not a directory.");
 		}
-		for (ResourcePackFile folder : assetsFolder.listFiles()) {
+		for (ResourcePackFile folder : assetsFolder.listFilesAndFolders()) {
 			if (folder.isDirectory()) {
 				String namespace = folder.getName();
 				ResourcePackFile models = folder.getChild("models");

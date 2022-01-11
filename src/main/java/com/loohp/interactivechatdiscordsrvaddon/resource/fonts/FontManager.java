@@ -48,7 +48,7 @@ public class FontManager {
 			files.put(namespace, fileList = new HashMap<>());
 		}
 		JSONParser parser = new JSONParser();
-		Map<String, FontProvider> fonts = new HashMap<>();
+		Map<String, FontProvider> fonts = new HashMap<>(this.fonts);
 		Collection<ResourcePackFile> files = root.listFilesRecursively();
 		for (ResourcePackFile file : files) {
 			fileList.put(file.getName(), file);
@@ -108,17 +108,26 @@ public class FontManager {
 							throw new RuntimeException("Unable to load font provider " + index + " in " + file.getAbsolutePath(), e);
 						}
 					}
-					providedFonts.add(new BackingEmptyFont(manager, null));
-					FontProvider provider = new FontProvider(key, providedFonts);
-					for (MinecraftFont mcFont : provider.getProviders()) {
-						mcFont.setProvider(provider);
+					FontProvider existingProvider = fonts.get(key);
+					if (existingProvider == null) {
+						providedFonts.add(new BackingEmptyFont(manager, null));
+						FontProvider provider = new FontProvider(key, providedFonts);
+						for (MinecraftFont mcFont : provider.getProviders()) {
+							mcFont.setProvider(provider);
+						}
+						fonts.put(key, provider);
+					} else {
+						for (MinecraftFont mcFont : providedFonts) {
+							mcFont.setProvider(existingProvider);
+						}
+						existingProvider.prependProviders(providedFonts);
 					}
-					fonts.put(key, provider);
 				} catch (Exception e) {
 					new RuntimeException("Unable to load font " + file.getAbsolutePath(), e).printStackTrace();
 				}
 			}
 		}
+		this.fonts.clear();
 		this.fonts.putAll(fonts);
 	}
 	

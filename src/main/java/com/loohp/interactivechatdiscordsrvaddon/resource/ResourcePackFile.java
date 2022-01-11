@@ -19,7 +19,7 @@ public interface ResourcePackFile extends AutoCloseable {
 
 	public boolean isDirectory();
 
-	public Collection<ResourcePackFile> listFiles();
+	public Collection<ResourcePackFile> listFilesAndFolders();
 	
 	public ResourcePackFile getChild(String name);
 	

@@ -49,7 +49,7 @@ public class ResourcePackSystemFile implements ResourcePackFile {
 	}
 
 	@Override
-	public Collection<ResourcePackFile> listFiles() {
+	public Collection<ResourcePackFile> listFilesAndFolders() {
 		return Arrays.asList(file.listFiles()).stream().map(each -> new ResourcePackSystemFile(each)).collect(Collectors.toSet());
 	}
 

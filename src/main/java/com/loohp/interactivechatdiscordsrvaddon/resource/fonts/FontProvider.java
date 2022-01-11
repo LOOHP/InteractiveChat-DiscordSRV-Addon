@@ -16,12 +16,21 @@ public class FontProvider {
 
 	public FontProvider(String key, List<MinecraftFont> providers) {
 		this.key = key;
-		this.providers = Collections.unmodifiableList(providers);
+		this.providers = new ArrayList<>(providers);
+		reload();
+	}
+	
+	public void prependProviders(List<MinecraftFont> newProviders) {
+		providers.addAll(0, newProviders);
+		reload();
+	}
+	
+	private void reload() {
 		Set<String> displayableCharacters = new HashSet<>();
 		for (MinecraftFont font : this.providers) {
 			displayableCharacters.addAll(font.getDisplayableCharacters());
 		}
-		this.displayableCharacters = Collections.unmodifiableList(new ArrayList<>(displayableCharacters));
+		this.displayableCharacters = new ArrayList<>(displayableCharacters);
 	}
 
 	public String getNamespacedKey() {
@@ -29,11 +38,11 @@ public class FontProvider {
 	}
 
 	public List<MinecraftFont> getProviders() {
-		return providers;
+		return Collections.unmodifiableList(providers);
 	}
 	
 	public List<String> getDisplayableCharacters() {
-		return displayableCharacters;
+		return Collections.unmodifiableList(displayableCharacters);
 	}
 
 	public void reloadFonts() {
