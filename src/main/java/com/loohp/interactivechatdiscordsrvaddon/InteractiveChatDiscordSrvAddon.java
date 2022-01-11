@@ -305,6 +305,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 	@Override
 	public void onDisable() {
 		modelRenderer.close();
+		if (resourceManager != null) {
+			resourceManager.close();
+		}
 		getServer().getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon has been Disabled!");
 	}
 	
