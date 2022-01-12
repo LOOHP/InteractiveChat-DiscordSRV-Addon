@@ -22,6 +22,7 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 
 public class LegacyUnicodeFont extends MinecraftFont {
 
+	public static final double ITALIC_SHEAR_X = -4.0 / 14.0;
 	private static final BufferedImage MISSING_CHARACTER = new BufferedImage(8, 16, BufferedImage.TYPE_INT_ARGB);
 	
 	static {
@@ -98,7 +99,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
 	}
 
 	@Override
-	public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, TextColor color, List<TextDecoration> decorations) {
+	public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations) {
 		decorations = sortDecorations(decorations);
 		Color awtColor = new Color(color.value());
 		Optional<BufferedImage> optCharImage = charImages.getOrDefault(character, Optional.of(ImageUtils.copyImage(MISSING_CHARACTER)));
@@ -113,6 +114,8 @@ public class LegacyUnicodeFont extends MinecraftFont {
 			int pixelSize = Math.round((float) beforeTransformW / (float) originalW);
 			int strikeSize = (int) (fontSize / 8);
 			int boldSize = (int) (fontSize / 16.0 * 2);
+			int italicExtraWidth = 0;
+			boolean italic = false;
 			for (TextDecoration decoration : decorations) {
 				switch (decoration) {
 				case OBFUSCATED:
@@ -146,10 +149,12 @@ public class LegacyUnicodeFont extends MinecraftFont {
 					BufferedImage italicImage = new BufferedImage(charImage.getWidth() + extraWidth * 2, charImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
 					g = italicImage.createGraphics();
 					g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-					g.transform(AffineTransform.getShearInstance(-4.0 / 14.0, 0));
+					g.transform(AffineTransform.getShearInstance(ITALIC_SHEAR_X, 0));
 					g.drawImage(charImage, extraWidth, 0, null);
 					g.dispose();
 					charImage = italicImage;
+					italicExtraWidth = (int) Math.round(-ITALIC_SHEAR_X * h);
+					italic = true;
 					break;
 				case STRIKETHROUGH:
 					charImage = ImageUtils.expandCenterAligned(charImage, 0, 0, 0, pixelSize);
@@ -170,11 +175,12 @@ public class LegacyUnicodeFont extends MinecraftFont {
 				}
 			}
 			Graphics2D g = image.createGraphics();
-			g.drawImage(charImage, x, y, null);
+			int extraWidth = italic ? 0 : lastItalicExtraWidth;
+			g.drawImage(charImage, x + extraWidth, y, null);
 			g.dispose();
-			return new FontRenderResult(image, w, h, pixelSize);
+			return new FontRenderResult(image, w + extraWidth, h, pixelSize, italicExtraWidth);
 		} else {
-			return new FontRenderResult(image, 0, 0, 0);
+			return new FontRenderResult(image, 0, 0, 0, 0);
 		}
 	}
 	

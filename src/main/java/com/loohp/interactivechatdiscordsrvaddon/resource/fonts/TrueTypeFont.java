@@ -123,7 +123,7 @@ public class TrueTypeFont extends MinecraftFont {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, TextColor color, List<TextDecoration> decorations) {
+	public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations) {
 		float scale = fontSize / 16;
 		fontSize = fontSize - (13 - this.size);
 		decorations = sortDecorations(decorations);
@@ -134,6 +134,7 @@ public class TrueTypeFont extends MinecraftFont {
 		Font fontToPrint = font.deriveFont(fontSize);
 		BufferedImage[] magicCharImages = null;
 		boolean bold = false;
+		boolean italic = false;
 		for (TextDecoration decoration : decorations) {
 			switch (decoration) {
 			case OBFUSCATED:
@@ -148,6 +149,7 @@ public class TrueTypeFont extends MinecraftFont {
 				break;
 			case ITALIC:
 				fontToPrint = fontToPrint.deriveFont(Font.ITALIC);
+				italic = true;
 				break;
 			case STRIKETHROUGH:
 				Map attributes = fontToPrint.getAttributes();
@@ -168,26 +170,27 @@ public class TrueTypeFont extends MinecraftFont {
 		int height = g.getFontMetrics().getHeight() / 2;
 		int newW = g.getFontMetrics().stringWidth(character);
 		int finalWidth = newW;
+		int extraWidth = italic ? 0 : lastItalicExtraWidth;
 		if (magicCharImages == null) {
 			g.drawString(character, x, y + height);
 			if (bold) {
-				g.drawString(character, x + (scale * 2), y + height);
+				g.drawString(character, x + (scale * 2) + extraWidth, y + height);
 				finalWidth += scale * 2;
 			}
 		} else {
 			for (int i = 0; i < magicCharImages.length; i++) {
-				g.drawImage(magicCharImages[i], x, y, newW, height, null);
+				g.drawImage(magicCharImages[i], x + extraWidth, y, newW, height, null);
 			}
 			if (bold) {
 				for (int i = 0; i < magicCharImages.length; i++) {
-					g.drawImage(magicCharImages[i], (int) (x + (scale * 2)), y, newW, height, null);
+					g.drawImage(magicCharImages[i], (int) (x + (scale * 2)) + extraWidth, y, newW, height, null);
 				}
 				finalWidth += scale * 2;
 			}
 		}
 		g.dispose();
 		float spaceWidth = (float) newW / (float) w;
-		return new FontRenderResult(image, finalWidth, height + (int) Math.round(shift.getTranslateY()), (int) Math.round(spaceWidth + shift.getTranslateX()));
+		return new FontRenderResult(image, finalWidth + extraWidth, height + (int) Math.round(shift.getTranslateY()), (int) Math.round(spaceWidth + shift.getTranslateX()), 0);
 	}
 
 	@Override

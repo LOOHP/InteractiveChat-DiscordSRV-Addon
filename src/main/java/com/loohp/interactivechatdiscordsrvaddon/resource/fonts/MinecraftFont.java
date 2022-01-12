@@ -47,7 +47,7 @@ public abstract class MinecraftFont {
 	
 	public abstract boolean canDisplayCharacter(String character);
 	
-	public abstract FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, TextColor color, List<TextDecoration> decorations);
+	public abstract FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations);
 	
 	public abstract void reloadFonts();
 	
@@ -61,12 +61,14 @@ public abstract class MinecraftFont {
 		private int width;
 		private int height;
 		private int spaceWidth;
+		private int italicExtraWidth;
 		
-		public FontRenderResult(BufferedImage image, int width, int height, int spaceWidth) {
+		public FontRenderResult(BufferedImage image, int width, int height, int spaceWidth, int italicExtraWidth) {
 			this.image = image;
 			this.width = width;
 			this.height = height;
 			this.spaceWidth = spaceWidth;
+			this.italicExtraWidth = italicExtraWidth;
 		}
 
 		public BufferedImage getImage() {
@@ -83,6 +85,10 @@ public abstract class MinecraftFont {
 		
 		public int getSpaceWidth() {
 			return spaceWidth;
+		}
+
+		public int getItalicExtraWidth() {
+			return italicExtraWidth;
 		}
 		
 	}

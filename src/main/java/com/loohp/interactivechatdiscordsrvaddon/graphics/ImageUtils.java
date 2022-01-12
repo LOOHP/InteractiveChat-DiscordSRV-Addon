@@ -399,6 +399,7 @@ public class ImageUtils {
 		
 		BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
 		int x = 0;
+		int lastItalicExtraWidth = 0;
 		int height = 0;
 		for (Component each : text.children()) {
 			Key font = each.style().font();
@@ -419,9 +420,10 @@ public class ImageUtils {
 					i += Math.max(1, character.length());
 					List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
 					MinecraftFont fontProvider = manager.getFontManager().getFontProviders(font.asString()).forCharacter(character);
-					FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, color, decorations);
+					FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, color, decorations);
 					textImage = result.getImage();
 					x += result.getWidth() + result.getSpaceWidth();
+					lastItalicExtraWidth = result.getItalicExtraWidth();
 					if (height < result.getHeight()) {
 						height = result.getHeight();
 					}
@@ -436,9 +438,10 @@ public class ImageUtils {
 					i += Math.max(1, character.length());
 					List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
 					MinecraftFont fontProvider = manager.getFontManager().getFontProviders(font.asString()).forCharacter(character);
-					FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, color, decorations);
+					FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, color, decorations);
 					textImage = result.getImage();
 					x += result.getWidth() + result.getSpaceWidth();
+					lastItalicExtraWidth = result.getItalicExtraWidth();
 					if (height < result.getHeight()) {
 						height = result.getHeight();
 					}
@@ -506,6 +509,7 @@ public class ImageUtils {
 		Component text = ComponentFlattening.flatten(ComponentStringUtils.convertTranslatables(ComponentModernizing.modernize(component), InteractiveChatDiscordSrvAddon.plugin.language));
 		BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
 		int x = 0;
+		int lastItalicExtraWidth = 0;
 		for (Component each : text.children()) {
 			Key font = each.style().font();
 			if (font == null) {
@@ -526,9 +530,10 @@ public class ImageUtils {
 					i += Math.max(1, character.length());
 					List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
 					MinecraftFont fontProvider = manager.getFontManager().getFontProviders(font.asString()).forCharacter(character);
-					FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, color, decorations);
+					FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, color, decorations);
 					textImage = result.getImage();
 					x += result.getWidth() + result.getSpaceWidth();
+					lastItalicExtraWidth = result.getItalicExtraWidth();
 				}
 			} else {
 				String content = ChatColorUtils.filterIllegalColorCodes(PlainTextComponentSerializer.plainText().serialize(each));
@@ -540,9 +545,10 @@ public class ImageUtils {
 					i += Math.max(1, character.length());
 					List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
 					MinecraftFont fontProvider = manager.getFontManager().getFontProviders(font.asString()).forCharacter(character);
-					FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, color, decorations);
+					FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, color, decorations);
 					textImage = result.getImage();
 					x += result.getWidth() + result.getSpaceWidth();
+					lastItalicExtraWidth = result.getItalicExtraWidth();
 				}
 			}
 		}
