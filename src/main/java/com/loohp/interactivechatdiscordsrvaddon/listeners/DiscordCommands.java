@@ -45,6 +45,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.
 import com.loohp.interactivechat.modules.InventoryDisplay;
 import com.loohp.interactivechat.objectholders.ICPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlayer;
+import com.loohp.interactivechat.objectholders.ICPlayerFactory;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 import com.loohp.interactivechat.objectholders.ValueTrios;
 import com.loohp.interactivechat.utils.ChatColorUtils;
@@ -56,7 +57,6 @@ import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.InventoryUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechat.utils.MCVersion;
-import com.loohp.interactivechat.utils.PlayerUtils;
 import com.loohp.interactivechat.utils.SkinUtils;
 import com.loohp.interactivechat.utils.VanishUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
@@ -214,7 +214,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 				}
 				return;
 			}
-			OfflineICPlayer offlineICPlayer = PlayerUtils.getOfflineICPlayer(uuid);
+			OfflineICPlayer offlineICPlayer = ICPlayerFactory.getOfflineICPlayer(uuid);
 			if (offlineICPlayer == null) {
 				if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandIsMainServer) {
 					event.reply(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.unableToRetrieveData) + " (-1)").setEphemeral(true).queue();
@@ -294,7 +294,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 				}
 				return;
 			}
-			OfflineICPlayer offlineICPlayer = PlayerUtils.getOfflineICPlayer(uuid);
+			OfflineICPlayer offlineICPlayer = ICPlayerFactory.getOfflineICPlayer(uuid);
 			if (offlineICPlayer == null) {
 				if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandIsMainServer) {
 					event.reply(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.unableToRetrieveData) + " (-1)").setEphemeral(true).queue();

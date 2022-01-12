@@ -44,6 +44,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.
 import com.loohp.interactivechat.objectholders.CustomPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlayer;
+import com.loohp.interactivechat.objectholders.ICPlayerFactory;
 import com.loohp.interactivechat.objectholders.MentionPair;
 import com.loohp.interactivechat.objectholders.PlaceholderCooldownManager;
 import com.loohp.interactivechat.objectholders.WebData;
@@ -140,7 +141,7 @@ public class OutboundToDiscordEvents implements Listener {
 		InteractiveChatDiscordSrvAddon.plugin.messagesCounter.incrementAndGet();
 		
 		Player sender = event.getPlayer();
-		ICPlayer icSender = new ICPlayer(sender);
+		ICPlayer icSender = ICPlayerFactory.getICPlayer(sender);
 		Component message = ComponentStringUtils.toRegularComponent(event.getMessageComponent());
 		
 		message = processGameMessage(icSender, message);
@@ -166,7 +167,7 @@ public class OutboundToDiscordEvents implements Listener {
 		ICPlayer player;
 		Player bukkitPlayer = Bukkit.getPlayer(uuid);
 		if (bukkitPlayer != null) {
-			player = new ICPlayer(bukkitPlayer);
+			player = ICPlayerFactory.getICPlayer(bukkitPlayer);
 		} else {
 			player = InteractiveChat.remotePlayers.get(uuid);
 			if (player == null) {
@@ -480,17 +481,12 @@ public class OutboundToDiscordEvents implements Listener {
 				if (pair.getSender().equals(icSender.getUniqueId())) {
 					UUID recieverUUID = pair.getReciever();
 					Set<String> names = new HashSet<>();
-					Player reciever = Bukkit.getPlayer(recieverUUID);
+					ICPlayer reciever = ICPlayerFactory.getICPlayer(recieverUUID);
 					if (reciever != null) {
 						names.add(ChatColorUtils.stripColor(reciever.getName()));
 						List<String> list = InteractiveChatAPI.getNicknames(reciever.getUniqueId());
 						for (String name : list) {
 							names.add(ChatColorUtils.stripColor(name));
-						}
-					} else {
-						ICPlayer icplayer = InteractiveChat.remotePlayers.get(recieverUUID);
-						if (icplayer != null) {
-							names.add(icplayer.getDisplayName());
 						}
 					}
 					String userId = srv.getAccountLinkManager().getDiscordId(recieverUUID);
@@ -562,7 +558,7 @@ public class OutboundToDiscordEvents implements Listener {
 		Player player = event.getPlayer();
 		DiscordMessageContent content = new DiscordMessageContent(ChatColorUtils.stripColor(meta.getDisplayName()), "attachment://Item.png", color);
 		try {
-			BufferedImage image = ImageGeneration.getItemStackImage(item, new ICPlayer(player), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
+			BufferedImage image = ImageGeneration.getItemStackImage(item, ICPlayerFactory.getICPlayer(player), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
 			ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
 			ImageIO.write(image, "png", itemOs);
 			
@@ -664,7 +660,7 @@ public class OutboundToDiscordEvents implements Listener {
 			}
 			try {
 				int id = DATA_ID_PROVIDER.getNext();
-				BufferedImage icon = ImageGeneration.getItemStackImage(item, new ICPlayer(event.getPlayer()), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
+				BufferedImage icon = ImageGeneration.getItemStackImage(item, ICPlayerFactory.getICPlayer(event.getPlayer()), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				ImageIO.write(icon, "png", baos);
 				content += "<ICA=" + id + ">";

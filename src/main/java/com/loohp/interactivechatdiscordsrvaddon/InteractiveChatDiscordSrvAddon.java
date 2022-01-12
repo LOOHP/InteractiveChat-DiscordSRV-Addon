@@ -24,7 +24,6 @@ import java.util.stream.Stream;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -36,6 +35,7 @@ import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.libs.org.simpleyaml.exceptions.InvalidConfigurationException;
 import com.loohp.interactivechat.objectholders.ICPlayer;
+import com.loohp.interactivechat.objectholders.ICPlayerFactory;
 import com.loohp.interactivechat.objectholders.PlaceholderCooldownManager;
 import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.ChatColorUtils;
@@ -269,22 +269,15 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 		modelRenderer = new ModelRenderer(8);
 		
 		Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
-			for (Player player : Bukkit.getOnlinePlayers()) {
-				cachePlayerSkin(new ICPlayer(player));
-			}
-			synchronized (InteractiveChat.remotePlayers) {
-				for (ICPlayer player : InteractiveChat.remotePlayers.values()) {
-					if (!player.isLocal()) {
-						cachePlayerSkin(player);
-					}
-				}
+			for (ICPlayer player : ICPlayerFactory.getOnlineICPlayers()) {
+				cachePlayerSkin(player);
 			}
 		}, 600, 6000);
 	}
 	
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event) {
-		Bukkit.getScheduler().runTaskLaterAsynchronously(this, () -> cachePlayerSkin(new ICPlayer(event.getPlayer())), 40);
+		Bukkit.getScheduler().runTaskLaterAsynchronously(this, () -> cachePlayerSkin(ICPlayerFactory.getICPlayer(event.getPlayer())), 40);
 	}
 	
 	private void cachePlayerSkin(ICPlayer player) {
