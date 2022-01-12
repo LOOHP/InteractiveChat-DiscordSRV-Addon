@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
@@ -29,15 +30,19 @@ public class ResourceManager implements AutoCloseable {
 	private FontManager fontManager;
 	private LanguageManager languageManager;
 	
+	private AtomicBoolean isValid;
+	
 	public ResourceManager() {
 		this.resourcePackInfo = new LinkedList<>();
 		this.modelManager = new ModelManager(this);
 		this.textureManager = new TextureManager(this);
 		this.fontManager = new FontManager(this);
 		this.languageManager = new LanguageManager(this);
+		
+		this.isValid = new AtomicBoolean(true);
 	}
 	
-	public ResourcePackInfo loadResources(File resourcePackFile) {
+	public synchronized ResourcePackInfo loadResources(File resourcePackFile) {
 		String resourcePackName = resourcePackFile.getName();
 		if (!resourcePackFile.exists()) {
 			new IllegalArgumentException(resourcePackFile.getAbsolutePath() + " is not a directory nor is a zip file.").printStackTrace();
@@ -126,19 +131,19 @@ public class ResourceManager implements AutoCloseable {
 				String namespace = folder.getName();
 				ResourcePackFile models = folder.getChild("models");
 				if (models.exists() && models.isDirectory()) {
-					modelManager.loadDirectory(namespace, models);
+					((AbstractManager) modelManager).loadDirectory(namespace, models);
 				}
 				ResourcePackFile textures = folder.getChild("textures");
 				if (textures.exists() && textures.isDirectory()) {
-					textureManager.loadDirectory(namespace, textures);
+					((AbstractManager) textureManager).loadDirectory(namespace, textures);
 				}
 				ResourcePackFile font = folder.getChild("font");
 				if (font.exists() && font.isDirectory()) {
-					fontManager.loadDirectory(namespace, font);
+					((AbstractManager) fontManager).loadDirectory(namespace, font);
 				}
 				ResourcePackFile lang = folder.getChild("lang");
 				if (lang.exists() && lang.isDirectory()) {
-					languageManager.loadDirectory(namespace, lang);
+					((AbstractManager) languageManager).loadDirectory(namespace, lang);
 				}
 			}
 		}
@@ -169,13 +174,20 @@ public class ResourceManager implements AutoCloseable {
 	public LanguageManager getLanguageManager() {
 		return languageManager;
 	}
+	
+	public boolean isValid() {
+		return isValid.get();
+	}
 
 	@Override
-	public void close() {
-		for (ResourcePackInfo info : resourcePackInfo) {
-			if (info.getResourcePackFile() != null) {
-				info.getResourcePackFile().close();
+	public synchronized void close() {
+		if (isValid.get()) {
+			for (ResourcePackInfo info : resourcePackInfo) {
+				if (info.getResourcePackFile() != null) {
+					info.getResourcePackFile().close();
+				}
 			}
+			isValid.set(false);
 		}
 	}
 

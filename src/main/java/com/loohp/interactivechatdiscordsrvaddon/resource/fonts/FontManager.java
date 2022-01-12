@@ -18,28 +18,29 @@ import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resource.AbstractManager;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resource.fonts.LegacyUnicodeFont.GlyphSize;
 import com.loohp.interactivechatdiscordsrvaddon.resource.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resource.textures.TextureResource;
 
-public class FontManager {
+public class FontManager extends AbstractManager {
 	
 	public static final String DEFAULT_FONT = "minecraft:default";
 	
-	private ResourceManager manager;
 	private Map<String, FontProvider> fonts;
 	private Map<String, Map<String, ResourcePackFile>> files;
 	
 	public FontManager(ResourceManager manager) {
-		this.manager = manager;
+		super(manager);
 		this.fonts = new HashMap<>();
 		this.files = new HashMap<>();
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void loadDirectory(String namespace, ResourcePackFile root) {
+	@Override
+	protected void loadDirectory(String namespace, ResourcePackFile root) {
 		if (!root.exists() || !root.isDirectory()) {
 			throw new IllegalArgumentException(root.getAbsolutePath() + " is not a directory.");
 		}
@@ -54,7 +55,7 @@ public class FontManager {
 			fileList.put(file.getName(), file);
 		}
 		for (ResourcePackFile file : files) {
-			if (file.getName().endsWith("json")) {
+			if (file.getName().endsWith(".json")) {
 				try {
 					String key = namespace + ":" + file.getName();
 					key = key.substring(0, key.lastIndexOf("."));

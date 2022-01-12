@@ -17,6 +17,10 @@ public class ResourcePackSystemFile implements ResourcePackFile {
 	public ResourcePackSystemFile(File file) {
 		this.file = file;
 	}
+	
+	public File getFile() {
+		return file;
+	}
 
 	@Override
 	public String getName() {

@@ -18,24 +18,36 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
 	
 	private String absoluteRootPath;
 	private ZipFile zipRoot;
-	private String path;
+	private String zipPath;
 	private boolean isDirectory;
-	private ZipEntry entry;
+	private ZipEntry zipEntry;
 	
 	public ResourcePackZipEntryFile(File resourcePackZip) throws ZipException, IOException {
 		this.absoluteRootPath = resourcePackZip.getAbsolutePath();
 		this.zipRoot = new ZipFile(resourcePackZip);
-		this.path = "";
+		this.zipPath = "";
 		this.isDirectory = true;
-		this.entry = null;
+		this.zipEntry = null;
 	}
 
-	public ResourcePackZipEntryFile(String absoluteRootPath, ZipFile zipRoot, String path, boolean isDirectory, ZipEntry entry) {
+	public ResourcePackZipEntryFile(String absoluteRootPath, ZipFile zipRoot, String zipPath, boolean isDirectory, ZipEntry zipEntry) {
 		this.absoluteRootPath = absoluteRootPath;
 		this.zipRoot = zipRoot;
-		this.path = path;
+		this.zipPath = zipPath;
 		this.isDirectory = isDirectory;
-		this.entry = entry;
+		this.zipEntry = zipEntry;
+	}
+
+	public ZipFile getZipRoot() {
+		return zipRoot;
+	}
+	
+	public boolean hasZipEntry() {
+		return zipEntry != null;
+	}
+
+	public ZipEntry getZipEntry() {
+		return zipEntry;
 	}
 
 	@Override
@@ -65,7 +77,7 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
 
 	@Override
 	public String getPath() {
-		return path;
+		return zipPath;
 	}
 
 	@Override
@@ -82,7 +94,7 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
 
 	@Override
 	public boolean exists() {
-		return isDirectory || entry != null;
+		return isDirectory || zipEntry != null;
 	}
 
 	@Override
@@ -98,14 +110,14 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
 			ZipEntry entry = itr.nextElement();
 			if (!entry.isDirectory()) {
 				String entryPath = entry.getName();
-				if (!entryPath.equals(path) && entryPath.startsWith(path)) {
-					String relativePath = entryPath.replace(path, "");
+				if (!entryPath.equals(zipPath) && entryPath.startsWith(zipPath)) {
+					String relativePath = entryPath.replace(zipPath, "");
 					if (relativePath.startsWith("/")) {
 						relativePath = relativePath.substring(1);
 					}
 					if (relativePath.contains("/")) {
 						String folderName = relativePath.substring(0, relativePath.indexOf("/"));
-						set.add(new ResourcePackZipEntryFile(absoluteRootPath, zipRoot, (path.isEmpty() ? path : (path + "/")) + folderName, true, null));
+						set.add(new ResourcePackZipEntryFile(absoluteRootPath, zipRoot, (zipPath.isEmpty() ? zipPath : (zipPath + "/")) + folderName, true, null));
 					} else {
 						set.add(new ResourcePackZipEntryFile(absoluteRootPath, zipRoot, entryPath, false, entry));
 					}
@@ -119,18 +131,18 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
 	public ResourcePackFile getChild(String name) {
 		for (ResourcePackFile entry : listFilesAndFolders()) {
 			ResourcePackZipEntryFile zipEntryFile = (ResourcePackZipEntryFile) entry;
-			if (zipEntryFile.path.equals((path.isEmpty() ? path : (path + "/")) + name)) {
+			if (zipEntryFile.zipPath.equals((zipPath.isEmpty() ? zipPath : (zipPath + "/")) + name)) {
 				return zipEntryFile;
 			}
 		}
-		return new ResourcePackZipEntryFile(absoluteRootPath, zipRoot, (path.isEmpty() ? path : (path + "/")) + name, false, null);
+		return new ResourcePackZipEntryFile(absoluteRootPath, zipRoot, (zipPath.isEmpty() ? zipPath : (zipPath + "/")) + name, false, null);
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((path == null) ? 0 : path.hashCode());
+		result = prime * result + ((zipPath == null) ? 0 : zipPath.hashCode());
 		result = prime * result + ((zipRoot == null) ? 0 : zipRoot.hashCode());
 		return result;
 	}
@@ -144,11 +156,11 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
 			return false;
 		}
 		ResourcePackZipEntryFile other = (ResourcePackZipEntryFile) obj;
-		if (path == null) {
-			if (other.path != null) {
+		if (zipPath == null) {
+			if (other.zipPath != null) {
 				return false;
 			}
-		} else if (!path.equals(other.path)) {
+		} else if (!zipPath.equals(other.zipPath)) {
 			return false;
 		}
 		if (zipRoot == null) {
@@ -164,7 +176,7 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
 	@Override
 	public InputStream getInputStream() {
 		try {
-			return zipRoot.getInputStream(entry);
+			return zipRoot.getInputStream(zipEntry);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;
@@ -179,7 +191,7 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
 			ZipEntry entry = itr.nextElement();
 			if (!entry.isDirectory()) {
 				String entryPath = entry.getName();
-				if ((this.entry == null || !entry.getName().equals(this.entry.getName())) && entryPath.startsWith(path)) {
+				if ((this.zipEntry == null || !entry.getName().equals(this.zipEntry.getName())) && entryPath.startsWith(zipPath)) {
 					if (extensions == null || Stream.of(extensions).anyMatch(each -> entryPath.endsWith("." + each))) {
 						list.add(new ResourcePackZipEntryFile(absoluteRootPath, zipRoot, entryPath, false, entry));
 					}

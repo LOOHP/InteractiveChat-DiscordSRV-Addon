@@ -1,7 +1,5 @@
 package com.loohp.interactivechatdiscordsrvaddon.resource.languages;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -13,21 +11,21 @@ import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
+import com.loohp.interactivechatdiscordsrvaddon.resource.AbstractManager;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ResourcePackFile;
 
-@SuppressWarnings("unused")
-public class LanguageManager {
+public class LanguageManager extends AbstractManager {
 	
-	private ResourceManager manager;
 	private Map<String, Map<String, String>> translations;
 	
 	public LanguageManager(ResourceManager manager) {
-		this.manager = manager;
+		super(manager);
 		this.translations = new HashMap<>();
 	}
 	
-	public void loadDirectory(String namespace, ResourcePackFile root) {
+	@Override
+	protected void loadDirectory(String namespace, ResourcePackFile root) {
 		if (!root.exists() || !root.isDirectory()) {
 			throw new IllegalArgumentException(root.getAbsolutePath() + " is not a directory.");
 		}

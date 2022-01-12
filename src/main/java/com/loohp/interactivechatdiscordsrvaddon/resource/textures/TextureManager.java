@@ -14,22 +14,25 @@ import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resource.AbstractManager;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resource.textures.TextureAnimation.TextureAnimationFrames;
 
-public class TextureManager {
+public class TextureManager extends AbstractManager {
 
 	public static final String SKIN_REQUIRED = "interactivechatdiscordsrvaddon/skin";
 	public static final TextureResource MISSING_TEXTURE = new GeneratedTextureResource(ImageGeneration.getMissingImage(16, 16));
 	private Map<String, TextureResource> textures;
 	
 	public TextureManager(ResourceManager manager) {
+		super(manager);
 		this.textures = new HashMap<>();
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void loadDirectory(String namespace, ResourcePackFile root) {
+	@Override
+	protected void loadDirectory(String namespace, ResourcePackFile root) {
 		if (!root.exists() || !root.isDirectory()) {
 			throw new IllegalArgumentException(root.getAbsolutePath() + " is not a directory.");
 		}

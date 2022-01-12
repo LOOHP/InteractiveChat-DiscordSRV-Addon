@@ -18,6 +18,7 @@ import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resource.AbstractManager;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resource.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelDisplay.ModelDisplayPosition;
@@ -25,7 +26,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelElement.Mod
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelFace.ModelFaceSide;
 import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelOverride.ModelOverrideType;
 
-public class ModelManager {
+public class ModelManager extends AbstractManager {
 	
 	public static final String CACHE_KEY = "ModelManager";
 	public static final String BLOCK_ENTITY_BASE = "builtin/entity";
@@ -35,11 +36,13 @@ public class ModelManager {
 	private Map<String, BlockModel> models;
 
 	public ModelManager(ResourceManager manager) {
+		super(manager);
 		this.models = new HashMap<>();
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void loadDirectory(String namespace, ResourcePackFile root) {
+	@Override
+	protected void loadDirectory(String namespace, ResourcePackFile root) {
 		if (!root.exists() || !root.isDirectory()) {
 			throw new IllegalArgumentException(root.getAbsolutePath() + " is not a directory.");
 		}
