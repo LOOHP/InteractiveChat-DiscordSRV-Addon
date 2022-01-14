@@ -59,7 +59,7 @@ import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.RarityUtils;
 import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import com.loohp.interactivechatdiscordsrvaddon.registies.DiscordDataRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.registry.DiscordDataRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.PatternTypeWrapper;
 
 import github.scarsz.discordsrv.DiscordSRV;

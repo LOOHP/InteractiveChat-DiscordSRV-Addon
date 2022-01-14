@@ -22,7 +22,7 @@ import com.loohp.interactivechat.utils.ComponentStyling;
 import com.loohp.interactivechatdiscordsrvaddon.api.events.InteractiveChatDiscordSRVConfigReloadEvent;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents.DiscordAttachmentData;
-import com.loohp.interactivechatdiscordsrvaddon.resource.ResourcePackInfo;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater.UpdaterResponse;
 

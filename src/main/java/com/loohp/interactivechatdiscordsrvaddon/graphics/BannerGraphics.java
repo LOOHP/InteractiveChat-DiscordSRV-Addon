@@ -15,7 +15,7 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.PatternTypeWrapper;
 
 public class BannerGraphics {

@@ -19,7 +19,7 @@ import com.loohp.interactivechat.utils.ComponentFlattening;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.ItemNBTUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
-import com.loohp.interactivechatdiscordsrvaddon.resource.fonts.FontProvider;
+import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontProvider;
 
 import net.md_5.bungee.api.ChatColor;
 

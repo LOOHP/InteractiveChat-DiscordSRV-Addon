@@ -10,12 +10,13 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
 
 import javax.imageio.ImageIO;
 
@@ -77,9 +78,9 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.HoverClickDisplayD
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.IDProvider;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayType;
-import com.loohp.interactivechatdiscordsrvaddon.registies.DiscordDataRegistry;
-import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
-import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelDisplay.ModelDisplayPosition;
+import com.loohp.interactivechatdiscordsrvaddon.registry.DiscordDataRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.utils.AchievementUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.AdvancementUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
@@ -129,7 +130,7 @@ public class OutboundToDiscordEvents implements Listener {
 		if (InteractiveChatDiscordSrvAddon.plugin.escapePlaceholdersFromDiscord) {
 			Debug.debug("onDiscordToGame escaping placeholders");
 			for (ICPlaceholder placeholder : InteractiveChat.placeholderList.values()) {
-				component = component.replaceText(github.scarsz.discordsrv.dependencies.kyori.adventure.text.TextReplacementConfig.builder().matchLiteral(placeholder.getKeyword()).replacement("\\" + placeholder.getKeyword()).build());
+				component = component.replaceText(github.scarsz.discordsrv.dependencies.kyori.adventure.text.TextReplacementConfig.builder().match(placeholder.getKeyword()).replacement("\\" + placeholder.getKeyword()).build());
 			}
 			event.setMinecraftMessage(component);
 		}
@@ -184,7 +185,6 @@ public class OutboundToDiscordEvents implements Listener {
 	@SuppressWarnings("deprecation")
 	public Component processGameMessage(ICPlayer icSender, Component component) {
 		boolean reserializer = DiscordSRV.config().getBoolean("Experiment_MCDiscordReserializer_ToDiscord");
-		String originalMessage = PlainTextComponentSerializer.plainText().serialize(component);
 		PlaceholderCooldownManager cooldownManager = InteractiveChatDiscordSrvAddon.plugin.placeholderCooldownManager;
 		long now = cooldownManager.checkMessage(icSender.getUniqueId(), PlainTextComponentSerializer.plainText().serialize(component)).getTimeNow();
 
@@ -194,18 +194,14 @@ public class OutboundToDiscordEvents implements Listener {
 			return null;
 		}
 		component = ComponentFlattening.flatten(gameMessagePreProcessEvent.getComponent());
+		
+		String plain = InteractiveChatComponentSerializer.plainText().serialize(component);
 
 		if (InteractiveChat.useItem && PlayerUtils.hasPermission(icSender.getUniqueId(), "interactivechat.module.item", true, 200)) {
 			Debug.debug("onGameToDiscord processing item display");
 			if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.itemPlaceholder)).findFirst().get(), now)) {
-				String placeholder = InteractiveChat.itemPlaceholder;
-				String regex = InteractiveChat.itemCaseSensitive ? CustomStringUtils.escapeMetaCharacters(placeholder) : "(?i)" + CustomStringUtils.escapeMetaCharacters(placeholder);
-				AtomicBoolean usedPlaceholder = new AtomicBoolean(false);
-				component = ComponentReplacing.replace(component, regex, true, result -> {
-					usedPlaceholder.set(true);
-					return LegacyComponentSerializer.legacySection().deserialize(placeholder);
-				});
-				if (usedPlaceholder.get()) {
+				Matcher matcher = InteractiveChat.itemPlaceholder.matcher(plain);
+				if (matcher.find()) {
 					ItemStack item = PlayerUtils.getHeldItem(icSender);
 					boolean isAir = item.getType().equals(Material.AIR);
 					XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
@@ -234,10 +230,10 @@ public class OutboundToDiscordEvents implements Listener {
 						replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
 					}
 					
-					component = ComponentReplacing.replace(component, (InteractiveChat.itemCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.itemPlaceholder), true, LegacyComponentSerializer.legacySection().deserialize(replaceText));
+					component = ComponentReplacing.replace(component, InteractiveChat.itemPlaceholder.pattern(), true, LegacyComponentSerializer.legacySection().deserialize(replaceText));
 					if (InteractiveChatDiscordSrvAddon.plugin.itemImage) {
 						int inventoryId = DATA_ID_PROVIDER.getNext();
-						int position = InteractiveChat.itemCaseSensitive ? originalMessage.indexOf(InteractiveChat.itemPlaceholder) : originalMessage.toLowerCase().indexOf(InteractiveChat.itemPlaceholder.toLowerCase());
+						int position = matcher.start();
 						
 						String title = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemTitle));
 						
@@ -279,22 +275,16 @@ public class OutboundToDiscordEvents implements Listener {
 		if (InteractiveChat.useInventory && PlayerUtils.hasPermission(icSender.getUniqueId(), "interactivechat.module.inventory", true, 200)) {
 			Debug.debug("onGameToDiscord processing inventory display");
 			if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.invPlaceholder)).findFirst().get(), now)) {
-				String placeholder = InteractiveChat.invPlaceholder;
-				String regex = InteractiveChat.invCaseSensitive ? CustomStringUtils.escapeMetaCharacters(placeholder) : "(?i)" + CustomStringUtils.escapeMetaCharacters(placeholder);
-				AtomicBoolean usedPlaceholder = new AtomicBoolean(false);
-				component = ComponentReplacing.replace(component, regex, true, result -> {
-					usedPlaceholder.set(true);
-					return LegacyComponentSerializer.legacySection().deserialize(placeholder);
-				});
-				if (usedPlaceholder.get()) {
+				Matcher matcher = InteractiveChat.invPlaceholder.matcher(plain);
+				if (matcher.find()) {
 					String replaceText = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.invReplaceText));
 					if (reserializer) {
 						replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
 					}
-					component = ComponentReplacing.replace(component, (InteractiveChat.invCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.invPlaceholder), true, LegacyComponentSerializer.legacySection().deserialize(replaceText));
+					component = ComponentReplacing.replace(component, InteractiveChat.invPlaceholder.pattern(), true, LegacyComponentSerializer.legacySection().deserialize(replaceText));
 					if (InteractiveChatDiscordSrvAddon.plugin.invImage) {
 						int inventoryId = DATA_ID_PROVIDER.getNext();
-						int position = InteractiveChat.invCaseSensitive ? originalMessage.indexOf(InteractiveChat.invPlaceholder) : originalMessage.toLowerCase().indexOf(InteractiveChat.invPlaceholder.toLowerCase());
+						int position = matcher.start();
 						
 						Inventory inv = Bukkit.createInventory(null, 45);
 						for (int j = 0; j < icSender.getInventory().getSize(); j++) {
@@ -323,22 +313,16 @@ public class OutboundToDiscordEvents implements Listener {
 		if (InteractiveChat.useEnder && PlayerUtils.hasPermission(icSender.getUniqueId(), "interactivechat.module.enderchest", true, 200)) {
 			Debug.debug("onGameToDiscord processing enderchest display");
 			if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.enderPlaceholder)).findFirst().get(), now)) {
-				String placeholder = InteractiveChat.enderPlaceholder;
-				String regex = InteractiveChat.enderCaseSensitive ? CustomStringUtils.escapeMetaCharacters(placeholder) : "(?i)" + CustomStringUtils.escapeMetaCharacters(placeholder);
-				AtomicBoolean usedPlaceholder = new AtomicBoolean(false);
-				component = ComponentReplacing.replace(component, regex, true, result -> {
-					usedPlaceholder.set(true);
-					return LegacyComponentSerializer.legacySection().deserialize(placeholder);
-				});
-				if (usedPlaceholder.get()) {
+				Matcher matcher = InteractiveChat.enderPlaceholder.matcher(plain);
+				if (matcher.find()) {
 					String replaceText = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.enderReplaceText));
 					if (reserializer) {
 						replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
 					}
-					component = ComponentReplacing.replace(component, (InteractiveChat.enderCaseSensitive ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(InteractiveChat.enderPlaceholder), true, LegacyComponentSerializer.legacySection().deserialize(replaceText));
+					component = ComponentReplacing.replace(component, InteractiveChat.enderPlaceholder.pattern(), true, LegacyComponentSerializer.legacySection().deserialize(replaceText));
 					if (InteractiveChatDiscordSrvAddon.plugin.enderImage) {
 						int inventoryId = DATA_ID_PROVIDER.getNext();
-						int position = InteractiveChat.enderCaseSensitive ? originalMessage.indexOf(InteractiveChat.enderPlaceholder) : originalMessage.toLowerCase().indexOf(InteractiveChat.enderPlaceholder.toLowerCase());
+						int position = matcher.start();
 						
 						Inventory inv = Bukkit.createInventory(null, InventoryUtils.toMultipleOf9(icSender.getEnderChest().getSize()));
 						for (int j = 0; j < icSender.getEnderChest().getSize(); j++) {
@@ -370,46 +354,51 @@ public class OutboundToDiscordEvents implements Listener {
 				CustomPlaceholder customP = (CustomPlaceholder) placeholder;
 				if (!InteractiveChat.useCustomPlaceholderPermissions || (InteractiveChat.useCustomPlaceholderPermissions && PlayerUtils.hasPermission(icSender.getUniqueId(), customP.getPermission(), true, 200))) {
 					boolean onCooldown = cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), customP, now);
-					String regex = customP.isCaseSensitive() ? CustomStringUtils.escapeMetaCharacters(customP.getKeyword()) : "(?i)" + CustomStringUtils.escapeMetaCharacters(customP.getKeyword());
-					AtomicBoolean usedPlaceholder = new AtomicBoolean(false);
-					component = ComponentReplacing.replace(component, regex, true, result -> {
-						usedPlaceholder.set(true);
-						return LegacyComponentSerializer.legacySection().deserialize(customP.getKeyword());
-					});
-					if (usedPlaceholder.get() && !onCooldown) {
-						String replaceText = customP.getKeyword();
+					Matcher matcher = customP.getKeyword().matcher(plain);
+					if (matcher.find() && !onCooldown) {
+						String replaceText;
 						if (customP.getReplace().isEnabled()) {
-							replaceText = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
-							if (reserializer) {
-								replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
-							}
-							component = ComponentReplacing.replace(component, (customP.isCaseSensitive() ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(customP.getKeyword()), true, LegacyComponentSerializer.legacySection().deserialize(replaceText));
+							replaceText = ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(icSender, customP.getReplace().getReplaceText()));
+						} else {
+							replaceText = null;
 						}
-						if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && !InteractiveChatDiscordSrvAddon.plugin.hoverIngore.contains(customP.getPosition())) {
-							int position = customP.isCaseSensitive() ? originalMessage.indexOf(customP.getKeyword()) : originalMessage.toLowerCase().indexOf(customP.getKeyword().toLowerCase());
-							HoverClickDisplayData.Builder hoverClick = new HoverClickDisplayData.Builder().player(icSender).postion(position).color(DiscordDataRegistry.DISCORD_HOVER_COLOR).displayText(replaceText);
-							boolean usingHoverClick = false;
-							
-							if (customP.getHover().isEnabled()) {
-								usingHoverClick = true;
-								String hoverText = PlaceholderParser.parse(icSender, customP.getHover().getText());
-								Color color = ColorUtils.getFirstColor(customP.getHover().getText());
-								hoverClick.hoverText(LegacyComponentSerializer.legacySection().deserialize(hoverText));
-								if (color != null) {
-									hoverClick.color(color);
+						List<Component> toAppend = new LinkedList<>();
+						Set<String> shown = new HashSet<>();
+						component = ComponentReplacing.replace(component, customP.getKeyword().pattern(), true, (result, matchedComponents) -> {
+							String replaceString = replaceText == null ? result.group() : CustomStringUtils.applyReplacementRegex(replaceText, result, 1);
+							if (!shown.contains(replaceString)) {
+								shown.add(replaceString);
+								int position = result.start();
+								if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && !InteractiveChatDiscordSrvAddon.plugin.hoverIngore.contains(customP.getPosition())) {
+									HoverClickDisplayData.Builder hoverClick = new HoverClickDisplayData.Builder().player(icSender).postion(position).color(DiscordDataRegistry.DISCORD_HOVER_COLOR).displayText(ChatColorUtils.stripColor(replaceString));
+									boolean usingHoverClick = false;
+									
+									if (customP.getHover().isEnabled()) {
+										usingHoverClick = true;
+										String hoverText = PlaceholderParser.parse(icSender, CustomStringUtils.applyReplacementRegex(customP.getHover().getText(), result, 1));
+										Color color = ColorUtils.getFirstColor(hoverText);
+										hoverClick.hoverText(LegacyComponentSerializer.legacySection().deserialize(hoverText));
+										if (color != null) {
+											hoverClick.color(color);
+										}
+									}
+									
+									if (customP.getClick().isEnabled()) {
+										usingHoverClick = true;
+										hoverClick.clickAction(customP.getClick().getAction()).clickValue(CustomStringUtils.applyReplacementRegex(customP.getClick().getValue(), result, 1));
+									}
+									
+									if (usingHoverClick) {
+										int hoverId = DATA_ID_PROVIDER.getNext();
+										DATA.put(hoverId, hoverClick.build());
+										toAppend.add(Component.text("<ICD=" + hoverId + ">"));
+									}
 								}
 							}
-							
-							if (customP.getClick().isEnabled()) {
-								usingHoverClick = true;
-								hoverClick.clickAction(customP.getClick().getAction()).clickValue(customP.getClick().getValue());
-							}
-							
-							if (usingHoverClick) {
-								int hoverId = DATA_ID_PROVIDER.getNext();
-								DATA.put(hoverId, hoverClick.build());
-								component = component.append(Component.text("<ICD=" + hoverId + ">"));
-							}
+							return replaceText == null ? Component.empty().children(matchedComponents) : LegacyComponentSerializer.legacySection().deserialize(replaceString);
+						});
+						for (Component componentToAppend : toAppend) {
+							component = component.append(componentToAppend);
 						}
 					}
 				}
@@ -419,46 +408,51 @@ public class OutboundToDiscordEvents implements Listener {
 		if (InteractiveChat.t && WebData.getInstance() != null) {
 			for (CustomPlaceholder customP : WebData.getInstance().getSpecialPlaceholders()) {
 				boolean onCooldown = cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), customP, now);
-				String regex = customP.isCaseSensitive() ? CustomStringUtils.escapeMetaCharacters(customP.getKeyword()) : "(?i)" + CustomStringUtils.escapeMetaCharacters(customP.getKeyword());
-				AtomicBoolean usedPlaceholder = new AtomicBoolean(false);
-				component = ComponentReplacing.replace(component, regex, true, result -> {
-					usedPlaceholder.set(true);
-					return LegacyComponentSerializer.legacySection().deserialize(customP.getKeyword());
-				});
-				if (usedPlaceholder.get() && !onCooldown) {
-					String replaceText = customP.getKeyword();
+				Matcher matcher = customP.getKeyword().matcher(plain);
+				if (matcher.find() && !onCooldown) {
+					String replaceText;
 					if (customP.getReplace().isEnabled()) {
-						replaceText = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(customP.getReplace().getReplaceText()));
-						if (reserializer) {
-							replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
-						}
-						component = ComponentReplacing.replace(component, (customP.isCaseSensitive() ? "" : "(?i)") + CustomStringUtils.escapeMetaCharacters(customP.getKeyword()), true, LegacyComponentSerializer.legacySection().deserialize(replaceText));
+						replaceText = ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(icSender, customP.getReplace().getReplaceText()));
+					} else {
+						replaceText = null;
 					}
-					if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && !InteractiveChatDiscordSrvAddon.plugin.hoverIngore.contains(customP.getPosition())) {
-						int position = customP.isCaseSensitive() ? originalMessage.indexOf(customP.getKeyword()) : originalMessage.toLowerCase().indexOf(customP.getKeyword().toLowerCase());
-						HoverClickDisplayData.Builder hoverClick = new HoverClickDisplayData.Builder().player(icSender).postion(position).color(DiscordDataRegistry.DISCORD_HOVER_COLOR).displayText(replaceText);
-						boolean usingHoverClick = false;
-						
-						if (customP.getHover().isEnabled()) {
-							usingHoverClick = true;
-							String hoverText = PlaceholderParser.parse(icSender, customP.getHover().getText());
-							Color color = ColorUtils.getFirstColor(customP.getHover().getText());
-							hoverClick.hoverText(LegacyComponentSerializer.legacySection().deserialize(hoverText));
-							if (color != null) {
-								hoverClick.color(color);
+					List<Component> toAppend = new LinkedList<>();
+					Set<String> shown = new HashSet<>();
+					component = ComponentReplacing.replace(component, customP.getKeyword().pattern(), true, (result, matchedComponents) -> {
+						String replaceString = replaceText == null ? result.group() : CustomStringUtils.applyReplacementRegex(replaceText, result, 1);
+						if (!shown.contains(replaceString)) {
+							shown.add(replaceString);
+							int position = result.start();
+							if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && !InteractiveChatDiscordSrvAddon.plugin.hoverIngore.contains(customP.getPosition())) {
+								HoverClickDisplayData.Builder hoverClick = new HoverClickDisplayData.Builder().player(icSender).postion(position).color(DiscordDataRegistry.DISCORD_HOVER_COLOR).displayText(ChatColorUtils.stripColor(replaceString));
+								boolean usingHoverClick = false;
+								
+								if (customP.getHover().isEnabled()) {
+									usingHoverClick = true;
+									String hoverText = PlaceholderParser.parse(icSender, CustomStringUtils.applyReplacementRegex(customP.getHover().getText(), result, 1));
+									Color color = ColorUtils.getFirstColor(hoverText);
+									hoverClick.hoverText(LegacyComponentSerializer.legacySection().deserialize(hoverText));
+									if (color != null) {
+										hoverClick.color(color);
+									}
+								}
+								
+								if (customP.getClick().isEnabled()) {
+									usingHoverClick = true;
+									hoverClick.clickAction(customP.getClick().getAction()).clickValue(CustomStringUtils.applyReplacementRegex(customP.getClick().getValue(), result, 1));
+								}
+								
+								if (usingHoverClick) {
+									int hoverId = DATA_ID_PROVIDER.getNext();
+									DATA.put(hoverId, hoverClick.build());
+									toAppend.add(Component.text("<ICD=" + hoverId + ">"));
+								}
 							}
 						}
-						
-						if (customP.getClick().isEnabled()) {
-							usingHoverClick = true;
-							hoverClick.clickAction(customP.getClick().getAction()).clickValue(customP.getClick().getValue());
-						}
-						
-						if (usingHoverClick) {
-							int hoverId = DATA_ID_PROVIDER.getNext();
-							DATA.put(hoverId, hoverClick.build());
-							component = component.append(Component.text("<ICD=" + hoverId + ">"));
-						}
+						return replaceText == null ? Component.empty().children(matchedComponents) : LegacyComponentSerializer.legacySection().deserialize(replaceString);
+					});
+					for (Component componentToAppend : toAppend) {
+						component = component.append(componentToAppend);
 					}
 				}
 			}

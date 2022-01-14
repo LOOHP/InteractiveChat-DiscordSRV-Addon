@@ -50,10 +50,10 @@ import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.OutboundToDiscordEvents;
 import com.loohp.interactivechatdiscordsrvaddon.metrics.Charts;
 import com.loohp.interactivechatdiscordsrvaddon.metrics.Metrics;
-import com.loohp.interactivechatdiscordsrvaddon.registies.InteractiveChatRegistry;
-import com.loohp.interactivechatdiscordsrvaddon.resource.ModelRenderer;
-import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
-import com.loohp.interactivechatdiscordsrvaddon.resource.ResourcePackInfo;
+import com.loohp.interactivechatdiscordsrvaddon.registry.InteractiveChatRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
 
 import github.scarsz.discordsrv.DiscordSRV;
@@ -317,7 +317,11 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 	@Override
 	public void reloadConfig() {
 		Config config = Config.getConfig(CONFIG_ID);
-		config.reload();
+		try {
+			config.reload();
+		} catch (InvalidConfigurationException | IOException e) {
+			e.printStackTrace();
+		}
 		
 		reloadConfigMessage = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.ReloadConfig"));
 		reloadTextureMessage = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.ReloadTexture"));

@@ -40,11 +40,11 @@ import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.BannerGraphics;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.BannerGraphics.BannerAssetResult;
+import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
-import com.loohp.interactivechatdiscordsrvaddon.registies.ResourceRegistry;
-import com.loohp.interactivechatdiscordsrvaddon.resource.models.ModelOverride.ModelOverrideType;
-import com.loohp.interactivechatdiscordsrvaddon.resource.textures.GeneratedTextureResource;
-import com.loohp.interactivechatdiscordsrvaddon.resource.textures.TextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.SpawnEggTintData;
 
 @SuppressWarnings("deprecation")

@@ -28,9 +28,9 @@ import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ComponentFlattening;
 import com.loohp.interactivechat.utils.ComponentModernizing;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import com.loohp.interactivechatdiscordsrvaddon.resource.ResourceManager;
-import com.loohp.interactivechatdiscordsrvaddon.resource.fonts.MinecraftFont;
-import com.loohp.interactivechatdiscordsrvaddon.resource.fonts.MinecraftFont.FontRenderResult;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.MinecraftFont;
+import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.MinecraftFont.FontRenderResult;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 
 public class ImageUtils {
