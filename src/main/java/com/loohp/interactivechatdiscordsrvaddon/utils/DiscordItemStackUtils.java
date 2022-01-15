@@ -236,7 +236,7 @@ public class DiscordItemStackUtils {
 			}
 		}
 		
-		if (FilledMapUtils.isFilledMap(item)) {
+		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && FilledMapUtils.isFilledMap(item)) {
 			MapMeta map = (MapMeta) item.getItemMeta();
 			MapView mapView;
 			int id;
@@ -263,7 +263,7 @@ public class DiscordItemStackUtils {
 			description += "\n";
 		}
 		
-		if (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS))) {
+		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && !hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS))) {
 			if (item.getItemMeta() instanceof PotionMeta) {
 				PotionMeta meta = (PotionMeta) item.getItemMeta();
 				List<PotionEffect> effects = new ArrayList<>();
@@ -668,7 +668,7 @@ public class DiscordItemStackUtils {
 			}
 		}
 		
-		if (FilledMapUtils.isFilledMap(item)) {
+		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && FilledMapUtils.isFilledMap(item)) {
 			MapMeta map = (MapMeta) item.getItemMeta();
 			MapView mapView;
 			int id;
@@ -694,7 +694,7 @@ public class DiscordItemStackUtils {
 			prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getFilledMapLevel(), language).replaceFirst("%s", scale + "").replaceFirst("%s", "4")));
 		}
 		
-		if (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS))) {
+		if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && !hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS))) {
 			if (item.getItemMeta() instanceof PotionMeta) {
 				PotionMeta meta = (PotionMeta) item.getItemMeta();
 				List<PotionEffect> effects = new ArrayList<>();

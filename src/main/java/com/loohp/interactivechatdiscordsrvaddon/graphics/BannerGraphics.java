@@ -21,11 +21,11 @@ import com.loohp.interactivechatdiscordsrvaddon.wrappers.PatternTypeWrapper;
 public class BannerGraphics {
 	
 	public static BannerAssetResult generateBannerAssets(ItemStack item) {
-		BufferedImage baseImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_LOCATION + "banner_base").getTexture(64, 64);
+		BufferedImage baseImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "banner_base").getTexture(64, 64);
 		BufferedImage patternsImage = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
 		
 		XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
-		String colorName = xMaterial.name().substring(0, xMaterial.name().indexOf("_"));
+		String colorName = xMaterial.name().replace("_BANNER", "");
 		Color baseColor = new Color(DyeColor.valueOf(colorName.toUpperCase()).getColor().asRGB());
 		
 		BufferedImage baseTint = new BufferedImage(42, 41, BufferedImage.TYPE_INT_ARGB);
@@ -58,7 +58,7 @@ public class BannerGraphics {
 		for (Pattern pattern : patterns) {
 			PatternTypeWrapper type = PatternTypeWrapper.fromPatternType(pattern.getPattern());
 			Color color = new Color(pattern.getColor().getColor().asRGB());
-			BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.BANNER_LOCATION + type.getAssetName()).getTexture(64, 64);
+			BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.BANNER_TEXTURE_LOCATION + type.getAssetName()).getTexture(64, 64);
 			BufferedImage tint = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g3 = tint.createGraphics();
 			g3.setColor(color);
@@ -97,7 +97,7 @@ public class BannerGraphics {
 			baseColor = new Color(meta.getBaseColor().getColor().asRGB());
 		}
 		
-		BufferedImage baseImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_LOCATION + "shield_base").getTexture(64, 64);
+		BufferedImage baseImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "shield_base").getTexture(64, 64);
 		BufferedImage patternsImage = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
 		
 		BufferedImage baseTint = new BufferedImage(11, 21, BufferedImage.TYPE_INT_ARGB);
@@ -113,7 +113,7 @@ public class BannerGraphics {
 		for (Pattern pattern : patterns) {
 			PatternTypeWrapper type = PatternTypeWrapper.fromPatternType(pattern.getPattern());
 			Color color = new Color(pattern.getColor().getColor().asRGB());
-			BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.SHIELD_LOCATION + type.getAssetName()).getTexture(64, 64);
+			BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.SHIELD_TEXTURE_LOCATION + type.getAssetName()).getTexture(64, 64);
 			BufferedImage tint = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
 			Graphics2D g3 = tint.createGraphics();
 			g3.setColor(color);
@@ -128,7 +128,7 @@ public class BannerGraphics {
 	}
 	
 	private static BannerAssetResult getDefaultShieldAssets() {
-		return new BannerAssetResult(InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_LOCATION + "shield_base_nopattern").getTexture(), new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB));
+		return new BannerAssetResult(InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "shield_base_nopattern").getTexture(), new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB));
 	}
 	
 	public static class BannerAssetResult {

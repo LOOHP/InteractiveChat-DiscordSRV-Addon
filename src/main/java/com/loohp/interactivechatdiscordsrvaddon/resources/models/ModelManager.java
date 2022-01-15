@@ -204,7 +204,7 @@ public class ModelManager extends AbstractManager {
 					break;
 				}
 				if (model.getRawParent().equals(BLOCK_ENTITY_BASE)) {
-					BlockModel builtinModel = resolveBlockModel(ResourceRegistry.BUILTIN_ENTITY_LOCATION + resourceLocation.substring(resourceLocation.lastIndexOf("/") + 1), predicates);
+					BlockModel builtinModel = resolveBlockModel(ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + resourceLocation.substring(resourceLocation.lastIndexOf("/") + 1), predicates);
 					if (builtinModel != null) {
 						return builtinModel;
 					}

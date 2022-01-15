@@ -268,7 +268,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 						ByteArrayOutputStream bottleOut = new ByteArrayOutputStream();
 						ImageIO.write(InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, "minecraft:item/experience_bottle", ModelDisplayPosition.GUI).getImage(), "png", bottleOut);
 						content.addAttachment("Level.png", bottleOut.toByteArray());
-						content.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language).replaceFirst("%s", level + ""));
+						content.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language).replaceFirst("%s|%d", level + ""));
 						content.setFooterImageUrl("attachment://Level.png");
 					}
 					errorCode--;
@@ -406,7 +406,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 			exp = NBTEditor.set(exp, InteractiveChatComponentSerializer.gson().serialize(expText), "display", "Name");
 		} else {
 			ItemMeta expMeta = exp.getItemMeta();
-			expMeta.setDisplayName(ChatColor.YELLOW + LanguageUtils.getTranslation(InventoryDisplay.getLevelTranslation(level), InteractiveChat.language).replaceFirst("%s", level + ""));
+			expMeta.setDisplayName(ChatColor.YELLOW + LanguageUtils.getTranslation(InventoryDisplay.getLevelTranslation(level), InteractiveChat.language).replaceFirst("%s|%d", level + ""));
 			exp.setItemMeta(expMeta);
 		}
 		inv.setItem(1, exp);
@@ -491,7 +491,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 			exp = NBTEditor.set(exp, InteractiveChatComponentSerializer.gson().serialize(expText), "display", "Name");
 		} else {
 			ItemMeta expMeta = exp.getItemMeta();
-			expMeta.setDisplayName(ChatColor.YELLOW + LanguageUtils.getTranslation(InventoryDisplay.getLevelTranslation(level), InteractiveChat.language).replaceFirst("%s", level + ""));
+			expMeta.setDisplayName(ChatColor.YELLOW + LanguageUtils.getTranslation(InventoryDisplay.getLevelTranslation(level), InteractiveChat.language).replaceFirst("%s|%d", level + ""));
 			exp.setItemMeta(expMeta);
 		}
 		inv.setItem(37, exp);

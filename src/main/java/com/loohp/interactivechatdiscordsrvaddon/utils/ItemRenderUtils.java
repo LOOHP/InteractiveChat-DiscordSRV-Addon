@@ -77,7 +77,7 @@ public class ItemRenderUtils {
 		if (xMaterial.equals(XMaterial.CHEST) || xMaterial.equals(XMaterial.TRAPPED_CHEST) || xMaterial.equals(XMaterial.ENDER_CHEST)) {
 			LocalDate time = LocalDate.now();
 			if (time.getMonth().equals(Month.DECEMBER) && (time.getDayOfMonth() == 24 || time.getDayOfMonth() == 25 || time.getDayOfMonth() == 26)) {
-				directLocation = ResourceRegistry.BUILTIN_ENTITY_LOCATION + "christmas_chest";
+				directLocation = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + "christmas_chest";
 			}
 		} else if (xMaterial.isOneOf(Arrays.asList("CONTAINS:banner"))) {
 			BannerAssetResult bannerAsset = BannerGraphics.generateBannerAssets(item);
@@ -88,7 +88,7 @@ public class ItemRenderUtils {
 			providedTextures.put(ResourceRegistry.SHIELD_BASE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(shieldAsset.getBase()));
 			providedTextures.put(ResourceRegistry.SHIELD_PATTERNS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(shieldAsset.getPatterns()));
 		} else if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
-			providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_LOCATION + "steve"));
+			providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "steve"));
 			try {
 				String base64 = SkinUtils.getSkinValue(item.getItemMeta());
 				if (base64 != null) {
@@ -200,12 +200,12 @@ public class ItemRenderUtils {
 			LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
 			Color color = new Color(meta.getColor().asRGB());
 			if (xMaterial.equals(XMaterial.LEATHER_HORSE_ARMOR)) {
-				BufferedImage itemImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_LOCATION + xMaterial.name().toLowerCase()).getTexture(32, 32);
+				BufferedImage itemImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + xMaterial.name().toLowerCase()).getTexture(32, 32);
 				BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
 				itemImage = ImageUtils.multiply(itemImage, colorOverlay);
 				providedTextures.put(ResourceRegistry.LEATHER_HORSE_ARMOR_PLACEHOLDER, new GeneratedTextureResource(itemImage));
 			} else {
-				BufferedImage itemImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_LOCATION + xMaterial.name().toLowerCase()).getTexture(32, 32);
+				BufferedImage itemImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + xMaterial.name().toLowerCase()).getTexture(32, 32);
 				BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
 				itemImage = ImageUtils.multiply(itemImage, colorOverlay);
 				if (xMaterial.name().contains("HELMET")) {
@@ -222,7 +222,7 @@ public class ItemRenderUtils {
 			if (xMaterial.equals(XMaterial.TIPPED_ARROW)) {
 				PotionMeta meta = (PotionMeta) item.getItemMeta();
 				PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
-				BufferedImage tippedArrowHead = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_LOCATION + "tipped_arrow_head").getTexture(32, 32);
+				BufferedImage tippedArrowHead = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "tipped_arrow_head").getTexture(32, 32);
 				
 				Color color;
 				try {
@@ -242,7 +242,7 @@ public class ItemRenderUtils {
 			} else {
 				PotionMeta meta = (PotionMeta) item.getItemMeta();
 				PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
-				BufferedImage potionOverlay = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_LOCATION + "potion_overlay").getTexture(32, 32);
+				BufferedImage potionOverlay = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "potion_overlay").getTexture(32, 32);
 				
 				Color color;
 				try {
@@ -268,8 +268,8 @@ public class ItemRenderUtils {
 		} else if (xMaterial.isOneOf(Arrays.asList("CONTAINS:spawn_egg"))) {
 			SpawnEggTintData tintData = TintUtils.getSpawnEggTint(xMaterial);
 			if (tintData != null) {
-				BufferedImage baseImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_LOCATION + "spawn_egg").getTexture();
-				BufferedImage overlayImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_LOCATION + "spawn_egg_overlay").getTexture(baseImage.getWidth(), baseImage.getHeight());
+				BufferedImage baseImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg").getTexture();
+				BufferedImage overlayImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg_overlay").getTexture(baseImage.getWidth(), baseImage.getHeight());
 				
 				BufferedImage colorBase = ImageUtils.changeColorTo(ImageUtils.copyImage(baseImage), tintData.getBase());
 				BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(overlayImage), tintData.getOverlay());

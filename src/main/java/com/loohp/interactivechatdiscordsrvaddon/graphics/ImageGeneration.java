@@ -52,6 +52,7 @@ import com.loohp.interactivechat.utils.HashUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.ItemNBTUtils;
 import com.loohp.interactivechat.utils.ItemStackUtils;
+import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.SkinUtils;
 import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Cache;
@@ -64,6 +65,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.M
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ModelUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils.ItemStackProcessResult;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper;
 
@@ -73,11 +75,12 @@ public class ImageGeneration {
 	private static final String OPTIFINE_CAPE_URL = "https://optifine.net/capes/%s.png";
 	private static final String PLAYER_INFO_URL = "https://sessionserver.mojang.com/session/minecraft/profile/%s";
 	
-	public static final int MAP_ICON_PER_ROLE = 16;
+	public static final int MAP_ICON_PER_ROLE = InteractiveChat.version.isLegacy() ? 4 : 16;
 	public static final int SPACING = 36;
 	
 	public static final double ITEM_AMOUNT_TEXT_DARKEN_FACTOR = 75.0 / 255.0;
 	
+	public static final Color ENCHANTMENT_GLINT_LEAGCY_COLOR = new Color(164, 84, 255);
 	public static final double ENCHANTMENT_GLINT_FACTOR = 190.0 / 255.0;
 	
 	private static final Color MISSING_TEXTURE_0 = new Color(0, 0, 0);
@@ -106,7 +109,11 @@ public class ImageGeneration {
 	}
 	
 	public static BufferedImage getRawEnchantedImage(BufferedImage source) {
-		BufferedImage tintOriginal = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.MISC_LOCATION + "enchanted_item_glint").getTexture();
+		BufferedImage tintOriginal = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.MISC_TEXTURE_LOCATION + "enchanted_item_glint").getTexture();
+		if (InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_14)) {
+			BufferedImage tinted = ImageUtils.changeColorTo(ImageUtils.copyImage(tintOriginal), ENCHANTMENT_GLINT_LEAGCY_COLOR);
+			tintOriginal = ImageUtils.multiply(tintOriginal, tinted);
+		}
 		BufferedImage tintImage = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);				
 		Graphics2D g3 = tintImage.createGraphics();
 		g3.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
@@ -135,7 +142,7 @@ public class ImageGeneration {
 		BufferedImage itemImage;
 		if (item == null || item.getType().equals(Material.AIR)) {
 			if (alternateAir) {
-				itemImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_BLOCK_LOCATION + "air_alternate").getTexture(32, 32);
+				itemImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_BLOCK_TEXTURE_LOCATION + "air_alternate").getTexture(32, 32);
 			} else {
 				g.dispose();
 				return background;
@@ -166,7 +173,7 @@ public class ImageGeneration {
 		}
 		
 		int rows = inventory.getSize() / 9;
-		BufferedImage background = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_GUI_LOCATION + rows + "_rows").getTexture();
+		BufferedImage background = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_GUI_TEXTURE_LOCATION + rows + "_rows").getTexture();
 		
 		BufferedImage target = new BufferedImage(background.getWidth(), background.getHeight(), BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = target.createGraphics();
@@ -210,10 +217,10 @@ public class ImageGeneration {
 			try {
 				background = ImageIO.read(new ByteArrayInputStream(InteractiveChatDiscordSrvAddon.plugin.getExtras("player_inventory_painting")));
 			} catch (Throwable e) {
-				background = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_GUI_LOCATION + "player_inventory").getTexture();
+				background = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_GUI_TEXTURE_LOCATION + "player_inventory").getTexture();
 			}
 		} else {
-			background = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_GUI_LOCATION + "player_inventory").getTexture();
+			background = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_GUI_TEXTURE_LOCATION + "player_inventory").getTexture();
 		}
 		
 		BufferedImage target = new BufferedImage(background.getWidth(), background.getHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -253,7 +260,7 @@ public class ImageGeneration {
 		//boots
 		ItemStack boots = inventory.getItem(i);
 		if (boots == null || boots.getType().equals(Material.AIR)) {
-			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_LOCATION + "empty_armor_slot_boots").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
+			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_boots").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
 		} else {
 			BufferedImage itemImage = getRawItemImage(boots, player);			
 			if (itemImage != null) {
@@ -265,7 +272,7 @@ public class ImageGeneration {
 		//leggings
 		ItemStack leggings = inventory.getItem(i);
 		if (leggings == null || leggings.getType().equals(Material.AIR)) {
-			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_LOCATION + "empty_armor_slot_leggings").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
+			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_leggings").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
 		} else {
 			BufferedImage itemImage = getRawItemImage(leggings, player);			
 			if (itemImage != null) {
@@ -277,7 +284,7 @@ public class ImageGeneration {
 		//chestplate
 		ItemStack chestplate = inventory.getItem(i);
 		if (chestplate == null || chestplate.getType().equals(Material.AIR)) {
-			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_LOCATION + "empty_armor_slot_chestplate").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
+			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_chestplate").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
 		} else {
 			BufferedImage itemImage = getRawItemImage(chestplate, player);			
 			if (itemImage != null) {
@@ -289,7 +296,7 @@ public class ImageGeneration {
 		//helmet
 		ItemStack helmet = inventory.getItem(i);
 		if (helmet == null || helmet.getType().equals(Material.AIR)) {
-			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_LOCATION + "empty_armor_slot_helmet").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
+			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_helmet").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
 		} else {
 			BufferedImage itemImage = getRawItemImage(helmet, player);			
 			if (itemImage != null) {
@@ -299,13 +306,15 @@ public class ImageGeneration {
 		i++;
 		
 		//offhand
-		ItemStack offhand = inventory.getItem(i);
-		if (offhand == null || offhand.getType().equals(Material.AIR)) {
-			g.drawImage(InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_LOCATION + "empty_armor_slot_shield").getTexture(32, 32), 162, 126, 32, 32, null);
-		} else {				
-			BufferedImage itemImage = getRawItemImage(offhand, player);				
-			if (itemImage != null) {
-				g.drawImage(itemImage, 162, 126, null);
+		if (!InteractiveChat.version.isOld()) {
+			ItemStack offhand = inventory.getItem(i);
+			if (offhand == null || offhand.getType().equals(Material.AIR)) {
+				g.drawImage(InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_shield").getTexture(32, 32), 162, 126, 32, 32, null);
+			} else {				
+				BufferedImage itemImage = getRawItemImage(offhand, player);				
+				if (itemImage != null) {
+					g.drawImage(itemImage, 162, 126, null);
+				}
 			}
 		}
 		
@@ -387,9 +396,9 @@ public class ImageGeneration {
 		
 		if (skin == null) {
 			if (slim) {
-				skin = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_LOCATION + "alex").getTexture();
+				skin = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "alex").getTexture();
 			} else {
-				skin = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_LOCATION + "steve").getTexture();
+				skin = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "steve").getTexture();
 			}
 		}
 		
@@ -407,10 +416,10 @@ public class ImageGeneration {
 			BufferedImage leggingsImage = null;
 			switch (type) {
 			case LEATHER_LEGGINGS:
-				leggingsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "leather_layer_2").getTexture();
+				leggingsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_2").getTexture();
 				LeatherArmorMeta meta = (LeatherArmorMeta) leggings.getItemMeta();
 				Color color = new Color(meta.getColor().asRGB());
-				BufferedImage armorOverlay = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "leather_layer_2_overlay").getTexture();
+				BufferedImage armorOverlay = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_2_overlay").getTexture();
 				BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(leggingsImage), color);
 				leggingsImage = ImageUtils.multiply(leggingsImage, colorOverlay);
 				
@@ -420,19 +429,19 @@ public class ImageGeneration {
 				g2.dispose();
 				break;
 			case CHAINMAIL_LEGGINGS:
-				leggingsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "chainmail_layer_2").getTexture();
+				leggingsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "chainmail_layer_2").getTexture();
 				break;
 			case GOLDEN_LEGGINGS:
-				leggingsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "gold_layer_2").getTexture();
+				leggingsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "gold_layer_2").getTexture();
 				break;
 			case IRON_LEGGINGS:
-				leggingsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "iron_layer_2").getTexture();
+				leggingsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "iron_layer_2").getTexture();
 				break;
 			case DIAMOND_LEGGINGS:
-				leggingsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "diamond_layer_2").getTexture();
+				leggingsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "diamond_layer_2").getTexture();
 				break;
 			case NETHERITE_LEGGINGS:
-				leggingsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "netherite_layer_2").getTexture();
+				leggingsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "netherite_layer_2").getTexture();
 				break;
 			default:
 				break;
@@ -450,10 +459,10 @@ public class ImageGeneration {
 			BufferedImage bootsImage = null;
 			switch (type) {
 			case LEATHER_BOOTS:
-				bootsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "leather_layer_1").getTexture();
+				bootsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_1").getTexture();
 				LeatherArmorMeta meta = (LeatherArmorMeta) boots.getItemMeta();
 				Color color = new Color(meta.getColor().asRGB());
-				BufferedImage armorOverlay = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "leather_layer_1_overlay").getTexture();
+				BufferedImage armorOverlay = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_1_overlay").getTexture();
 				BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(bootsImage), color);
 				
 				bootsImage = ImageUtils.multiply(bootsImage, colorOverlay);
@@ -464,19 +473,19 @@ public class ImageGeneration {
 				g2.dispose();
 				break;
 			case CHAINMAIL_BOOTS:
-				bootsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "chainmail_layer_1").getTexture();
+				bootsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "chainmail_layer_1").getTexture();
 				break;
 			case GOLDEN_BOOTS:
-				bootsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "gold_layer_1").getTexture();
+				bootsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "gold_layer_1").getTexture();
 				break;
 			case IRON_BOOTS:
-				bootsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "iron_layer_1").getTexture();
+				bootsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "iron_layer_1").getTexture();
 				break;
 			case DIAMOND_BOOTS:
-				bootsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "diamond_layer_1").getTexture();
+				bootsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "diamond_layer_1").getTexture();
 				break;
 			case NETHERITE_BOOTS:
-				bootsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "netherite_layer_1").getTexture();
+				bootsImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "netherite_layer_1").getTexture();
 				break;
 			default:
 				break;
@@ -496,10 +505,10 @@ public class ImageGeneration {
 			boolean isArmor = true;
 			switch (type) {
 			case LEATHER_CHESTPLATE:
-				chestplateImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "leather_layer_1").getTexture();
+				chestplateImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_1").getTexture();
 				LeatherArmorMeta meta = (LeatherArmorMeta) chestplate.getItemMeta();
 				Color color = new Color(meta.getColor().asRGB());
-				BufferedImage armorOverlay = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "leather_layer_1_overlay").getTexture();
+				BufferedImage armorOverlay = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_1_overlay").getTexture();
 				BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(chestplateImage), color);
 				chestplateImage = ImageUtils.multiply(chestplateImage, colorOverlay);
 				
@@ -509,24 +518,24 @@ public class ImageGeneration {
 				g2.dispose();
 				break;
 			case CHAINMAIL_CHESTPLATE:
-				chestplateImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "chainmail_layer_1").getTexture();
+				chestplateImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "chainmail_layer_1").getTexture();
 				break;
 			case GOLDEN_CHESTPLATE:
-				chestplateImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "gold_layer_1").getTexture();
+				chestplateImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "gold_layer_1").getTexture();
 				break;
 			case IRON_CHESTPLATE:
-				chestplateImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "iron_layer_1").getTexture();
+				chestplateImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "iron_layer_1").getTexture();
 				break;
 			case DIAMOND_CHESTPLATE:
-				chestplateImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "diamond_layer_1").getTexture();
+				chestplateImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "diamond_layer_1").getTexture();
 				break;
 			case NETHERITE_CHESTPLATE:
-				chestplateImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "netherite_layer_1").getTexture();
+				chestplateImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "netherite_layer_1").getTexture();
 				break;
 			case ELYTRA:
 				isArmor = false;
 				chestplateImage = new BufferedImage(150, 150, BufferedImage.TYPE_INT_ARGB);
-				BufferedImage wing = cape == null ? InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_LOCATION + "elytra").getTexture() : cape;
+				BufferedImage wing = cape == null ? InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "elytra").getTexture() : cape;
 				if (wing.getWidth() % 64 != 0 || wing.getHeight() % 32 != 0) {
 					int w = 0;
 					int h = 0;
@@ -573,10 +582,10 @@ public class ImageGeneration {
 			boolean isArmor = true;
 			switch (type) {
 			case LEATHER_HELMET:
-				helmetImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "leather_layer_1").getTexture();
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_1").getTexture();
 				LeatherArmorMeta meta = (LeatherArmorMeta) helmet.getItemMeta();
 				Color color = new Color(meta.getColor().asRGB());
-				BufferedImage armorOverlay = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "leather_layer_1_overlay").getTexture();
+				BufferedImage armorOverlay = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_1_overlay").getTexture();
 				BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(helmetImage), color);
 				
 				helmetImage = ImageUtils.multiply(helmetImage, colorOverlay);
@@ -587,30 +596,30 @@ public class ImageGeneration {
 				g2.dispose();
 				break;
 			case CHAINMAIL_HELMET:
-				helmetImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "chainmail_layer_1").getTexture();
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "chainmail_layer_1").getTexture();
 				break;
 			case GOLDEN_HELMET:
-				helmetImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "gold_layer_1").getTexture();
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "gold_layer_1").getTexture();
 				break;
 			case IRON_HELMET:
-				helmetImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "iron_layer_1").getTexture();
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "iron_layer_1").getTexture();
 				break;
 			case DIAMOND_HELMET:
-				helmetImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "diamond_layer_1").getTexture();
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "diamond_layer_1").getTexture();
 				break;
 			case NETHERITE_HELMET:
-				helmetImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "netherite_layer_1").getTexture();
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "netherite_layer_1").getTexture();
 				break;
 			case TURTLE_HELMET:
-				helmetImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_LOCATION + "turtle_layer_1").getTexture();
+				helmetImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "turtle_layer_1").getTexture();
 				break;
 			default:
 				isArmor = false;
-				String key = type.name().toLowerCase();
+				String key = ModelUtils.getItemModelKey(type);
 				ItemStackProcessResult itemProcessResult = ItemRenderUtils.processItemForRendering(player, helmet);
 				helmetEnchanted = itemProcessResult.isRequiresEnchantmentGlint();
 				helmetPredicate = itemProcessResult.getPredicates();
-				helmetModelKey = itemProcessResult.getDirectLocation() == null ? "minecraft:item/" + key : itemProcessResult.getDirectLocation();
+				helmetModelKey = itemProcessResult.getDirectLocation() == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : itemProcessResult.getDirectLocation();
 				providedTextures.putAll(itemProcessResult.getProvidedTextures());
 				break;
 			}
@@ -641,7 +650,7 @@ public class ImageGeneration {
 		
 		XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
 		int amount = item.getAmount();
-		String key = xMaterial.name().toLowerCase();
+		String key = ModelUtils.getItemModelKey(xMaterial);
 		ItemStackProcessResult processResult = ItemRenderUtils.processItemForRendering(player, item);
 		boolean requiresEnchantmentGlint = processResult.isRequiresEnchantmentGlint();
 		Map<ModelOverrideType, Float> predicates = processResult.getPredicates();
@@ -649,11 +658,12 @@ public class ImageGeneration {
 		String directLocation = processResult.getDirectLocation();
 		
 		BufferedImage itemImage;
-		RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, directLocation == null ? "minecraft:item/" + key : directLocation, ModelDisplayPosition.GUI, predicates, providedTextures, requiresEnchantmentGlint);
+		RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, directLocation == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : directLocation, ModelDisplayPosition.GUI, predicates, providedTextures, requiresEnchantmentGlint);
 		if (renderResult.isSuccessful()) {
 			itemImage = renderResult.getImage();
 		} else {
-			return null;
+			Debug.debug("ImageGeneration creating missing Image for material " + xMaterial);
+			itemImage = getMissingImage(32, 32);
 		}
 		
 		if (item.getType().getMaxDurability() > 0) {
@@ -699,7 +709,7 @@ public class ImageGeneration {
 		InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
 		Debug.debug("ImageGeneration creating map image");
 		
-		BufferedImage background = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.MAP_LOCATION + "map_background").getTexture();
+		BufferedImage background = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.MAP_TEXTURE_LOCATION + "map_background").getTexture();
 		
 		BufferedImage image = new BufferedImage(1120, 1120, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = image.createGraphics();
@@ -728,7 +738,7 @@ public class ImageGeneration {
 		Graphics2D g2 = image.createGraphics();
 		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 		
-		BufferedImage asset = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.MAP_LOCATION + "map_icons").getTexture();
+		BufferedImage asset = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.MAP_TEXTURE_LOCATION + "map_icons").getTexture();
 		int iconWidth = asset.getWidth() / MAP_ICON_PER_ROLE;
 		
 		for (MapCursor icon : data.getMapCursors()) {
@@ -736,7 +746,12 @@ public class ImageGeneration {
 			int y = icon.getY() + 128;
 			double rotation = (360.0 / 16.0 * (double) icon.getDirection()) + 180.0;
 			int type = icon.getType().ordinal();
-			Component component = LegacyComponentSerializer.legacySection().deserializeOrNull(icon.getCaption());
+			Component component;
+			try {
+				component = LegacyComponentSerializer.legacySection().deserializeOrNull(icon.getCaption());
+			} catch (Throwable e) {
+				component = null;
+			}
 			
 			//String name
 			BufferedImage iconImage = ImageUtils.copyAndGetSubImage(asset, type % MAP_ICON_PER_ROLE * iconWidth, type / MAP_ICON_PER_ROLE * iconWidth, iconWidth, iconWidth);
@@ -873,10 +888,12 @@ public class ImageGeneration {
 						}
 					}
 				} catch (Exception e) {
-					skin = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_LOCATION + "steve").getTexture(64, 64);
+					skin = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "steve").getTexture(64, 64);
 				}
 				BufferedImage avatar = ImageUtils.copyAndGetSubImage(skin, 8, 8, 8, 8);
+				BufferedImage avatarOverlay = ImageUtils.copyAndGetSubImage(skin, 40, 8, 8, 8);
 				g.drawImage(avatar, offsetX, 0, 16, 16, null);
+				g.drawImage(avatarOverlay, offsetX, 0, 16, 16, null);
 				offsetX += 18;
 			} else {
 				offsetX += 2;
@@ -1016,8 +1033,8 @@ public class ImageGeneration {
 				offsetY += 18;
 			}
 			g.dispose();
-			int lastY = 0;
-			for (int y = 0; y < decoration.getHeight(); y++) {
+			int lastY = offsetY - 2;
+			for (int y = offsetY - 2; y < decoration.getHeight(); y++) {
 				for (int x = 0; x < decoration.getWidth(); x++) {
 					if (decoration.getRGB(x, y) != 0) {
 						lastY = y;
@@ -1037,7 +1054,7 @@ public class ImageGeneration {
 	}
 	
 	public static BufferedImage getPingIcon(int ms) {
-		BufferedImage icons = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.GUI_LOCATION + "icons").getTexture();
+		BufferedImage icons = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "icons").getTexture();
 		if (ms < 0) {
 			return ImageUtils.copyAndGetSubImage(icons, 0, 56, 10, 7);
 		} else if (ms < 150) {

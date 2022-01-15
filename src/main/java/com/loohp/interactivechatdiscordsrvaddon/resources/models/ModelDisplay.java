@@ -1,5 +1,10 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources.models;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 public class ModelDisplay {
 	
 	private ModelDisplayPosition position;
@@ -32,18 +37,28 @@ public class ModelDisplay {
 
 	public static enum ModelDisplayPosition {
 		
-		THIRDPERSON_RIGHTHAND,
-		THIRDPERSON_LEFTHAND,
-		FIRSTPERSON_RIGHTHAND,
-		FIRSTPERSON_LEFTHAND,
-		GUI,
-		HEAD,
-		GROUND,
-		FIXED;
+		THIRDPERSON_RIGHTHAND("thirdperson_righthand", "thirdperson"),
+		THIRDPERSON_LEFTHAND("thirdperson_lefthand"),
+		FIRSTPERSON_RIGHTHAND("firstperson_righthand", "firstperson"),
+		FIRSTPERSON_LEFTHAND("firstperson_lefthand"),
+		GUI("gui"),
+		HEAD("head"),
+		GROUND("ground"),
+		FIXED("fixed");
 		
+		private Set<String> keys;
+		
+		ModelDisplayPosition(String... keys) {
+			this.keys = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(keys)));
+		}
+		
+		public Set<String> getKeys() {
+			return keys;
+		}
+
 		public static ModelDisplayPosition fromKey(String key) {
 			for (ModelDisplayPosition position : values()) {
-				if (key.toUpperCase().equals(position.toString())) {
+				if (position.getKeys().contains(key.toLowerCase())) {
 					return position;
 				}
 			}

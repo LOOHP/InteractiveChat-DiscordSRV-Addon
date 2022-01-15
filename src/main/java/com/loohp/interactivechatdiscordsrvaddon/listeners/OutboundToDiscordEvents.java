@@ -1056,7 +1056,7 @@ public class OutboundToDiscordEvents implements Listener {
 					}
 					content.addDescription(body);
 					if (InteractiveChatDiscordSrvAddon.plugin.hoverImage) {
-						BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_MISC_LOCATION + "hover_cursor").getTexture();
+						BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_MISC_TEXTURE_LOCATION + "hover_cursor").getTexture();
 						ByteArrayOutputStream os = new ByteArrayOutputStream();
 						ImageIO.write(image, "png", os);
 						content.setAuthorIconUrl("attachment://Hover.png");

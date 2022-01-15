@@ -23,6 +23,7 @@ import org.bukkit.command.CommandSender;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
+import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
@@ -33,7 +34,7 @@ import net.md_5.bungee.api.ChatColor;
 
 public class AssetsDownloader {
 	
-	public static final String ASSETS_DATA_URL = "https://api.loohpjames.com/spigot/plugins/interactivechatdiscordsrvaddon";
+	public static final String ASSETS_DATA_URL = "https://api.loohpjames.com/spigot/plugins/interactivechatdiscordsrvaddon?minecraftVersion=" + InteractiveChat.exactMinecraftVersion;
 	
 	private static final DecimalFormat FORMAT = new DecimalFormat("0.0");
 	private static final ReentrantLock LOCK = new ReentrantLock(true);

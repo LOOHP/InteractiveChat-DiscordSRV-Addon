@@ -35,14 +35,14 @@ import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.Coordinates3D;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay;
-import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelElement;
-import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelFace;
-import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelManager;
-import com.loohp.interactivechatdiscordsrvaddon.resources.models.TextureUV;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelElement;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelElement.ModelElementRotation;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelFace;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelFace.ModelFaceSide;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.TextureUV;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimation;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
@@ -63,8 +63,8 @@ public class ModelRenderer implements AutoCloseable {
 	
 	private static final double[] OVERLAY_ADDITION_FACTORS = new double[6];
 	
-	private static final String PLAYER_MODEL_RESOURCELOCATION = ResourceRegistry.BUILTIN_ENTITY_LOCATION + "player_model";
-	private static final String PLAYER_MODEL_SLIM_RESOURCELOCATION = ResourceRegistry.BUILTIN_ENTITY_LOCATION + "player_model_slim";
+	private static final String PLAYER_MODEL_RESOURCELOCATION = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + "player_model";
+	private static final String PLAYER_MODEL_SLIM_RESOURCELOCATION = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + "player_model_slim";
 	
 	static {
 		Arrays.fill(OVERLAY_ADDITION_FACTORS, ImageGeneration.ENCHANTMENT_GLINT_FACTOR);
