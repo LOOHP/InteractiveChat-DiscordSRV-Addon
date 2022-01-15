@@ -180,6 +180,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 	public String playerlistCommandFooter = "";
 	public String playerlistCommandEmptyServer = "";
 	public Color playerlistCommandColor = new Color(153, 153, 153);
+	public int playerlistCommandMinWidth = 0;
 	
 	public boolean shareInvCommandEnabled = true;
 	public boolean shareInvCommandIsMainServer = true;
@@ -424,6 +425,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 		playerlistCommandFooter = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getStringList("DiscordCommands.PlayerList.TablistOptions.FooterText").stream().collect(Collectors.joining("\n")));
 		playerlistCommandEmptyServer = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.PlayerList.EmptyServer"));
 		playerlistCommandColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordCommands.PlayerList.TablistOptions.SidebarColor"));
+		playerlistCommandMinWidth = config.getConfiguration().getInt("DiscordCommands.PlayerList.TablistOptions.PlayerMinWidth");
 		
 		shareInvCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.ShareInventory.Enabled");
 		shareInvCommandIsMainServer = config.getConfiguration().getBoolean("DiscordCommands.ShareInventory.IsMainServer");

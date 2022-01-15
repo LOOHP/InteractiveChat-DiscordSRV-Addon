@@ -900,8 +900,8 @@ public class ImageGeneration {
 			}
 			g.dispose();
 			ImageUtils.printComponent(InteractiveChatDiscordSrvAddon.plugin.resourceManager, image, name, offsetX, -1, 16);
-			int lastX = 0;
-			for (int x = 0; x < image.getWidth(); x++) {
+			int lastX = InteractiveChatDiscordSrvAddon.plugin.playerlistCommandMinWidth;
+			for (int x = InteractiveChatDiscordSrvAddon.plugin.playerlistCommandMinWidth; x < image.getWidth(); x++) {
 				for (int y = 0; y < image.getHeight(); y++) {
 					if (image.getRGB(x, y) != 0) {
 						lastX = x;
@@ -926,7 +926,7 @@ public class ImageGeneration {
 				BufferedImage ping = getPingIcon(pair.getSecond());
 				Graphics2D g = image.createGraphics();
 				g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-				g.drawImage(ImageUtils.resizeImageAbs(ping, 20, 14), masterOffsetX - 22, 3, null);
+				g.drawImage(ImageUtils.resizeImageAbs(ping, 20, 14), masterOffsetX - 22, 2, null);
 				g.dispose();
 			}
 			BufferedImage cropped = new BufferedImage(masterOffsetX, 18, BufferedImage.TYPE_INT_ARGB);
@@ -1055,18 +1055,19 @@ public class ImageGeneration {
 	
 	public static BufferedImage getPingIcon(int ms) {
 		BufferedImage icons = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "icons").getTexture();
+		int scale = icons.getWidth() / 256;
 		if (ms < 0) {
-			return ImageUtils.copyAndGetSubImage(icons, 0, 56, 10, 7);
+			return ImageUtils.copyAndGetSubImage(icons, 0 * scale, 56 * scale, 10 * scale, 7 * scale);
 		} else if (ms < 150) {
-			return ImageUtils.copyAndGetSubImage(icons, 0, 16, 10, 7);
+			return ImageUtils.copyAndGetSubImage(icons, 0 * scale, 16 * scale, 10 * scale, 7 * scale);
 		} else if (ms < 300) {
-			return ImageUtils.copyAndGetSubImage(icons, 0, 24, 10, 7);
+			return ImageUtils.copyAndGetSubImage(icons, 0 * scale, 24 * scale, 10 * scale, 7 * scale);
 		} else if (ms < 600) {
-			return ImageUtils.copyAndGetSubImage(icons, 0, 32, 10, 7);
+			return ImageUtils.copyAndGetSubImage(icons, 0 * scale, 32 * scale, 10 * scale, 7 * scale);
 		} else if (ms < 1000) {
-			return ImageUtils.copyAndGetSubImage(icons, 0, 40, 10, 7);
+			return ImageUtils.copyAndGetSubImage(icons, 0 * scale, 40 * scale, 10 * scale, 7 * scale);
 		} else {
-			return ImageUtils.copyAndGetSubImage(icons, 0, 48, 10, 7);
+			return ImageUtils.copyAndGetSubImage(icons, 0 * scale, 48 * scale, 10 * scale, 7 * scale);
 		}
 	}
 	

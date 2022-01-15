@@ -109,6 +109,9 @@ DiscordCommands:
     #Delete the tablist message after X seconds (Set to 0 to not have it automatically deleted)
     DeleteAfter: 0
     TablistOptions:
+      #The minimum width of the player name section of the playerlist
+      #This is measured in pixels
+      PlayerMinWidth: 0
       SidebarColor: "#999999"
       #The formatting of each player name
       PlayerFormat: "%vault_prefix%%player_name%"
