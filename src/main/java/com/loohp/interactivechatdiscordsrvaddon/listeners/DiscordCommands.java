@@ -164,18 +164,18 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 					OfflinePlayer firstPlayer = players.keySet().iterator().next();
 					List<Component> header = new ArrayList<>();
 					if (!InteractiveChatDiscordSrvAddon.plugin.playerlistCommandHeader.isEmpty()) {
-						header = ComponentStyling.splitAtLineBreaks(LegacyComponentSerializer.legacySection().deserialize(PlaceholderAPI.setPlaceholders(firstPlayer, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandHeader.replace("{OnlinePlayers}", players.size() + ""))));
+						header = ComponentStyling.splitAtLineBreaks(LegacyComponentSerializer.legacySection().deserialize(ChatColorUtils.translateAlternateColorCodes('&', PlaceholderAPI.setPlaceholders(firstPlayer, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandHeader.replace("{OnlinePlayers}", players.size() + "")))));
 					}
 					errorCode--;
 					List<Component> footer = new ArrayList<>();
 					if (!InteractiveChatDiscordSrvAddon.plugin.playerlistCommandFooter.isEmpty()) {
-						footer = ComponentStyling.splitAtLineBreaks(LegacyComponentSerializer.legacySection().deserialize(PlaceholderAPI.setPlaceholders(firstPlayer, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandFooter.replace("{OnlinePlayers}", players.size() + ""))));
+						footer = ComponentStyling.splitAtLineBreaks(LegacyComponentSerializer.legacySection().deserialize(ChatColorUtils.translateAlternateColorCodes('&', PlaceholderAPI.setPlaceholders(firstPlayer, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandFooter.replace("{OnlinePlayers}", players.size() + "")))));
 					}
 					errorCode--;
 					List<ValueTrios<UUID, Component, Integer>> player = new ArrayList<>();
 					for (Entry<OfflinePlayer, Integer> entry : players.entrySet()) {
 						OfflinePlayer offlineplayer = entry.getKey();
-						player.add(new ValueTrios<>(offlineplayer.getUniqueId(), LegacyComponentSerializer.legacySection().deserialize(ChatColorUtils.translateAlternateColorCodes('&', ChatColorUtils.translatePopularHexFormats('&', PlaceholderAPI.setPlaceholders(offlineplayer, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandPlayerFormat)))), entry.getValue()));
+						player.add(new ValueTrios<>(offlineplayer.getUniqueId(), LegacyComponentSerializer.legacySection().deserialize(ChatColorUtils.translateAlternateColorCodes('&', PlaceholderAPI.setPlaceholders(offlineplayer, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandPlayerFormat))), entry.getValue()));
 					}
 					errorCode--;
 					BufferedImage image = ImageGeneration.getTabListImage(header, footer, player, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandAvatar, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandPing);
