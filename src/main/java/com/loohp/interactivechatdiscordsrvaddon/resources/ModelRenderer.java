@@ -7,9 +7,11 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -22,6 +24,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.loohp.blockmodelrenderer.render.Hexahedron;
@@ -86,6 +89,15 @@ public class ModelRenderer implements AutoCloseable {
 	}
 	
 	public RenderResult renderPlyer(int width, int height, ResourceManager manager, boolean slim, String helmetModelKey, Map<ModelOverrideType, Float> helmetPredicate, boolean helmetEnchanted, Map<String, TextureResource> providedTextures) {
+		String cacheKey = cacheKey(width, height, manager.getUuid(), slim, helmetModelKey, helmetPredicate, helmetEnchanted, cacheKeyProvidedTextures(providedTextures));
+		Cache<?> cachedRender = Cache.getCache(cacheKey);
+		if (cachedRender != null) {
+			RenderResult cachedResult = (RenderResult) cachedRender.getObject();
+			if (cachedResult.isSuccessful()) {
+				return cachedResult;
+			}
+		}
+		
 		BlockModel helmetBlockModel = helmetModelKey == null ? null : manager.getModelManager().resolveBlockModel(helmetModelKey, helmetPredicate);
 		Model helmetRenderModel = null;
 		if (helmetBlockModel != null) {
@@ -157,7 +169,9 @@ public class ModelRenderer implements AutoCloseable {
 		
 		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 		renderPlayerModel(playerRenderModel, image);
-		return new RenderResult(image, null);
+		RenderResult result = new RenderResult(image, null);
+		Cache.putCache(cacheKey, result, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+		return result;
 	}
 	
 	public RenderResult render(int width, int height, ResourceManager manager, String modelKey, ModelDisplayPosition displayPosition) {
@@ -173,7 +187,7 @@ public class ModelRenderer implements AutoCloseable {
 	}
 	
 	public RenderResult render(int width, int height, ResourceManager manager, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, boolean enchanted) {
-		String cacheKey = CACHE_KEY + "/" + modelKey + "/" + predicate.entrySet().stream().map(entry -> entry.getKey().name().toLowerCase() + ":" + entry.getValue().toString()).collect(Collectors.joining(";")) + "/" + providedTextures.entrySet().stream().map(entry -> entry.getKey() + ":" + (entry.getValue().isTexture() ? hash(entry.getValue().getTexture()) : "null")).collect(Collectors.joining(":")) + "/" + enchanted;
+		String cacheKey = cacheKey(width, height, manager.getUuid(), modelKey, displayPosition, predicate, cacheKeyProvidedTextures(providedTextures), enchanted);
 		Cache<?> cachedRender = Cache.getCache(cacheKey);
 		if (cachedRender != null) {
 			RenderResult cachedResult = (RenderResult) cachedRender.getObject();
@@ -249,9 +263,12 @@ public class ModelRenderer implements AutoCloseable {
 					BufferedImage pixel = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 					pixel.setRGB(0, 0, color.getRGB());
 					BufferedImage[] imageArray = new BufferedImage[6];
-					for (int i = 0; i < imageArray.length; i++) {
-						imageArray[i] = ImageUtils.copyImage(pixel);
-					}
+					imageArray[0] = ImageUtils.getRGB(image, x, y + 1) > 0 ? ImageUtils.copyImage(pixel) : null; //u
+					imageArray[1] = ImageUtils.getRGB(image, x, y - 1) > 0 ? ImageUtils.copyImage(pixel) : null; //d
+					imageArray[2] = ImageUtils.copyImage(pixel); //n
+					imageArray[3] = ImageUtils.getRGB(image, x + 1, y) > 0 ? ImageUtils.copyImage(pixel) : null; //e
+					imageArray[4] = ImageUtils.copyImage(pixel); //s
+					imageArray[5] = ImageUtils.getRGB(image, x - 1, y) > 0 ? ImageUtils.copyImage(pixel) : null; //w
 					double scaledX = (double) x * intervalX;
 					double scaledY = height - (double) y * intervalY;
 					hexahedrons.add(Hexahedron.fromCorners(new Point3D(scaledX, scaledY, z), new Point3D(scaledX + intervalX, scaledY - intervalY, z + 1), false, imageArray));
@@ -432,7 +449,7 @@ public class ModelRenderer implements AutoCloseable {
 		g.scale(image.getWidth() / 18, image.getWidth() / 18);
 		renderModel.translate(-16 / 2, -16 / 2, -16 / 2);
 		renderModel.updateLightingRatio(0.7, 0.7, 0.7, 0.7, 0.7, 0.7);
-		renderModel.render(image.getWidth(), image.getHeight(), g, image, false);
+		renderModel.render(g, image, false);
 		g.dispose();
 	}
 	
@@ -451,7 +468,7 @@ public class ModelRenderer implements AutoCloseable {
 			renderModel.translate(transform.getX(), transform.getY(), transform.getZ());
 		}
 		renderModel.updateLightingRatio(0.98, 0.98, 0.608, 0.8, 0.608, 0.8);
-		renderModel.render(image.getWidth(), image.getHeight(), g, image, renderModel.getComponents().size() <= QUALITY_THRESHOLD);
+		renderModel.render(g, image, renderModel.getComponents().size() <= QUALITY_THRESHOLD);
 		g.dispose();
 	}
 	
@@ -463,6 +480,33 @@ public class ModelRenderer implements AutoCloseable {
 			}
 		}
 		return sb.toString();
+	}
+	
+	private String cacheKey(Object... obj) {
+		return Stream.of(obj).map(each -> {
+			if (each == null) {
+				return "null";
+			} else if (each instanceof Map) {
+				Comparator<Entry<?, ?>> c = Comparator.comparing(entry -> entry.getKey() == null ? "null" : entry.getKey().toString());
+				c = c.thenComparing(entry -> entry.getValue() == null ? "null" : entry.getValue().toString());
+				((Map<?, ?>) each).entrySet().stream().sorted(c).map(entry -> {
+					return (entry.getKey() == null ? "null" : entry.getKey().toString()) + ":" + (entry.getValue() == null ? "null" : entry.getValue().toString());
+				}).collect(Collectors.joining(", ", "{", "}"));
+			}
+			return each.toString();
+		}).collect(Collectors.joining("/", CACHE_KEY + "/", ""));
+	}
+	
+	private String cacheKeyProvidedTextures(Map<String, TextureResource> providedTextures) {
+		return providedTextures.entrySet().stream().map(entry -> {
+			TextureResource resource = entry.getValue();
+			if (resource.isTexture()) {
+				return entry.getKey() + ":" + hash(resource.getTexture());
+			} else if (resource.hasFile()) {
+				return entry.getKey() + ":" + resource.getFile().getAbsolutePath();
+			}
+			return entry.getKey() + ":" + resource.toString();
+		}).collect(Collectors.joining(", ", "{", "}"));
 	}
 	
 	public static class RenderResult {

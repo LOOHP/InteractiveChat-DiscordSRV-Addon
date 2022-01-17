@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -76,9 +77,20 @@ public class Commands implements CommandExecutor, TabCompleter {
 		
 		if (args[0].equalsIgnoreCase("reloadconfig")) {
 			if (sender.hasPermission("interactivechatdiscordsrv.reloadconfig")) {
-				InteractiveChatDiscordSrvAddon.plugin.reloadConfig();
-				Bukkit.getPluginManager().callEvent(new InteractiveChatDiscordSRVConfigReloadEvent());
-				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.reloadConfigMessage);
+				try {
+					if (InteractiveChatDiscordSrvAddon.plugin.resourceReloadLock.tryLock(0, TimeUnit.MILLISECONDS)) {
+						try {
+							InteractiveChatDiscordSrvAddon.plugin.reloadConfig();
+							Bukkit.getPluginManager().callEvent(new InteractiveChatDiscordSRVConfigReloadEvent());
+							sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.reloadConfigMessage);
+						} catch (Throwable e) {
+							e.printStackTrace();
+						}
+						InteractiveChatDiscordSrvAddon.plugin.resourceReloadLock.unlock();
+					} else {
+						sender.sendMessage(ChatColor.YELLOW + "Resource reloading in progress, please wait!");
+					}
+				} catch (IllegalStateException | InterruptedException e) {}
 			} else {
 				sender.sendMessage(InteractiveChat.noPermissionMessage);
 			}

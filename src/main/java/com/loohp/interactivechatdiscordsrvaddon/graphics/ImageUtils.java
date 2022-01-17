@@ -59,6 +59,13 @@ public class ImageUtils {
 	    }
 	}
 	
+	public static int getRGB(BufferedImage image, int x, int y) {
+		if (x < 0 || y < 0 || x >= image.getWidth() || y >= image.getHeight()) {
+			return 0;
+		}
+		return image.getRGB(x, y);
+	}
+	
 	public static BufferedImage downloadImage(String link) throws IOException {
 		URL url = new URL(link);
 		URLConnection connection = url.openConnection();

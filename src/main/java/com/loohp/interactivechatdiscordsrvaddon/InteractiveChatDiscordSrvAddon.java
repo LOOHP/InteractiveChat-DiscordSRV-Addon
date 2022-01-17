@@ -197,7 +197,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 	
 	public PlaceholderCooldownManager placeholderCooldownManager = new PlaceholderCooldownManager();
 	
-	private final ReentrantLock resourceReloadLock = new ReentrantLock(true);
+	protected final ReentrantLock resourceReloadLock = new ReentrantLock(true);
 	
 	public String defaultResourceHash = "N/A";
 	public List<String> resourceOrder = new ArrayList<>();

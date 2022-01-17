@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
@@ -31,6 +32,7 @@ public class ResourceManager implements AutoCloseable {
 	private LanguageManager languageManager;
 	
 	private AtomicBoolean isValid;
+	private UUID uuid;
 	
 	public ResourceManager() {
 		this.resourcePackInfo = new LinkedList<>();
@@ -40,6 +42,7 @@ public class ResourceManager implements AutoCloseable {
 		this.languageManager = new LanguageManager(this);
 		
 		this.isValid = new AtomicBoolean(true);
+		this.uuid = UUID.randomUUID();
 	}
 	
 	public synchronized ResourcePackInfo loadResources(File resourcePackFile) {
@@ -177,6 +180,10 @@ public class ResourceManager implements AutoCloseable {
 	
 	public boolean isValid() {
 		return isValid.get();
+	}
+
+	protected UUID getUuid() {
+		return uuid;
 	}
 
 	@Override
