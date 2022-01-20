@@ -298,7 +298,7 @@ public class ItemRenderUtils {
 			this.directLocation = directLocation;
 		}
 		
-		public boolean isRequiresEnchantmentGlint() {
+		public boolean requiresEnchantmentGlint() {
 			return requiresEnchantmentGlint;
 		}
 		

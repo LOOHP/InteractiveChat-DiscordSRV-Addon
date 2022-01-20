@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -59,14 +58,16 @@ import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.PlayerModelItem;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.PlayerModelItemPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RenderResult;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils;
-import com.loohp.interactivechatdiscordsrvaddon.utils.ModelUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils.ItemStackProcessResult;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ModelUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper;
 
 @SuppressWarnings("deprecation")
@@ -321,7 +322,7 @@ public class ImageGeneration {
 		//puppet
 		EntityEquipment equipment = player.getEquipment();
 		BufferedImage puppet = getFullBodyImage(player, equipment.getHelmet(), equipment.getChestplate(), equipment.getLeggings(), equipment.getBoots());
-		g.drawImage(puppet, 65, -10, null);
+		g.drawImage(puppet, 45, -10, null);
 		
 		g.dispose();
 		
@@ -403,11 +404,9 @@ public class ImageGeneration {
 		}
 		
 		BufferedImage elytraImage = null;
-		BufferedImage image = new BufferedImage(256, 676, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage image = new BufferedImage(556, 748, BufferedImage.TYPE_INT_ARGB);
 		Map<String, TextureResource> providedTextures = new HashMap<>();
-		String helmetModelKey = null;
-		Map<ModelOverrideType, Float> helmetPredicate = Collections.emptyMap();
-		boolean helmetEnchanted = false;
+		Map<PlayerModelItemPosition, PlayerModelItem> modelItems = new HashMap<>();
 		
 		providedTextures.put(ResourceRegistry.SKIN_FULL_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(skin));
 		
@@ -617,28 +616,51 @@ public class ImageGeneration {
 				isArmor = false;
 				String key = ModelUtils.getItemModelKey(type);
 				ItemStackProcessResult itemProcessResult = ItemRenderUtils.processItemForRendering(player, helmet);
-				helmetEnchanted = itemProcessResult.isRequiresEnchantmentGlint();
-				helmetPredicate = itemProcessResult.getPredicates();
-				helmetModelKey = itemProcessResult.getDirectLocation() == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : itemProcessResult.getDirectLocation();
-				providedTextures.putAll(itemProcessResult.getProvidedTextures());
+				boolean enchanted = itemProcessResult.requiresEnchantmentGlint();
+				Map<ModelOverrideType, Float> predicate = itemProcessResult.getPredicates();
+				String modelKey = itemProcessResult.getDirectLocation() == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : itemProcessResult.getDirectLocation();
+				Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
+				modelItems.put(PlayerModelItemPosition.HELMET, new PlayerModelItem(PlayerModelItemPosition.HELMET, modelKey, predicate, enchanted, itemProvidedTextures));
 				break;
 			}
 			if (isArmor) {
 				if (helmet.getEnchantments().size() > 0) {
 					helmetImage = getEnchantedImage(helmetImage);
 				}
-				
 				providedTextures.put(ResourceRegistry.HELMET_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(helmetImage));
 			}
 		}
 		
-		RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.renderPlyer(image.getWidth(), image.getHeight(), InteractiveChatDiscordSrvAddon.plugin.resourceManager, slim, helmetModelKey, helmetPredicate, helmetEnchanted, providedTextures);
+		if (InteractiveChatDiscordSrvAddon.plugin.renderHandHeldItems) {
+			ItemStack rightHand = player.isRightHanded() ? player.getMainHandItem() : player.getOffHandItem();
+			if (rightHand != null) {
+				String key = ModelUtils.getItemModelKey(XMaterialUtils.matchXMaterial(rightHand));
+				ItemStackProcessResult itemProcessResult = ItemRenderUtils.processItemForRendering(player, rightHand);
+				boolean enchanted = itemProcessResult.requiresEnchantmentGlint();
+				Map<ModelOverrideType, Float> predicate = itemProcessResult.getPredicates();
+				String modelKey = itemProcessResult.getDirectLocation() == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : itemProcessResult.getDirectLocation();
+				Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
+				modelItems.put(PlayerModelItemPosition.RIGHT_HAND, new PlayerModelItem(PlayerModelItemPosition.RIGHT_HAND, modelKey, predicate, enchanted, itemProvidedTextures));
+			}
+			ItemStack leftHand = player.isRightHanded() ? player.getOffHandItem() : player.getMainHandItem();
+			if (leftHand != null) {
+				String key = ModelUtils.getItemModelKey(XMaterialUtils.matchXMaterial(leftHand));
+				ItemStackProcessResult itemProcessResult = ItemRenderUtils.processItemForRendering(player, leftHand);
+				boolean enchanted = itemProcessResult.requiresEnchantmentGlint();
+				Map<ModelOverrideType, Float> predicate = itemProcessResult.getPredicates();
+				String modelKey = itemProcessResult.getDirectLocation() == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : itemProcessResult.getDirectLocation();
+				Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
+				modelItems.put(PlayerModelItemPosition.LEFT_HAND, new PlayerModelItem(PlayerModelItemPosition.LEFT_HAND, modelKey, predicate, enchanted, itemProvidedTextures));
+			}
+		}
+		
+		RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.renderPlyer(image.getWidth(), image.getHeight(), InteractiveChatDiscordSrvAddon.plugin.resourceManager, slim, providedTextures, modelItems);
 		Graphics2D g = image.createGraphics();
-		g.drawImage(ImageUtils.resizeImageAbs(renderResult.getImage(), 54, 148), 11, 14, null);
+		g.drawImage(ImageUtils.resizeImageAbs(renderResult.getImage(), 117, 159), -1, 12, null);
 		g.dispose();
 		
 		if (elytraImage != null) {
-			ImageUtils.drawTransparent(image, ImageUtils.resizeImage(elytraImage, 0.9), -6, 75);
+			ImageUtils.drawTransparent(image, ImageUtils.resizeImage(elytraImage, 0.9), 14, 75);
 		}
 		
 		return image;
@@ -652,7 +674,7 @@ public class ImageGeneration {
 		int amount = item.getAmount();
 		String key = ModelUtils.getItemModelKey(xMaterial);
 		ItemStackProcessResult processResult = ItemRenderUtils.processItemForRendering(player, item);
-		boolean requiresEnchantmentGlint = processResult.isRequiresEnchantmentGlint();
+		boolean requiresEnchantmentGlint = processResult.requiresEnchantmentGlint();
 		Map<ModelOverrideType, Float> predicates = processResult.getPredicates();
 		Map<String, TextureResource> providedTextures = processResult.getProvidedTextures();
 		String directLocation = processResult.getDirectLocation();
@@ -677,7 +699,7 @@ public class ImageGeneration {
 				
 				Graphics2D g4 = itemImage.createGraphics();
 				g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-				g4.setColor(Color.black);
+				g4.setColor(Color.BLACK);
 				g4.fillPolygon(new int[] {4, 30, 30, 4}, new int[] {26, 26, 30, 30}, 4);
 				g4.setColor(color);
 				g4.fillPolygon(new int[] {4, 4 + length, 4 + length, 4}, new int[] {26, 26, 28, 28}, 4);

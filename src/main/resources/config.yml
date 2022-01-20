@@ -16,6 +16,9 @@ InventoryImage:
     Enabled: true
     #Use the player inventory gui template instead of the normal inventory template
     UsePlayerInventoryView: true
+    #Whether to render the items a player is holding
+    #Only effective when UsePlayerInventoryView is true
+    RenderHandHeldItems: true
     EmbedColor: "#55FFFF"
     ShowExperienceLevel: true
   #Whether or not to generate images for the enderchest placeholder

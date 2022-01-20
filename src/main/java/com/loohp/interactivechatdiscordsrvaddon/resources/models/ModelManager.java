@@ -58,6 +58,7 @@ public class ModelManager extends AbstractManager {
 				reader.close();
 				String parent = (String) rootJson.getOrDefault("parent", null);
 				boolean ambientocclusion = (boolean) rootJson.getOrDefault("ambientocclusion", true);
+				ModelGUILight guiLight = rootJson.containsKey("gui_light") ? ModelGUILight.fromKey((String) rootJson.get("gui_light")) : null;
 				Map<ModelDisplayPosition, ModelDisplay> display = new EnumMap<>(ModelDisplayPosition.class);
 				JSONObject displayJson = (JSONObject) rootJson.get("display");
 				if (displayJson != null) {
@@ -166,7 +167,7 @@ public class ModelManager extends AbstractManager {
 					}
 				}
 				Collections.reverse(overrides);
-				models.put(key, new BlockModel(parent, ambientocclusion, display, texture, elements, overrides));
+				models.put(key, new BlockModel(parent, ambientocclusion, guiLight, display, texture, elements, overrides));
 			} catch (Exception e) {
 				new RuntimeException("Unable to load block model " + file.getAbsolutePath(), e).printStackTrace();
 			}

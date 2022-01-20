@@ -230,6 +230,27 @@ public class Charts {
             }
         }));
 		
+		metrics.addCustomChart(new Metrics.SingleLineChart("servers_rendering_player_models_with_hand_items", new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                return InteractiveChatDiscordSrvAddon.plugin.usePlayerInvView && InteractiveChatDiscordSrvAddon.plugin.renderHandHeldItems ? 1 : 0;
+            }
+        }));
+		
+		metrics.addCustomChart(new Metrics.SingleLineChart("servers_combined_average_pmwhh_rendering_times", new Callable<Integer>() {
+            @Override
+            public Integer call() throws Exception {
+                long combined = 0;
+                Integer i;
+                int counter = 0;
+                while ((i = InteractiveChatDiscordSrvAddon.plugin.playerModelRenderingTimes.poll()) != null) {
+                	combined += i;
+                	counter++;
+                }
+                return (int) ((double) combined / (double) counter);
+            }
+        }));
+		
 	}
 
 }

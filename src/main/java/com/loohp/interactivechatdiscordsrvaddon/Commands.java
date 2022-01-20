@@ -45,7 +45,7 @@ public class Commands implements CommandExecutor, TabCompleter {
 		
 		if (args[0].equalsIgnoreCase("status")) {
 			if (sender.hasPermission("interactivechatdiscordsrv.status")) {
-				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.defaultResourceHashLang.replaceFirst("%s", InteractiveChatDiscordSrvAddon.plugin.defaultResourceHash));
+				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.defaultResourceHashLang.replaceFirst("%s", InteractiveChatDiscordSrvAddon.plugin.defaultResourceHash + " (" + InteractiveChat.exactMinecraftVersion + ")"));
 				sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.loadedResourcesLang);
 				for (ResourcePackInfo info : InteractiveChatDiscordSrvAddon.plugin.resourceManager.getResourcePackInfo()) {
 					String name = info.getName();

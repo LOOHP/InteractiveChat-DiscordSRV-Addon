@@ -66,6 +66,13 @@ public class ImageUtils {
 		return image.getRGB(x, y);
 	}
 	
+	public static int getRGB(int[] colors, int x, int y, int w, int h) {
+		if (x < 0 || y < 0 || x >= w || y >= h) {
+			return 0;
+		}
+		return colors[y * w + x];
+	}
+	
 	public static BufferedImage downloadImage(String link) throws IOException {
 		URL url = new URL(link);
 		URLConnection connection = url.openConnection();

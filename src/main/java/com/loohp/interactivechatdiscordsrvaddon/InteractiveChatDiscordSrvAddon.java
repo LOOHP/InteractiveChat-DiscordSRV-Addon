@@ -13,8 +13,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -93,12 +95,14 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 	public AtomicLong attachmentCounter = new AtomicLong(0);
 	public AtomicLong attachmentImageCounter = new AtomicLong(0);
 	public AtomicLong imagesViewedCounter = new AtomicLong(0);
+	public Queue<Integer> playerModelRenderingTimes = new ConcurrentLinkedQueue<>();
 	
 	public boolean itemImage = true;
 	public boolean invImage = true;
 	public boolean enderImage = true;
 	
 	public boolean usePlayerInvView = true;
+	public boolean renderHandHeldItems = true;
 	
 	public String itemDisplaySingle = "";
 	public String itemDisplayMultiple = "";
@@ -267,7 +271,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 		}
 		
 		reloadTextures(false, false);
-		modelRenderer = new ModelRenderer(8);
+		modelRenderer = new ModelRenderer(() -> 8, () -> Runtime.getRuntime().availableProcessors());
 		
 		Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
 			for (ICPlayer player : ICPlayerFactory.getOnlineICPlayers()) {
@@ -352,6 +356,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 		enderImage = config.getConfiguration().getBoolean("InventoryImage.EnderChest.Enabled");
 		
 		usePlayerInvView = config.getConfiguration().getBoolean("InventoryImage.Inventory.UsePlayerInventoryView");
+		renderHandHeldItems = config.getConfiguration().getBoolean("InventoryImage.Inventory.RenderHandHeldItems");
 		
 		itemUseTooltipImage = config.getConfiguration().getBoolean("InventoryImage.Item.UseTooltipImage");
 		itemUseTooltipImageOnBaseItem = config.getConfiguration().getBoolean("InventoryImage.Item.UseTooltipImageOnBaseItem");

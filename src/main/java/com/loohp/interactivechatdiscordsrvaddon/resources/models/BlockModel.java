@@ -16,14 +16,16 @@ public class BlockModel {
 	
 	private String parent;
 	private boolean ambientocclusion;
+	private ModelGUILight guiLight;
 	private Map<ModelDisplayPosition, ModelDisplay> display;
 	private Map<String, String> textures;
 	private List<ModelElement> elements;
 	private List<ModelOverride> overrides;
 	
-	public BlockModel(String parent, boolean ambientocclusion, Map<ModelDisplayPosition, ModelDisplay> display, Map<String, String> textures, List<ModelElement> elements, List<ModelOverride> overrides) {
+	public BlockModel(String parent, boolean ambientocclusion, ModelGUILight guiLight, Map<ModelDisplayPosition, ModelDisplay> display, Map<String, String> textures, List<ModelElement> elements, List<ModelOverride> overrides) {
 		this.parent = parent;
 		this.ambientocclusion = ambientocclusion;
+		this.guiLight = guiLight;
 		this.display = Collections.unmodifiableMap(display);
 		this.textures = Collections.unmodifiableMap(textures);
 		this.elements = Collections.unmodifiableList(elements);
@@ -33,7 +35,7 @@ public class BlockModel {
 	public static BlockModel resolve(BlockModel childrenModel) {
 		boolean ambientocclusion = childrenModel.isAmbientocclusion();
 		Map<ModelDisplayPosition, ModelDisplay> display = new EnumMap<>(ModelDisplayPosition.class);
-		display.putAll(childrenModel.getDisplay());
+		display.putAll(childrenModel.getRawDisplay());
 		Map<String, String> textures = new HashMap<>();
 		textures.putAll(childrenModel.getTextures());
 		for (Entry<String, String> entry : textures.entrySet()) {
@@ -64,15 +66,18 @@ public class BlockModel {
 			}
 			elements.set(i, new ModelElement(element.getFrom(), element.getTo(), element.getRotation(), element.isShade(), faces));
 		}
-		return new BlockModel(childrenModel.getRawParent(), ambientocclusion, display, textures, elements, childrenModel.getOverrides());
+		return new BlockModel(childrenModel.getRawParent(), ambientocclusion, childrenModel.getRawGUILight(), display, textures, elements, childrenModel.getOverrides());
 	}
 	
 	public static BlockModel resolve(BlockModel parentModel, BlockModel childrenModel) {
 		String parent = parentModel.getRawParent();
-		boolean ambientocclusion = childrenModel.isAmbientocclusion();
+		ModelGUILight guiLight = childrenModel.getRawGUILight();
+		if (parentModel.getRawGUILight() != null) {
+			guiLight = parentModel.getRawGUILight();
+		}
 		Map<ModelDisplayPosition, ModelDisplay> display = new EnumMap<>(ModelDisplayPosition.class);
-		display.putAll(parentModel.getDisplay());
-		display.putAll(childrenModel.getDisplay());
+		display.putAll(parentModel.getRawDisplay());
+		display.putAll(childrenModel.getRawDisplay());
 		Map<String, String> textures = new HashMap<>();
 		textures.putAll(parentModel.getTextures());
 		textures.putAll(childrenModel.getTextures());
@@ -104,7 +109,7 @@ public class BlockModel {
 			}
 			elements.set(i, new ModelElement(element.getFrom(), element.getTo(), element.getRotation(), element.isShade(), faces));
 		}
-		return new BlockModel(parent, ambientocclusion, display, textures, elements, parentModel.getOverrides());
+		return new BlockModel(parent, childrenModel.isAmbientocclusion(), guiLight, display, textures, elements, parentModel.getOverrides());
 	}
 	
 	public String getRawParent() {
@@ -119,12 +124,26 @@ public class BlockModel {
 		return ambientocclusion;
 	}
 	
-	public Map<ModelDisplayPosition, ModelDisplay> getDisplay() {
+	public ModelGUILight getRawGUILight() {
+		return guiLight;
+	}
+	
+	public ModelGUILight getGUILight() {
+		return guiLight == null ? ModelGUILight.SIDE : guiLight;
+	}
+
+	public Map<ModelDisplayPosition, ModelDisplay> getRawDisplay() {
 		return display;
 	}
 
 	public ModelDisplay getDisplay(ModelDisplayPosition position) {
-		return display.get(position);
+		ModelDisplay modelDisplay = display.get(position);
+		if (modelDisplay != null) {
+			return modelDisplay;
+		} else if (position.hasFallback()) {
+			return display.get(position.getFallback());
+		}
+		return null;
 	}
 
 	public Map<String, String> getTextures() {

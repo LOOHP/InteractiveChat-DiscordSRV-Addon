@@ -38,22 +38,36 @@ public class ModelDisplay {
 	public static enum ModelDisplayPosition {
 		
 		THIRDPERSON_RIGHTHAND("thirdperson_righthand", "thirdperson"),
-		THIRDPERSON_LEFTHAND("thirdperson_lefthand"),
+		THIRDPERSON_LEFTHAND(THIRDPERSON_RIGHTHAND, "thirdperson_lefthand"),
 		FIRSTPERSON_RIGHTHAND("firstperson_righthand", "firstperson"),
-		FIRSTPERSON_LEFTHAND("firstperson_lefthand"),
+		FIRSTPERSON_LEFTHAND(FIRSTPERSON_RIGHTHAND, "firstperson_lefthand"),
 		GUI("gui"),
 		HEAD("head"),
 		GROUND("ground"),
 		FIXED("fixed");
 		
+		private ModelDisplayPosition fallback;
 		private Set<String> keys;
 		
-		ModelDisplayPosition(String... keys) {
+		ModelDisplayPosition(ModelDisplayPosition fallback, String... keys) {
 			this.keys = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(keys)));
+			this.fallback = fallback;
+		}
+		
+		ModelDisplayPosition(String... keys) {
+			this(null, keys);
 		}
 		
 		public Set<String> getKeys() {
 			return keys;
+		}
+		
+		public boolean hasFallback() {
+			return fallback != null;
+		}
+
+		public ModelDisplayPosition getFallback() {
+			return fallback;
 		}
 
 		public static ModelDisplayPosition fromKey(String key) {
