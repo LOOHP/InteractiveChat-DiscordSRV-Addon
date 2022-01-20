@@ -74,7 +74,7 @@ public class ItemRenderUtils {
 			int customModelData = NBTEditor.getInt(item, "CustomModelData");
 			predicates.put(ModelOverrideType.CUSTOM_MODEL_DATA, (float) customModelData);
 		}
-		if (xMaterial.equals(XMaterial.CHEST) || xMaterial.equals(XMaterial.TRAPPED_CHEST) || xMaterial.equals(XMaterial.ENDER_CHEST)) {
+		if (xMaterial.equals(XMaterial.CHEST) || xMaterial.equals(XMaterial.TRAPPED_CHEST)) {
 			LocalDate time = LocalDate.now();
 			if (time.getMonth().equals(Month.DECEMBER) && (time.getDayOfMonth() == 24 || time.getDayOfMonth() == 25 || time.getDayOfMonth() == 26)) {
 				directLocation = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + "christmas_chest";
