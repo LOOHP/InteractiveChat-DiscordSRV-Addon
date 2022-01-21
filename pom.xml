@@ -279,7 +279,7 @@
 		<dependency>
 			<groupId>com.loohp</groupId>
 			<artifactId>BlockModelRenderer</artifactId>
-			<version>1.0.5.1</version>
+			<version>1.0.5.2</version>
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
