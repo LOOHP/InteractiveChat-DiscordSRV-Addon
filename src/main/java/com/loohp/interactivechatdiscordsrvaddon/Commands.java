@@ -18,14 +18,17 @@ import com.loohp.interactivechat.api.InteractiveChatAPI;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ComponentStyling;
+import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.api.events.InteractiveChatDiscordSRVConfigReloadEvent;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents.DiscordAttachmentData;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater.UpdaterResponse;
+import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -50,12 +53,23 @@ public class Commands implements CommandExecutor, TabCompleter {
 				for (ResourcePackInfo info : InteractiveChatDiscordSrvAddon.plugin.resourceManager.getResourcePackInfo()) {
 					String name = info.getName();
 					if (info.getStatus()) {
-						Component component = Component.text(" - " + name).color(NamedTextColor.GREEN);
-						component = component.hoverEvent(HoverEvent.showText(info.getDescription()));
+						Component component = Component.text(" - " + name).color(info.comparePackFormat() == 0 ? NamedTextColor.GREEN : NamedTextColor.YELLOW);
+						Component hoverComponent = info.getDescription();
+						if (info.comparePackFormat() > 0) {
+							hoverComponent = hoverComponent.append(LegacyComponentSerializer.legacySection().deserialize("\n" + ChatColor.YELLOW + LanguageUtils.getTranslation(TranslationKeyUtils.getNewIncompatiblePack(), InteractiveChatDiscordSrvAddon.plugin.language)));
+						} else if (info.comparePackFormat() < 0) {
+							hoverComponent = hoverComponent.append(LegacyComponentSerializer.legacySection().deserialize("\n" + ChatColor.YELLOW + LanguageUtils.getTranslation(TranslationKeyUtils.getOldIncompatiblePack(), InteractiveChatDiscordSrvAddon.plugin.language)));
+						}
+						component = component.hoverEvent(HoverEvent.showText(hoverComponent));
 						InteractiveChatAPI.sendMessage(sender, component);
 						if (!(sender instanceof Player)) {
 							for (Component each : ComponentStyling.splitAtLineBreaks(info.getDescription())) {
 								InteractiveChatAPI.sendMessage(sender, Component.text("   - ").color(NamedTextColor.GRAY).append(each));
+								if (info.comparePackFormat() > 0) {
+									sender.sendMessage(ChatColor.YELLOW + "     " + LanguageUtils.getTranslation(TranslationKeyUtils.getNewIncompatiblePack(), InteractiveChatDiscordSrvAddon.plugin.language));
+								} else if (info.comparePackFormat() < 0) {
+									sender.sendMessage(ChatColor.YELLOW + "     " + LanguageUtils.getTranslation(TranslationKeyUtils.getOldIncompatiblePack(), InteractiveChatDiscordSrvAddon.plugin.language));
+								}
 							}
 						}
 					} else {

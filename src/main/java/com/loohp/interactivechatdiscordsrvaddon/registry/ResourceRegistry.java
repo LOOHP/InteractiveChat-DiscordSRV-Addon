@@ -1,10 +1,13 @@
 package com.loohp.interactivechatdiscordsrvaddon.registry;
 
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackUtils;
 
 public class ResourceRegistry {
 	
 	public static final String DEFAULT_NAMESPACE = "minecraft";
+	
+	public static final int RESOURCE_PACK_VERSION = ResourcePackUtils.getServerResourcePackVersion();
 	
 	public static final String BANNER_TEXTURE_LOCATION = "minecraft:entity/banner/";
 	public static final String SHIELD_TEXTURE_LOCATION = "minecraft:entity/shield/";

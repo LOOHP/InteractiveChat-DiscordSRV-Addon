@@ -1,6 +1,7 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources;
 
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 
 public class ResourcePackInfo {
 	
@@ -52,6 +53,10 @@ public class ResourcePackInfo {
 
 	public int getPackFormat() {
 		return packFormat;
+	}
+	
+	public int comparePackFormat() {
+		return ResourceRegistry.RESOURCE_PACK_VERSION < packFormat ? 1 : (ResourceRegistry.RESOURCE_PACK_VERSION > packFormat ? -1 : 0);
 	}
 
 	public Component getDescription() {

@@ -500,7 +500,13 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 						Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"" + resourceName + "\" resources...");
 						File resourcePackFile = new File(getDataFolder(), "resourcepacks/" + resourceName);
 						ResourcePackInfo info = resourceManager.loadResources(resourcePackFile);
-						if (!info.getStatus()) {
+						if (info.getStatus()) {
+							if (info.comparePackFormat() > 0) {
+								sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] Warning: \"" + resourceName + "\" was made for a newer version of Minecraft!", senders);
+							} else if (info.comparePackFormat() < 0) {
+								sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] Warning: \"" + resourceName + "\" was made for an older version of Minecraft!", senders);
+							}
+						} else {
 							if (info.getRejectedReason() == null) {
 								sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load \"" + resourceName + "\"", senders);
 							} else {

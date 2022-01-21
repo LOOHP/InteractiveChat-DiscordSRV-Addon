@@ -105,7 +105,7 @@ public class AssetsDownloader {
 							break;
 						}
 						String name = entry.getName();
-						if (name.startsWith("assets") && !entry.isDirectory()) {
+						if ((name.startsWith("assets") || name.equals("pack.png")) && !entry.isDirectory()) {
 							String fileName = getEntryName(name);
 							if (!InteractiveChatDiscordSrvAddon.plugin.reducedAssetsDownloadInfo) {
 								Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Extracting " + name);

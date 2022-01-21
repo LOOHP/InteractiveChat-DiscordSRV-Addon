@@ -48,7 +48,7 @@ public class BitmapFont extends MinecraftFont {
 		BufferedImage fontFileImage = manager.getFontManager().getFontResource(resourceLocation).getTexture();
 		
 		int yIncrement = fontFileImage.getHeight() / chars.size();
-		this.scale = yIncrement / height;
+		this.scale = Math.abs(height == 0 ? 0 : yIncrement / height);
 		int y = 0;
 		for (String line : chars) {
 			if (!line.isEmpty()) {

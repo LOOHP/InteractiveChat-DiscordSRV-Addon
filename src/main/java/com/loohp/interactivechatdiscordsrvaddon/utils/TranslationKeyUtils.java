@@ -132,6 +132,22 @@ public class TranslationKeyUtils {
 		PREDEFINED_TROPICAL_FISH.put(67699456, 20);
 		PREDEFINED_TROPICAL_FISH.put(67371009, 21);
 	}
+	
+	public static String getOldIncompatiblePack() {
+		if (InteractiveChat.version.isLegacy()) {
+			return "resourcePack.incompatible.old";
+		} else {
+			return "pack.incompatible.old";
+		}
+	}
+	
+	public static String getNewIncompatiblePack() {
+		if (InteractiveChat.version.isLegacy()) {
+			return "resourcePack.incompatible.new";
+		} else {
+			return "pack.incompatible.new";
+		}
+	}
 
 	public static String getFilledMapId() {
 		return "filled_map.id";

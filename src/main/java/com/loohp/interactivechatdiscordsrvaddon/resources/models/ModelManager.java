@@ -81,7 +81,7 @@ public class ModelManager extends AbstractManager {
 						}
 						Coordinates3D scale;
 						if (scaleArray == null) {
-							scale =  new Coordinates3D(1, 1, 1);
+							scale = new Coordinates3D(1, 1, 1);
 						} else {
 							scale = new Coordinates3D(((Number) scaleArray.get(0)).doubleValue(), ((Number) scaleArray.get(1)).doubleValue(), ((Number) scaleArray.get(2)).doubleValue());
 						}
@@ -139,8 +139,14 @@ public class ModelManager extends AbstractManager {
 									uv = new TextureUV(((Number) uvArray.get(0)).doubleValue(), ((Number) uvArray.get(1)).doubleValue(), ((Number) uvArray.get(2)).doubleValue(), ((Number) uvArray.get(3)).doubleValue());
 								}
 								String faceTexture = (String) faceJson.get("texture");
-								String cullfaceString = (String) faceJson.get("cullface");
-								ModelFaceSide cullface = cullfaceString == null ? null : ModelFaceSide.fromKey(cullfaceString);
+								Object cullfaceObj = faceJson.get("cullface");
+								ModelFaceSide cullface = null;
+								if (cullfaceObj != null && cullfaceObj instanceof String) {
+									cullface = ModelFaceSide.fromKey((String) cullfaceObj);
+								}
+								if (cullface == null) {
+									cullface = side;
+								}
 								int faceRotation = ((Number) faceJson.getOrDefault("rotation", 0)).intValue();
 								int faceTintindex = ((Number) faceJson.getOrDefault("tintindex", -1)).intValue();
 								face.put(side, new ModelFace(side, uv, faceTexture, cullface, faceRotation, faceTintindex));
