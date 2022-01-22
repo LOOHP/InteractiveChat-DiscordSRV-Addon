@@ -7,7 +7,7 @@ InventoryImage:
     #If UseTooltipImage is true, should the plugin attach tooltip image if the target item
     #is just a plain base item with no information worth showing
     UseTooltipImageOnBaseItem: false
-    EmbedDisplay: 
+    EmbedDisplay:
       Single: "{Item}"
       Multiple: "{Item} x{Amount}"
     AlternateAirTexture: true
@@ -47,19 +47,19 @@ HoverEventDisplay:
   UseTooltipImage: true
   #Which custom placeholder should have their hover event text ignored
   #This is a list of integer by indexes
-  IgnoredPlaceholderIndexes: []
+  IgnoredPlaceholderIndexes: [ ]
 
 DiscordAttachments:
   #Whether or not to convert discord attachments from digusting urls into clickable text in chat
   Convert: true
-  Formatting: 
+  Formatting:
     Text: "&e[&b{FileName}&e]"
     ImageOriginal: " &a(Link)"
     Hover:
       Enabled: true
-      HoverText: 
+      HoverText:
         - "&bClick to View"
-      ImageOriginalHover: 
+      ImageOriginalHover:
         - "&eOpen Original"
   #Whether or not to allow previewing images in game using maps
   ShowImageUsingMaps: true
@@ -138,7 +138,7 @@ DiscordCommands:
     #If you do, set this option on ONE of the servers connected to the discord channel to true, 
     #With all others servers to false.
     IsMainServer: true
-    InGameMessage: 
+    InGameMessage:
       Text: "&6{Player} shared their Inventory: &f[&b{Player}'s Inventory&f]"
       Hover:
         - "&bClick to view!"
@@ -152,7 +152,7 @@ DiscordCommands:
     #If you do, set this option on ONE of the servers connected to the discord channel to true, 
     #With all others servers to false.
     IsMainServer: true
-    InGameMessage: 
+    InGameMessage:
       Text: "&6{Player} shared their Ender Chest: &f[&d{Player}'s Ender Chest&f]"
       Hover:
         - "&bClick to view!"
@@ -217,7 +217,7 @@ Resources:
   #Set which resource pack should be installed and in what order
   #Visit this page for more info:
   #https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon/wiki/Resource-Pack
-  Order: []
+  Order: [ ]
 
 Options:
   Updater: true

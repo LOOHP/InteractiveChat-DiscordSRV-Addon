@@ -5,30 +5,30 @@ import com.loohp.interactivechat.objectholders.ICPlayer;
 
 /**
  * This is the base class of all GameMessageProcessEvents
- * @author LOOHP
  *
+ * @author LOOHP
  */
 public class GameMessageProcessEvent extends GameMessageEvent {
 
-	private int processId;
-	private String title;
+    private int processId;
+    private String title;
 
-	public GameMessageProcessEvent(ICPlayer sender, String title, Component component, boolean cancel, int processId) {
-		super(sender, component, cancel);
-		this.processId = processId;
-		this.title = title;
-	}
+    public GameMessageProcessEvent(ICPlayer sender, String title, Component component, boolean cancel, int processId) {
+        super(sender, component, cancel);
+        this.processId = processId;
+        this.title = title;
+    }
 
-	public int getProcessId() {
-		return processId;
-	}
-	
-	public String getTitle() {
-		return title;
-	}
+    public int getProcessId() {
+        return processId;
+    }
 
-	public void setTitle(String title) {
-		this.title = title;
-	}
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
 }

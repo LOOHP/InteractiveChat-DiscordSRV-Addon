@@ -4,34 +4,34 @@ import java.io.InputStream;
 import java.util.Collection;
 
 public interface ResourcePackFile extends AutoCloseable {
-	
-	public String getName();
 
-	public String getParent();
+    String getName();
 
-	public ResourcePackFile getParentFile();
-	
-	public String getAbsolutePath();
+    String getParent();
 
-	public String getPath();
+    ResourcePackFile getParentFile();
 
-	public boolean exists();
+    String getAbsolutePath();
 
-	public boolean isDirectory();
+    String getPath();
 
-	public Collection<ResourcePackFile> listFilesAndFolders();
-	
-	public ResourcePackFile getChild(String name);
-	
-	public InputStream getInputStream();
-	
-	public default Collection<ResourcePackFile> listFilesRecursively() {
-		return listFilesRecursively(null);
-	}
-	
-	public Collection<ResourcePackFile> listFilesRecursively(String[] extensions);
-	
-	@Override
-	public void close();
+    boolean exists();
+
+    boolean isDirectory();
+
+    Collection<ResourcePackFile> listFilesAndFolders();
+
+    ResourcePackFile getChild(String name);
+
+    InputStream getInputStream();
+
+    default Collection<ResourcePackFile> listFilesRecursively() {
+        return listFilesRecursively(null);
+    }
+
+    Collection<ResourcePackFile> listFilesRecursively(String[] extensions);
+
+    @Override
+    void close();
 
 }

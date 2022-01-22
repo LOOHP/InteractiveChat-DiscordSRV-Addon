@@ -6,22 +6,22 @@ import org.bukkit.event.HandlerList;
 
 /**
  * Fired when /icd reloadconfig is used
- * @author LOOHP
  *
+ * @author LOOHP
  */
 public class InteractiveChatDiscordSRVConfigReloadEvent extends Event {
 
+    private static final HandlerList HANDLERS = new HandlerList();
+
     public InteractiveChatDiscordSRVConfigReloadEvent() {
-    	super(!Bukkit.isPrimaryThread());
-    }
-
-	private static final HandlerList HANDLERS = new HandlerList();
-
-    public HandlerList getHandlers() {
-        return HANDLERS;
+        super(!Bukkit.isPrimaryThread());
     }
 
     public static HandlerList getHandlerList() {
+        return HANDLERS;
+    }
+
+    public HandlerList getHandlers() {
         return HANDLERS;
     }
 }

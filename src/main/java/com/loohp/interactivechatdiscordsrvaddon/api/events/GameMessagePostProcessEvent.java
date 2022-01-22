@@ -5,13 +5,13 @@ import com.loohp.interactivechat.objectholders.ICPlayer;
 
 /**
  * This event is called after all other GameMessageEvents and is ready to be sent to discord.
- * @author LOOHP
  *
+ * @author LOOHP
  */
 public class GameMessagePostProcessEvent extends GameMessageEvent {
 
-	public GameMessagePostProcessEvent(ICPlayer sender, Component component, boolean cancel) {
-		super(sender, component, cancel);
-	}
+    public GameMessagePostProcessEvent(ICPlayer sender, Component component, boolean cancel) {
+        super(sender, component, cancel);
+    }
 
 }
