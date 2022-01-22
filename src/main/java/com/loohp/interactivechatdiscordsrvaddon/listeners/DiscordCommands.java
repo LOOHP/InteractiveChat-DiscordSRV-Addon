@@ -79,15 +79,6 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
     public static final String INVENTORY_LABEL = "inv";
     public static final String ENDERCHEST_LABEL = "ender";
 
-    private DiscordSRV discordsrv;
-    private Map<String, Component> components;
-
-    public DiscordCommands(DiscordSRV discordsrv) {
-        this.discordsrv = discordsrv;
-        this.components = new ConcurrentHashMap<>();
-        reload();
-    }
-
     private static void layout0(OfflineICPlayer player, String sha1, String title) throws Exception {
         Inventory inv = Bukkit.createInventory(null, 54, title);
         int f1 = 0;
@@ -274,6 +265,14 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                 e.printStackTrace();
             }
         }
+    }
+    private DiscordSRV discordsrv;
+    private Map<String, Component> components;
+
+    public DiscordCommands(DiscordSRV discordsrv) {
+        this.discordsrv = discordsrv;
+        this.components = new ConcurrentHashMap<>();
+        reload();
     }
 
     @EventHandler

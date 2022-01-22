@@ -11,6 +11,14 @@ public enum AdvancementType {
 
     private static final AdvancementType[] VALUES = values();
 
+    public static AdvancementType fromHandle(Object obj) {
+        for (AdvancementType type : VALUES) {
+            if (type.toString().equalsIgnoreCase(obj.toString())) {
+                return type;
+            }
+        }
+        return null;
+    }
     private ChatColor color;
     private String translationKey;
     private boolean isLegacy;
@@ -23,15 +31,6 @@ public enum AdvancementType {
 
     AdvancementType(ChatColor color, String translationKey) {
         this(color, translationKey, false);
-    }
-
-    public static AdvancementType fromHandle(Object obj) {
-        for (AdvancementType type : VALUES) {
-            if (type.toString().equalsIgnoreCase(obj.toString())) {
-                return type;
-            }
-        }
-        return null;
     }
 
     public ChatColor getColor() {

@@ -115,6 +115,7 @@ public class Updater implements Listener {
         public boolean isDevBuildLatest() {
             return devBuildIsLatest;
         }
+
     }
 
 }

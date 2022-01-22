@@ -21,6 +21,10 @@ import java.util.List;
 public class DiscordImageEvent extends Event implements Cancellable {
 
     private static final HandlerList HANDLERS = new HandlerList();
+
+    public static HandlerList getHandlerList() {
+        return HANDLERS;
+    }
     private TextChannel channel;
     private String originalMessage;
     private String newMessage;
@@ -35,10 +39,6 @@ public class DiscordImageEvent extends Event implements Cancellable {
         this.newMessage = newMessage;
         this.discordMessageContents = discordMessageContents;
         this.cancel = cancel;
-    }
-
-    public static HandlerList getHandlerList() {
-        return HANDLERS;
     }
 
     @Override
@@ -82,4 +82,5 @@ public class DiscordImageEvent extends Event implements Cancellable {
     public HandlerList getHandlers() {
         return HANDLERS;
     }
+
 }

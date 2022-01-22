@@ -13,14 +13,6 @@ public class Cache<T> {
     private static final List<Integer> TASKS = new LinkedList<>();
     private static final Object LOCK = new Object();
 
-    private long timeCreated;
-    private T object;
-
-    private Cache(T object) {
-        this.timeCreated = System.currentTimeMillis();
-        this.object = object;
-    }
-
     public static Cache<?> getCache(String key) {
         return DATA.get(key);
     }
@@ -40,6 +32,13 @@ public class Cache<T> {
             TASKS.clear();
             DATA.clear();
         }
+    }
+    private long timeCreated;
+    private T object;
+
+    private Cache(T object) {
+        this.timeCreated = System.currentTimeMillis();
+        this.object = object;
     }
 
     public long getTimeCreated() {

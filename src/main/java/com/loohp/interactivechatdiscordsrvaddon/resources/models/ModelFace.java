@@ -69,12 +69,6 @@ public class ModelFace {
         SOUTH,
         WEST;
 
-        private Set<String> aliases;
-
-        ModelFaceSide(String... aliases) {
-            this.aliases = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(aliases)));
-        }
-
         public static ModelFaceSide fromKey(String key) {
             for (ModelFaceSide face : values()) {
                 if (key.toUpperCase().equals(face.toString()) || face.aliases.contains(key.toUpperCase())) {
@@ -82,6 +76,11 @@ public class ModelFace {
                 }
             }
             return null;
+        }
+        private Set<String> aliases;
+
+        ModelFaceSide(String... aliases) {
+            this.aliases = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(aliases)));
         }
 
         public Set<String> getAliases() {

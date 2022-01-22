@@ -16,6 +16,10 @@ import org.bukkit.event.HandlerList;
 public class GameMessageEvent extends Event implements Cancellable {
 
     private static final HandlerList HANDLERS = new HandlerList();
+
+    public static HandlerList getHandlerList() {
+        return HANDLERS;
+    }
     private ICPlayer sender;
     private Component component;
     private boolean cancel;
@@ -25,10 +29,6 @@ public class GameMessageEvent extends Event implements Cancellable {
         this.sender = sender;
         this.component = component;
         this.cancel = cancel;
-    }
-
-    public static HandlerList getHandlerList() {
-        return HANDLERS;
     }
 
     @Override
@@ -66,4 +66,5 @@ public class GameMessageEvent extends Event implements Cancellable {
     public HandlerList getHandlers() {
         return HANDLERS;
     }
+
 }

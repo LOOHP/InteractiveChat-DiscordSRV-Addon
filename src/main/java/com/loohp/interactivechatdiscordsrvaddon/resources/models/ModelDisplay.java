@@ -46,6 +46,14 @@ public class ModelDisplay {
         GROUND("ground"),
         FIXED("fixed");
 
+        public static ModelDisplayPosition fromKey(String key) {
+            for (ModelDisplayPosition position : values()) {
+                if (position.getKeys().contains(key.toLowerCase())) {
+                    return position;
+                }
+            }
+            return null;
+        }
         private ModelDisplayPosition fallback;
         private Set<String> keys;
 
@@ -56,15 +64,6 @@ public class ModelDisplay {
 
         ModelDisplayPosition(String... keys) {
             this(null, keys);
-        }
-
-        public static ModelDisplayPosition fromKey(String key) {
-            for (ModelDisplayPosition position : values()) {
-                if (position.getKeys().contains(key.toLowerCase())) {
-                    return position;
-                }
-            }
-            return null;
         }
 
         public Set<String> getKeys() {

@@ -147,6 +147,7 @@ public class BannerGraphics {
         public BufferedImage getPatterns() {
             return patterns;
         }
+
     }
 
 }

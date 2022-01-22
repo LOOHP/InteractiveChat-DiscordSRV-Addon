@@ -931,6 +931,7 @@ public class DiscordItemStackUtils {
     }
 
     public static class DiscordDescription {
+
         private String name;
         private Optional<String> description;
 
@@ -946,9 +947,11 @@ public class DiscordItemStackUtils {
         public Optional<String> getDescription() {
             return description;
         }
+
     }
 
     public static class DiscordToolTip {
+
         private List<Component> components;
         private boolean isBaseItem;
 
@@ -964,6 +967,7 @@ public class DiscordItemStackUtils {
         public boolean isBaseItem() {
             return isBaseItem;
         }
+
     }
 
 }

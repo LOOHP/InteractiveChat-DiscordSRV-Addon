@@ -13,6 +13,10 @@ import org.bukkit.event.HandlerList;
 public class DiscordAttachmentConversionEvent extends Event {
 
     private static final HandlerList HANDLERS = new HandlerList();
+
+    public static HandlerList getHandlerList() {
+        return HANDLERS;
+    }
     private final String url;
     private final DiscordAttachmentData data;
 
@@ -20,10 +24,6 @@ public class DiscordAttachmentConversionEvent extends Event {
         super(!Bukkit.isPrimaryThread());
         this.url = url;
         this.data = data;
-    }
-
-    public static HandlerList getHandlerList() {
-        return HANDLERS;
     }
 
     public String getUrl() {

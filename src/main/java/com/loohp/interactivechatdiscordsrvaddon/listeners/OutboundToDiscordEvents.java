@@ -1073,6 +1073,7 @@ public class OutboundToDiscordEvents implements Listener {
             }
             client.close();
         }
+
     }
 
 }

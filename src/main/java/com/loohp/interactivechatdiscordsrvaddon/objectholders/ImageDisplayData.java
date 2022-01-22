@@ -65,4 +65,5 @@ public class ImageDisplayData extends DiscordDisplayData {
     public ImageDisplayType getType() {
         return type;
     }
+
 }

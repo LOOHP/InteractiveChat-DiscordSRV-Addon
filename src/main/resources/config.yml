@@ -47,7 +47,7 @@ HoverEventDisplay:
   UseTooltipImage: true
   #Which custom placeholder should have their hover event text ignored
   #This is a list of integer by indexes
-  IgnoredPlaceholderIndexes: [ ]
+  IgnoredPlaceholderIndexes: []
 
 DiscordAttachments:
   #Whether to convert discord attachments from disgusting urls into clickable text in chat
@@ -217,7 +217,7 @@ Resources:
   #Set which resource pack should be installed and in what order
   #Visit this page for more info:
   #https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon/wiki/Resource-Pack
-  Order: [ ]
+  Order: []
 
 Options:
   Updater: true

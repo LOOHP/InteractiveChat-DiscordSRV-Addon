@@ -23,14 +23,6 @@ public abstract class MinecraftFont {
         DECORATIONS_ORDER.add(TextDecoration.UNDERLINED);
     }
 
-    protected ResourceManager manager;
-    protected FontProvider provider;
-
-    public MinecraftFont(ResourceManager manager, FontProvider provider) {
-        this.manager = manager;
-        this.provider = provider;
-    }
-
     public static List<TextDecoration> sortDecorations(List<TextDecoration> decorations) {
         List<TextDecoration> list = new ArrayList<>(decorations.size());
         for (TextDecoration decoration : DECORATIONS_ORDER) {
@@ -39,6 +31,14 @@ public abstract class MinecraftFont {
             }
         }
         return list;
+    }
+
+    protected ResourceManager manager;
+    protected FontProvider provider;
+
+    public MinecraftFont(ResourceManager manager, FontProvider provider) {
+        this.manager = manager;
+        this.provider = provider;
     }
 
     protected void setProvider(FontProvider provider) {

@@ -13,15 +13,16 @@ public class InteractiveChatDiscordSRVConfigReloadEvent extends Event {
 
     private static final HandlerList HANDLERS = new HandlerList();
 
-    public InteractiveChatDiscordSRVConfigReloadEvent() {
-        super(!Bukkit.isPrimaryThread());
-    }
-
     public static HandlerList getHandlerList() {
         return HANDLERS;
+    }
+
+    public InteractiveChatDiscordSRVConfigReloadEvent() {
+        super(!Bukkit.isPrimaryThread());
     }
 
     public HandlerList getHandlers() {
         return HANDLERS;
     }
+
 }

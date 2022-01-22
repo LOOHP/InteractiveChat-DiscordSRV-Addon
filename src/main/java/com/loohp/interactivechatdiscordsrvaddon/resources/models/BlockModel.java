@@ -14,24 +14,6 @@ import java.util.Map.Entry;
 
 public class BlockModel {
 
-    private String parent;
-    private boolean ambientocclusion;
-    private ModelGUILight guiLight;
-    private Map<ModelDisplayPosition, ModelDisplay> display;
-    private Map<String, String> textures;
-    private List<ModelElement> elements;
-    private List<ModelOverride> overrides;
-
-    public BlockModel(String parent, boolean ambientocclusion, ModelGUILight guiLight, Map<ModelDisplayPosition, ModelDisplay> display, Map<String, String> textures, List<ModelElement> elements, List<ModelOverride> overrides) {
-        this.parent = parent;
-        this.ambientocclusion = ambientocclusion;
-        this.guiLight = guiLight;
-        this.display = Collections.unmodifiableMap(display);
-        this.textures = Collections.unmodifiableMap(textures);
-        this.elements = Collections.unmodifiableList(elements);
-        this.overrides = Collections.unmodifiableList(overrides);
-    }
-
     public static BlockModel resolve(BlockModel childrenModel) {
         boolean ambientocclusion = childrenModel.isAmbientocclusion();
         Map<ModelDisplayPosition, ModelDisplay> display = new EnumMap<>(ModelDisplayPosition.class);
@@ -110,6 +92,23 @@ public class BlockModel {
             elements.set(i, new ModelElement(element.getFrom(), element.getTo(), element.getRotation(), element.isShade(), faces));
         }
         return new BlockModel(parent, childrenModel.isAmbientocclusion(), guiLight, display, textures, elements, parentModel.getOverrides());
+    }
+    private String parent;
+    private boolean ambientocclusion;
+    private ModelGUILight guiLight;
+    private Map<ModelDisplayPosition, ModelDisplay> display;
+    private Map<String, String> textures;
+    private List<ModelElement> elements;
+    private List<ModelOverride> overrides;
+
+    public BlockModel(String parent, boolean ambientocclusion, ModelGUILight guiLight, Map<ModelDisplayPosition, ModelDisplay> display, Map<String, String> textures, List<ModelElement> elements, List<ModelOverride> overrides) {
+        this.parent = parent;
+        this.ambientocclusion = ambientocclusion;
+        this.guiLight = guiLight;
+        this.display = Collections.unmodifiableMap(display);
+        this.textures = Collections.unmodifiableMap(textures);
+        this.elements = Collections.unmodifiableList(elements);
+        this.overrides = Collections.unmodifiableList(overrides);
     }
 
     public String getRawParent() {
