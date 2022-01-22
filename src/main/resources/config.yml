@@ -1,5 +1,5 @@
 InventoryImage:
-  #Whether or not to generate images for the item placeholder
+  #Whether to generate images for the item placeholder
   Item:
     Enabled: true
     #Show information about the item in a tooltip image instead of text
@@ -11,7 +11,7 @@ InventoryImage:
       Single: "{Item}"
       Multiple: "{Item} x{Amount}"
     AlternateAirTexture: true
-  #Whether or not to generate images for the inventory placeholder
+  #Whether to generate images for the inventory placeholder
   Inventory:
     Enabled: true
     #Use the player inventory gui template instead of the normal inventory template
@@ -21,7 +21,7 @@ InventoryImage:
     RenderHandHeldItems: true
     EmbedColor: "#55FFFF"
     ShowExperienceLevel: true
-  #Whether or not to generate images for the enderchest placeholder
+  #Whether to generate images for the enderchest placeholder
   EnderChest:
     Enabled: true
     EmbedColor: "#FF55FF"
@@ -39,9 +39,9 @@ Advancements:
   ShowDescription: true
 
 HoverEventDisplay:
-  #Whether or not to show hover event text
+  #Whether to show hover event text
   Enabled: true
-  #Whether or not to show the cursor image
+  #Whether to show the cursor image
   ShowCursorImage: true
   #Show information in a tooltip image instead of text
   UseTooltipImage: true
@@ -50,7 +50,7 @@ HoverEventDisplay:
   IgnoredPlaceholderIndexes: [ ]
 
 DiscordAttachments:
-  #Whether or not to convert discord attachments from digusting urls into clickable text in chat
+  #Whether to convert discord attachments from disgusting urls into clickable text in chat
   Convert: true
   Formatting:
     Text: "&e[&b{FileName}&e]"
@@ -61,7 +61,7 @@ DiscordAttachments:
         - "&bClick to View"
       ImageOriginalHover:
         - "&eOpen Original"
-  #Whether or not to allow previewing images in game using maps
+  #Whether to allow previewing images in game using maps
   ShowImageUsingMaps: true
   #What color should the background be when previewing images in game using maps
   #Note that the color will not be exact as it is limited to the map colors Minecraft offers
@@ -93,7 +93,7 @@ DiscordCommands:
   #These settings apply to all discord commands below 
   GlobalSettings:
     #Set this to true ONLY IF you use have multiple servers with interactivechatdiscordsrvaddon AND
-    #you use a DIFFERENT channel for each server (i.e not one shared channel for all servers)
+    #you use a DIFFERENT channel for each server (i.e. not one shared channel for all servers)
     RespondToCommandsInInvalidChannels: true
   #Settings for /playerlist
   PlayerList:
