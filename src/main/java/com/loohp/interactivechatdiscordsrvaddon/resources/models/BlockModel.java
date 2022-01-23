@@ -1,5 +1,6 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources.models;
 
+import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelFace.ModelFaceSide;
@@ -48,7 +49,16 @@ public class BlockModel {
             }
             elements.set(i, new ModelElement(element.getFrom(), element.getTo(), element.getRotation(), element.isShade(), faces));
         }
-        return new BlockModel(childrenModel.getRawParent(), ambientocclusion, childrenModel.getRawGUILight(), display, textures, elements, childrenModel.getOverrides());
+        BlockModel newBlockModel = new BlockModel(childrenModel.getManager(), childrenModel.getRawParent(), ambientocclusion, childrenModel.getRawGUILight(), display, textures, elements, childrenModel.getOverrides());
+        if (InteractiveChat.version.isOld()) {
+            String newRawParent = newBlockModel.getRawParent();
+            if (newRawParent == null) {
+                return resolve(newBlockModel.getManager().getRawBlockModel(ResourceRegistry.IC_OLD_BASE_BLOCK_MODEL), newBlockModel);
+            } else if (newRawParent.equals(ModelManager.ITEM_BASE)) {
+                return resolve(newBlockModel.getManager().getRawBlockModel(ResourceRegistry.IC_OLD_BASE_ITEM_MODEL), newBlockModel);
+            }
+        }
+        return newBlockModel;
     }
 
     public static BlockModel resolve(BlockModel parentModel, BlockModel childrenModel) {
@@ -91,8 +101,10 @@ public class BlockModel {
             }
             elements.set(i, new ModelElement(element.getFrom(), element.getTo(), element.getRotation(), element.isShade(), faces));
         }
-        return new BlockModel(parent, childrenModel.isAmbientocclusion(), guiLight, display, textures, elements, parentModel.getOverrides());
+        return new BlockModel(childrenModel.getManager(), parent, childrenModel.isAmbientocclusion(), guiLight, display, textures, elements, parentModel.getOverrides());
     }
+
+    private ModelManager manager;
     private String parent;
     private boolean ambientocclusion;
     private ModelGUILight guiLight;
@@ -101,7 +113,8 @@ public class BlockModel {
     private List<ModelElement> elements;
     private List<ModelOverride> overrides;
 
-    public BlockModel(String parent, boolean ambientocclusion, ModelGUILight guiLight, Map<ModelDisplayPosition, ModelDisplay> display, Map<String, String> textures, List<ModelElement> elements, List<ModelOverride> overrides) {
+    public BlockModel(ModelManager manager, String parent, boolean ambientocclusion, ModelGUILight guiLight, Map<ModelDisplayPosition, ModelDisplay> display, Map<String, String> textures, List<ModelElement> elements, List<ModelOverride> overrides) {
+        this.manager = manager;
         this.parent = parent;
         this.ambientocclusion = ambientocclusion;
         this.guiLight = guiLight;
@@ -109,6 +122,10 @@ public class BlockModel {
         this.textures = Collections.unmodifiableMap(textures);
         this.elements = Collections.unmodifiableList(elements);
         this.overrides = Collections.unmodifiableList(overrides);
+    }
+
+    public ModelManager getManager() {
+        return manager;
     }
 
     public String getRawParent() {

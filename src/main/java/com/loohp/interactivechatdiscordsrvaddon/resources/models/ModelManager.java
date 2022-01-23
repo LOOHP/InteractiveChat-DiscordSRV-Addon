@@ -173,7 +173,7 @@ public class ModelManager extends AbstractManager {
                     }
                 }
                 Collections.reverse(overrides);
-                models.put(key, new BlockModel(parent, ambientocclusion, guiLight, display, texture, elements, overrides));
+                models.put(key, new BlockModel(this, parent, ambientocclusion, guiLight, display, texture, elements, overrides));
             } catch (Exception e) {
                 new RuntimeException("Unable to load block model " + file.getAbsolutePath(), e).printStackTrace();
             }

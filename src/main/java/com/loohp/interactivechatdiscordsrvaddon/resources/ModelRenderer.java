@@ -5,6 +5,7 @@ import com.loohp.blockmodelrenderer.render.Hexahedron;
 import com.loohp.blockmodelrenderer.render.Model;
 import com.loohp.blockmodelrenderer.render.Point3D;
 import com.loohp.blockmodelrenderer.utils.ColorUtils;
+import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.utils.CustomArrayUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
@@ -103,7 +104,7 @@ public class ModelRenderer implements AutoCloseable {
         renderingService.shutdown();
     }
 
-    public RenderResult renderPlyer(int width, int height, ResourceManager manager, boolean slim, Map<String, TextureResource> providedTextures, Map<PlayerModelItemPosition, PlayerModelItem> modelItems) {
+    public RenderResult renderPlayer(int width, int height, ResourceManager manager, boolean slim, Map<String, TextureResource> providedTextures, Map<PlayerModelItemPosition, PlayerModelItem> modelItems) {
         String cacheKey = cacheKey(width, height, manager.getUuid(), slim, cacheKeyModelItems(modelItems), cacheKeyProvidedTextures(providedTextures));
         Cache<?> cachedRender = Cache.getCache(cacheKey);
         if (cachedRender != null) {
@@ -123,7 +124,7 @@ public class ModelRenderer implements AutoCloseable {
             BlockModel itemBlockModel = playerModelItem.getModelKey() == null ? null : manager.getModelManager().resolveBlockModel(playerModelItem.getModelKey(), playerModelItem.getPredicate());
             Model itemRenderModel = null;
             if (itemBlockModel != null) {
-                if (itemBlockModel.getRawParent() == null || itemBlockModel.getRawParent().indexOf("/") < 0) {
+                if (itemBlockModel.getRawParent() == null || !itemBlockModel.getRawParent().contains("/")) {
                     itemRenderModel = generateStandardRenderModel(itemBlockModel, manager, playerModelItem.getProvidedTextures(), playerModelItem.isEnchanted(), false);
                 } else if (itemBlockModel.getRawParent().equals(ModelManager.ITEM_BASE)) {
                     BufferedImage image = new BufferedImage(INTERNAL_W, INTERNAL_H, BufferedImage.TYPE_INT_ARGB);
@@ -178,9 +179,9 @@ public class ModelRenderer implements AutoCloseable {
                         Coordinates3D scale = displayData.getScale();
                         itemRenderModel.scale(scale.getX(), scale.getY(), scale.getZ());
                         Coordinates3D rotation = displayData.getRotation();
-                        itemRenderModel.rotate(rotation.getX(), rotation.getY(), rotation.getZ(), false);
+                        itemRenderModel.rotate(rotation.getX(), rotation.getY(), rotation.getZ() + (InteractiveChat.version.isOld() ? 10 : 0), false);
                         Coordinates3D transform = displayData.getTranslation();
-                        itemRenderModel.translate(transform.getX(), transform.getY(), transform.getZ());
+                        itemRenderModel.translate(transform.getX(), transform.getY() + (InteractiveChat.version.isOld() ? -10 : 0), transform.getZ() + (InteractiveChat.version.isOld() ? -2.75 : 0));
                     }
                     if (flipX) {
                         itemRenderModel.flipAboutPlane(false, true, true);
@@ -196,13 +197,17 @@ public class ModelRenderer implements AutoCloseable {
                     }
                 }
                 if (playerModelItem.getPosition().yIsZAxis()) {
-                    itemRenderModel.rotate(90, 0, 0, true);
+                    if (InteractiveChat.version.isOld()) {
+                        itemRenderModel.rotate(180, 180, 0, false);
+                    } else {
+                        itemRenderModel.rotate(90, 0, 0, true);
+                    }
                 }
                 double scale = playerModelItem.getPosition().getScale();
                 itemRenderModel.scale(scale, scale, scale);
                 itemRenderModel.translate((16 * scale) / 2, (16 * scale) / 2, (16 * scale) / 2);
-                Coordinates3D defaultTraslation = playerModelItem.getPosition().getDefaultTranslate();
-                itemRenderModel.translate(defaultTraslation.getX(), defaultTraslation.getY(), defaultTraslation.getZ());
+                Coordinates3D defaultTranslation = playerModelItem.getPosition().getDefaultTranslate();
+                itemRenderModel.translate(defaultTranslation.getX(), defaultTranslation.getY(), defaultTranslation.getZ());
                 playerRenderModel.append(itemRenderModel);
             }
         }
@@ -246,7 +251,7 @@ public class ModelRenderer implements AutoCloseable {
             return new RenderResult(MODEL_NOT_FOUND, null);
         }
         BufferedImage image = new BufferedImage(INTERNAL_W, INTERNAL_H, BufferedImage.TYPE_INT_ARGB);
-        if (blockModel.getRawParent() == null || blockModel.getRawParent().indexOf("/") < 0) {
+        if (blockModel.getRawParent() == null || !blockModel.getRawParent().contains("/")) {
             renderBlockModel(generateStandardRenderModel(blockModel, manager, providedTextures, enchanted, false), image, blockModel.getDisplay(displayPosition), blockModel.getGUILight());
         } else if (blockModel.getRawParent().equals(ModelManager.ITEM_BASE)) {
             Graphics2D g = image.createGraphics();

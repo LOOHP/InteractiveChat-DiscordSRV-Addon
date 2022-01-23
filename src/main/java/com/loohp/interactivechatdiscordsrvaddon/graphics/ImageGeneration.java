@@ -647,7 +647,7 @@ public class ImageGeneration {
             }
         }
 
-        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.renderPlyer(image.getWidth(), image.getHeight(), InteractiveChatDiscordSrvAddon.plugin.resourceManager, slim, providedTextures, modelItems);
+        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.renderPlayer(image.getWidth(), image.getHeight(), InteractiveChatDiscordSrvAddon.plugin.resourceManager, slim, providedTextures, modelItems);
         Graphics2D g = image.createGraphics();
         g.drawImage(ImageUtils.resizeImageAbs(renderResult.getImage(), 117, 159), -1, 12, null);
         g.dispose();

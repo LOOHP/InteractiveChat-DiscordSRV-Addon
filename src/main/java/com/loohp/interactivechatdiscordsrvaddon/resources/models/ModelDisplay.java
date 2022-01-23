@@ -54,6 +54,7 @@ public class ModelDisplay {
             }
             return null;
         }
+
         private ModelDisplayPosition fallback;
         private Set<String> keys;
 

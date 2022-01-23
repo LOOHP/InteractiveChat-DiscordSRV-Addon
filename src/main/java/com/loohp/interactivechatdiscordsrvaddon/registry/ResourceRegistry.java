@@ -22,6 +22,9 @@ public class ResourceRegistry {
     public static final String IC_GUI_TEXTURE_LOCATION = "minecraft:interactivechatdiscordsrvaddon/gui/";
     public static final String IC_MISC_TEXTURE_LOCATION = "minecraft:interactivechatdiscordsrvaddon/misc/";
 
+    public static final String IC_OLD_BASE_BLOCK_MODEL = "minecraft:interactivechatdiscordsrvaddon/block/block";
+    public static final String IC_OLD_BASE_ITEM_MODEL = "minecraft:interactivechatdiscordsrvaddon/item/generated";
+
     public static final String ITEM_MODEL_LOCATION = "minecraft:item/";
     public static final String BUILTIN_ENTITY_MODEL_LOCATION = "minecraft:interactivechatdiscordsrvaddon/builtin_entity/";
 
