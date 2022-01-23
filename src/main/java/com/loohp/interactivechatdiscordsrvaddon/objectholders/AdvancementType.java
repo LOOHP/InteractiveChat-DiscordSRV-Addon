@@ -19,6 +19,7 @@ public enum AdvancementType {
         }
         return null;
     }
+
     private ChatColor color;
     private String translationKey;
     private boolean isLegacy;

@@ -18,6 +18,7 @@ public class ResourceRegistry {
     public static final String MISC_TEXTURE_LOCATION = "minecraft:misc/";
     public static final String GUI_TEXTURE_LOCATION = "minecraft:gui/";
     public static final String MAP_TEXTURE_LOCATION = "minecraft:map/";
+    public static final String COLORMAP_TEXTURE_LOCATION = "minecraft:colormap/";
     public static final String IC_BLOCK_TEXTURE_LOCATION = "minecraft:interactivechatdiscordsrvaddon/block/";
     public static final String IC_GUI_TEXTURE_LOCATION = "minecraft:interactivechatdiscordsrvaddon/gui/";
     public static final String IC_MISC_TEXTURE_LOCATION = "minecraft:interactivechatdiscordsrvaddon/misc/";
@@ -53,5 +54,8 @@ public class ResourceRegistry {
     public static final String POTION_OVERLAY_PLACEHOLDER = ITEM_TEXTURE_LOCATION + "potion_overlay";
 
     public static final String MAP_MARKINGS_LOCATION = ITEM_TEXTURE_LOCATION + "filled_map_markings";
+
+    public static final String GRASS_COLORMAP_LOCATION = COLORMAP_TEXTURE_LOCATION + "grass";
+    public static final String FOLIAGE_COLORMAP_LOCATION = COLORMAP_TEXTURE_LOCATION + "foliage";
 
 }

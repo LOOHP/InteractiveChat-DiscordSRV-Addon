@@ -219,7 +219,7 @@ public class OutboundToDiscordEvents implements Listener {
                         if (type.equals(ImageDisplayType.INVENTORY) && InteractiveChatDiscordSrvAddon.plugin.invShowLevel) {
                             int level = iData.getPlayer().getExperienceLevel();
                             ByteArrayOutputStream bottleOut = new ByteArrayOutputStream();
-                            ImageIO.write(InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, "minecraft:item/experience_bottle", ModelDisplayPosition.GUI).getImage(), "png", bottleOut);
+                            ImageIO.write(InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, "minecraft:item/experience_bottle", ModelDisplayPosition.GUI, false).getImage(), "png", bottleOut);
                             content.addAttachment("Level.png", bottleOut.toByteArray());
                             content.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language).replaceFirst("%s", level + ""));
                             content.setFooterImageUrl("attachment://Level.png");
@@ -636,28 +636,28 @@ public class OutboundToDiscordEvents implements Listener {
         if (InteractiveChatDiscordSrvAddon.plugin.translateMentions) {
             Debug.debug("onGameToDiscord processing mentions");
             List<MentionPair> distinctMentionPairs = new ArrayList<>();
-            Set<UUID> processedRecievers = new HashSet<>();
+            Set<UUID> processedReceivers = new HashSet<>();
             synchronized (InteractiveChat.mentionPair) {
                 for (MentionPair pair : InteractiveChat.mentionPair) {
-                    if (!processedRecievers.contains(pair.getReciever())) {
+                    if (!processedReceivers.contains(pair.getReciever())) {
                         distinctMentionPairs.add(pair);
-                        processedRecievers.add(pair.getReciever());
+                        processedReceivers.add(pair.getReciever());
                     }
                 }
             }
             for (MentionPair pair : distinctMentionPairs) {
                 if (pair.getSender().equals(icSender.getUniqueId())) {
-                    UUID recieverUUID = pair.getReciever();
+                    UUID receiverUUID = pair.getReciever();
                     Set<String> names = new HashSet<>();
-                    ICPlayer reciever = ICPlayerFactory.getICPlayer(recieverUUID);
-                    if (reciever != null) {
-                        names.add(ChatColorUtils.stripColor(reciever.getName()));
-                        List<String> list = InteractiveChatAPI.getNicknames(reciever.getUniqueId());
+                    ICPlayer receiver = ICPlayerFactory.getICPlayer(receiverUUID);
+                    if (receiver != null) {
+                        names.add(ChatColorUtils.stripColor(receiver.getName()));
+                        List<String> list = InteractiveChatAPI.getNicknames(receiver.getUniqueId());
                         for (String name : list) {
                             names.add(ChatColorUtils.stripColor(name));
                         }
                     }
-                    String userId = srv.getAccountLinkManager().getDiscordId(recieverUUID);
+                    String userId = srv.getAccountLinkManager().getDiscordId(receiverUUID);
                     if (userId != null) {
                         User user = srv.getJda().getUserById(userId);
                         if (user != null) {

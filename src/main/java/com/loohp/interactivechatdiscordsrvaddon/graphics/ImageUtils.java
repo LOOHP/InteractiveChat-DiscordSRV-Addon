@@ -276,13 +276,16 @@ public class ImageUtils {
     }
 
     public static BufferedImage changeColorTo(BufferedImage image, Color color) {
+        return changeColorTo(image, color.getRGB());
+    }
+
+    public static BufferedImage changeColorTo(BufferedImage image, int color) {
+        color = color & 0x00FFFFFF;
         for (int y = 0; y < image.getHeight(); y++) {
             for (int x = 0; x < image.getWidth(); x++) {
                 int colorValue = image.getRGB(x, y);
-                Color oriColor = new Color(colorValue, true);
-
-                Color newColor = new Color(color.getRed(), color.getGreen(), color.getBlue(), oriColor.getAlpha());
-                image.setRGB(x, y, newColor.getRGB());
+                int newColor = color | (colorValue & 0xFF000000);
+                image.setRGB(x, y, newColor);
             }
         }
         return image;

@@ -134,6 +134,7 @@ public class Metrics {
         }
         return outputStream.toByteArray();
     }
+
     // The plugin
     private final Plugin plugin;
     // The plugin id

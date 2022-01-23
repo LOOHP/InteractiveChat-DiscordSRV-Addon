@@ -54,7 +54,8 @@ public class LanguageManager extends AbstractManager {
         this.translations.putAll(translations);
     }
 
-    public void reloadLanguages() {
+    @Override
+    public void reload() {
         LanguageUtils.clearPluginTranslations(InteractiveChatDiscordSrvAddon.plugin);
         for (Entry<String, Map<String, String>> entry : translations.entrySet()) {
             LanguageUtils.loadPluginTranslations(InteractiveChatDiscordSrvAddon.plugin, entry.getKey(), entry.getValue());

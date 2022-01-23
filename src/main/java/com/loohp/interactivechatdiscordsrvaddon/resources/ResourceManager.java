@@ -150,8 +150,10 @@ public class ResourceManager implements AutoCloseable {
                 }
             }
         }
-        fontManager.reloadFonts();
-        languageManager.reloadLanguages();
+        modelManager.reload();
+        textureManager.reload();
+        fontManager.reload();
+        languageManager.reload();
     }
 
     public List<ResourcePackInfo> getResourcePackInfo() {

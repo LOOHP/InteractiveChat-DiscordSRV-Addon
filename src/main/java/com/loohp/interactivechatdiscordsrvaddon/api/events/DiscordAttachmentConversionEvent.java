@@ -17,6 +17,7 @@ public class DiscordAttachmentConversionEvent extends Event {
     public static HandlerList getHandlerList() {
         return HANDLERS;
     }
+
     private final String url;
     private final DiscordAttachmentData data;
 

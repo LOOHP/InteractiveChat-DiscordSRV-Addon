@@ -20,6 +20,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.M
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.SpawnEggTintData;
+import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintIndexData;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World.Environment;
@@ -67,6 +68,7 @@ public class ItemRenderUtils {
             requiresEnchantmentGlint = true;
         }
 
+        TintIndexData tintIndexData = TintUtils.getTintData(xMaterial);
         Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
         Map<String, TextureResource> providedTextures = new HashMap<>();
         if (NBTEditor.contains(item, "CustomModelData")) {
@@ -281,7 +283,7 @@ public class ItemRenderUtils {
                 providedTextures.put(ResourceRegistry.SPAWN_EGG_OVERLAY_PLACEHOLDER, new GeneratedTextureResource(overlayImage));
             }
         }
-        return new ItemStackProcessResult(requiresEnchantmentGlint, predicates, providedTextures, directLocation);
+        return new ItemStackProcessResult(requiresEnchantmentGlint, predicates, providedTextures, tintIndexData, directLocation);
     }
 
     public static class ItemStackProcessResult {
@@ -289,13 +291,15 @@ public class ItemRenderUtils {
         private boolean requiresEnchantmentGlint;
         private Map<ModelOverrideType, Float> predicates;
         private Map<String, TextureResource> providedTextures;
+        private TintIndexData tintIndexData;
         private String directLocation;
 
-        public ItemStackProcessResult(boolean requiresEnchantmentGlint, Map<ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, String directLocation) {
+        public ItemStackProcessResult(boolean requiresEnchantmentGlint, Map<ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, String directLocation) {
             this.requiresEnchantmentGlint = requiresEnchantmentGlint;
             this.predicates = predicates;
             this.providedTextures = providedTextures;
             this.directLocation = directLocation;
+            this.tintIndexData = tintIndexData;
         }
 
         public boolean requiresEnchantmentGlint() {
@@ -308,6 +312,10 @@ public class ItemRenderUtils {
 
         public Map<String, TextureResource> getProvidedTextures() {
             return providedTextures;
+        }
+
+        public TintIndexData getTintIndexData() {
+            return tintIndexData;
         }
 
         public String getDirectLocation() {

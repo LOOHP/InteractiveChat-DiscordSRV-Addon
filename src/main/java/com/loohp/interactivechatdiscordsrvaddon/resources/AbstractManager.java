@@ -18,4 +18,6 @@ public abstract class AbstractManager {
 
     protected abstract void loadDirectory(String namespace, ResourcePackFile root);
 
+    public abstract void reload();
+
 }

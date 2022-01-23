@@ -20,6 +20,7 @@ public class GameMessageEvent extends Event implements Cancellable {
     public static HandlerList getHandlerList() {
         return HANDLERS;
     }
+
     private ICPlayer sender;
     private Component component;
     private boolean cancel;

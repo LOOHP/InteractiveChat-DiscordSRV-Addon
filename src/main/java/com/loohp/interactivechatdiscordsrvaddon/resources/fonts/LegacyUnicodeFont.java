@@ -35,6 +35,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
     public static String getSectionSubstring(int i) {
         return String.format("%04x", i).substring(0, 2);
     }
+
     protected Map<String, Optional<BufferedImage>> charImages;
     private Map<String, GlyphSize> sizes;
     private String template;

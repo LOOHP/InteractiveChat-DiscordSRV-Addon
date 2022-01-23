@@ -15,6 +15,7 @@ public enum ModelGUILight {
         }
         return null;
     }
+
     private Vector lightVector;
     private double ambientLevel;
     private double maxLevel;

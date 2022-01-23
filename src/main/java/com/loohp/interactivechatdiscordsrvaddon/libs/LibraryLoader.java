@@ -5,7 +5,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
-import com.loohp.interactivechat.utils.FileUtils;
 import com.loohp.interactivechat.utils.HTTPRequestUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import net.md_5.bungee.api.ChatColor;

@@ -132,7 +132,8 @@ public class FontManager extends AbstractManager {
         this.fonts.putAll(fonts);
     }
 
-    public void reloadFonts() {
+    @Override
+    public void reload() {
         for (FontProvider provider : fonts.values()) {
             provider.reloadFonts();
         }

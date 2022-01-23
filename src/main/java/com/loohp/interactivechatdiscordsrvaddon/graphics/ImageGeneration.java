@@ -38,6 +38,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResour
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils.ItemStackProcessResult;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ModelUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintIndexData;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -613,7 +614,8 @@ public class ImageGeneration {
                     Map<ModelOverrideType, Float> predicate = itemProcessResult.getPredicates();
                     String modelKey = itemProcessResult.getDirectLocation() == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : itemProcessResult.getDirectLocation();
                     Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
-                    modelItems.put(PlayerModelItemPosition.HELMET, new PlayerModelItem(PlayerModelItemPosition.HELMET, modelKey, predicate, enchanted, itemProvidedTextures));
+                    TintIndexData tintIndexData = itemProcessResult.getTintIndexData();
+                    modelItems.put(PlayerModelItemPosition.HELMET, new PlayerModelItem(PlayerModelItemPosition.HELMET, modelKey, predicate, enchanted, itemProvidedTextures, tintIndexData));
                     break;
             }
             if (isArmor) {
@@ -633,7 +635,8 @@ public class ImageGeneration {
                 Map<ModelOverrideType, Float> predicate = itemProcessResult.getPredicates();
                 String modelKey = itemProcessResult.getDirectLocation() == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : itemProcessResult.getDirectLocation();
                 Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
-                modelItems.put(PlayerModelItemPosition.RIGHT_HAND, new PlayerModelItem(PlayerModelItemPosition.RIGHT_HAND, modelKey, predicate, enchanted, itemProvidedTextures));
+                TintIndexData tintIndexData = itemProcessResult.getTintIndexData();
+                modelItems.put(PlayerModelItemPosition.RIGHT_HAND, new PlayerModelItem(PlayerModelItemPosition.RIGHT_HAND, modelKey, predicate, enchanted, itemProvidedTextures, tintIndexData));
             }
             ItemStack leftHand = player.isRightHanded() ? player.getOffHandItem() : player.getMainHandItem();
             if (leftHand != null) {
@@ -643,11 +646,12 @@ public class ImageGeneration {
                 Map<ModelOverrideType, Float> predicate = itemProcessResult.getPredicates();
                 String modelKey = itemProcessResult.getDirectLocation() == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : itemProcessResult.getDirectLocation();
                 Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
-                modelItems.put(PlayerModelItemPosition.LEFT_HAND, new PlayerModelItem(PlayerModelItemPosition.LEFT_HAND, modelKey, predicate, enchanted, itemProvidedTextures));
+                TintIndexData tintIndexData = itemProcessResult.getTintIndexData();
+                modelItems.put(PlayerModelItemPosition.LEFT_HAND, new PlayerModelItem(PlayerModelItemPosition.LEFT_HAND, modelKey, predicate, enchanted, itemProvidedTextures, tintIndexData));
             }
         }
 
-        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.renderPlayer(image.getWidth(), image.getHeight(), InteractiveChatDiscordSrvAddon.plugin.resourceManager, slim, providedTextures, modelItems);
+        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.renderPlayer(image.getWidth(), image.getHeight(), InteractiveChatDiscordSrvAddon.plugin.resourceManager, slim, providedTextures, TintIndexData.EMPTY_INSTANCE, modelItems);
         Graphics2D g = image.createGraphics();
         g.drawImage(ImageUtils.resizeImageAbs(renderResult.getImage(), 117, 159), -1, 12, null);
         g.dispose();
@@ -670,10 +674,11 @@ public class ImageGeneration {
         boolean requiresEnchantmentGlint = processResult.requiresEnchantmentGlint();
         Map<ModelOverrideType, Float> predicates = processResult.getPredicates();
         Map<String, TextureResource> providedTextures = processResult.getProvidedTextures();
+        TintIndexData tintIndexData = processResult.getTintIndexData();
         String directLocation = processResult.getDirectLocation();
 
         BufferedImage itemImage;
-        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, directLocation == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : directLocation, ModelDisplayPosition.GUI, predicates, providedTextures, requiresEnchantmentGlint);
+        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, directLocation == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : directLocation, ModelDisplayPosition.GUI, predicates, providedTextures, tintIndexData, requiresEnchantmentGlint);
         if (renderResult.isSuccessful()) {
             itemImage = renderResult.getImage();
         } else {

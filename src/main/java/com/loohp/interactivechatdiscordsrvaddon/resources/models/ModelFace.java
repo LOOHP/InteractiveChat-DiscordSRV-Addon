@@ -77,6 +77,7 @@ public class ModelFace {
             }
             return null;
         }
+
         private Set<String> aliases;
 
         ModelFaceSide(String... aliases) {

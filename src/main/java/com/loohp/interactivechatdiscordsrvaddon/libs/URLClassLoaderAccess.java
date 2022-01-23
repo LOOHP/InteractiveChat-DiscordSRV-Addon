@@ -54,12 +54,17 @@ public abstract class URLClassLoaderAccess {
         }
     }
 
+    private static void throwError(Throwable cause) throws UnsupportedOperationException {
+        throw new UnsupportedOperationException("LuckPerms is unable to inject into the plugin URLClassLoader.\n" +
+                                                        "You may be able to fix this problem by adding the following command-line argument " +
+                                                        "directly after the 'java' command in your start script: \n'--add-opens java.base/java.lang=ALL-UNNAMED'", cause);
+    }
     private final URLClassLoader classLoader;
+
 
     protected URLClassLoaderAccess(URLClassLoader classLoader) {
         this.classLoader = classLoader;
     }
-
 
     /**
      * Adds the given URL to the class loader.
@@ -68,16 +73,11 @@ public abstract class URLClassLoaderAccess {
      */
     public abstract void addURL(@NonNull URL url);
 
-    private static void throwError(Throwable cause) throws UnsupportedOperationException {
-        throw new UnsupportedOperationException("LuckPerms is unable to inject into the plugin URLClassLoader.\n" +
-                                                        "You may be able to fix this problem by adding the following command-line argument " +
-                                                        "directly after the 'java' command in your start script: \n'--add-opens java.base/java.lang=ALL-UNNAMED'", cause);
-    }
-
     /**
      * Accesses using reflection, not supported on Java 9+.
      */
     private static class Reflection extends URLClassLoaderAccess {
+
         private static final Method ADD_URL_METHOD;
 
         static {
@@ -107,6 +107,7 @@ public abstract class URLClassLoaderAccess {
                 URLClassLoaderAccess.throwError(e);
             }
         }
+
     }
 
     /**
@@ -115,6 +116,7 @@ public abstract class URLClassLoaderAccess {
      * @author Vaishnav Anil (https://github.com/slimjar/slimjar)
      */
     private static class Unsafe extends URLClassLoaderAccess {
+
         private static final sun.misc.Unsafe UNSAFE;
 
         static {
@@ -133,6 +135,11 @@ public abstract class URLClassLoaderAccess {
             return UNSAFE != null;
         }
 
+        private static Object fetchField(final Class<?> clazz, final Object object, final String name) throws NoSuchFieldException {
+            Field field = clazz.getDeclaredField(name);
+            long offset = UNSAFE.objectFieldOffset(field);
+            return UNSAFE.getObject(object, offset);
+        }
         private final Collection<URL> unopenedURLs;
         private final Collection<URL> pathURLs;
 
@@ -155,12 +162,6 @@ public abstract class URLClassLoaderAccess {
             this.pathURLs = pathURLs;
         }
 
-        private static Object fetchField(final Class<?> clazz, final Object object, final String name) throws NoSuchFieldException {
-            Field field = clazz.getDeclaredField(name);
-            long offset = UNSAFE.objectFieldOffset(field);
-            return UNSAFE.getObject(object, offset);
-        }
-
         @Override
         public void addURL(@NonNull URL url) {
             if (this.unopenedURLs == null || this.pathURLs == null) {
@@ -170,9 +171,11 @@ public abstract class URLClassLoaderAccess {
             this.unopenedURLs.add(url);
             this.pathURLs.add(url);
         }
+
     }
 
     private static class Noop extends URLClassLoaderAccess {
+
         private static final Noop INSTANCE = new Noop();
 
         private Noop() {
@@ -183,6 +186,7 @@ public abstract class URLClassLoaderAccess {
         public void addURL(@NonNull URL url) {
             URLClassLoaderAccess.throwError(null);
         }
+
     }
 
 }

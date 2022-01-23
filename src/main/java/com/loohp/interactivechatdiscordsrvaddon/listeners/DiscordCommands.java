@@ -266,6 +266,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
             }
         }
     }
+
     private DiscordSRV discordsrv;
     private Map<String, Component> components;
 
@@ -450,13 +451,13 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     if (InteractiveChatDiscordSrvAddon.plugin.invShowLevel) {
                         int level = offlineICPlayer.getExperienceLevel();
                         ByteArrayOutputStream bottleOut = new ByteArrayOutputStream();
-                        ImageIO.write(InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, "minecraft:item/experience_bottle", ModelDisplayPosition.GUI).getImage(), "png", bottleOut);
+                        ImageIO.write(InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, "minecraft:item/experience_bottle", ModelDisplayPosition.GUI, false).getImage(), "png", bottleOut);
                         content.addAttachment("Level.png", bottleOut.toByteArray());
                         content.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language).replaceFirst("%s|%d", level + ""));
                         content.setFooterImageUrl("attachment://Level.png");
                     }
                     errorCode--;
-                    event.getHook().editOriginal(PlainTextComponentSerializer.plainText().serialize(component)).queue(sucess -> content.toJDAMessageRestAction(channel).queue());
+                    event.getHook().editOriginal(PlainTextComponentSerializer.plainText().serialize(component)).queue(success -> content.toJDAMessageRestAction(channel).queue());
                 }
             } catch (Exception e) {
                 e.printStackTrace();

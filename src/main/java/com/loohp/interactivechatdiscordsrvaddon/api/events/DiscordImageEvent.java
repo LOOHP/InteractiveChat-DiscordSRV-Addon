@@ -25,6 +25,7 @@ public class DiscordImageEvent extends Event implements Cancellable {
     public static HandlerList getHandlerList() {
         return HANDLERS;
     }
+
     private TextChannel channel;
     private String originalMessage;
     private String newMessage;

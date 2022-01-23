@@ -60,6 +60,7 @@ public enum PatternTypeWrapper {
     public static PatternTypeWrapper fromPatternType(PatternType type) {
         return MAPPING.get(type);
     }
+
     private String assetName;
 
     PatternTypeWrapper(String assetName, String s1, boolean flag) {

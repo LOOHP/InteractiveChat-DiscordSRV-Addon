@@ -33,6 +33,7 @@ public class Cache<T> {
             DATA.clear();
         }
     }
+
     private long timeCreated;
     private T object;
 

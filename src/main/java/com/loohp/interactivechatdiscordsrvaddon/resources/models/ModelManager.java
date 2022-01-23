@@ -181,6 +181,11 @@ public class ModelManager extends AbstractManager {
         this.models.putAll(models);
     }
 
+    @Override
+    public void reload() {
+
+    }
+
     public BlockModel getRawBlockModel(String resourceLocation) {
         return models.get(resourceLocation);
     }

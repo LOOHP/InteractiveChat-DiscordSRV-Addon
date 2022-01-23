@@ -10,10 +10,12 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.AbstractManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimation.TextureAnimationFrames;
+import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -89,6 +91,29 @@ public class TextureManager extends AbstractManager {
             }
         }
         this.textures.putAll(textures);
+    }
+
+    @Override
+    public void reload() {
+        int[] grassColorArray;
+        TextureResource grassColorMap = getTexture(ResourceRegistry.GRASS_COLORMAP_LOCATION, false);
+        if (grassColorMap != null && grassColorMap.isTexture()) {
+            grassColorArray = grassColorMap.getTexture(256, 256).getRGB(0, 0, 256, 256, null, 0, 256);
+        } else {
+            grassColorArray = new int[65536];
+            Arrays.fill(grassColorArray, 0xFFFFFF);
+        }
+
+        int[] foliageColorArray;
+        TextureResource foliageColorMap = getTexture(ResourceRegistry.FOLIAGE_COLORMAP_LOCATION, false);
+        if (foliageColorMap != null && foliageColorMap.isTexture()) {
+            foliageColorArray = foliageColorMap.getTexture(256, 256).getRGB(0, 0, 256, 256, null, 0, 256);
+        } else {
+            foliageColorArray = new int[65536];
+            Arrays.fill(foliageColorArray, 0xFFFFFF);
+        }
+
+        TintUtils.setGrassAndFoliageColorMap(grassColorArray, foliageColorArray);
     }
 
     public TextureResource getTexture(String resourceLocation) {
