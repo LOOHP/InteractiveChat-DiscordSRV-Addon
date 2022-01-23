@@ -16,6 +16,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.MinecraftFont;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.MinecraftFont.FontRenderResult;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.UnicodeUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
@@ -101,7 +102,7 @@ public class ImageUtils {
         BufferedImage rotated = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = rotated.createGraphics();
         AffineTransform at = new AffineTransform();
-        at.translate((newWidth - w) / 2, (newHeight - h) / 2);
+        at.translate((newWidth - w) / 2.0, (newHeight - h) / 2.0);
 
         int x = w / 2;
         int y = h / 2;
@@ -165,7 +166,7 @@ public class ImageUtils {
                     int red = color.getRed() + (int) (addColor.getRed() * factor);
                     int green = color.getGreen() + (int) (addColor.getGreen() * factor);
                     int blue = color.getBlue() + (int) (addColor.getBlue() * factor);
-                    color = new Color(red > 255 ? 255 : red, green > 255 ? 255 : green, blue > 255 ? 255 : blue, color.getAlpha());
+                    color = new Color(Math.min(red, 255), Math.min(green, 255), Math.min(blue, 255), color.getAlpha());
                     image.setRGB(x, y, color.getRGB());
                 }
             }
@@ -202,7 +203,7 @@ public class ImageUtils {
                     int red = color.getRed() - value;
                     int green = color.getGreen() - value;
                     int blue = color.getBlue() - value;
-                    color = new Color(red < 0 ? 0 : red, green < 0 ? 0 : green, blue < 0 ? 0 : blue, color.getAlpha());
+                    color = new Color(Math.max(red, 0), Math.max(green, 0), Math.max(blue, 0), color.getAlpha());
                     image.setRGB(x, y, color.getRGB());
                 }
             }
@@ -224,7 +225,7 @@ public class ImageUtils {
                     int red = color.getRed() + xValue;
                     int green = color.getGreen() + yValue;
                     int blue = color.getBlue() + zValue;
-                    color = new Color(red < 0 ? 0 : (red > 255 ? 255 : red), green < 0 ? 0 : (green > 255 ? 255 : green), blue < 0 ? 0 : (blue > 255 ? 255 : blue), color.getAlpha());
+                    color = new Color(red < 0 ? 0 : (Math.min(red, 255)), green < 0 ? 0 : (Math.min(green, 255)), blue < 0 ? 0 : (Math.min(blue, 255)), color.getAlpha());
                     image.setRGB(x, y, color.getRGB());
                 }
             }
@@ -246,7 +247,7 @@ public class ImageUtils {
                     int red = (int) (color.getRed() * xValue);
                     int green = (int) (color.getGreen() * yValue);
                     int blue = (int) (color.getBlue() * zValue);
-                    color = new Color(red < 0 ? 0 : (red > 255 ? 255 : red), green < 0 ? 0 : (green > 255 ? 255 : green), blue < 0 ? 0 : (blue > 255 ? 255 : blue), color.getAlpha());
+                    color = new Color(red < 0 ? 0 : (Math.min(red, 255)), green < 0 ? 0 : (Math.min(green, 255)), blue < 0 ? 0 : (Math.min(blue, 255)), color.getAlpha());
                     image.setRGB(x, y, color.getRGB());
                 }
             }
@@ -294,7 +295,7 @@ public class ImageUtils {
                 Color color = new Color(colorValue, true);
 
                 int alpha = color.getAlpha() + value;
-                color = new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha > 255 ? 255 : (alpha < 0 ? 0 : alpha));
+                color = new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha > 255 ? 255 : (Math.max(alpha, 0)));
                 image.setRGB(x, y, color.getRGB());
             }
         }
@@ -407,7 +408,7 @@ public class ImageUtils {
         String striped = ChatColorUtils.stripColor(ChatColorUtils.filterIllegalColorCodes(PlainTextComponentSerializer.plainText().serialize(text)));
 
         if (dynamicFontSize) {
-            fontSize = Math.round(Math.max(2, fontSize - (float) striped.length() / 3) * 10) / 8;
+            fontSize = Math.round(Math.max(2, fontSize - (float) striped.length() / 3) * 10) / 8.0F;
         }
 
         BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
@@ -423,48 +424,34 @@ public class ImageUtils {
             if (color == null) {
                 color = NamedTextColor.WHITE;
             }
+            List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
+            String content;
             if (each instanceof TextComponent) {
-                String content = ChatColorUtils.filterIllegalColorCodes(((TextComponent) each).content());
-                if (content.isEmpty()) {
-                    continue;
-                }
-                for (int i = 0; i < content.length(); ) {
-                    String character = new String(Character.toChars(content.codePointAt(i)));
-                    i += Math.max(1, character.length());
-                    List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
-                    MinecraftFont fontProvider = manager.getFontManager().getFontProviders(font.asString()).forCharacter(character);
-                    FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, color, decorations);
-                    textImage = result.getImage();
-                    x += result.getWidth() + result.getSpaceWidth();
-                    lastItalicExtraWidth = result.getItalicExtraWidth();
-                    if (height < result.getHeight()) {
-                        height = result.getHeight();
-                    }
-                }
+                content = ChatColorUtils.filterIllegalColorCodes(((TextComponent) each).content());
             } else {
-                String content = ChatColorUtils.filterIllegalColorCodes(PlainTextComponentSerializer.plainText().serialize(each));
-                if (content.isEmpty()) {
-                    continue;
-                }
-                for (int i = 0; i < content.length(); ) {
-                    String character = new String(Character.toChars(content.codePointAt(i)));
-                    i += Math.max(1, character.length());
-                    List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
-                    MinecraftFont fontProvider = manager.getFontManager().getFontProviders(font.asString()).forCharacter(character);
-                    FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, color, decorations);
-                    textImage = result.getImage();
-                    x += result.getWidth() + result.getSpaceWidth();
-                    lastItalicExtraWidth = result.getItalicExtraWidth();
-                    if (height < result.getHeight()) {
-                        height = result.getHeight();
-                    }
+                content = ChatColorUtils.filterIllegalColorCodes(PlainTextComponentSerializer.plainText().serialize(each));
+            }
+            if (content.isEmpty()) {
+                continue;
+            }
+            content = UnicodeUtils.bidirectionalShaping(content);
+            for (int i = 0; i < content.length(); ) {
+                String character = new String(Character.toChars(content.codePointAt(i)));
+                i += Math.max(1, character.length());
+                MinecraftFont fontProvider = manager.getFontManager().getFontProviders(font.asString()).forCharacter(character);
+                FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, color, decorations);
+                textImage = result.getImage();
+                x += result.getWidth() + result.getSpaceWidth();
+                lastItalicExtraWidth = result.getItalicExtraWidth();
+                if (height < result.getHeight()) {
+                    height = result.getHeight();
                 }
             }
         }
 
         int width = x;
         x = centerX - width / 2;
-        int border = (int) Math.ceil(height / 6);
+        int border = (int) Math.ceil(height / 6.0);
         int y = topY + border;
 
         BufferedImage background = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -533,36 +520,25 @@ public class ImageUtils {
                 color = NamedTextColor.WHITE;
             }
             color = darker(color, factor);
+            List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
+            String content;
             if (each instanceof TextComponent) {
-                String content = ChatColorUtils.filterIllegalColorCodes(((TextComponent) each).content());
-                if (content.isEmpty()) {
-                    continue;
-                }
-                for (int i = 0; i < content.length(); ) {
-                    String character = new String(Character.toChars(content.codePointAt(i)));
-                    i += Math.max(1, character.length());
-                    List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
-                    MinecraftFont fontProvider = manager.getFontManager().getFontProviders(font.asString()).forCharacter(character);
-                    FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, color, decorations);
-                    textImage = result.getImage();
-                    x += result.getWidth() + result.getSpaceWidth();
-                    lastItalicExtraWidth = result.getItalicExtraWidth();
-                }
+                content = ChatColorUtils.filterIllegalColorCodes(((TextComponent) each).content());
             } else {
-                String content = ChatColorUtils.filterIllegalColorCodes(PlainTextComponentSerializer.plainText().serialize(each));
-                if (content.isEmpty()) {
-                    continue;
-                }
-                for (int i = 0; i < content.length(); ) {
-                    String character = new String(Character.toChars(content.codePointAt(i)));
-                    i += Math.max(1, character.length());
-                    List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
-                    MinecraftFont fontProvider = manager.getFontManager().getFontProviders(font.asString()).forCharacter(character);
-                    FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, color, decorations);
-                    textImage = result.getImage();
-                    x += result.getWidth() + result.getSpaceWidth();
-                    lastItalicExtraWidth = result.getItalicExtraWidth();
-                }
+                content = ChatColorUtils.filterIllegalColorCodes(PlainTextComponentSerializer.plainText().serialize(each));
+            }
+            if (content.isEmpty()) {
+                continue;
+            }
+            content = UnicodeUtils.bidirectionalShaping(content);
+            for (int i = 0; i < content.length(); ) {
+                String character = new String(Character.toChars(content.codePointAt(i)));
+                i += Math.max(1, character.length());
+                MinecraftFont fontProvider = manager.getFontManager().getFontProviders(font.asString()).forCharacter(character);
+                FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, color, decorations);
+                textImage = result.getImage();
+                x += result.getWidth() + result.getSpaceWidth();
+                lastItalicExtraWidth = result.getItalicExtraWidth();
             }
         }
         Graphics2D g = image.createGraphics();
@@ -573,10 +549,6 @@ public class ImageUtils {
 
     private static TextColor darker(TextColor color, double factor) {
         return TextColor.color(Math.max((int) (color.red() * factor), 0), Math.max((int) (color.green() * factor), 0), Math.max((int) (color.blue() * factor), 0));
-    }
-
-    public enum MagicFormat {
-        APPLY, KEEP, RESET
     }
 
 }

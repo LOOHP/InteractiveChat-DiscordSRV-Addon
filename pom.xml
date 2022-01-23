@@ -5,7 +5,7 @@
 	<groupId>com.loohp</groupId>
 	<artifactId>InteractiveChatDiscordSrvAddon</artifactId>
 	<name>InteractiveChatDiscordSrvAddon</name>
-	<version>4.1.1.18</version>
+	<version>4.1.1.19</version>
 
 	<description>Have InteractiveChat Placeholders translated on DiscordSRV discord messages.</description>
 	<url>https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon</url>
@@ -222,6 +222,12 @@
 	</repositories>
 
 	<dependencies>
+		<dependency>
+			<groupId>com.ibm.icu</groupId>
+			<artifactId>icu4j</artifactId>
+			<version>70.1</version>
+			<scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>com.madgag</groupId>
 			<artifactId>animated-gif-lib</artifactId>
