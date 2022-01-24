@@ -168,7 +168,7 @@ public class ModelRenderer implements AutoCloseable {
             }
 
             if (itemRenderModel != null) {
-                itemRenderModel.translate(-16 / 2, -16 / 2, -16 / 2);
+                itemRenderModel.translate(-16 / 2.0, -16 / 2.0, -16 / 2.0);
                 ModelDisplay displayData = itemBlockModel.getRawDisplay().get(playerModelItem.getPosition().getModelDisplayPosition());
                 boolean flipX = playerModelItem.getPosition().isLiteralFlipped();
                 boolean isMirror = false;
@@ -214,9 +214,9 @@ public class ModelRenderer implements AutoCloseable {
             }
         }
 
-        playerRenderModel.translate(-16 / 2, -16 / 2, -16 / 2);
+        playerRenderModel.translate(-16 / 2.0, -16 / 2.0, -16 / 2.0);
         playerRenderModel.rotate(0, 180, 0, false);
-        playerRenderModel.translate(16 / 2, 16 / 2, 16 / 2);
+        playerRenderModel.translate(16 / 2.0, 16 / 2.0, 16 / 2.0);
 
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         renderPlayerModel(playerRenderModel, image, playerModel.getGUILight());
@@ -494,9 +494,9 @@ public class ModelRenderer implements AutoCloseable {
     }
 
     private void renderPlayerModel(Model renderModel, BufferedImage image, ModelGUILight lightData) {
-        AffineTransform baseTransform = AffineTransform.getTranslateInstance(image.getWidth() / 2, (double) image.getHeight() / 7 * 5);
+        AffineTransform baseTransform = AffineTransform.getTranslateInstance(image.getWidth() / 2.0, (double) image.getHeight() / 7 * 5);
         baseTransform.concatenate(AffineTransform.getScaleInstance(image.getWidth() / 39.09375, image.getWidth() / 39.09375));
-        renderModel.translate(-16 / 2, -16 / 2, -16 / 2);
+        renderModel.translate(-16 / 2.0, -16 / 2.0, -16 / 2.0);
         renderModel.updateLighting(lightData.getLightVector(), lightData.getAmbientLevel(), lightData.getMaxLevel());
         long start = System.currentTimeMillis();
         renderModel.render(image, true, baseTransform, renderingService).join();
@@ -504,9 +504,9 @@ public class ModelRenderer implements AutoCloseable {
     }
 
     private void renderBlockModel(Model renderModel, BufferedImage image, ModelDisplay displayData, ModelGUILight lightData) {
-        AffineTransform baseTransform = AffineTransform.getTranslateInstance(image.getWidth() / 2, image.getHeight() / 2);
-        baseTransform.concatenate(AffineTransform.getScaleInstance(image.getWidth() / 16, image.getHeight() / 16));
-        renderModel.translate(-16 / 2, -16 / 2, -16 / 2);
+        AffineTransform baseTransform = AffineTransform.getTranslateInstance(image.getWidth() / 2.0, image.getHeight() / 2.0);
+        baseTransform.concatenate(AffineTransform.getScaleInstance(image.getWidth() / 16.0, image.getHeight() / 16.0));
+        renderModel.translate(-16 / 2.0, -16 / 2.0, -16 / 2.0);
         if (displayData != null) {
             Coordinates3D scale = displayData.getScale();
             renderModel.scale(scale.getX(), scale.getY(), scale.getZ());
