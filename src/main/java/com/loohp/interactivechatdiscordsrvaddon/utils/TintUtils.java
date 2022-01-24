@@ -1,6 +1,5 @@
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
-import com.loohp.blockmodelrenderer.utils.ColorUtils;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 
