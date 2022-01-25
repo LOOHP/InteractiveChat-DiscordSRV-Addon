@@ -46,9 +46,9 @@ public class AdvancementUtils {
     public static AdvancementData getAdvancementData(Object advancementObject) {
         try {
             Advancement advancement = (Advancement) advancementObject;
-            boolean isMinecraft = advancement.getKey().getKey().equals(NamespacedKey.MINECRAFT);
-            Object craftAdvancment = craftAdvancementClass.cast(advancement);
-            Object nmsAdvancement = craftAdvancementClassGetHandleMethod.invoke(craftAdvancment);
+            boolean isMinecraft = advancement.getKey().getNamespace().equals(NamespacedKey.MINECRAFT);
+            Object craftAdvancement = craftAdvancementClass.cast(advancement);
+            Object nmsAdvancement = craftAdvancementClassGetHandleMethod.invoke(craftAdvancement);
             Object nmsAdvancementDisplay = nmsAdvancementClassGetDisplayMethod.invoke(nmsAdvancement);
             Object nmsTitle = nmsAdvancementDisplayClassGetTitleMethod.invoke(nmsAdvancementDisplay);
             Component title = ChatComponentType.IChatBaseComponent.convertFrom(nmsTitle);
