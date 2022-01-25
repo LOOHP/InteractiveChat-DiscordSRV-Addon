@@ -4,7 +4,6 @@ import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.config.Config;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
-import com.loohp.interactivechat.libs.org.simpleyaml.exceptions.InvalidConfigurationException;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.ICPlayerFactory;
 import com.loohp.interactivechat.objectholders.PlaceholderCooldownManager;
@@ -196,7 +195,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
         try {
             Config.loadConfig(CONFIG_ID, new File(getDataFolder(), "config.yml"), getClass().getClassLoader().getResourceAsStream("config.yml"), getClass().getClassLoader().getResourceAsStream("config.yml"), true);
-        } catch (IOException | InvalidConfigurationException e) {
+        } catch (IOException e) {
             e.printStackTrace();
             getServer().getPluginManager().disablePlugin(this);
             return;
@@ -298,11 +297,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     @Override
     public void reloadConfig() {
         Config config = Config.getConfig(CONFIG_ID);
-        try {
-            config.reload();
-        } catch (InvalidConfigurationException | IOException e) {
-            e.printStackTrace();
-        }
+        config.reload();
 
         reloadConfigMessage = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.ReloadConfig"));
         reloadTextureMessage = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.ReloadTexture"));
