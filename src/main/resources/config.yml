@@ -73,16 +73,16 @@ DiscordAttachments:
   RestrictImageUrl:
     Enabled: false
     Whitelist:
-      - https://i.imgur.com
-      - http://i.imgur.com
-      - https://storage.googleapis.com
-      - http://storage.googleapis.com
-      - https://cdn.discordapp.com
-      - http://cdn.discordapp.com
-      - https://media.discordapp.net
-      - http://media.discordapp.net
-      - https://textures.minecraft.net
-      - http://textures.minecraft.net
+      - "https://i.imgur.com"
+      - "http://i.imgur.com"
+      - "https://storage.googleapis.com"
+      - "http://storage.googleapis.com"
+      - "https://cdn.discordapp.com"
+      - "http://cdn.discordapp.com"
+      - "https://media.discordapp.net"
+      - "http://media.discordapp.net"
+      - "https://textures.minecraft.net"
+      - "http://textures.minecraft.net"
   Timeout: 86400
   PlaybackBar:
     Enabled: true

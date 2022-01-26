@@ -41,6 +41,8 @@ public class ResourceRegistry {
     public static final String SHIELD_BASE_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/shield_base";
     public static final String SHIELD_PATTERNS_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/shield_patterns";
 
+    public static final String LEGACY_BED_TEXTURE_PLACEHOLDER = "minecraft:interactivechatdiscordsrvaddon/legacy_bed";
+
     public static final String LEATHER_HELMET_PLACEHOLDER = ITEM_TEXTURE_LOCATION + "leather_helmet";
     public static final String LEATHER_CHESTPLATE_PLACEHOLDER = ITEM_TEXTURE_LOCATION + "leather_chestplate";
     public static final String LEATHER_LEGGINGS_PLACEHOLDER = ITEM_TEXTURE_LOCATION + "leather_leggings";
