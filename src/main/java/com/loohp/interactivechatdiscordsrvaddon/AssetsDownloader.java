@@ -156,18 +156,7 @@ public class AssetsDownloader {
                 Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Done!");
             }
 
-            if (data.containsKey("extras-entries")) {
-                InteractiveChatDiscordSrvAddon.plugin.extras.clear();
-                JSONObject extras = (JSONObject) data.get("extras-entries");
-                for (Object obj : extras.keySet()) {
-                    String key = obj.toString();
-                    String value = extras.get(key).toString();
-                    try {
-                        InteractiveChatDiscordSrvAddon.plugin.extras.put(value, HTTPRequestUtils.download(key));
-                    } catch (Exception e) {
-                    }
-                }
-            }
+            loadExtras(data);
 
             InteractiveChatDiscordSrvAddon.plugin.defaultResourceHash = hash;
 
@@ -185,6 +174,25 @@ public class AssetsDownloader {
             e.printStackTrace();
         }
         LOCK.unlock();
+    }
+
+    public static void loadExtras() {
+        loadExtras(HTTPRequestUtils.getJSONResponse(ASSETS_DATA_URL));
+    }
+
+    public static void loadExtras(JSONObject data) {
+        if (data.containsKey("extras-entries")) {
+            InteractiveChatDiscordSrvAddon.plugin.extras.clear();
+            JSONObject extras = (JSONObject) data.get("extras-entries");
+            for (Object obj : extras.keySet()) {
+                String key = obj.toString();
+                String value = extras.get(key).toString();
+                try {
+                    InteractiveChatDiscordSrvAddon.plugin.extras.put(value, HTTPRequestUtils.download(key));
+                } catch (Exception e) {
+                }
+            }
+        }
     }
 
     private static String getEntryName(String name) {

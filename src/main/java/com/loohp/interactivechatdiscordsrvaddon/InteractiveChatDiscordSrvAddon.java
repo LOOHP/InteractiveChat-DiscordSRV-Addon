@@ -44,7 +44,6 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
@@ -52,6 +51,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -179,7 +179,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public ResourceManager resourceManager;
     public ModelRenderer modelRenderer;
 
-    protected Map<String, byte[]> extras = new HashMap<>();
+    protected Map<String, byte[]> extras = new ConcurrentHashMap<>();
 
     @Override
     public void onEnable() {
@@ -250,6 +250,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
             for (ICPlayer player : ICPlayerFactory.getOnlineICPlayers()) {
                 cachePlayerSkin(player);
             }
+            AssetsDownloader.loadExtras();
         }, 600, 6000);
     }
 

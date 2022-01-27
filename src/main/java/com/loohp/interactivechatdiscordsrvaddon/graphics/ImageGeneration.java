@@ -59,6 +59,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -207,9 +208,11 @@ public class ImageGeneration {
         }
 
         BufferedImage background;
-        if (player.getName().equalsIgnoreCase("LOOHP") || player.getName().equalsIgnoreCase("NARLIAR")) {
+        String sha1 = HashUtils.createSha1String(new ByteArrayInputStream(player.getName().toLowerCase().getBytes(StandardCharsets.UTF_8)));
+        byte[] playerInventoryImageData = InteractiveChatDiscordSrvAddon.plugin.getExtras("inventory/" + sha1);
+        if (playerInventoryImageData != null) {
             try {
-                background = ImageIO.read(new ByteArrayInputStream(InteractiveChatDiscordSrvAddon.plugin.getExtras("player_inventory_painting")));
+                background = ImageIO.read(new ByteArrayInputStream(playerInventoryImageData));
             } catch (Throwable e) {
                 background = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_GUI_TEXTURE_LOCATION + "player_inventory").getTexture();
             }
