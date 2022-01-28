@@ -181,17 +181,21 @@ public class AssetsDownloader {
     }
 
     public static void loadExtras(JSONObject data) {
-        if (data.containsKey("extras-entries")) {
-            InteractiveChatDiscordSrvAddon.plugin.extras.clear();
-            JSONObject extras = (JSONObject) data.get("extras-entries");
-            for (Object obj : extras.keySet()) {
-                String key = obj.toString();
-                String value = extras.get(key).toString();
-                try {
-                    InteractiveChatDiscordSrvAddon.plugin.extras.put(value, HTTPRequestUtils.download(key));
-                } catch (Exception e) {
+        try {
+            if (data.containsKey("extras-entries")) {
+                InteractiveChatDiscordSrvAddon.plugin.extras.clear();
+                JSONObject extras = (JSONObject) data.get("extras-entries");
+                for (Object obj : extras.keySet()) {
+                    String key = obj.toString();
+                    String value = extras.get(key).toString();
+                    try {
+                        InteractiveChatDiscordSrvAddon.plugin.extras.put(value, HTTPRequestUtils.download(key));
+                    } catch (Exception e) {
+                    }
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

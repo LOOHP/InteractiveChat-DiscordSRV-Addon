@@ -30,6 +30,7 @@ import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.InventoryUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechat.utils.MCVersion;
+import com.loohp.interactivechat.utils.PlayerUtils;
 import com.loohp.interactivechat.utils.SkinUtils;
 import com.loohp.interactivechat.utils.VanishUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
@@ -339,7 +340,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     return;
                 }
             } else {
-                players = Bukkit.getOnlinePlayers().stream().filter(each -> !VanishUtils.isVanished(each.getUniqueId())).collect(Collectors.toMap(each -> each, each -> each.getPing()));
+                players = Bukkit.getOnlinePlayers().stream().filter(each -> !VanishUtils.isVanished(each.getUniqueId())).collect(Collectors.toMap(each -> each, each -> PlayerUtils.getPing(each)));
             }
             if (players.isEmpty()) {
                 event.getHook().editOriginal(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandEmptyServer)).queue();
