@@ -57,6 +57,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -199,25 +200,20 @@ public class ImageGeneration {
         InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();
         Debug.debug("ImageGeneration creating player inventory image of " + player.getName());
 
-        String key = PLAYER_INVENTORY_CACHE_KEY + HashUtils.createSha1(player.getUniqueId().toString(), inventory);
-        if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial()) && !Stream.of(inventory.getContents()).noneMatch(each -> each != null && NBTEditor.contains(each, "CustomModelData"))) {
+        Object playerInventoryData = player.getProperty("player_inventory");
+        BufferedImage background;
+        if (playerInventoryData != null && playerInventoryData instanceof BufferedImage) {
+            background = ImageUtils.copyImage((BufferedImage) playerInventoryData);
+        } else {
+            background = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_GUI_TEXTURE_LOCATION + "player_inventory").getTexture();
+        }
+
+        String key = PLAYER_INVENTORY_CACHE_KEY + HashUtils.createSha1(player.getUniqueId().toString(), inventory) + ImageUtils.hash(background);
+        if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial()) && Stream.of(inventory.getContents()).anyMatch(each -> each != null && NBTEditor.contains(each, "CustomModelData"))) {
             Cache<?> cache = Cache.getCache(key);
             if (cache != null) {
                 return ImageUtils.copyImage((BufferedImage) cache.getObject());
             }
-        }
-
-        BufferedImage background;
-        String sha1 = HashUtils.createSha1String(new ByteArrayInputStream(player.getName().toLowerCase().getBytes(StandardCharsets.UTF_8)));
-        byte[] playerInventoryImageData = InteractiveChatDiscordSrvAddon.plugin.getExtras("inventory/" + sha1);
-        if (playerInventoryImageData != null) {
-            try {
-                background = ImageIO.read(new ByteArrayInputStream(playerInventoryImageData));
-            } catch (Throwable e) {
-                background = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_GUI_TEXTURE_LOCATION + "player_inventory").getTexture();
-            }
-        } else {
-            background = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_GUI_TEXTURE_LOCATION + "player_inventory").getTexture();
         }
 
         BufferedImage target = new BufferedImage(background.getWidth(), background.getHeight(), BufferedImage.TYPE_INT_ARGB);

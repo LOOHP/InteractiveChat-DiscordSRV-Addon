@@ -33,6 +33,15 @@ public class ImageUtils {
     public static final Color TEXT_BACKGROUND_COLOR = new Color(0, 0, 0, 180);
     public static final double CHAT_COLOR_BACKGROUND_FACTOR = 0.19;
 
+    public static String hash(BufferedImage image) {
+        StringBuilder sb = new StringBuilder();
+        int[] colors = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());
+        for (int i = 0; i < colors.length; i++) {
+            sb.append(Integer.toHexString(colors[i]));
+        }
+        return sb.toString();
+    }
+
     public static BufferedImage toCompatibleImage(BufferedImage image) {
         try {
             GraphicsConfiguration gfxConfig = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();

@@ -17,6 +17,7 @@ import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.libs.LibraryLoader;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordReadyEvents;
+import com.loohp.interactivechatdiscordsrvaddon.listeners.ICPlayerEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.OutboundToDiscordEvents;
 import com.loohp.interactivechatdiscordsrvaddon.metrics.Charts;
@@ -212,6 +213,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(new InboundToGameEvents(), this);
         getServer().getPluginManager().registerEvents(new OutboundToDiscordEvents(), this);
+        getServer().getPluginManager().registerEvents(new ICPlayerEvents(), this);
         getServer().getPluginManager().registerEvents(new Debug(), this);
         getServer().getPluginManager().registerEvents(new Updater(), this);
         getCommand("interactivechatdiscordsrv").setExecutor(new Commands());

@@ -519,15 +519,6 @@ public class ModelRenderer implements AutoCloseable {
         renderModel.render(image, renderModel.getComponents().size() <= QUALITY_THRESHOLD, baseTransform, renderingService).join();
     }
 
-    private String hash(BufferedImage image) {
-        StringBuilder sb = new StringBuilder();
-        int[] colors = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());
-        for (int i = 0; i < colors.length; i++) {
-            sb.append(Integer.toHexString(colors[i]));
-        }
-        return sb.toString();
-    }
-
     private String cacheKey(Object... obj) {
         return Stream.of(obj).map(each -> {
             if (each == null) {
@@ -551,7 +542,7 @@ public class ModelRenderer implements AutoCloseable {
         return providedTextures.entrySet().stream().map(entry -> {
             TextureResource resource = entry.getValue();
             if (resource.isTexture()) {
-                return entry.getKey() + ":" + hash(resource.getTexture());
+                return entry.getKey() + ":" + ImageUtils.hash(resource.getTexture());
             } else if (resource.hasFile()) {
                 return entry.getKey() + ":" + resource.getFile().getAbsolutePath();
             }

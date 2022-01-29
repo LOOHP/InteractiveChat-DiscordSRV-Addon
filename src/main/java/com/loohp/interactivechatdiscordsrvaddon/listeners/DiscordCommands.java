@@ -400,18 +400,20 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                 }
                 return;
             }
-            OfflineICPlayer offlineICPlayer = ICPlayerFactory.getOfflineICPlayer(uuid);
-            if (offlineICPlayer == null) {
-                if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandIsMainServer) {
-                    event.reply(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.unableToRetrieveData) + " (-1)").setEphemeral(true).queue();
-                }
-                return;
-            }
-            int errorCode = -2;
+            int errorCode = -1;
             try {
                 if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandIsMainServer) {
                     event.reply("...").queue();
                 }
+                errorCode--;
+                OfflineICPlayer offlineICPlayer = ICPlayerFactory.getOfflineICPlayer(uuid);
+                if (offlineICPlayer == null) {
+                    if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandIsMainServer) {
+                        event.reply(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.unableToRetrieveData) + " (" + errorCode + ")").setEphemeral(true).queue();
+                    }
+                    return;
+                }
+                errorCode--;
                 if (InteractiveChat.bungeecordMode && offlineICPlayer instanceof ICPlayer) {
                     ICPlayer icplayer = (ICPlayer) offlineICPlayer;
                     if (icplayer.isLocal()) {
@@ -480,17 +482,18 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                 }
                 return;
             }
-            OfflineICPlayer offlineICPlayer = ICPlayerFactory.getOfflineICPlayer(uuid);
-            if (offlineICPlayer == null) {
-                if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandIsMainServer) {
-                    event.reply(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.unableToRetrieveData) + " (-1)").setEphemeral(true).queue();
-                }
-                return;
-            }
-            int errorCode = -2;
+            int errorCode = -1;
             try {
                 if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandIsMainServer) {
                     event.reply("...").queue();
+                }
+                errorCode--;
+                OfflineICPlayer offlineICPlayer = ICPlayerFactory.getOfflineICPlayer(uuid);
+                if (offlineICPlayer == null) {
+                    if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandIsMainServer) {
+                        event.reply(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.unableToRetrieveData) + " (" + errorCode + ")").setEphemeral(true).queue();
+                    }
+                    return;
                 }
                 errorCode--;
                 if (InteractiveChat.bungeecordMode && offlineICPlayer instanceof ICPlayer) {
