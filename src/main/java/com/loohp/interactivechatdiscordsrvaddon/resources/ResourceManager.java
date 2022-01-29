@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -129,21 +130,37 @@ public class ResourceManager implements AutoCloseable {
         if (!assetsFolder.exists() || !assetsFolder.isDirectory()) {
             throw new IllegalArgumentException(assetsFolder.getAbsolutePath() + " is not a directory.");
         }
-        for (ResourcePackFile folder : assetsFolder.listFilesAndFolders()) {
+        Collection<ResourcePackFile> folders = assetsFolder.listFilesAndFolders();
+        for (ResourcePackFile folder : folders) {
             if (folder.isDirectory()) {
                 String namespace = folder.getName();
                 ResourcePackFile models = folder.getChild("models");
                 if (models.exists() && models.isDirectory()) {
                     ((AbstractManager) modelManager).loadDirectory(namespace, models);
                 }
+            }
+        }
+        for (ResourcePackFile folder : folders) {
+            if (folder.isDirectory()) {
+                String namespace = folder.getName();
                 ResourcePackFile textures = folder.getChild("textures");
                 if (textures.exists() && textures.isDirectory()) {
                     ((AbstractManager) textureManager).loadDirectory(namespace, textures);
                 }
+            }
+        }
+        for (ResourcePackFile folder : folders) {
+            if (folder.isDirectory()) {
+                String namespace = folder.getName();
                 ResourcePackFile font = folder.getChild("font");
                 if (font.exists() && font.isDirectory()) {
                     ((AbstractManager) fontManager).loadDirectory(namespace, font);
                 }
+            }
+        }
+        for (ResourcePackFile folder : folders) {
+            if (folder.isDirectory()) {
+                String namespace = folder.getName();
                 ResourcePackFile lang = folder.getChild("lang");
                 if (lang.exists() && lang.isDirectory()) {
                     ((AbstractManager) languageManager).loadDirectory(namespace, lang);

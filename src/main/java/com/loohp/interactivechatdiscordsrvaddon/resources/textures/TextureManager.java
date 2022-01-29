@@ -43,7 +43,7 @@ public class TextureManager extends AbstractManager {
         Collection<ResourcePackFile> files = root.listFilesRecursively();
         for (ResourcePackFile file : files) {
             try {
-                String key = namespace + ":" + file.getParentFile().getAbsolutePath().replace("\\", "/").replace(root.getAbsolutePath().replace("\\", "/") + "/", "") + "/" + file.getName();
+                String key = namespace + ":" + file.getRelativePathFrom(root);
                 String extension = "";
                 if (key.lastIndexOf(".") >= 0) {
                     extension = key.substring(key.lastIndexOf(".") + 1);

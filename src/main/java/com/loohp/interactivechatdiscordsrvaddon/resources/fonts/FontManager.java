@@ -150,28 +150,30 @@ public class FontManager extends AbstractManager {
             key = resourceLocation;
         }
 
-        Map<String, ResourcePackFile> fileList = files.get(namespace);
-        if (fileList == null) {
-            return null;
+        if (resourceLocation.endsWith(".png")) {
+            return manager.getTextureManager().getTexture(resourceLocation, false);
+        } else {
+            Map<String, ResourcePackFile> fileList = files.get(namespace);
+            if (fileList == null) {
+                return null;
+            }
+            ResourcePackFile current0 = fileList.get(key);
+            if (current0 != null && current0.exists()) {
+                return new GeneratedTextureResource(current0);
+            }
+            ResourcePackFile current1 = fileList.get(key.replace("font/", ""));
+            if (current1 != null && current1.exists()) {
+                return new GeneratedTextureResource(current1);
+            }
         }
-        ResourcePackFile current0 = fileList.get(key);
-        if (current0 != null && current0.exists()) {
-            return new GeneratedTextureResource(current0);
-        }
-        ResourcePackFile current1 = fileList.get(key.replace("font/", ""));
-        if (current1 != null && current1.exists()) {
-            return new GeneratedTextureResource(current1);
-        }
-        TextureResource resource = manager.getTextureManager().getTexture(resourceLocation, false);
-        return resource;
+        return null;
     }
 
     public FontProvider getFontProviders(String resourceLocation) {
         if (!resourceLocation.contains(":")) {
             resourceLocation = ResourceRegistry.DEFAULT_NAMESPACE + ":" + resourceLocation;
         }
-        FontProvider providers = fonts.getOrDefault(resourceLocation, resourceLocation.equals(DEFAULT_FONT) ? null : getFontProviders(DEFAULT_FONT));
-        return providers;
+        return fonts.getOrDefault(resourceLocation, resourceLocation.equals(DEFAULT_FONT) ? null : getFontProviders(DEFAULT_FONT));
     }
 
 }

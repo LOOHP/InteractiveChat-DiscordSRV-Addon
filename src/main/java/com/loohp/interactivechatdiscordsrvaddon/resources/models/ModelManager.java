@@ -51,7 +51,7 @@ public class ModelManager extends AbstractManager {
         Collection<ResourcePackFile> files = root.listFilesRecursively(new String[] {"json"});
         for (ResourcePackFile file : files) {
             try {
-                String key = namespace + ":" + file.getParentFile().getAbsolutePath().replace("\\", "/").replace(root.getAbsolutePath().replace("\\", "/") + "/", "") + "/" + file.getName();
+                String key = namespace + ":" + file.getRelativePathFrom(root);
                 key = key.substring(0, key.lastIndexOf("."));
                 InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
                 JSONObject rootJson = (JSONObject) parser.parse(reader);
