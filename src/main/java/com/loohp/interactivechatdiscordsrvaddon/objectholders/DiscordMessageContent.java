@@ -216,7 +216,7 @@ public class DiscordMessageContent {
                 actions.put(channel.sendMessage(otherEmbed.build()), usedAttachments);
             }
         }
-        Set<String> embededAttachments = new HashSet<>();
+        Set<String> embeddedAttachments = new HashSet<>();
         for (Entry<MessageAction, Set<String>> entry : actions.entrySet()) {
             MessageAction action = entry.getKey();
             Set<String> neededUrls = entry.getValue();
@@ -224,14 +224,14 @@ public class DiscordMessageContent {
                 String attachmentName = attachment.getKey();
                 if (neededUrls.contains("attachment://" + attachmentName)) {
                     action.addFile(attachment.getValue(), attachmentName);
-                    embededAttachments.add(attachmentName);
+                    embeddedAttachments.add(attachmentName);
                 }
             }
         }
         MessageAction lastAction = actions.keySet().stream().skip(actions.size() - 1).findFirst().get();
         for (Entry<String, byte[]> attachment : attachments.entrySet()) {
             String attachmentName = attachment.getKey();
-            if (!embededAttachments.contains(attachmentName)) {
+            if (!embeddedAttachments.contains(attachmentName)) {
                 lastAction.addFile(attachment.getValue(), attachmentName);
             }
         }

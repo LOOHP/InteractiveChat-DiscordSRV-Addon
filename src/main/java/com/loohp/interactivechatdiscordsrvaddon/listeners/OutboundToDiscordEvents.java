@@ -131,7 +131,7 @@ public class OutboundToDiscordEvents implements Listener {
                     Debug.debug("createContents creating item discord content");
                     ItemStack item = iData.getItemStack().get();
                     Color color = DiscordItemStackUtils.getDiscordColor(item);
-                    if (color == null || color.equals(Color.white)) {
+                    if (color == null || color.equals(Color.WHITE)) {
                         color = new Color(0xFFFFFE);
                     }
                     try {
@@ -273,7 +273,9 @@ public class OutboundToDiscordEvents implements Listener {
                                 break;
                         }
                     }
-                    content.addDescription(body);
+                    if (!body.isEmpty()) {
+                        content.addDescription(body);
+                    }
                     if (InteractiveChatDiscordSrvAddon.plugin.hoverImage) {
                         BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_MISC_TEXTURE_LOCATION + "hover_cursor").getTexture();
                         ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -1042,8 +1044,8 @@ public class OutboundToDiscordEvents implements Listener {
 
             String avatarUrl = player.isLocal() ? DiscordSRV.getAvatarUrl(player.getLocalPlayer()) : null;
             String username = DiscordSRV.config().getString("Experiment_WebhookChatMessageUsernameFormat")
-                    .replace("%displayname%", MessageUtil.strip(player.getDisplayName()))
-                    .replace("%username%", player.getName());
+                .replace("%displayname%", MessageUtil.strip(player.getDisplayName()))
+                .replace("%username%", player.getName());
             username = PlaceholderUtil.replacePlaceholders(username, player.isLocal() ? player.getLocalPlayer() : Bukkit.getOfflinePlayer(player.getUniqueId()));
             username = MessageUtil.strip(username);
 
