@@ -1,6 +1,5 @@
 package com.loohp.interactivechatdiscordsrvaddon.listeners;
 
-import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.api.events.ICPlayerJoinEvent;
 import com.loohp.interactivechat.api.events.OfflineICPlayerCreationEvent;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
