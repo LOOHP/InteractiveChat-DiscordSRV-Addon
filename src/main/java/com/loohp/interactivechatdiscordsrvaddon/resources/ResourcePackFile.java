@@ -2,7 +2,6 @@ package com.loohp.interactivechatdiscordsrvaddon.resources;
 
 import java.io.File;
 import java.io.InputStream;
-import java.nio.file.Paths;
 import java.util.Collection;
 
 public interface ResourcePackFile extends AutoCloseable {
@@ -10,6 +9,10 @@ public interface ResourcePackFile extends AutoCloseable {
     String getName();
 
     String getParent();
+
+    default boolean hasParent() {
+        return getParent() != null;
+    }
 
     ResourcePackFile getParentFile();
 
@@ -34,7 +37,7 @@ public interface ResourcePackFile extends AutoCloseable {
     Collection<ResourcePackFile> listFilesRecursively(String[] extensions);
 
     default String getRelativePathFrom(ResourcePackFile from) {
-        return Paths.get(new File(from.getAbsolutePath()).toURI()).relativize(Paths.get(new File(this.getAbsolutePath()).toURI())).toString().replace("\\", "/");
+        return new File(from.getAbsolutePath()).toPath().relativize(new File(this.getAbsolutePath()).toPath()).toString().replace("\\", "/");
     }
 
     @Override

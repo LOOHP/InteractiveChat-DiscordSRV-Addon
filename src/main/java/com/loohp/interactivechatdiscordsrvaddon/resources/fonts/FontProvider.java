@@ -1,6 +1,6 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
-import com.loohp.interactivechat.libs.org.apache.commons.lang.StringEscapeUtils;
+import com.loohp.interactivechat.libs.org.apache.commons.lang3.StringEscapeUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;

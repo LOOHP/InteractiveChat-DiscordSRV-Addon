@@ -29,7 +29,7 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
         this.zipEntry = null;
     }
 
-    public ResourcePackZipEntryFile(String absoluteRootPath, ZipFile zipRoot, String zipPath, boolean isDirectory, ZipEntry zipEntry) {
+    private ResourcePackZipEntryFile(String absoluteRootPath, ZipFile zipRoot, String zipPath, boolean isDirectory, ZipEntry zipEntry) {
         this.absoluteRootPath = absoluteRootPath;
         this.zipRoot = zipRoot;
         this.zipPath = zipPath;

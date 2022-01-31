@@ -6,7 +6,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.TextReplacementCo
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.TranslatableComponent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent.ShowItem;
-import com.loohp.interactivechat.libs.org.apache.commons.lang.RandomStringUtils;
+import com.loohp.interactivechat.libs.org.apache.commons.lang3.RandomStringUtils;
 import com.loohp.interactivechat.utils.ComponentCompacting;
 import com.loohp.interactivechat.utils.ComponentFlattening;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;

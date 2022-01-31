@@ -9,12 +9,20 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ResourcePackSystemFile implements ResourcePackFile {
 
+    private File root;
     private File file;
 
     public ResourcePackSystemFile(File file) {
+        this.root = file;
+        this.file = file;
+    }
+
+    private ResourcePackSystemFile(File root, File file) {
+        this.root = root;
         this.file = file;
     }
 
@@ -29,12 +37,18 @@ public class ResourcePackSystemFile implements ResourcePackFile {
 
     @Override
     public String getParent() {
+        if (root.equals(file)) {
+            return null;
+        }
         return file.getParent();
     }
 
     @Override
     public ResourcePackFile getParentFile() {
-        return new ResourcePackSystemFile(file.getParentFile());
+        if (getParent() == null) {
+            return null;
+        }
+        return new ResourcePackSystemFile(root, file.getParentFile());
     }
 
     @Override
@@ -54,7 +68,7 @@ public class ResourcePackSystemFile implements ResourcePackFile {
 
     @Override
     public Collection<ResourcePackFile> listFilesAndFolders() {
-        return Arrays.asList(file.listFiles()).stream().map(each -> new ResourcePackSystemFile(each)).collect(Collectors.toSet());
+        return Stream.of(file.listFiles()).map(each -> new ResourcePackSystemFile(root, each)).collect(Collectors.toSet());
     }
 
     @Override
@@ -64,7 +78,7 @@ public class ResourcePackSystemFile implements ResourcePackFile {
 
     @Override
     public ResourcePackFile getChild(String name) {
-        return new ResourcePackSystemFile(new File(file, name));
+        return new ResourcePackSystemFile(root, new File(file, name));
     }
 
     @Override
@@ -103,7 +117,7 @@ public class ResourcePackSystemFile implements ResourcePackFile {
 
     @Override
     public Collection<ResourcePackFile> listFilesRecursively(String[] extensions) {
-        return FileUtils.listFiles(file, extensions, true).stream().map(each -> new ResourcePackSystemFile(each)).collect(Collectors.toList());
+        return FileUtils.listFiles(file, extensions, true).stream().map(each -> new ResourcePackSystemFile(root, each)).collect(Collectors.toList());
     }
 
     @Override
