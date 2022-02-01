@@ -646,7 +646,7 @@ public class ImageGeneration {
             }
         }
 
-        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.renderPlayer(image.getWidth(), image.getHeight(), InteractiveChatDiscordSrvAddon.plugin.resourceManager, slim, providedTextures, TintIndexData.EMPTY_INSTANCE, modelItems);
+        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.renderPlayer(image.getWidth(), image.getHeight(), InteractiveChatDiscordSrvAddon.plugin.resourceManager, InteractiveChat.version.isOld(), slim, providedTextures, TintIndexData.EMPTY_INSTANCE, modelItems);
         Graphics2D g = image.createGraphics();
         g.drawImage(ImageUtils.resizeImageAbs(renderResult.getImage(), 117, 159), -1, 12, null);
         g.dispose();
@@ -780,7 +780,7 @@ public class ImageGeneration {
             BufferedImage iconCan = new BufferedImage(96, 96, BufferedImage.TYPE_INT_ARGB);
 
             AffineTransform at = new AffineTransform();
-            at.rotate(Math.toRadians(rotation), iconImage.getWidth() / 2, iconImage.getHeight() / 2);
+            at.rotate(Math.toRadians(rotation), iconImage.getWidth() / 2.0, iconImage.getHeight() / 2.0);
             Graphics2D g2d = iconCan.createGraphics();
             g2d.drawImage(iconImage, at, null);
             g2d.dispose();

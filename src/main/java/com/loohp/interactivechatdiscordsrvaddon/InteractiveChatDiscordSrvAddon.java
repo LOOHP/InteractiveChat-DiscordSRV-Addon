@@ -49,6 +49,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
@@ -465,6 +466,13 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                 sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Reloading ResourceManager: " + ChatColor.YELLOW + String.join(", ", resourceList), senders);
 
                 ResourceManager resourceManager = new ResourceManager();
+                resourceManager.getLanguageManager().registerReloadListener(languageManager -> {
+                    LanguageUtils.clearPluginTranslations(InteractiveChatDiscordSrvAddon.plugin);
+                    for (Entry<String, Map<String, String>> entry : languageManager.getTranslations().entrySet()) {
+                        LanguageUtils.loadPluginTranslations(InteractiveChatDiscordSrvAddon.plugin, entry.getKey(), entry.getValue());
+                    }
+                });
+
                 Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"Default\" resources...");
                 resourceManager.loadResources(new File(getDataFolder() + "/built-in", "Default"));
                 for (String resourceName : resourceOrder) {

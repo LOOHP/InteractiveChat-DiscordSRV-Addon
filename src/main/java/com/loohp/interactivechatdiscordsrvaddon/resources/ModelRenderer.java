@@ -5,7 +5,6 @@ import com.loohp.blockmodelrenderer.render.Hexahedron;
 import com.loohp.blockmodelrenderer.render.Model;
 import com.loohp.blockmodelrenderer.render.Point3D;
 import com.loohp.blockmodelrenderer.utils.ColorUtils;
-import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.utils.CustomArrayUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
@@ -28,7 +27,6 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimat
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintIndexData;
-import org.bukkit.Bukkit;
 
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -46,8 +44,10 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -80,6 +80,7 @@ public class ModelRenderer implements AutoCloseable {
 
     private ThreadPoolExecutor modelResolvingService;
     private ThreadPoolExecutor renderingService;
+    private ScheduledExecutorService controlService;
     private AtomicBoolean isValid;
 
     public ModelRenderer(Supplier<Integer> modelThreads, Supplier<Integer> renderThreads) {
@@ -88,23 +89,26 @@ public class ModelRenderer implements AutoCloseable {
         this.modelResolvingService = new ThreadPoolExecutor(modelThreads.get(), modelThreads.get(), 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), factory0);
         ThreadFactory factory1 = new ThreadFactoryBuilder().setNameFormat("InteractiveChatDiscordSRVAddon Async Model Rendering Thread #%d").build();
         this.renderingService = new ThreadPoolExecutor(renderThreads.get(), renderThreads.get(), 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), factory1);
+        ThreadFactory factory2 = new ThreadFactoryBuilder().setNameFormat("InteractiveChatDiscordSRVAddon Async Model Renderer Control Thread").build();
+        this.controlService = Executors.newSingleThreadScheduledExecutor(factory2);
 
-        Bukkit.getScheduler().runTaskTimerAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+        this.controlService.scheduleAtFixedRate(() -> {
             this.modelResolvingService.setCorePoolSize(modelThreads.get());
             this.modelResolvingService.setMaximumPoolSize(modelThreads.get());
             this.renderingService.setCorePoolSize(renderThreads.get());
             this.renderingService.setMaximumPoolSize(renderThreads.get());
-        }, 600, 600);
+        }, 30, 30, TimeUnit.SECONDS);
     }
 
     @Override
     public synchronized void close() {
         isValid.set(false);
+        controlService.shutdown();
         modelResolvingService.shutdown();
         renderingService.shutdown();
     }
 
-    public RenderResult renderPlayer(int width, int height, ResourceManager manager, boolean slim, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, Map<PlayerModelItemPosition, PlayerModelItem> modelItems) {
+    public RenderResult renderPlayer(int width, int height, ResourceManager manager, boolean post1_8, boolean slim, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, Map<PlayerModelItemPosition, PlayerModelItem> modelItems) {
         String cacheKey = cacheKey(width, height, manager.getUuid(), slim, cacheKeyModelItems(modelItems), cacheKeyProvidedTextures(providedTextures));
         Cache<?> cachedRender = Cache.getCache(cacheKey);
         if (cachedRender != null) {
@@ -181,9 +185,9 @@ public class ModelRenderer implements AutoCloseable {
                         Coordinates3D scale = displayData.getScale();
                         itemRenderModel.scale(scale.getX(), scale.getY(), scale.getZ());
                         Coordinates3D rotation = displayData.getRotation();
-                        itemRenderModel.rotate(rotation.getX(), rotation.getY(), rotation.getZ() + (InteractiveChat.version.isOld() ? 10 : 0), false);
+                        itemRenderModel.rotate(rotation.getX(), rotation.getY(), rotation.getZ() + (post1_8 ? 10 : 0), false);
                         Coordinates3D transform = displayData.getTranslation();
-                        itemRenderModel.translate(transform.getX(), transform.getY() + (InteractiveChat.version.isOld() ? -10 : 0), transform.getZ() + (InteractiveChat.version.isOld() ? -2.75 : 0));
+                        itemRenderModel.translate(transform.getX(), transform.getY() + (post1_8 ? -10 : 0), transform.getZ() + (post1_8 ? -2.75 : 0));
                     }
                     if (flipX) {
                         itemRenderModel.flipAboutPlane(false, true, true);
@@ -199,7 +203,7 @@ public class ModelRenderer implements AutoCloseable {
                     }
                 }
                 if (playerModelItem.getPosition().yIsZAxis()) {
-                    if (InteractiveChat.version.isOld()) {
+                    if (post1_8) {
                         itemRenderModel.rotate(180, 180, 0, false);
                     } else {
                         itemRenderModel.rotate(90, 0, 0, true);

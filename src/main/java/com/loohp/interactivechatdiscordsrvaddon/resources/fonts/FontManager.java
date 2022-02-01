@@ -133,7 +133,7 @@ public class FontManager extends AbstractManager {
     }
 
     @Override
-    public void reload() {
+    protected void reload() {
         for (FontProvider provider : fonts.values()) {
             provider.reloadFonts();
         }

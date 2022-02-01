@@ -182,7 +182,7 @@ public class ModelManager extends AbstractManager {
     }
 
     @Override
-    public void reload() {
+    protected void reload() {
 
     }
 

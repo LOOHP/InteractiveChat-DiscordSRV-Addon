@@ -94,7 +94,7 @@ public class TextureManager extends AbstractManager {
     }
 
     @Override
-    public void reload() {
+    protected void reload() {
         int[] grassColorArray;
         TextureResource grassColorMap = getTexture(ResourceRegistry.GRASS_COLORMAP_LOCATION, false);
         if (grassColorMap != null && grassColorMap.isTexture()) {

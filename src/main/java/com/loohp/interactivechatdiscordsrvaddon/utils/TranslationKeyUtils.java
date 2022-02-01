@@ -9,7 +9,6 @@ import org.apache.commons.lang.WordUtils;
 import org.bukkit.DyeColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.TropicalFish.Pattern;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta.Generation;
@@ -20,13 +19,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class TranslationKeyUtils {
-
-    private static final Map<Integer, Integer> PREDEFINED_TROPICAL_FISH = new HashMap<>();
 
     private static Method bukkitEnchantmentGetIdMethod;
     private static Class<?> nmsEnchantmentClass;
@@ -42,10 +37,6 @@ public class TranslationKeyUtils {
     private static Method nmsGetItemMethod;
     private static Class<?> nmsItemRecordClass;
     private static Field nmsItemRecordTranslationKeyField;
-    private static Class<?> craftTropicalFishClass;
-    private static Method getTropicalFishPatternMethod;
-    private static Method getTropicalFishPatternColorMethod;
-    private static Method getTropicalFishBodyColorMethod;
 
     static {
         if (InteractiveChat.version.isLegacy()) {
@@ -86,11 +77,6 @@ public class TranslationKeyUtils {
                     }
                     getEffectKeyMethod = nmsMobEffectListClass.getMethod("c");
                 }
-
-                craftTropicalFishClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.entity.CraftTropicalFish");
-                getTropicalFishPatternMethod = craftTropicalFishClass.getMethod("getPattern", int.class);
-                getTropicalFishPatternColorMethod = craftTropicalFishClass.getMethod("getPatternColor", int.class);
-                getTropicalFishBodyColorMethod = craftTropicalFishClass.getMethod("getBodyColor", int.class);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -107,29 +93,6 @@ public class TranslationKeyUtils {
         } catch (ClassNotFoundException | SecurityException | NoSuchMethodException e) {
             e.printStackTrace();
         }
-
-        PREDEFINED_TROPICAL_FISH.put(117506305, 0);
-        PREDEFINED_TROPICAL_FISH.put(117899265, 1);
-        PREDEFINED_TROPICAL_FISH.put(185008129, 2);
-        PREDEFINED_TROPICAL_FISH.put(117441793, 3);
-        PREDEFINED_TROPICAL_FISH.put(118161664, 4);
-        PREDEFINED_TROPICAL_FISH.put(65536, 5);
-        PREDEFINED_TROPICAL_FISH.put(50726144, 6);
-        PREDEFINED_TROPICAL_FISH.put(67764993, 7);
-        PREDEFINED_TROPICAL_FISH.put(234882305, 8);
-        PREDEFINED_TROPICAL_FISH.put(67110144, 9);
-        PREDEFINED_TROPICAL_FISH.put(117441025, 10);
-        PREDEFINED_TROPICAL_FISH.put(16778497, 11);
-        PREDEFINED_TROPICAL_FISH.put(101253888, 12);
-        PREDEFINED_TROPICAL_FISH.put(50660352, 13);
-        PREDEFINED_TROPICAL_FISH.put(918529, 14);
-        PREDEFINED_TROPICAL_FISH.put(235340288, 15);
-        PREDEFINED_TROPICAL_FISH.put(918273, 16);
-        PREDEFINED_TROPICAL_FISH.put(67108865, 17);
-        PREDEFINED_TROPICAL_FISH.put(917504, 18);
-        PREDEFINED_TROPICAL_FISH.put(459008, 19);
-        PREDEFINED_TROPICAL_FISH.put(67699456, 20);
-        PREDEFINED_TROPICAL_FISH.put(67371009, 21);
     }
 
     public static String getOldIncompatiblePack() {
@@ -302,46 +265,20 @@ public class TranslationKeyUtils {
         List<String> list = new ArrayList<>();
         if (!InteractiveChat.version.isLegacy() && NBTEditor.contains(bucket, "BucketVariantTag")) {
             int variance = NBTEditor.getInt(bucket, "BucketVariantTag");
-            int prefefinedType = PREDEFINED_TROPICAL_FISH.getOrDefault(variance, -1);
-            if (prefefinedType != -1) {
-                list.add("entity.minecraft.tropical_fish.predefined." + prefefinedType);
+            int predefinedType = TropicalFishUtils.getPredefinedType(variance);
+            if (predefinedType >= 0) {
+                list.add("entity.minecraft.tropical_fish.predefined." + predefinedType);
             } else {
-                try {
-                    variance = validateAndFixTropicalFishVariant(variance);
-                    Pattern pattern = (Pattern) getTropicalFishPatternMethod.invoke(null, variance);
-                    DyeColor bodyColor = (DyeColor) getTropicalFishBodyColorMethod.invoke(null, variance);
-                    DyeColor patternColor = (DyeColor) getTropicalFishPatternColorMethod.invoke(null, variance);
-                    list.add("entity.minecraft.tropical_fish.type." + pattern.toString().toLowerCase());
-                    list.add("color.minecraft." + bodyColor.toString().toLowerCase());
-                    if (!bodyColor.equals(patternColor)) {
-                        list.add("color.minecraft." + patternColor.toString().toLowerCase());
-                    }
-                } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-                    e.printStackTrace();
+                DyeColor baseColor = TropicalFishUtils.getTropicalFishBaseColor(variance);
+                DyeColor patternColor = TropicalFishUtils.getTropicalFishPatternColor(variance);
+                list.add("entity.minecraft.tropical_fish.type." + TropicalFishUtils.getTropicalFishTypeName(variance));
+                list.add("color.minecraft." + baseColor.toString().toLowerCase());
+                if (!baseColor.equals(patternColor)) {
+                    list.add("color.minecraft." + patternColor.toString().toLowerCase());
                 }
             }
         }
         return list;
-    }
-
-    private static int validateAndFixTropicalFishVariant(int data) {
-        byte[] bytes = new byte[] {(byte) (data >> 24), (byte) (data >> 16), (byte) (data >> 8), (byte) data};
-        if (bytes.length != 4) {
-            return 0;
-        }
-        if (bytes[3] < 0 || bytes[3] > 1) {
-            bytes[3] = 1;
-        }
-        if (bytes[2] < 0 || bytes[2] > 5) {
-            bytes[2] = 5;
-        }
-        if (bytes[1] < 0 || bytes[1] > 15) {
-            bytes[1] = 0;
-        }
-        if (bytes[0] < 0 || bytes[0] > 15) {
-            bytes[0] = 0;
-        }
-        return ((bytes[0] & 0xFF) << 24) | ((bytes[1] & 0xFF) << 16) | ((bytes[2] & 0xFF) << 8) | (bytes[3] & 0xFF);
     }
 
     public static String getBannerPatternName(PatternTypeWrapper type, DyeColor color) {
