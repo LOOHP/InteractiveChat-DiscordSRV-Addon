@@ -1,5 +1,6 @@
 package com.loohp.interactivechatdiscordsrvaddon;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.config.Config;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
@@ -247,7 +248,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         }
 
         reloadTextures(false, false);
-        modelRenderer = new ModelRenderer(() -> 8, () -> Runtime.getRuntime().availableProcessors());
+        modelRenderer = new ModelRenderer(str -> new ThreadFactoryBuilder().setNameFormat(str).build(),() -> InteractiveChatDiscordSrvAddon.plugin.cacheTimeout, image -> ImageGeneration.getEnchantedImage(image), image -> ImageGeneration.getRawEnchantedImage(image), () -> 8, () -> Runtime.getRuntime().availableProcessors());
 
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
             for (ICPlayer player : ICPlayerFactory.getOnlineICPlayers()) {

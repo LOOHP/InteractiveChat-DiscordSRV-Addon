@@ -65,9 +65,9 @@ public class LibraryLoader {
                     JSONObject details = (JSONObject) libs.get(jarName);
                     String url = (String) details.get("url");
                     File jarFile = new File(libsFolder, jarName);
-                    Bukkit.getConsoleSender().sendMessage("[ICDiscordSrvAddon] Downloading Library library \"" + jarName + "\"");
+                    Bukkit.getConsoleSender().sendMessage("[ICDiscordSrvAddon] Downloading library \"" + jarName + "\"");
                     if (HTTPRequestUtils.download(jarFile, url)) {
-                        Bukkit.getConsoleSender().sendMessage("[ICDiscordSrvAddon] Downloaded Library library \"" + jarName + "\"");
+                        Bukkit.getConsoleSender().sendMessage("[ICDiscordSrvAddon] Downloaded library \"" + jarName + "\"");
                     } else {
                         Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to download library \"" + jarName + "\"");
                     }

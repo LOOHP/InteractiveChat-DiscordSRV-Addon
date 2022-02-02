@@ -1,6 +1,5 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources.models;
 
-import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelFace.ModelFaceSide;
@@ -15,12 +14,11 @@ import java.util.Map.Entry;
 
 public class BlockModel {
 
-    public static BlockModel resolve(BlockModel childrenModel) {
+    public static BlockModel resolve(BlockModel childrenModel, boolean post1_8) {
         boolean ambientocclusion = childrenModel.isAmbientocclusion();
         Map<ModelDisplayPosition, ModelDisplay> display = new EnumMap<>(ModelDisplayPosition.class);
         display.putAll(childrenModel.getRawDisplay());
-        Map<String, String> textures = new HashMap<>();
-        textures.putAll(childrenModel.getTextures());
+        Map<String, String> textures = new HashMap<>(childrenModel.getTextures());
         for (Entry<String, String> entry : textures.entrySet()) {
             String value = entry.getValue();
             if (value.startsWith("#")) {
@@ -50,18 +48,18 @@ public class BlockModel {
             elements.set(i, new ModelElement(element.getFrom(), element.getTo(), element.getRotation(), element.isShade(), faces));
         }
         BlockModel newBlockModel = new BlockModel(childrenModel.getManager(), childrenModel.getRawParent(), ambientocclusion, childrenModel.getRawGUILight(), display, textures, elements, childrenModel.getOverrides());
-        if (InteractiveChat.version.isOld()) {
+        if (post1_8) {
             String newRawParent = newBlockModel.getRawParent();
             if (newRawParent == null) {
-                return resolve(newBlockModel.getManager().getRawBlockModel(ResourceRegistry.IC_OLD_BASE_BLOCK_MODEL), newBlockModel);
+                return resolve(newBlockModel.getManager().getRawBlockModel(ResourceRegistry.IC_OLD_BASE_BLOCK_MODEL), newBlockModel, post1_8);
             } else if (newRawParent.equals(ModelManager.ITEM_BASE)) {
-                return resolve(newBlockModel.getManager().getRawBlockModel(ResourceRegistry.IC_OLD_BASE_ITEM_MODEL), newBlockModel);
+                return resolve(newBlockModel.getManager().getRawBlockModel(ResourceRegistry.IC_OLD_BASE_ITEM_MODEL), newBlockModel, post1_8);
             }
         }
         return newBlockModel;
     }
 
-    public static BlockModel resolve(BlockModel parentModel, BlockModel childrenModel) {
+    public static BlockModel resolve(BlockModel parentModel, BlockModel childrenModel, boolean post1_8) {
         String parent = parentModel.getRawParent();
         ModelGUILight guiLight = childrenModel.getRawGUILight();
         if (parentModel.getRawGUILight() != null) {

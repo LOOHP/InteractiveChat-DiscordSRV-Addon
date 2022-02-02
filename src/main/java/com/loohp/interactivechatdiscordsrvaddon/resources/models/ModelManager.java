@@ -40,7 +40,6 @@ public class ModelManager extends AbstractManager {
         this.models = new HashMap<>();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected void loadDirectory(String namespace, ResourcePackFile root) {
         if (!root.exists() || !root.isDirectory()) {
@@ -194,7 +193,7 @@ public class ModelManager extends AbstractManager {
         return Collections.unmodifiableMap(models);
     }
 
-    public BlockModel resolveBlockModel(String resourceLocation, Map<ModelOverrideType, Float> predicates) {
+    public BlockModel resolveBlockModel(String resourceLocation, boolean post1_8, Map<ModelOverrideType, Float> predicates) {
         String cacheKey = CACHE_KEY + "/" + resourceLocation + "/" + (predicates == null ? "null" : predicates.entrySet().stream().map(entry -> entry.getKey().name().toLowerCase() + ":" + entry.getValue().toString()).collect(Collectors.joining(";")));
         Cache<?> cachedModel = Cache.getCache(cacheKey);
         if (cachedModel != null) {
@@ -207,7 +206,7 @@ public class ModelManager extends AbstractManager {
         }
         for (ModelOverride override : model.getOverrides()) {
             if (override.test(predicates)) {
-                return resolveBlockModel(override.getModel(), null);
+                return resolveBlockModel(override.getModel(), post1_8, null);
             }
         }
         if (model.getParent() != null) {
@@ -216,7 +215,7 @@ public class ModelManager extends AbstractManager {
                     break;
                 }
                 if (model.getRawParent().equals(BLOCK_ENTITY_BASE)) {
-                    BlockModel builtinModel = resolveBlockModel(ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + resourceLocation.substring(resourceLocation.lastIndexOf("/") + 1), predicates);
+                    BlockModel builtinModel = resolveBlockModel(ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + resourceLocation.substring(resourceLocation.lastIndexOf("/") + 1), post1_8, predicates);
                     if (builtinModel != null) {
                         return builtinModel;
                     }
@@ -228,15 +227,15 @@ public class ModelManager extends AbstractManager {
                 }
                 for (ModelOverride override : model.getOverrides()) {
                     if (override.test(predicates)) {
-                        return resolveBlockModel(override.getModel(), null);
+                        return resolveBlockModel(override.getModel(), post1_8, null);
                     }
                 }
-                model = BlockModel.resolve(parent, model);
+                model = BlockModel.resolve(parent, model, post1_8);
             }
         }
-        model = BlockModel.resolve(model);
+        model = BlockModel.resolve(model, post1_8);
 
-        Cache.putCache(cacheKey, model, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+        //Cache.putCache(cacheKey, model, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
         return model;
     }
 

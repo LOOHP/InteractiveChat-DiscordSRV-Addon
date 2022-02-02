@@ -41,6 +41,7 @@ public class TropicalFishUtils {
         return PREDEFINED_TROPICAL_FISH.getOrDefault(variance, -1);
     }
 
+    @SuppressWarnings("deprecation")
     public static int calculateTropicalFishVariant(Pattern bukkitPattern, DyeColor bodyColor, DyeColor patternColor) {
         TropicalFishPattern pattern = TropicalFishPattern.fromPattern(bukkitPattern);
         return pattern.getBase() & 255 | (pattern.getIndex() & 255) << 8 | ((int) bodyColor.getWoolData() & 255) << 16 | ((int) patternColor.getWoolData() & 255) << 24;
@@ -62,10 +63,12 @@ public class TropicalFishUtils {
         return Math.min((variance & '\uff00') >> 8, 5);
     }
 
+    @SuppressWarnings("deprecation")
     public static DyeColor getTropicalFishBaseColor(int variance) {
         return DyeColor.getByWoolData((byte) getTropicalFishBaseColorIdx(variance));
     }
 
+    @SuppressWarnings("deprecation")
     public static DyeColor getTropicalFishPatternColor(int variance) {
         return DyeColor.getByWoolData((byte) getTropicalFishPatternColorIdx(variance));
     }

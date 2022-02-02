@@ -1,5 +1,6 @@
 package com.loohp.interactivechatdiscordsrvaddon.graphics;
 
+import com.loohp.blockmodelrenderer.utils.MathUtils;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -92,7 +93,7 @@ public class ImageUtils {
     }
 
     public static BufferedImage rotateImageByDegrees(BufferedImage img, double angle) {
-        if (angle % 360 == 0) {
+        if (MathUtils.equals(angle % 360, 0)) {
             return img;
         }
         double rads = Math.toRadians(angle);

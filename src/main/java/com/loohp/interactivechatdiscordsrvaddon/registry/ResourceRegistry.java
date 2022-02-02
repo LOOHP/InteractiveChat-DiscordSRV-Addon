@@ -1,19 +1,35 @@
 package com.loohp.interactivechatdiscordsrvaddon.registry;
 
-import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackUtils;
-
 public class ResourceRegistry {
+
+    static {
+        int resourcePackVersion;
+        String itemTextureLocation;
+        String blockTextureLocation;
+        try {
+            Class.forName("org.bukkit.plugin.java.JavaPlugin");
+            resourcePackVersion = com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackUtils.getServerResourcePackVersion();
+            itemTextureLocation = com.loohp.interactivechat.InteractiveChat.version.isLegacy() ? "minecraft:items/" : "minecraft:item/";
+            blockTextureLocation = com.loohp.interactivechat.InteractiveChat.version.isLegacy() ? "minecraft:blocks/" : "minecraft:block/";
+        } catch (ClassNotFoundException | NoClassDefFoundError e) {
+            resourcePackVersion = 8;
+            itemTextureLocation = "minecraft:item/";
+            blockTextureLocation = "minecraft:block/";
+        }
+        RESOURCE_PACK_VERSION = resourcePackVersion;
+        ITEM_TEXTURE_LOCATION = itemTextureLocation;
+        BLOCK_TEXTURE_LOCATION = blockTextureLocation;
+    }
 
     public static final String DEFAULT_NAMESPACE = "minecraft";
 
-    public static final int RESOURCE_PACK_VERSION = ResourcePackUtils.getServerResourcePackVersion();
+    public static final int RESOURCE_PACK_VERSION;
 
     public static final String BANNER_TEXTURE_LOCATION = "minecraft:entity/banner/";
     public static final String SHIELD_TEXTURE_LOCATION = "minecraft:entity/shield/";
-    public static final String ITEM_TEXTURE_LOCATION = InteractiveChat.version.isLegacy() ? "minecraft:items/" : "minecraft:item/";
+    public static final String ITEM_TEXTURE_LOCATION;
     public static final String ARMOR_TEXTURE_LOCATION = "minecraft:models/armor/";
-    public static final String BLOCK_TEXTURE_LOCATION = InteractiveChat.version.isLegacy() ? "minecraft:blocks/" : "minecraft:block/";
+    public static final String BLOCK_TEXTURE_LOCATION;
     public static final String ENTITY_TEXTURE_LOCATION = "minecraft:entity/";
     public static final String MISC_TEXTURE_LOCATION = "minecraft:misc/";
     public static final String GUI_TEXTURE_LOCATION = "minecraft:gui/";
@@ -59,5 +75,7 @@ public class ResourceRegistry {
 
     public static final String GRASS_COLORMAP_LOCATION = COLORMAP_TEXTURE_LOCATION + "grass";
     public static final String FOLIAGE_COLORMAP_LOCATION = COLORMAP_TEXTURE_LOCATION + "foliage";
+
+    public static final double ENCHANTMENT_GLINT_FACTOR = 190.0 / 255.0;
 
 }

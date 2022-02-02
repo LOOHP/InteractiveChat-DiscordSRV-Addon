@@ -1,35 +1,44 @@
 package com.loohp.interactivechatdiscordsrvaddon;
 
-import org.bukkit.Bukkit;
-
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class Cache<T> {
 
     private static final Map<String, Cache<?>> DATA = new ConcurrentHashMap<>();
-    private static final List<Integer> TASKS = new LinkedList<>();
+    private static final List<ScheduledFuture<?>> TASKS = new LinkedList<>();
     private static final Object LOCK = new Object();
+    private static final ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 
     public static Cache<?> getCache(String key) {
         return DATA.get(key);
     }
 
     public static <T> void putCache(String key, T object, long ticks) {
+        if (ticks <= 0) {
+            return;
+        }
         synchronized (LOCK) {
             Cache<T> cache = new Cache<>(object);
             DATA.put(key, cache);
-            TASKS.add(Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> {
-                DATA.remove(key, cache);
-            }, ticks).getTaskId());
+            service.schedule(() -> DATA.remove(key, cache), ticks * 50, TimeUnit.MILLISECONDS);
         }
     }
 
     public static void clearAllCache() {
         synchronized (LOCK) {
-            TASKS.clear();
+            Iterator<ScheduledFuture<?>> itr = TASKS.iterator();
+            while (itr.hasNext()) {
+                itr.next().cancel(false);
+                itr.remove();
+            }
             DATA.clear();
         }
     }

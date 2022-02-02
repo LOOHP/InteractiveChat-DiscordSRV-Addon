@@ -34,6 +34,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RenderRe
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils.ItemStackProcessResult;
@@ -74,7 +75,6 @@ public class ImageGeneration {
     public static final int SPACING = 36;
     public static final double ITEM_AMOUNT_TEXT_DARKEN_FACTOR = 75.0 / 255.0;
     public static final Color ENCHANTMENT_GLINT_LEAGCY_COLOR = new Color(164, 84, 255);
-    public static final double ENCHANTMENT_GLINT_FACTOR = 190.0 / 255.0;
     public static final String PLAYER_CAPE_CACHE_KEY = "PlayerCapeTexture";
     public static final String PLAYER_SKIN_CACHE_KEY = "PlayerSkinTexture";
     public static final String INVENTORY_CACHE_KEY = "Inventory";
@@ -84,20 +84,9 @@ public class ImageGeneration {
     public static final Color TABLIST_PLAYER_BACKGROUND = new Color(107, 107, 107);
     private static final String OPTIFINE_CAPE_URL = "https://optifine.net/capes/%s.png";
     private static final String PLAYER_INFO_URL = "https://sessionserver.mojang.com/session/minecraft/profile/%s";
-    private static final Color MISSING_TEXTURE_0 = new Color(0, 0, 0);
-    private static final Color MISSING_TEXTURE_1 = new Color(248, 0, 248);
 
     public static BufferedImage getMissingImage(int width, int length) {
-        Debug.debug("ImageGeneration creating missing texture image");
-        BufferedImage image = new BufferedImage(width, length, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = image.createGraphics();
-        g.setColor(MISSING_TEXTURE_0);
-        g.fillRect(0, 0, width, length);
-        g.setColor(MISSING_TEXTURE_1);
-        g.fillRect(0, 0, width / 2, length / 2);
-        g.fillRect(width / 2, length / 2, width / 2, length / 2);
-        g.dispose();
-        return image;
+        return TextureManager.getMissingImage(width, length);
     }
 
     public static BufferedImage getRawEnchantedImage(BufferedImage source) {
@@ -116,7 +105,7 @@ public class ImageGeneration {
     }
 
     public static BufferedImage getEnchantedImage(BufferedImage source) {
-        return ImageUtils.additionNonTransparent(source, getRawEnchantedImage(source), ENCHANTMENT_GLINT_FACTOR);
+        return ImageUtils.additionNonTransparent(source, getRawEnchantedImage(source), ResourceRegistry.ENCHANTMENT_GLINT_FACTOR);
     }
 
     public static BufferedImage getItemStackImage(ItemStack item, OfflineICPlayer player) throws IOException {
@@ -673,12 +662,12 @@ public class ImageGeneration {
         String directLocation = processResult.getDirectLocation();
 
         BufferedImage itemImage;
-        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, directLocation == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : directLocation, ModelDisplayPosition.GUI, predicates, providedTextures, tintIndexData, requiresEnchantmentGlint);
+        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, InteractiveChat.version.isOld(), directLocation == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : directLocation, ModelDisplayPosition.GUI, predicates, providedTextures, tintIndexData, requiresEnchantmentGlint);
         if (renderResult.isSuccessful()) {
             itemImage = renderResult.getImage();
         } else {
             Debug.debug("ImageGeneration creating missing Image for material " + xMaterial);
-            itemImage = getMissingImage(32, 32);
+            itemImage = TextureManager.getMissingImage(32, 32);
         }
 
         if (item.getType().getMaxDurability() > 0) {

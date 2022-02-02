@@ -1,14 +1,13 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.loohp.blockmodelrenderer.render.Hexahedron;
 import com.loohp.blockmodelrenderer.render.Model;
 import com.loohp.blockmodelrenderer.render.Point3D;
 import com.loohp.blockmodelrenderer.utils.ColorUtils;
+import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.utils.CustomArrayUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
@@ -52,7 +51,9 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
+import java.util.function.Function;
+import java.util.function.IntSupplier;
+import java.util.function.LongSupplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -75,29 +76,41 @@ public class ModelRenderer implements AutoCloseable {
     private static final String PLAYER_MODEL_SLIM_RESOURCELOCATION = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + "player_model_slim";
 
     static {
-        Arrays.fill(OVERLAY_ADDITION_FACTORS, ImageGeneration.ENCHANTMENT_GLINT_FACTOR);
+        Arrays.fill(OVERLAY_ADDITION_FACTORS, ResourceRegistry.ENCHANTMENT_GLINT_FACTOR);
     }
 
+    private Function<String, ThreadFactory> threadFactoryBuilder;
+    private Function<BufferedImage, BufferedImage> enchantmentGlintProvider;
+    private Function<BufferedImage, BufferedImage> rawEnchantmentGlintProvider;
+    private LongSupplier cacheTimeoutSupplier;
+    private IntSupplier modelThreads;
+    private IntSupplier renderThreads;
     private ThreadPoolExecutor modelResolvingService;
     private ThreadPoolExecutor renderingService;
     private ScheduledExecutorService controlService;
     private AtomicBoolean isValid;
 
-    public ModelRenderer(Supplier<Integer> modelThreads, Supplier<Integer> renderThreads) {
+    public ModelRenderer(Function<String, ThreadFactory> threadFactoryBuilder, LongSupplier cacheTimeoutSupplier, Function<BufferedImage, BufferedImage> enchantmentGlintProvider, Function<BufferedImage, BufferedImage> rawEnchantmentGlintProvider, IntSupplier modelThreads, IntSupplier renderThreads) {
         this.isValid = new AtomicBoolean(true);
-        ThreadFactory factory0 = new ThreadFactoryBuilder().setNameFormat("InteractiveChatDiscordSRVAddon Async Model Resolving Thread #%d").build();
-        this.modelResolvingService = new ThreadPoolExecutor(modelThreads.get(), modelThreads.get(), 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), factory0);
-        ThreadFactory factory1 = new ThreadFactoryBuilder().setNameFormat("InteractiveChatDiscordSRVAddon Async Model Rendering Thread #%d").build();
-        this.renderingService = new ThreadPoolExecutor(renderThreads.get(), renderThreads.get(), 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), factory1);
-        ThreadFactory factory2 = new ThreadFactoryBuilder().setNameFormat("InteractiveChatDiscordSRVAddon Async Model Renderer Control Thread").build();
+        this.threadFactoryBuilder = threadFactoryBuilder;
+        this.cacheTimeoutSupplier = cacheTimeoutSupplier;
+        this.enchantmentGlintProvider = enchantmentGlintProvider;
+        this.rawEnchantmentGlintProvider = rawEnchantmentGlintProvider;
+        this.modelThreads = modelThreads;
+        this.renderThreads = renderThreads;
+
+        ThreadFactory factory0 = threadFactoryBuilder.apply("InteractiveChatDiscordSRVAddon Async Model Resolving Thread #%d");
+        this.modelResolvingService = new ThreadPoolExecutor(modelThreads.getAsInt(), modelThreads.getAsInt(), 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), factory0);
+        ThreadFactory factory1 = threadFactoryBuilder.apply("InteractiveChatDiscordSRVAddon Async Model Rendering Thread #%d");
+        this.renderingService = new ThreadPoolExecutor(renderThreads.getAsInt(), renderThreads.getAsInt(), 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), factory1);
+        ThreadFactory factory2 = threadFactoryBuilder.apply("InteractiveChatDiscordSRVAddon Async Model Renderer Control Thread");
         this.controlService = Executors.newSingleThreadScheduledExecutor(factory2);
 
-        this.controlService.scheduleAtFixedRate(() -> {
-            this.modelResolvingService.setCorePoolSize(modelThreads.get());
-            this.modelResolvingService.setMaximumPoolSize(modelThreads.get());
-            this.renderingService.setCorePoolSize(renderThreads.get());
-            this.renderingService.setMaximumPoolSize(renderThreads.get());
-        }, 30, 30, TimeUnit.SECONDS);
+        this.controlService.scheduleAtFixedRate(() -> reloadPoolSize(), 30, 30, TimeUnit.SECONDS);
+    }
+
+    public ModelRenderer(LongSupplier cacheTimeoutSupplier, Function<BufferedImage, BufferedImage> enchantmentGlintProvider, Function<BufferedImage, BufferedImage> rawEnchantmentGlintProvider, IntSupplier modelThreads, IntSupplier renderThreads) {
+        this(str -> Executors.defaultThreadFactory(), cacheTimeoutSupplier, enchantmentGlintProvider, rawEnchantmentGlintProvider, modelThreads, renderThreads);
     }
 
     @Override
@@ -106,6 +119,13 @@ public class ModelRenderer implements AutoCloseable {
         controlService.shutdown();
         modelResolvingService.shutdown();
         renderingService.shutdown();
+    }
+
+    public synchronized void reloadPoolSize() {
+        this.modelResolvingService.setCorePoolSize(modelThreads.getAsInt());
+        this.modelResolvingService.setMaximumPoolSize(modelThreads.getAsInt());
+        this.renderingService.setCorePoolSize(renderThreads.getAsInt());
+        this.renderingService.setMaximumPoolSize(renderThreads.getAsInt());
     }
 
     public RenderResult renderPlayer(int width, int height, ResourceManager manager, boolean post1_8, boolean slim, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, Map<PlayerModelItemPosition, PlayerModelItem> modelItems) {
@@ -118,14 +138,14 @@ public class ModelRenderer implements AutoCloseable {
             }
         }
 
-        BlockModel playerModel = manager.getModelManager().resolveBlockModel(slim ? PLAYER_MODEL_SLIM_RESOURCELOCATION : PLAYER_MODEL_RESOURCELOCATION, Collections.emptyMap());
+        BlockModel playerModel = manager.getModelManager().resolveBlockModel(slim ? PLAYER_MODEL_SLIM_RESOURCELOCATION : PLAYER_MODEL_RESOURCELOCATION, InteractiveChat.version.isOld(), Collections.emptyMap());
         if (playerModel == null) {
             return new RenderResult(MODEL_NOT_FOUND, null);
         }
         Model playerRenderModel = generateStandardRenderModel(playerModel, manager, providedTextures, tintIndexData, false, true);
 
         for (PlayerModelItem playerModelItem : modelItems.values()) {
-            BlockModel itemBlockModel = playerModelItem.getModelKey() == null ? null : manager.getModelManager().resolveBlockModel(playerModelItem.getModelKey(), playerModelItem.getPredicate());
+            BlockModel itemBlockModel = playerModelItem.getModelKey() == null ? null : manager.getModelManager().resolveBlockModel(playerModelItem.getModelKey(), InteractiveChat.version.isOld(), playerModelItem.getPredicate());
             Model itemRenderModel = null;
             if (itemBlockModel != null) {
                 if (itemBlockModel.getRawParent() == null || !itemBlockModel.getRawParent().contains("/")) {
@@ -165,7 +185,7 @@ public class ModelRenderer implements AutoCloseable {
                     g.dispose();
                     image = tintIndexData.applyTint(image, 0);
                     if (playerModelItem.isEnchanted()) {
-                        image = ImageGeneration.getEnchantedImage(image);
+                        image = enchantmentGlintProvider.apply(image);
                     }
                     itemRenderModel = generateItemRenderModel(16, 16, 16, image);
                 }
@@ -225,15 +245,23 @@ public class ModelRenderer implements AutoCloseable {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         renderPlayerModel(playerRenderModel, image, playerModel.getGUILight());
         RenderResult result = new RenderResult(image, null);
-        Cache.putCache(cacheKey, result, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+        Cache.putCache(cacheKey, result, cacheTimeoutSupplier.getAsLong());
         return result;
     }
 
-    public RenderResult render(int width, int height, ResourceManager manager, String modelKey, ModelDisplayPosition displayPosition, boolean enchanted) {
-        return render(width, height, manager, modelKey, displayPosition, Collections.emptyMap(), Collections.emptyMap(), TintIndexData.EMPTY_INSTANCE, enchanted);
+    public RenderResult render(int width, int height, ResourceManager manager, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, boolean enchanted) {
+        return render(width, height, manager, post1_8, modelKey, displayPosition, Collections.emptyMap(), Collections.emptyMap(), TintIndexData.EMPTY_INSTANCE, enchanted);
     }
 
-    public RenderResult render(int width, int height, ResourceManager manager, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, boolean enchanted) {
+    public RenderResult render(int width, int height, ResourceManager manager, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, boolean enchanted) {
+        return render(width, height, INTERNAL_W, INTERNAL_H, manager, post1_8, modelKey, displayPosition, predicate, providedTextures, tintIndexData, enchanted);
+    }
+
+    public RenderResult render(int width, int height, int internalWidth, int internalHeight, ResourceManager manager, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, boolean enchanted) {
+        return render(width, height, internalWidth, internalHeight, manager, post1_8, modelKey, displayPosition, predicate, providedTextures, tintIndexData, enchanted, false);
+    }
+
+    public RenderResult render(int width, int height, int internalWidth, int internalHeight, ResourceManager manager, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, boolean enchanted, boolean usePlayerModelPosition) {
         String cacheKey = cacheKey(width, height, manager.getUuid(), modelKey, displayPosition, predicate, cacheKeyProvidedTextures(providedTextures), enchanted);
         Cache<?> cachedRender = Cache.getCache(cacheKey);
         if (cachedRender != null) {
@@ -244,13 +272,13 @@ public class ModelRenderer implements AutoCloseable {
         }
 
         String rejectedReason = null;
-        BlockModel blockModel = manager.getModelManager().resolveBlockModel(modelKey, predicate);
+        BlockModel blockModel = manager.getModelManager().resolveBlockModel(modelKey, post1_8, predicate);
         if (blockModel == null) {
             return new RenderResult(MODEL_NOT_FOUND, null);
         }
-        BufferedImage image = new BufferedImage(INTERNAL_W, INTERNAL_H, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage image = new BufferedImage(internalWidth, internalHeight, BufferedImage.TYPE_INT_ARGB);
         if (blockModel.getRawParent() == null || !blockModel.getRawParent().contains("/")) {
-            renderBlockModel(generateStandardRenderModel(blockModel, manager, providedTextures, tintIndexData, enchanted, false), image, blockModel.getDisplay(displayPosition), blockModel.getGUILight());
+            renderBlockModel(generateStandardRenderModel(blockModel, manager, providedTextures, tintIndexData, enchanted, false), image, blockModel.getDisplay(displayPosition), blockModel.getGUILight(), usePlayerModelPosition);
         } else if (blockModel.getRawParent().equals(ModelManager.ITEM_BASE)) {
             Graphics2D g = image.createGraphics();
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
@@ -284,7 +312,7 @@ public class ModelRenderer implements AutoCloseable {
             g.dispose();
             image = tintIndexData.applyTint(image, 0);
             if (enchanted) {
-                image = ImageGeneration.getEnchantedImage(image);
+                image = enchantmentGlintProvider.apply(image);
             }
         } else {
             rejectedReason = blockModel.getRawParent();
@@ -295,7 +323,7 @@ public class ModelRenderer implements AutoCloseable {
         } else {
             result = new RenderResult(rejectedReason == null ? "null" : rejectedReason, blockModel);
         }
-        Cache.putCache(cacheKey, result, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+        Cache.putCache(cacheKey, result, cacheTimeoutSupplier.getAsLong());
         return result;
     }
 
@@ -435,10 +463,10 @@ public class ModelRenderer implements AutoCloseable {
                             }
                             uv = uv.getScaled(1, (double) images[i].getHeight() / (double) images[i].getWidth());
                             uv = uv.getScaled((double) images[i].getWidth() / 16.0);
-                            double x1 = uv.getX1();
-                            double y1 = uv.getY1();
-                            double dX = Math.abs(uv.getXDiff());
-                            double dY = Math.abs(uv.getYDiff());
+                            int x1 = (int) Math.ceil(uv.getX1());
+                            int y1 = (int) Math.ceil(uv.getY1());
+                            int dX = Math.abs((int) Math.floor(uv.getX2()) - x1);
+                            int dY = Math.abs((int) Math.floor(uv.getY2()) - y1);
                             if (uv.isVerticallyFlipped()) {
                                 images[i] = ImageUtils.flipVertically(images[i]);
                                 y1 = images[i].getHeight() - y1;
@@ -447,10 +475,14 @@ public class ModelRenderer implements AutoCloseable {
                                 images[i] = ImageUtils.flipHorizontal(images[i]);
                                 x1 = images[i].getWidth() - x1;
                             }
-                            images[i] = ImageUtils.rotateImageByDegrees(ImageUtils.copyAndGetSubImage(images[i], (int) x1, (int) y1, Math.max(1, (int) dX), Math.max(1, (int) dY)), faceData.getRotation());
+                            images[i] = ImageUtils.copyAndGetSubImage(images[i], (int) x1, (int) y1, Math.max(1, dX), Math.max(1, dY));
+                            int rotationAngle = faceData.getRotation();
+                            if (rotationAngle % 360 != 0) {
+                                images[i] = ImageUtils.rotateImageByDegrees(images[i], rotationAngle);
+                            }
                             images[i] = tintIndexData.applyTint(images[i], faceData.getTintindex());
                             if (enchanted) {
-                                overlayImages[i] = ImageGeneration.getRawEnchantedImage(images[i]);
+                                overlayImages[i] = rawEnchantmentGlintProvider.apply(images[i]);
                             }
                         }
                     }
@@ -507,9 +539,18 @@ public class ModelRenderer implements AutoCloseable {
         InteractiveChatDiscordSrvAddon.plugin.playerModelRenderingTimes.add((int) Math.min(System.currentTimeMillis() - start, Integer.MAX_VALUE));
     }
 
-    private void renderBlockModel(Model renderModel, BufferedImage image, ModelDisplay displayData, ModelGUILight lightData) {
-        AffineTransform baseTransform = AffineTransform.getTranslateInstance(image.getWidth() / 2.0, image.getHeight() / 2.0);
-        baseTransform.concatenate(AffineTransform.getScaleInstance(image.getWidth() / 16.0, image.getHeight() / 16.0));
+    private void renderBlockModel(Model renderModel, BufferedImage image, ModelDisplay displayData, ModelGUILight lightData, boolean usePlayerPosition) {
+        AffineTransform baseTransform;
+        if (usePlayerPosition) {
+            renderModel.translate(-16 / 2.0, -16 / 2.0, -16 / 2.0);
+            renderModel.rotate(0, 180, 0, false);
+            renderModel.translate(16 / 2.0, 16 / 2.0, 16 / 2.0);
+            baseTransform = AffineTransform.getTranslateInstance(image.getWidth() / 2.0, (double) image.getHeight() / 7 * 5);
+            baseTransform.concatenate(AffineTransform.getScaleInstance(image.getWidth() / 39.09375, image.getWidth() / 39.09375));
+        } else {
+            baseTransform = AffineTransform.getTranslateInstance(image.getWidth() / 2.0, image.getHeight() / 2.0);
+            baseTransform.concatenate(AffineTransform.getScaleInstance(image.getWidth() / 16.0, image.getHeight() / 16.0));
+        }
         renderModel.translate(-16 / 2.0, -16 / 2.0, -16 / 2.0);
         if (displayData != null) {
             Coordinates3D scale = displayData.getScale();

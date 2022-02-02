@@ -4,7 +4,6 @@ import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
-import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.AbstractManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
@@ -12,6 +11,9 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimation.TextureAnimationFrames;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -24,7 +26,22 @@ import java.util.Map;
 public class TextureManager extends AbstractManager {
 
     public static final String SKIN_REQUIRED = "interactivechatdiscordsrvaddon/skin";
-    public static final TextureResource MISSING_TEXTURE = new GeneratedTextureResource(ImageGeneration.getMissingImage(16, 16));
+    private static final Color MISSING_TEXTURE_0 = new Color(0, 0, 0);
+    private static final Color MISSING_TEXTURE_1 = new Color(248, 0, 248);
+    public static final TextureResource MISSING_TEXTURE = new GeneratedTextureResource(getMissingImage(16, 16));
+
+    public static BufferedImage getMissingImage(int width, int length) {
+        BufferedImage image = new BufferedImage(width, length, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = image.createGraphics();
+        g.setColor(MISSING_TEXTURE_0);
+        g.fillRect(0, 0, width, length);
+        g.setColor(MISSING_TEXTURE_1);
+        g.fillRect(0, 0, width / 2, length / 2);
+        g.fillRect(width / 2, length / 2, width / 2, length / 2);
+        g.dispose();
+        return image;
+    }
+
     private Map<String, TextureResource> textures;
 
     public TextureManager(ResourceManager manager) {
