@@ -259,7 +259,7 @@ public class BlockModelRenderer extends JFrame {
 
         providedTexturesFrame.addWindowListener(new WindowAdapter() {
             @Override
-            public void windowDeactivated(WindowEvent e) {
+            public void windowClosing(WindowEvent e) {
                 Iterator<Entry<JComponent, ValueTrios<Supplier<String>, JButton, JFileChooser>>> itr = providedTextureSettings.entrySet().iterator();
                 while (itr.hasNext()) {
                     Entry<JComponent, ValueTrios<Supplier<String>, JButton, JFileChooser>> entry = itr.next();
