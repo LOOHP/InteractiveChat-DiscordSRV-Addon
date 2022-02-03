@@ -4,6 +4,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 
 import java.awt.Color;
@@ -44,7 +45,11 @@ public class BitmapFont extends MinecraftFont {
             return;
         }
 
-        BufferedImage fontFileImage = manager.getFontManager().getFontResource(resourceLocation).getTexture();
+        TextureResource resourceFile = manager.getFontManager().getFontResource(resourceLocation);
+        if (resourceFile == null || !resourceFile.isTexture()) {
+            throw new RuntimeException(resourceLocation + " is not a valid font resource");
+        }
+        BufferedImage fontFileImage = resourceFile.getTexture();
 
         int yIncrement = fontFileImage.getHeight() / chars.size();
         this.scale = Math.abs(height == 0 ? 0 : yIncrement / height);
@@ -65,6 +70,9 @@ public class BitmapFont extends MinecraftFont {
                                 break;
                             }
                         }
+                    }
+                    if (x + lastX >= fontFileImage.getWidth()) {
+                        lastX = fontFileImage.getWidth() - x;
                     }
                     if (lastX > 0) {
                         charImages.put(character, ImageUtils.copyAndGetSubImage(fontFileImage, x, y, lastX, yIncrement));
@@ -110,7 +118,8 @@ public class BitmapFont extends MinecraftFont {
         float scale = fontSize / 8;
         float ascent = this.ascent - 7;
         float descent = height - this.ascent - 1;
-        charImage = ImageUtils.resizeImageFillHeight(charImage, Math.round(fontSize + (ascent + descent) * scale));
+        int fillHeight = Math.round(fontSize + (ascent + descent) * scale);
+        charImage = ImageUtils.resizeImageFillHeight(charImage, Math.abs(fillHeight));
         int w = charImage.getWidth();
         int h = charImage.getHeight();
         charImage = ImageUtils.multiply(charImage, ImageUtils.changeColorTo(ImageUtils.copyImage(charImage), awtColor));
@@ -126,8 +135,8 @@ public class BitmapFont extends MinecraftFont {
                     charImage = new BufferedImage(charImage.getWidth(), charImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
                     Graphics2D g = charImage.createGraphics();
                     for (int i = 0; i < OBFUSCATE_OVERLAP_COUNT; i++) {
-                        String magicCharater = ComponentStringUtils.toMagic(provider, character);
-                        BufferedImage magicImage = provider.forCharacter(magicCharater).getCharacterImage(magicCharater, fontSize, color).orElse(new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB));
+                        String magicCharacter = ComponentStringUtils.toMagic(provider, character);
+                        BufferedImage magicImage = provider.forCharacter(magicCharacter).getCharacterImage(magicCharacter, fontSize, color).orElse(new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB));
                         g.drawImage(magicImage, 0, 0, charImage.getWidth(), charImage.getHeight(), null);
                     }
                     g.dispose();
@@ -180,9 +189,16 @@ public class BitmapFont extends MinecraftFont {
         }
         Graphics2D g = image.createGraphics();
         int extraWidth = italic ? 0 : lastItalicExtraWidth;
-        g.drawImage(charImage, x + extraWidth, (int) (y - ascent * scale), null);
+        int sign = fillHeight >= 0 ? 1 : -1;
+        int spaceWidth = pixelSize * this.scale;
+        if (sign > 0) {
+            g.drawImage(charImage, x + extraWidth, (int) (y - ascent * scale), null);
+        } else {
+            g.drawImage(charImage, x + extraWidth, (int) (y - ascent * scale), -x, charImage.getHeight(), null);
+            spaceWidth += scale * 2;
+        }
         g.dispose();
-        return new FontRenderResult(image, w + extraWidth, h, pixelSize * this.scale, italicExtraWidth);
+        return new FontRenderResult(image, (w + extraWidth) * sign, h, spaceWidth, italicExtraWidth);
     }
 
     @Override
@@ -190,7 +206,7 @@ public class BitmapFont extends MinecraftFont {
         Color awtColor = new Color(color.value());
         BufferedImage charImage = ImageUtils.copyImage(charImages.get(character));
         float descent = height - this.ascent - 1;
-        charImage = ImageUtils.resizeImageFillHeight(charImage, Math.round(fontSize + (ascent + descent) * scale));
+        charImage = ImageUtils.resizeImageFillHeight(charImage, Math.abs(Math.round(fontSize + (ascent + descent) * scale)));
         charImage = ImageUtils.multiply(charImage, ImageUtils.changeColorTo(ImageUtils.copyImage(charImage), awtColor));
         return Optional.of(charImage);
     }

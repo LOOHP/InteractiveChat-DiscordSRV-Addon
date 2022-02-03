@@ -16,6 +16,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.M
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.SpawnEggTintData;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintIndexData;
 
 import javax.imageio.ImageIO;
@@ -25,6 +26,7 @@ import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -49,6 +51,8 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyAdapter;
@@ -112,7 +116,7 @@ public class BlockModelRenderer extends JFrame {
     private JCheckBox enchantedCheckBox;
     private Map<ModelOverrideType, JSpinner> overrideSettings;
 
-    private JFrame providedTexturesFrame;
+    private JDialog providedTexturesDialog;
     private Map<JComponent, ValueTrios<Supplier<String>, JButton, JFileChooser>> providedTextureSettings;
 
     private ResourceManager resourceManager;
@@ -183,9 +187,9 @@ public class BlockModelRenderer extends JFrame {
         }
         predicateValuePanel.setLayout(new GridLayout(0, 1));
 
-        providedTexturesFrame = new JFrame("Provided Textures");
-        providedTexturesFrame.setIconImage(image);
-        providedTexturesFrame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
+        providedTexturesDialog = new JDialog(this, "Provided Textures");
+        providedTexturesDialog.setIconImage(image);
+        providedTexturesDialog.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
         JPanel builtInProvidedTexturesPanel = new JPanel();
         builtInProvidedTexturesPanel.setLayout(new GridLayout(0, 2));
         for (Field field : ResourceRegistry.class.getFields()) {
@@ -208,7 +212,7 @@ public class BlockModelRenderer extends JFrame {
                 fieldButton.addActionListener(e -> {
                     fieldFileChooser.setSelectedFile(null);
                     fieldButton.setText("No File Chosen");
-                    int result = fieldFileChooser.showOpenDialog(providedTexturesFrame);
+                    int result = fieldFileChooser.showOpenDialog(providedTexturesDialog);
                     if (result == 0) {
                         fieldButton.setText(fieldFileChooser.getSelectedFile().getName());
                     }
@@ -237,14 +241,14 @@ public class BlockModelRenderer extends JFrame {
             fieldButton.addActionListener(ev -> {
                 fieldFileChooser.setSelectedFile(null);
                 fieldButton.setText("No File Chosen");
-                int result = fieldFileChooser.showOpenDialog(providedTexturesFrame);
+                int result = fieldFileChooser.showOpenDialog(providedTexturesDialog);
                 if (result == 0) {
                     fieldButton.setText(fieldFileChooser.getSelectedFile().getName());
                 }
             });
             providedTextureSettings.put(fieldText, new ValueTrios<>(() -> fieldText.getText(), fieldButton, fieldFileChooser));
             builtInProvidedTexturesPanel.add(fieldButton);
-            SwingUtilities.invokeLater(() -> providedTexturesFrame.pack());
+            SwingUtilities.invokeLater(() -> providedTexturesDialog.pack());
         });
         JPanel layoutPanel = new JPanel();
         BoxLayout layout = new BoxLayout(layoutPanel, BoxLayout.Y_AXIS);
@@ -253,11 +257,11 @@ public class BlockModelRenderer extends JFrame {
         layoutPanel.add(builtInProvidedTexturesPanel);
         layoutPanel.add(buttonMoreProvidedTextures);
         buttonMoreProvidedTextures.setAlignmentX(Component.CENTER_ALIGNMENT);
-        providedTexturesFrame.add(layoutPanel);
-        providedTexturesFrame.pack();
-        providedTexturesFrame.setLocationRelativeTo(null);
+        providedTexturesDialog.add(layoutPanel);
+        providedTexturesDialog.pack();
+        providedTexturesDialog.setLocationRelativeTo(null);
 
-        providedTexturesFrame.addWindowListener(new WindowAdapter() {
+        providedTexturesDialog.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 Iterator<Entry<JComponent, ValueTrios<Supplier<String>, JButton, JFileChooser>>> itr = providedTextureSettings.entrySet().iterator();
@@ -273,14 +277,19 @@ public class BlockModelRenderer extends JFrame {
                         }
                     }
                 }
-                SwingUtilities.invokeLater(() -> providedTexturesFrame.pack());
+                SwingUtilities.invokeLater(() -> providedTexturesDialog.pack());
             }
         });
 
-        providedTexturesFrame.setResizable(false);
+        providedTexturesDialog.setResizable(false);
 
-        providedTexturesButton.addActionListener(e -> {
-            providedTexturesFrame.setVisible(true);
+        providedTexturesButton.addActionListener(new ActionListener() {
+            @Override
+            public synchronized void actionPerformed(ActionEvent e) {
+                if (!providedTexturesDialog.isVisible()) {
+                    providedTexturesDialog.setVisible(true);
+                }
+            }
         });
 
         renderModelButton.addActionListener(e -> {
@@ -562,15 +571,34 @@ public class BlockModelRenderer extends JFrame {
         historyIndex = 0;
         currentHistoryKey = null;
         int lastSlash = key.lastIndexOf("/");
-        TintIndexData tintIndexData = TintUtils.getTintData(key.substring(lastSlash < 0 ? (key.lastIndexOf(":") + 1) : lastSlash + 1));
+        String trimmedKey = key.substring(lastSlash < 0 ? (key.lastIndexOf(":") + 1) : lastSlash + 1);
+
+        Map<String, TextureResource> providedTextures = new HashMap<>();
         Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
+
+        SpawnEggTintData tintData = TintUtils.getSpawnEggTint(trimmedKey);
+        if (tintData != null) {
+            BufferedImage baseImage = resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg").getTexture();
+            BufferedImage overlayImage = resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg_overlay").getTexture(baseImage.getWidth(), baseImage.getHeight());
+
+            BufferedImage colorBase = ImageUtils.changeColorTo(ImageUtils.copyImage(baseImage), tintData.getBase());
+            BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(overlayImage), tintData.getOverlay());
+
+            baseImage = ImageUtils.multiply(baseImage, colorBase);
+            overlayImage = ImageUtils.multiply(overlayImage, colorOverlay);
+
+            providedTextures.put(ResourceRegistry.SPAWN_EGG_PLACEHOLDER, new GeneratedTextureResource(baseImage));
+            providedTextures.put(ResourceRegistry.SPAWN_EGG_OVERLAY_PLACEHOLDER, new GeneratedTextureResource(overlayImage));
+        }
+
+        TintIndexData tintIndexData = TintUtils.getTintData(trimmedKey);
         for (Entry<ModelOverrideType, JSpinner> entry : overrideSettings.entrySet()) {
             float value = ((Number) entry.getValue().getValue()).floatValue();
             if (value != 0F) {
                 predicates.put(entry.getKey(), value);
             }
         }
-        Map<String, TextureResource> providedTextures = new HashMap<>();
+
         for (ValueTrios<Supplier<String>, JButton, JFileChooser> data : providedTextureSettings.values()) {
             String texturePlaceholder = data.getFirst().get();
             File file = data.getThird().getSelectedFile();

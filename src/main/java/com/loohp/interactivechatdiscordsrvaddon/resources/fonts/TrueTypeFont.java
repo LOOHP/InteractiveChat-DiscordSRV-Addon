@@ -121,7 +121,7 @@ public class TrueTypeFont extends MinecraftFont {
         return displayableCharacters;
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings("rawtypes")
     @Override
     public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations) {
         float scale = fontSize / 16;
@@ -178,12 +178,12 @@ public class TrueTypeFont extends MinecraftFont {
                 finalWidth += scale * 2;
             }
         } else {
-            for (int i = 0; i < magicCharImages.length; i++) {
-                g.drawImage(magicCharImages[i], x + extraWidth, y, newW, height, null);
+            for (BufferedImage magicCharImage : magicCharImages) {
+                g.drawImage(magicCharImage, x + extraWidth, y, newW, height, null);
             }
             if (bold) {
-                for (int i = 0; i < magicCharImages.length; i++) {
-                    g.drawImage(magicCharImages[i], (int) (x + (scale * 2)) + extraWidth, y, newW, height, null);
+                for (BufferedImage magicCharImage : magicCharImages) {
+                    g.drawImage(magicCharImage, (int) (x + (scale * 2)) + extraWidth, y, newW, height, null);
                 }
                 finalWidth += scale * 2;
             }

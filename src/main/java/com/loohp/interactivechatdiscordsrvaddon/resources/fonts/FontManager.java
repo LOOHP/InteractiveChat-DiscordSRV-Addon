@@ -106,7 +106,7 @@ public class FontManager extends AbstractManager {
                                     break;
                             }
                         } catch (Exception e) {
-                            throw new RuntimeException("Unable to load font provider " + index + " in " + file.getAbsolutePath(), e);
+                            new RuntimeException("Unable to load font provider " + index + " in " + file.getAbsolutePath(), e).printStackTrace();
                         }
                     }
                     FontProvider existingProvider = fonts.get(key);

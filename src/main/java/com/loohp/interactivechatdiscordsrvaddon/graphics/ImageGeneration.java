@@ -815,15 +815,27 @@ public class ImageGeneration {
             prints = newList;
         }
 
-        BufferedImage image = new BufferedImage(1120, prints.size() * 20 + 15, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage image = new BufferedImage(2240, prints.size() * 20 + 15, BufferedImage.TYPE_INT_ARGB);
 
+        int topX = image.getWidth() / 5 * 2;
         for (int i = 0; i < prints.size(); i++) {
             Component text = prints.get(i);
-            ImageUtils.printComponent(InteractiveChatDiscordSrvAddon.plugin.resourceManager, image, text, 8, 8 + 20 * i, 16);
+            ImageUtils.printComponent(InteractiveChatDiscordSrvAddon.plugin.resourceManager, image, text, topX + 8, 8 + 20 * i, 16);
+        }
+
+        int firstX = 0;
+        outer:
+        for (int x = 0; x < image.getWidth() - 9; x++) {
+            for (int y = 0; y < image.getHeight(); y++) {
+                if (image.getRGB(x, y) != 0) {
+                    firstX = x;
+                    break outer;
+                }
+            }
         }
 
         int lastX = 0;
-        for (int x = 0; x < image.getWidth() - 9; x++) {
+        for (int x = firstX; x < image.getWidth() - 9; x++) {
             for (int y = 0; y < image.getHeight(); y++) {
                 if (image.getRGB(x, y) != 0) {
                     lastX = x;
@@ -832,7 +844,9 @@ public class ImageGeneration {
             }
         }
 
-        BufferedImage background = new BufferedImage(lastX + 9, image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        firstX = Math.max(0, firstX - 8);
+
+        BufferedImage background = new BufferedImage(lastX - topX + 9, image.getHeight(), BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D g = background.createGraphics();
         g.setColor(new Color(36, 1, 92));
@@ -843,10 +857,15 @@ public class ImageGeneration {
         g.fillRect(background.getWidth() - 2, 2, 2, background.getHeight() - 4);
         g.fillRect(2, 0, background.getWidth() - 4, 2);
         g.fillRect(2, background.getHeight() - 2, background.getWidth() - 4, 2);
-        g.drawImage(image, 0, 0, null);
         g.dispose();
 
-        return background;
+        int offsetX = Math.max(topX - firstX, 0);
+        BufferedImage output = new BufferedImage(offsetX + background.getWidth(), background.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = output.createGraphics();
+        g2.drawImage(background, offsetX, 0, null);
+        g2.drawImage(image, -firstX, 0, null);
+
+        return output;
     }
 
     public static BufferedImage getTabListImage(List<Component> header, List<Component> footer, List<ValueTrios<UUID, Component, Integer>> players, boolean showAvatar, boolean showPing) throws Exception {

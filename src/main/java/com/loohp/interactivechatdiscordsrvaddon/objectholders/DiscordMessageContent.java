@@ -28,6 +28,7 @@ public class DiscordMessageContent {
     private String authorIconUrl;
     private List<String> description;
     private List<String> imageUrl;
+    private String thumbnail;
     private Color color;
     private String footer;
     private String footerImageUrl;
@@ -85,6 +86,14 @@ public class DiscordMessageContent {
 
     public void setAuthorIconUrl(String authorIconUrl) {
         this.authorIconUrl = authorIconUrl;
+    }
+
+    public String getThumbnail() {
+        return thumbnail;
+    }
+
+    public void setThumbnail(String thumbnail) {
+        this.thumbnail = thumbnail;
     }
 
     public List<String> getDescriptions() {
@@ -172,7 +181,7 @@ public class DiscordMessageContent {
         Map<MessageAction, Set<String>> actions = new LinkedHashMap<>();
         Set<String> rootAttachments = new HashSet<>();
         rootAttachments.add(authorIconUrl);
-        EmbedBuilder embed = new EmbedBuilder().setAuthor(authorName, null, authorIconUrl).setColor(color);
+        EmbedBuilder embed = new EmbedBuilder().setAuthor(authorName, null, authorIconUrl).setColor(color).setThumbnail(thumbnail);
         if (description.size() > 0) {
             embed.setDescription(description.get(0));
         }
@@ -239,7 +248,7 @@ public class DiscordMessageContent {
     }
 
     public WebhookMessageBuilder toWebhookMessageBuilder() {
-        WebhookEmbedBuilder embed = new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(authorName, authorIconUrl, null)).setColor(color.getRGB());
+        WebhookEmbedBuilder embed = new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(authorName, authorIconUrl, null)).setColor(color.getRGB()).setThumbnailUrl(thumbnail);
         if (description.size() > 0) {
             embed.setDescription(description.get(0));
         }

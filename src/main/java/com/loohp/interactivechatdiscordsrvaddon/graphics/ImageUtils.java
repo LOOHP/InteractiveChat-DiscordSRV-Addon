@@ -419,7 +419,7 @@ public class ImageUtils {
             fontSize = Math.round(Math.max(2, fontSize - (float) striped.length() / 3) * 10) / 8.0F;
         }
 
-        BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage textImage = new BufferedImage(image.getWidth() + centerX, image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
         CharacterDataArray characterDataArray = CharacterDataArray.fromComponent(text);
         char[] chars = characterDataArray.getChars();
         CharacterData[] data = characterDataArray.getData();
@@ -433,7 +433,7 @@ public class ImageUtils {
             UnicodeUtils.bidirectionalReorderVisually(levels, chars);
         }
 
-        int x = 0;
+        int x = centerX;
         int lastItalicExtraWidth = 0;
         int height = 0;
         String character = null;
@@ -461,7 +461,7 @@ public class ImageUtils {
             character = null;
         }
 
-        int width = x;
+        int width = x - centerX;
         x = centerX - width / 2;
         int border = (int) Math.ceil(height / 6.0);
         int y = topY + border;
@@ -475,7 +475,7 @@ public class ImageUtils {
 
         Graphics2D g3 = image.createGraphics();
         g3.drawImage(background, 0, 0, null);
-        g3.drawImage(textImage, x, (int) (y - (height / 5) + Math.max(1, 1 * (fontSize / 8))) - image.getHeight(), null);
+        g3.drawImage(textImage, x - centerX, (int) (y - (height / 5) + Math.max(1, 1 * (fontSize / 8))) - image.getHeight(), null);
         g3.dispose();
         return image;
     }
@@ -533,7 +533,7 @@ public class ImageUtils {
             UnicodeUtils.bidirectionalReorderVisually(levels, chars);
         }
 
-        int x = 0;
+        int x = topX;
         int lastItalicExtraWidth = 0;
         String character = null;
         for (int i = 0; i < chars.length; i++) {
@@ -557,7 +557,7 @@ public class ImageUtils {
             character = null;
         }
         Graphics2D g = image.createGraphics();
-        g.drawImage(textImage, topX, topY - image.getHeight(), null);
+        g.drawImage(textImage, 0, topY - image.getHeight(), null);
         g.dispose();
         return image;
     }
