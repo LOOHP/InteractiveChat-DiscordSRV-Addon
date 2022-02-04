@@ -188,7 +188,6 @@ public class ItemRenderUtils {
             int level = 15;
             Object blockStateObj = item.getItemMeta().serialize().get("BlockStateTag");
             if (blockStateObj != null && blockStateObj instanceof Map) {
-                @SuppressWarnings("unchecked")
                 Object levelObj = ((Map<?, Object>) blockStateObj).get("level");
                 if (levelObj != null) {
                     try {
@@ -226,10 +225,10 @@ public class ItemRenderUtils {
                 PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
                 BufferedImage tippedArrowHead = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "tipped_arrow_head").getTexture(32, 32);
 
-                Color color;
+                int color;
                 try {
                     if (meta.hasColor()) {
-                        color = new Color(meta.getColor().asRGB());
+                        color = meta.getColor().asRGB();
                     } else {
                         color = PotionUtils.getPotionBaseColor(potiontype);
                     }
@@ -246,10 +245,10 @@ public class ItemRenderUtils {
                 PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
                 BufferedImage potionOverlay = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "potion_overlay").getTexture(32, 32);
 
-                Color color;
+                int color;
                 try {
                     if (meta.hasColor()) {
-                        color = new Color(meta.getColor().asRGB());
+                        color = meta.getColor().asRGB();
                     } else {
                         color = PotionUtils.getPotionBaseColor(potiontype);
                     }

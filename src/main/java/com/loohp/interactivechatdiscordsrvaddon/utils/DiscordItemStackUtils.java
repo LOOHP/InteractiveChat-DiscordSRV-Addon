@@ -371,7 +371,6 @@ public class DiscordItemStackUtils {
             List<String> chest = new LinkedList<>();
             boolean useHead = false;
             List<String> head = new LinkedList<>();
-            @SuppressWarnings("unchecked")
             ListTag<CompoundTag> attributeList = (ListTag<CompoundTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "AttributeModifiers").toJson());
             for (CompoundTag attributeTag : attributeList) {
                 String attributeName = attributeTag.getString("AttributeName").replace("minecraft:", "");
@@ -380,36 +379,43 @@ public class DiscordItemStackUtils {
                 String attributeComponent = LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeModifierKey(amount, operation), language).replaceFirst("%s", ATTRIBUTE_FORMAT.format(Math.abs(amount)) + "").replaceFirst("%s", LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeKey(attributeName), language)).replace("%%", "%");
                 if (attributeTag.containsKey("Slot")) {
                     String slot = attributeTag.getString("Slot");
-                    if (slot.equals("mainhand")) {
-                        if (amount != 0) {
-                            mainHand.add(attributeComponent);
-                        }
-                        useMainHand = true;
-                    } else if (slot.equals("offhand")) {
-                        if (amount != 0) {
-                            offHand.add(attributeComponent);
-                        }
-                        useOffhand = true;
-                    } else if (slot.equals("feet")) {
-                        if (amount != 0) {
-                            feet.add(attributeComponent);
-                        }
-                        useFeet = true;
-                    } else if (slot.equals("legs")) {
-                        if (amount != 0) {
-                            legs.add(attributeComponent);
-                        }
-                        useLegs = true;
-                    } else if (slot.equals("chest")) {
-                        if (amount != 0) {
-                            chest.add(attributeComponent);
-                        }
-                        useChest = true;
-                    } else if (slot.equals("head")) {
-                        if (amount != 0) {
-                            head.add(attributeComponent);
-                        }
-                        useHead = true;
+                    switch (slot) {
+                        case "mainhand":
+                            if (amount != 0) {
+                                mainHand.add(attributeComponent);
+                            }
+                            useMainHand = true;
+                            break;
+                        case "offhand":
+                            if (amount != 0) {
+                                offHand.add(attributeComponent);
+                            }
+                            useOffhand = true;
+                            break;
+                        case "feet":
+                            if (amount != 0) {
+                                feet.add(attributeComponent);
+                            }
+                            useFeet = true;
+                            break;
+                        case "legs":
+                            if (amount != 0) {
+                                legs.add(attributeComponent);
+                            }
+                            useLegs = true;
+                            break;
+                        case "chest":
+                            if (amount != 0) {
+                                chest.add(attributeComponent);
+                            }
+                            useChest = true;
+                            break;
+                        case "head":
+                            if (amount != 0) {
+                                head.add(attributeComponent);
+                            }
+                            useHead = true;
+                            break;
                     }
                 } else {
                     if (amount != 0) {
@@ -472,7 +478,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (hasMeta && isUnbreakble(item) && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_UNBREAKABLE)) {
+        if (hasMeta && isUnbreakable(item) && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_UNBREAKABLE)) {
             if (!description.equals("")) {
                 description += "\n";
             }
@@ -692,7 +698,12 @@ public class DiscordItemStackUtils {
                                 description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() * 50, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true) + ")";
                             }
                         }
-                        ChatColor color = PotionUtils.isPositive(effect.getType()) ? ChatColor.BLUE : ChatColor.RED;
+                        ChatColor color;
+                        try {
+                            color = PotionUtils.getPotionEffectChatColor(effect.getType());
+                        } catch (Throwable e) {
+                            color = ChatColor.BLUE;
+                        }
                         prints.add(LegacyComponentSerializer.legacySection().deserialize(color + description));
                     }
                 }
@@ -766,7 +777,6 @@ public class DiscordItemStackUtils {
             List<Component> chest = new LinkedList<>();
             boolean useHead = false;
             List<Component> head = new LinkedList<>();
-            @SuppressWarnings("unchecked")
             ListTag<CompoundTag> attributeList = (ListTag<CompoundTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "AttributeModifiers").toJson());
             for (CompoundTag attributeTag : attributeList) {
                 String attributeName = attributeTag.getString("AttributeName").replace("minecraft:", "");
@@ -775,36 +785,43 @@ public class DiscordItemStackUtils {
                 Component attributeComponent = LegacyComponentSerializer.legacySection().deserialize((amount < 0 ? ChatColor.RED : ChatColor.BLUE) + LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeModifierKey(amount, operation), language).replaceFirst("%s", ATTRIBUTE_FORMAT.format(Math.abs(amount)) + "").replaceFirst("%s", LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeKey(attributeName), language)).replace("%%", "%"));
                 if (attributeTag.containsKey("Slot")) {
                     String slot = attributeTag.getString("Slot");
-                    if (slot.equals("mainhand")) {
-                        if (amount != 0) {
-                            mainHand.add(attributeComponent);
-                        }
-                        useMainHand = true;
-                    } else if (slot.equals("offhand")) {
-                        if (amount != 0) {
-                            offHand.add(attributeComponent);
-                        }
-                        useOffhand = true;
-                    } else if (slot.equals("feet")) {
-                        if (amount != 0) {
-                            feet.add(attributeComponent);
-                        }
-                        useFeet = true;
-                    } else if (slot.equals("legs")) {
-                        if (amount != 0) {
-                            legs.add(attributeComponent);
-                        }
-                        useLegs = true;
-                    } else if (slot.equals("chest")) {
-                        if (amount != 0) {
-                            chest.add(attributeComponent);
-                        }
-                        useChest = true;
-                    } else if (slot.equals("head")) {
-                        if (amount != 0) {
-                            head.add(attributeComponent);
-                        }
-                        useHead = true;
+                    switch (slot) {
+                        case "mainhand":
+                            if (amount != 0) {
+                                mainHand.add(attributeComponent);
+                            }
+                            useMainHand = true;
+                            break;
+                        case "offhand":
+                            if (amount != 0) {
+                                offHand.add(attributeComponent);
+                            }
+                            useOffhand = true;
+                            break;
+                        case "feet":
+                            if (amount != 0) {
+                                feet.add(attributeComponent);
+                            }
+                            useFeet = true;
+                            break;
+                        case "legs":
+                            if (amount != 0) {
+                                legs.add(attributeComponent);
+                            }
+                            useLegs = true;
+                            break;
+                        case "chest":
+                            if (amount != 0) {
+                                chest.add(attributeComponent);
+                            }
+                            useChest = true;
+                            break;
+                        case "head":
+                            if (amount != 0) {
+                                head.add(attributeComponent);
+                            }
+                            useHead = true;
+                            break;
                     }
                 } else {
                     if (amount != 0) {
@@ -867,7 +884,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (hasMeta && isUnbreakble(item) && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_UNBREAKABLE)) {
+        if (hasMeta && isUnbreakable(item) && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_UNBREAKABLE)) {
             prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.BLUE + LanguageUtils.getTranslation(TranslationKeyUtils.getUnbreakable(), language)));
         }
 
@@ -875,7 +892,6 @@ public class DiscordItemStackUtils {
             if (NBTEditor.contains(item, "CanDestroy") && NBTEditor.getSize(item, "CanDestroy") > 0) {
                 prints.add(Component.empty());
                 prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getCanDestroy(), language)));
-                @SuppressWarnings("unchecked")
                 ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "CanDestroy").toJson());
                 for (StringTag materialTag : materialList) {
                     XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
@@ -892,7 +908,6 @@ public class DiscordItemStackUtils {
             if (NBTEditor.contains(item, "CanPlaceOn") && NBTEditor.getSize(item, "CanPlaceOn") > 0) {
                 prints.add(Component.empty());
                 prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getCanPlace(), language)));
-                @SuppressWarnings("unchecked")
                 ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "CanPlaceOn").toJson());
                 for (StringTag materialTag : materialList) {
                     XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
@@ -916,7 +931,7 @@ public class DiscordItemStackUtils {
         return new DiscordToolTip(prints, !hasCustomName && prints.size() <= 1);
     }
 
-    public static boolean isUnbreakble(ItemStack item) {
+    public static boolean isUnbreakable(ItemStack item) {
         if (itemMetaHasUnbreakable) {
             if (item.hasItemMeta()) {
                 ItemMeta meta = item.getItemMeta();

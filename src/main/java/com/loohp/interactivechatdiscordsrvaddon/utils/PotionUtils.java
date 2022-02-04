@@ -1,25 +1,26 @@
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NMSUtils;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
-import java.awt.Color;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class PotionUtils {
 
-    public static final Color WATER_COLOR = Color.decode("#385dc6");
-    public static final Color UNCRAFTABLE_COLOR = Color.decode("#ff5bde");
-    private static final Set<String> POSITIVE_EFFECTS = new HashSet<>();
+    public static final int WATER_COLOR = 3694022;
+    public static final int UNCRAFTABLE_COLOR = 16253176;
+
     private static Class<?> craftItemStackClass;
     private static Class<?> nmsItemStackClass;
     private static Method asNMSCopyMethod;
@@ -36,6 +37,11 @@ public class PotionUtils {
     private static Class<?> craftPotionUtilClass;
     private static Class<?> nmsMobEffectClass;
     private static Method craftPotionUtilToBukkitMethod;
+    private static Class<?> nmsMobEffectListClass;
+    private static Field nmsMobEffectListByIdArrayField;
+    private static Method nmsMobEffectListByIdMethod;
+    private static Field nmsMobEffectListTypeField;
+    private static Field nmsMobEffectInfoChatFormatField;
 
     static {
         try {
@@ -55,6 +61,7 @@ public class PotionUtils {
             } catch (Exception e) {
                 nmsNbtTagGetStringMethod = nmsNbtTagCompoundClass.getMethod("l", String.class);
             }
+            nmsMobEffectListClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MobEffectList", "net.minecraft.world.effect.MobEffectList");
             if (InteractiveChat.version.isOld()) {
                 craftPotionBrewerClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.potion.CraftPotionBrewer");
                 craftPotionBrewerInstance = craftPotionBrewerClass.getConstructor().newInstance();
@@ -67,31 +74,27 @@ public class PotionUtils {
                 nmsMobEffectClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MobEffect", "net.minecraft.world.effect.MobEffect");
                 craftPotionUtilToBukkitMethod = craftPotionUtilClass.getMethod("toBukkit", nmsMobEffectClass);
             }
+            if (InteractiveChat.version.isOld()) {
+                nmsMobEffectListByIdArrayField = nmsMobEffectListClass.getField("byId");
+                nmsMobEffectListTypeField = nmsMobEffectListClass.getDeclaredField("K");
+            } else if (InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_13_1)) {
+                nmsMobEffectListByIdMethod = nmsMobEffectListClass.getMethod("fromId", int.class);
+                nmsMobEffectListTypeField = nmsMobEffectListClass.getDeclaredField("c");
+            } else {
+                if (InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_17)) {
+                    nmsMobEffectListByIdMethod = nmsMobEffectListClass.getMethod("fromId", int.class);
+                } else {
+                    nmsMobEffectListByIdMethod = nmsMobEffectListClass.getMethod("a", int.class);
+                }
+                nmsMobEffectListTypeField = nmsMobEffectListClass.getDeclaredField("b");
+                nmsMobEffectInfoChatFormatField = nmsMobEffectListTypeField.getType().getDeclaredField("d");
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        POSITIVE_EFFECTS.add("SPEED");
-        POSITIVE_EFFECTS.add("FAST_DIGGING");
-        POSITIVE_EFFECTS.add("INCREASE_DAMAGE");
-        POSITIVE_EFFECTS.add("JUMP");
-        POSITIVE_EFFECTS.add("REGENERATION");
-        POSITIVE_EFFECTS.add("DAMAGE_RESISTANCE");
-        POSITIVE_EFFECTS.add("FIRE_RESISTANCE");
-        POSITIVE_EFFECTS.add("WATER_BREATHING");
-        POSITIVE_EFFECTS.add("INVISIBILITY");
-        POSITIVE_EFFECTS.add("NIGHT_VISION");
-        POSITIVE_EFFECTS.add("HEALTH_BOOST");
-        POSITIVE_EFFECTS.add("ABSORPTION");
-        POSITIVE_EFFECTS.add("SATURATION");
-        POSITIVE_EFFECTS.add("LUCK");
-        POSITIVE_EFFECTS.add("SLOW_FALLING");
-        POSITIVE_EFFECTS.add("CONDUIT_POWER");
-        POSITIVE_EFFECTS.add("DOLPHINS_GRACE");
-        POSITIVE_EFFECTS.add("HERO_OF_THE_VILLAGE");
     }
 
-    public static Color getPotionBaseColor(PotionType type) {
+    public static int getPotionBaseColor(PotionType type) {
         PotionEffectType effect = type.getEffectType();
         if (effect == null) {
             if (type.name().equalsIgnoreCase("UNCRAFTABLE")) {
@@ -100,17 +103,17 @@ public class PotionUtils {
                 return WATER_COLOR;
             }
         } else {
-            return new Color(effect.getColor().asRGB());
+            return effect.getColor().asRGB();
         }
     }
 
-    @SuppressWarnings({"deprecation", "unchecked"})
+    @SuppressWarnings("deprecation")
     public static List<PotionEffect> getBasePotionEffect(ItemStack potion) throws Exception {
         if (InteractiveChat.version.isOld()) {
             return new ArrayList<>((Collection<PotionEffect>) craftPotionBrewerGetEffectsFromDamageMethod.invoke(craftPotionBrewerInstance, potion.getDurability()));
         } else {
             Object nmsStack = asNMSCopyMethod.invoke(null, potion);
-            if (!(Boolean) nmsItemHasTagMethod.invoke(nmsStack)) {
+            if (!(boolean) nmsItemHasTagMethod.invoke(nmsStack)) {
                 return null;
             }
             String pName = (String) nmsNbtTagGetStringMethod.invoke(nmsItemHasGetMethod.invoke(nmsStack), "Potion");
@@ -133,8 +136,25 @@ public class PotionUtils {
         }
     }
 
-    public static boolean isPositive(PotionEffectType type) {
-        return POSITIVE_EFFECTS.contains(type.getName());
+    public static ChatColor getPotionEffectChatColor(PotionEffectType type) throws Exception {
+        int id = type.getId();
+        if (InteractiveChat.version.isOld()) {
+            Object array = nmsMobEffectListByIdArrayField.get(null);
+            Object mobEffectListObject = Array.get(array, id);
+            nmsMobEffectListTypeField.setAccessible(true);
+            return nmsMobEffectListTypeField.getBoolean(mobEffectListObject) ? ChatColor.RED : ChatColor.BLUE;
+        } else if (InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_13_1)) {
+            Object mobEffectListObject = nmsMobEffectListByIdMethod.invoke(null, id);
+            nmsMobEffectListTypeField.setAccessible(true);
+            return nmsMobEffectListTypeField.getBoolean(mobEffectListObject) ? ChatColor.RED : ChatColor.BLUE;
+        } else {
+            Object mobEffectListObject = nmsMobEffectListByIdMethod.invoke(null, id);
+            nmsMobEffectListTypeField.setAccessible(true);
+            Enum<?> mobEffectType = (Enum<?>) nmsMobEffectListTypeField.get(mobEffectListObject);
+            nmsMobEffectInfoChatFormatField.setAccessible(true);
+            Enum<?> chatFormat = (Enum<?>) nmsMobEffectInfoChatFormatField.get(mobEffectType);
+            return ChatColor.getByChar(chatFormat.toString().charAt(1));
+        }
     }
 
 }
