@@ -70,7 +70,7 @@ public class GUIMain {
             String icVersion = icPluginYaml.getString("version");
 
             String append;
-            if (Registry.INTERACTIVE_CHAT_DISCORD_SRV_ADDON_COMPATIBLE_VERSION == InteractiveChatRegistry.INTERACTIVE_CHAT_DISCORD_SRV_ADDON_COMPATIBLE_VERSION) {
+            if (compatible()) {
                 append = "Select one of the tools below";
             } else {
                 append = "<p style=\"color:red;\"><b>These versions of InteractiveChat & InteractiveChat DiscordSRV Addon are incompatible!<br>Please Upgrade!</b></p>";
@@ -322,6 +322,15 @@ public class GUIMain {
         label.setFont(label.getFont().deriveFont(Font.PLAIN).deriveFont(fontSize));
         label.setForeground(color);
         return label;
+    }
+
+    protected static boolean compatible() {
+        try {
+            return Registry.class.getField("INTERACTIVE_CHAT_DISCORD_SRV_ADDON_COMPATIBLE_VERSION").getInt(null) == InteractiveChatRegistry.class.getField("INTERACTIVE_CHAT_DISCORD_SRV_ADDON_COMPATIBLE_VERSION").getInt(null);
+        } catch (IllegalAccessException | NoSuchFieldException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
 }
