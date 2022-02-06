@@ -682,6 +682,8 @@ public class OutboundToDiscordEvents implements Listener {
         return component;
     }
 
+    //=====Death Message
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onDeath(PlayerDeathEvent event) {
         if (!InteractiveChatDiscordSrvAddon.plugin.deathMessageItem) {
@@ -693,8 +695,6 @@ public class OutboundToDiscordEvents implements Listener {
         ItemStack item = ComponentStringUtils.extractItemStack(deathMessage);
         DEATH_BY.put(player.getUniqueId(), item == null ? new ItemStack(Material.AIR) : item);
     }
-
-    //===== Advancement
 
     @Subscribe(priority = ListenerPriority.HIGHEST)
     public void onDeathMessageSend(DeathMessagePostProcessEvent event) {
@@ -771,6 +771,8 @@ public class OutboundToDiscordEvents implements Listener {
         }, 5);
     }
 
+    //===== Advancement
+
     @Subscribe(priority = ListenerPriority.HIGHEST)
     public void onAdvancement(AchievementMessagePreProcessEvent event) {
         if (event.isCancelled()) {
@@ -821,20 +823,20 @@ public class OutboundToDiscordEvents implements Listener {
         }
 
         Debug.debug("onAdvancement processing advancement");
-        if (InteractiveChatDiscordSrvAddon.plugin.advancementItem && item != null) {
+        if (InteractiveChatDiscordSrvAddon.plugin.advancementItem && item != null && advancementType != null) {
             String content = messageFormat.getContent();
             if (content == null) {
                 content = "";
             }
             try {
                 int id = DATA_ID_PROVIDER.getNext();
-                BufferedImage icon = ImageGeneration.getItemStackImage(item, ICPlayerFactory.getICPlayer(event.getPlayer()), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
+                BufferedImage thumbnail = ImageGeneration.getAdvancementIcon(item, advancementType, true, ICPlayerFactory.getICPlayer(event.getPlayer()));
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                ImageIO.write(icon, "png", baos);
+                ImageIO.write(thumbnail, "png", baos);
                 content += "<ICA=" + id + ">";
                 messageFormat.setContent(content);
-                RESEND_WITH_ATTACHMENT.put(id, new AttachmentData("Icon.png", baos.toByteArray()));
-                messageFormat.setAuthorImageUrl("attachment://Icon.png");
+                RESEND_WITH_ATTACHMENT.put(id, new AttachmentData("Thumbnail.png", baos.toByteArray()));
+                messageFormat.setThumbnailUrl("attachment://Thumbnail.png");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -859,8 +861,6 @@ public class OutboundToDiscordEvents implements Listener {
         }
         event.setMessageFormat(messageFormat);
     }
-
-    //=====
 
     @Subscribe(priority = ListenerPriority.HIGHEST)
     public void onAdvancementSend(AchievementMessagePostProcessEvent event) {
@@ -905,6 +905,8 @@ public class OutboundToDiscordEvents implements Listener {
             content.toJDAMessageRestAction(destinationChannel).queue();
         }
     }
+
+    //=====
 
     @Subscribe(priority = ListenerPriority.HIGHEST)
     public void discordMessageSent(DiscordGuildMessageSentEvent event) {

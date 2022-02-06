@@ -69,6 +69,9 @@ public class DiscordMessageContent {
             imageUrl.add(embed.getImage().getUrl());
         }
         this.color = embed.getColor();
+        if (embed.getThumbnail() != null) {
+            this.thumbnail = embed.getThumbnail().getUrl();
+        }
         this.attachments = new HashMap<>();
     }
 

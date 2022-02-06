@@ -27,6 +27,7 @@ import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.PlayerModelItem;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.PlayerModelItemPosition;
@@ -106,6 +107,15 @@ public class ImageGeneration {
 
     public static BufferedImage getEnchantedImage(BufferedImage source) {
         return ImageUtils.additionNonTransparent(source, getRawEnchantedImage(source), ResourceRegistry.ENCHANTMENT_GLINT_FACTOR);
+    }
+
+    public static BufferedImage getAdvancementIcon(ItemStack item, AdvancementType advancementType, boolean completed, OfflineICPlayer player) throws IOException {
+        BufferedImage frame = ImageUtils.resizeImageAbs(getAdvancementFrame(advancementType, completed), 52, 52);
+        BufferedImage itemImage = getItemStackImage(item, player, false);
+        Graphics2D g = frame.createGraphics();
+        g.drawImage(itemImage, 10, 10, null);
+        g.dispose();
+        return frame;
     }
 
     public static BufferedImage getItemStackImage(ItemStack item, OfflineICPlayer player) throws IOException {
@@ -1091,6 +1101,27 @@ public class ImageGeneration {
             return ImageUtils.copyAndGetSubImage(icons, 0, 40 * scale, 10 * scale, 7 * scale);
         } else {
             return ImageUtils.copyAndGetSubImage(icons, 0, 48 * scale, 10 * scale, 7 * scale);
+        }
+    }
+
+    public static BufferedImage getAdvancementFrame(AdvancementType advancementType, boolean completed) {
+        if (advancementType.isLegacy()) {
+            BufferedImage icons = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "achievement/achievement_background").getTexture();
+            int scale = icons.getWidth() / 256;
+            return ImageUtils.copyAndGetSubImage(icons, 0, 202 * scale, 26 * scale, 26 * scale);
+        } else {
+            BufferedImage icons = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "advancements/widgets").getTexture();
+            int scale = icons.getWidth() / 256;
+            int offsetY = completed ? 0 : 26 * scale;
+            switch (advancementType) {
+                case CHALLENGE:
+                    return ImageUtils.copyAndGetSubImage(icons, 26 * scale, 128 * scale + offsetY, 26 * scale, 26 * scale);
+                case GOAL:
+                    return ImageUtils.copyAndGetSubImage(icons, 52 * scale, 128 * scale + offsetY, 26 * scale, 26 * scale);
+                case TASK:
+                default:
+                    return ImageUtils.copyAndGetSubImage(icons, 0, 128 * scale + offsetY, 26 * scale, 26 * scale);
+            }
         }
     }
 
