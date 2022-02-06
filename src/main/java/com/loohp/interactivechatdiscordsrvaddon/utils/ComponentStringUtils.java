@@ -20,19 +20,20 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 
 public class ComponentStringUtils {
 
-    public static Component convertTranslatables(Component component, String language) {
+    public static Component convertTranslatables(Component component, Function<String, String> translateFunction) {
         component = ComponentFlattening.flatten(component);
         List<Component> children = new ArrayList<>(component.children());
         for (int i = 0; i < children.size(); i++) {
             Component current = children.get(i);
             if (current instanceof TranslatableComponent) {
                 TranslatableComponent trans = (TranslatableComponent) current;
-                Component translated = Component.text(LanguageUtils.getTranslation(trans.key(), language)).style(trans.style());
+                Component translated = Component.text(translateFunction.apply(trans.key())).style(trans.style());
                 for (Component arg : trans.args()) {
-                    translated = translated.replaceText(TextReplacementConfig.builder().matchLiteral("%s").replacement(convertTranslatables(arg, language)).once().build());
+                    translated = translated.replaceText(TextReplacementConfig.builder().matchLiteral("%s").replacement(convertTranslatables(arg, translateFunction)).once().build());
                 }
                 children.set(i, translated);
             }

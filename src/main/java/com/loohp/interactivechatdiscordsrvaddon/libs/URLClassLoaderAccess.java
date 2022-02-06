@@ -28,6 +28,7 @@ package com.loohp.interactivechatdiscordsrvaddon.libs;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -117,33 +118,43 @@ public abstract class URLClassLoaderAccess {
      */
     private static class Unsafe extends URLClassLoaderAccess {
 
-        private static final sun.misc.Unsafe UNSAFE;
+        private static final Object UNSAFE;
+        private static final Method OBJECT_FIELD_OFFSET_METHOD;
+        private static final Method GET_OBJECT_METHOD;
 
         static {
-            sun.misc.Unsafe unsafe;
+            Object unsafe;
+            Method objectFieldOffsetMethod;
+            Method getObjectMethod;
             try {
-                Field unsafeField = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
+                Class<?> unsafeClass = Class.forName("sun.misc.Unsafe");
+                Field unsafeField = unsafeClass.getDeclaredField("theUnsafe");
                 unsafeField.setAccessible(true);
-                unsafe = (sun.misc.Unsafe) unsafeField.get(null);
+                unsafe = unsafeField.get(null);
+                objectFieldOffsetMethod = unsafe.getClass().getMethod("objectFieldOffset", Field.class);
+                getObjectMethod = unsafe.getClass().getMethod("getObject", Object.class, long.class);
             } catch (Throwable t) {
                 unsafe = null;
+                objectFieldOffsetMethod = null;
+                getObjectMethod = null;
             }
             UNSAFE = unsafe;
+            OBJECT_FIELD_OFFSET_METHOD = objectFieldOffsetMethod;
+            GET_OBJECT_METHOD = getObjectMethod;
         }
 
         private static boolean isSupported() {
             return UNSAFE != null;
         }
 
-        private static Object fetchField(final Class<?> clazz, final Object object, final String name) throws NoSuchFieldException {
+        private static Object fetchField(final Class<?> clazz, final Object object, final String name) throws NoSuchFieldException, InvocationTargetException, IllegalAccessException {
             Field field = clazz.getDeclaredField(name);
-            long offset = UNSAFE.objectFieldOffset(field);
-            return UNSAFE.getObject(object, offset);
+            long offset = (long) OBJECT_FIELD_OFFSET_METHOD.invoke(UNSAFE, field);
+            return GET_OBJECT_METHOD.invoke(UNSAFE, object, offset);
         }
         private final Collection<URL> unopenedURLs;
         private final Collection<URL> pathURLs;
 
-        @SuppressWarnings("unchecked")
         Unsafe(URLClassLoader classLoader) {
             super(classLoader);
 

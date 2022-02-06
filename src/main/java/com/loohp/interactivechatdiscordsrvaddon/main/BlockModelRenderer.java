@@ -81,6 +81,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
@@ -514,15 +515,11 @@ public class BlockModelRenderer extends JFrame {
                     File resourcePackFile = new File("InteractiveChatDiscordSrvAddon/resourcepacks/" + resourceName);
                     ResourcePackInfo info = resourceManager.loadResources(resourcePackFile);
                 } catch (Exception e) {
-                    StringWriter sw = new StringWriter();
-                    PrintWriter pw = new PrintWriter(sw);
-                    e.printStackTrace(pw);
-                    Toolkit.getDefaultToolkit().beep();
-                    JOptionPane.showMessageDialog(null, GUIMain.createLabel("Unable to load \"" + resourceName + "\":\n" + sw, 13, Color.RED), title, JOptionPane.ERROR_MESSAGE);
+                    e.printStackTrace();
                 }
                 String error = baos.toString();
                 if (!error.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, GUIMain.createLabel("There are errors while loading \"" + resourceName + "\":\n" + error, 13, Color.RED), title, JOptionPane.ERROR_MESSAGE);
+                    ForkJoinPool.commonPool().execute(() -> JOptionPane.showMessageDialog(null, GUIMain.createLabel("There are errors while loading \"" + resourceName + "\":\n" + error, 13, Color.RED), title, JOptionPane.ERROR_MESSAGE));
                 }
                 resourceBar.setValue(resourceBar.getValue() + valuePerPack);
             }

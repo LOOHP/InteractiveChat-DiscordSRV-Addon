@@ -74,7 +74,7 @@ public class ImageGeneration {
     public static final int MAP_ICON_PER_ROLE = InteractiveChat.version.isLegacy() ? 4 : 16;
     public static final int SPACING = 36;
     public static final double ITEM_AMOUNT_TEXT_DARKEN_FACTOR = 75.0 / 255.0;
-    public static final Color ENCHANTMENT_GLINT_LEAGCY_COLOR = new Color(164, 84, 255);
+    public static final Color ENCHANTMENT_GLINT_LEGACY_COLOR = new Color(164, 84, 255);
     public static final String PLAYER_CAPE_CACHE_KEY = "PlayerCapeTexture";
     public static final String PLAYER_SKIN_CACHE_KEY = "PlayerSkinTexture";
     public static final String INVENTORY_CACHE_KEY = "Inventory";
@@ -92,7 +92,7 @@ public class ImageGeneration {
     public static BufferedImage getRawEnchantedImage(BufferedImage source) {
         BufferedImage tintOriginal = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.MISC_TEXTURE_LOCATION + "enchanted_item_glint").getTexture();
         if (InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_14)) {
-            BufferedImage tinted = ImageUtils.changeColorTo(ImageUtils.copyImage(tintOriginal), ENCHANTMENT_GLINT_LEAGCY_COLOR);
+            BufferedImage tinted = ImageUtils.changeColorTo(ImageUtils.copyImage(tintOriginal), ENCHANTMENT_GLINT_LEGACY_COLOR);
             tintOriginal = ImageUtils.multiply(tintOriginal, tinted);
         }
         BufferedImage tintImage = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -146,7 +146,7 @@ public class ImageGeneration {
         Debug.debug("ImageGeneration creating inventory image of " + player.getName());
 
         String key = INVENTORY_CACHE_KEY + HashUtils.createSha1("Inventory", inventory);
-        if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial()) && !Stream.of(inventory.getContents()).noneMatch(each -> each != null && NBTEditor.contains(each, "CustomModelData"))) {
+        if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial()) && Stream.of(inventory.getContents()).anyMatch(each -> each != null && NBTEditor.contains(each, "CustomModelData"))) {
             Cache<?> cache = Cache.getCache(key);
             if (cache != null) {
                 return ImageUtils.copyImage((BufferedImage) cache.getObject());
@@ -698,7 +698,7 @@ public class ImageGeneration {
             if (amount <= 0) {
                 component = component.color(NamedTextColor.RED);
             }
-            newItemImage = ImageUtils.printComponentRightAligned(InteractiveChatDiscordSrvAddon.plugin.resourceManager, newItemImage, component, 33, 17, 16, ITEM_AMOUNT_TEXT_DARKEN_FACTOR);
+            newItemImage = ImageUtils.printComponentRightAligned(InteractiveChatDiscordSrvAddon.plugin.resourceManager, newItemImage, component, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), 33, 17, 16, ITEM_AMOUNT_TEXT_DARKEN_FACTOR);
             g4.dispose();
             itemImage = newItemImage;
         }
@@ -780,7 +780,7 @@ public class ImageGeneration {
             g2.drawImage(iconCan, imageX - (iconCan.getWidth() / 2), imageY - (iconCan.getHeight() / 2), 96, 96, null);
 
             if (component != null) {
-                ImageUtils.printComponentNoShadow(InteractiveChatDiscordSrvAddon.plugin.resourceManager, image, component, imageX, imageY + 32, 30, true);
+                ImageUtils.printComponentNoShadow(InteractiveChatDiscordSrvAddon.plugin.resourceManager, image, component, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), imageX, imageY + 32, 30, true);
             }
         }
         g2.dispose();
@@ -788,19 +788,19 @@ public class ImageGeneration {
         return image;
     }
 
-    public static BufferedImage getToolTipImage(Component print) throws Exception {
+    public static BufferedImage getToolTipImage(Component print) {
         return getToolTipImage(Arrays.asList(print), false);
     }
 
-    public static BufferedImage getToolTipImage(Component print, boolean allowLineBreaks) throws Exception {
+    public static BufferedImage getToolTipImage(Component print, boolean allowLineBreaks) {
         return getToolTipImage(Arrays.asList(print), allowLineBreaks);
     }
 
-    public static BufferedImage getToolTipImage(List<Component> prints) throws Exception {
+    public static BufferedImage getToolTipImage(List<Component> prints) {
         return getToolTipImage(prints, false);
     }
 
-    public static BufferedImage getToolTipImage(List<Component> prints, boolean allowLineBreaks) throws Exception {
+    public static BufferedImage getToolTipImage(List<Component> prints, boolean allowLineBreaks) {
         if (prints.isEmpty()) {
             Debug.debug("ImageGeneration creating tooltip image");
         } else {
@@ -820,7 +820,7 @@ public class ImageGeneration {
         int topX = image.getWidth() / 5 * 2;
         for (int i = 0; i < prints.size(); i++) {
             Component text = prints.get(i);
-            ImageUtils.printComponent(InteractiveChatDiscordSrvAddon.plugin.resourceManager, image, text, topX + 8, 8 + 20 * i, 16);
+            ImageUtils.printComponent(InteractiveChatDiscordSrvAddon.plugin.resourceManager, image, text, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), topX + 8, 8 + 20 * i, 16);
         }
 
         int firstX = 0;
@@ -868,14 +868,14 @@ public class ImageGeneration {
         return output;
     }
 
-    public static BufferedImage getTabListImage(List<Component> header, List<Component> footer, List<ValueTrios<UUID, Component, Integer>> players, boolean showAvatar, boolean showPing) throws Exception {
+    public static BufferedImage getTabListImage(List<Component> header, List<Component> footer, List<ValueTrios<UUID, Component, Integer>> players, boolean showAvatar, boolean showPing) {
         List<ValuePairs<BufferedImage, Integer>> playerImages = new ArrayList<>(players.size());
         int masterOffsetX = 0;
         for (ValueTrios<UUID, Component, Integer> trio : players) {
             UUID uuid = trio.getFirst();
             Component name = trio.getSecond();
             int ping = trio.getThird();
-            BufferedImage image = new BufferedImage(4096, 18, BufferedImage.TYPE_INT_ARGB);
+            BufferedImage image = new BufferedImage(4096, 1042, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = image.createGraphics();
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             int offsetX = 0;
@@ -915,14 +915,14 @@ public class ImageGeneration {
                 }
                 BufferedImage avatar = ImageUtils.copyAndGetSubImage(skin, 8, 8, 8, 8);
                 BufferedImage avatarOverlay = ImageUtils.copyAndGetSubImage(skin, 40, 8, 8, 8);
-                g.drawImage(avatar, offsetX, 0, 16, 16, null);
-                g.drawImage(avatarOverlay, offsetX, 0, 16, 16, null);
+                g.drawImage(avatar, offsetX, 512, 16, 16, null);
+                g.drawImage(avatarOverlay, offsetX, 512, 16, 16, null);
                 offsetX += 18;
             } else {
                 offsetX += 2;
             }
             g.dispose();
-            ImageUtils.printComponent(InteractiveChatDiscordSrvAddon.plugin.resourceManager, image, name, offsetX, -1, 16);
+            ImageUtils.printComponent(InteractiveChatDiscordSrvAddon.plugin.resourceManager, image, name, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), offsetX, 511, 16);
             int lastX = InteractiveChatDiscordSrvAddon.plugin.playerlistCommandMinWidth;
             for (int x = InteractiveChatDiscordSrvAddon.plugin.playerlistCommandMinWidth; x < image.getWidth(); x++) {
                 for (int y = 0; y < image.getHeight(); y++) {
@@ -949,22 +949,22 @@ public class ImageGeneration {
                 BufferedImage ping = getPingIcon(pair.getSecond());
                 Graphics2D g = image.createGraphics();
                 g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-                g.drawImage(ImageUtils.resizeImageAbs(ping, 20, 14), masterOffsetX - 22, 2, null);
+                g.drawImage(ImageUtils.resizeImageAbs(ping, 20, 14), masterOffsetX - 22, 514, null);
                 g.dispose();
             }
-            BufferedImage cropped = new BufferedImage(masterOffsetX, 18, BufferedImage.TYPE_INT_ARGB);
+            BufferedImage cropped = new BufferedImage(masterOffsetX, 1042, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = cropped.createGraphics();
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             g.setColor(TABLIST_PLAYER_BACKGROUND);
-            g.fillRect(0, 0, cropped.getWidth(), 16);
+            g.fillRect(0, 512, cropped.getWidth(), 16);
             g.drawImage(image, 0, 0, null);
             g.dispose();
             playerRows.add(cropped);
         }
         Map<BufferedImage, Integer> headerLines = new LinkedHashMap<>(header.size());
         for (Component line : header) {
-            BufferedImage image = new BufferedImage(4096, 18, BufferedImage.TYPE_INT_ARGB);
-            ImageUtils.printComponent(InteractiveChatDiscordSrvAddon.plugin.resourceManager, image, line, 0, -1, 16);
+            BufferedImage image = new BufferedImage(4096, 1042, BufferedImage.TYPE_INT_ARGB);
+            ImageUtils.printComponent(InteractiveChatDiscordSrvAddon.plugin.resourceManager, image, line, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), 0, 511, 16);
             int lastX = 0;
             for (int x = 0; x < image.getWidth(); x++) {
                 for (int y = 0; y < image.getHeight(); y++) {
@@ -974,7 +974,7 @@ public class ImageGeneration {
                     }
                 }
             }
-            BufferedImage cropped = new BufferedImage(Math.max(1, lastX), 18, BufferedImage.TYPE_INT_ARGB);
+            BufferedImage cropped = new BufferedImage(Math.max(1, lastX), 1042, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = cropped.createGraphics();
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             g.drawImage(image, 0, 0, null);
@@ -983,8 +983,8 @@ public class ImageGeneration {
         }
         Map<BufferedImage, Integer> footerLines = new LinkedHashMap<>(footer.size());
         for (Component line : footer) {
-            BufferedImage image = new BufferedImage(4096, 18, BufferedImage.TYPE_INT_ARGB);
-            ImageUtils.printComponent(InteractiveChatDiscordSrvAddon.plugin.resourceManager, image, line, 0, -1, 16);
+            BufferedImage image = new BufferedImage(4096, 1042, BufferedImage.TYPE_INT_ARGB);
+            ImageUtils.printComponent(InteractiveChatDiscordSrvAddon.plugin.resourceManager, image, line, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), 0, 511, 16);
             int lastX = 0;
             for (int x = 0; x < image.getWidth(); x++) {
                 for (int y = 0; y < image.getHeight(); y++) {
@@ -994,7 +994,7 @@ public class ImageGeneration {
                     }
                 }
             }
-            BufferedImage cropped = new BufferedImage(Math.max(1, lastX), 18, BufferedImage.TYPE_INT_ARGB);
+            BufferedImage cropped = new BufferedImage(Math.max(1, lastX), 1042, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = cropped.createGraphics();
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             g.drawImage(image, 0, 0, null);
@@ -1008,7 +1008,7 @@ public class ImageGeneration {
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             g.setColor(TABLIST_BACKGROUND);
             g.fillRect(0, 0, image.getWidth(), image.getHeight());
-            int offsetY = 2;
+            int offsetY = -510;
             for (BufferedImage each : playerRows) {
                 g.drawImage(each, 2, offsetY, null);
                 offsetY += 18;
@@ -1020,20 +1020,20 @@ public class ImageGeneration {
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             g.setColor(TABLIST_BACKGROUND);
             g.fillRect(0, 0, image.getWidth(), image.getHeight());
-            int offsetY = 2;
+            int offsetY = -510;
             int half = (int) Math.ceil((double) playerRows.size() / 2);
             for (int i = 0; i < half; i++) {
                 g.drawImage(playerRows.get(i), 2, offsetY, null);
                 offsetY += 18;
             }
-            offsetY = 2;
+            offsetY = -510;
             for (int i = half; i < playerRows.size(); i++) {
                 g.drawImage(playerRows.get(i), masterOffsetX + 4, offsetY, null);
                 offsetY += 18;
             }
             if (playerRows.size() % 2 == 1) {
                 g.setColor(TABLIST_PLAYER_BACKGROUND);
-                g.fillRect(masterOffsetX + 4, offsetY, masterOffsetX, 16);
+                g.fillRect(masterOffsetX + 4, offsetY + 512, masterOffsetX, 16);
             }
             g.dispose();
         }
@@ -1044,20 +1044,20 @@ public class ImageGeneration {
             BufferedImage decoration = new BufferedImage(Math.max(image.getWidth(), maxOffsetX + 4), (headerLines.isEmpty() ? 0 : headerLines.size() * 18 + 2) + image.getHeight() + (footerLines.isEmpty() ? 2 : footerLines.size() * 18 + 4), BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = decoration.createGraphics();
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-            int offsetY = 2;
+            int offsetY = -510;
             for (BufferedImage each : headerLines.keySet()) {
                 g.drawImage(each, (decoration.getWidth() / 2) - (each.getWidth() / 2), offsetY, null);
                 offsetY += 18;
             }
-            g.drawImage(image, (decoration.getWidth() / 2) - (image.getWidth() / 2), offsetY, null);
+            g.drawImage(image, (decoration.getWidth() / 2) - (image.getWidth() / 2), offsetY + 512, null);
             offsetY += image.getHeight() + 2;
             for (BufferedImage each : footerLines.keySet()) {
                 g.drawImage(each, (decoration.getWidth() / 2) - (each.getWidth() / 2), offsetY, null);
                 offsetY += 18;
             }
             g.dispose();
-            int lastY = offsetY - 2;
-            for (int y = offsetY - 2; y < decoration.getHeight(); y++) {
+            int lastY = offsetY + 510;
+            for (int y = offsetY + 510; y < decoration.getHeight(); y++) {
                 for (int x = 0; x < decoration.getWidth(); x++) {
                     if (decoration.getRGB(x, y) != 0) {
                         lastY = y;
@@ -1080,17 +1080,17 @@ public class ImageGeneration {
         BufferedImage icons = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "icons").getTexture();
         int scale = icons.getWidth() / 256;
         if (ms < 0) {
-            return ImageUtils.copyAndGetSubImage(icons, 0 * scale, 56 * scale, 10 * scale, 7 * scale);
+            return ImageUtils.copyAndGetSubImage(icons, 0, 56 * scale, 10 * scale, 7 * scale);
         } else if (ms < 150) {
-            return ImageUtils.copyAndGetSubImage(icons, 0 * scale, 16 * scale, 10 * scale, 7 * scale);
+            return ImageUtils.copyAndGetSubImage(icons, 0, 16 * scale, 10 * scale, 7 * scale);
         } else if (ms < 300) {
-            return ImageUtils.copyAndGetSubImage(icons, 0 * scale, 24 * scale, 10 * scale, 7 * scale);
+            return ImageUtils.copyAndGetSubImage(icons, 0, 24 * scale, 10 * scale, 7 * scale);
         } else if (ms < 600) {
-            return ImageUtils.copyAndGetSubImage(icons, 0 * scale, 32 * scale, 10 * scale, 7 * scale);
+            return ImageUtils.copyAndGetSubImage(icons, 0, 32 * scale, 10 * scale, 7 * scale);
         } else if (ms < 1000) {
-            return ImageUtils.copyAndGetSubImage(icons, 0 * scale, 40 * scale, 10 * scale, 7 * scale);
+            return ImageUtils.copyAndGetSubImage(icons, 0, 40 * scale, 10 * scale, 7 * scale);
         } else {
-            return ImageUtils.copyAndGetSubImage(icons, 0 * scale, 48 * scale, 10 * scale, 7 * scale);
+            return ImageUtils.copyAndGetSubImage(icons, 0, 48 * scale, 10 * scale, 7 * scale);
         }
     }
 

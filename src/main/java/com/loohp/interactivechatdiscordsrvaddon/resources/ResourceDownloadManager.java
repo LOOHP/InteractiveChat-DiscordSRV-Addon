@@ -12,7 +12,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.zip.ZipEntry;
@@ -21,6 +24,7 @@ public class ResourceDownloadManager {
 
     public static final String ASSETS_DATA_URL = "https://api.loohpjames.com/spigot/plugins/interactivechatdiscordsrvaddon?minecraftVersion=%s";
     public static final String VERSIONS_URL = "https://api.loohpjames.com/spigot/plugins/interactivechatdiscordsrvaddon/versions";
+    public static final String MOJANG_RESOURCES_URL = "http://resources.download.minecraft.net/";
 
     private static Set<String> MINECRAFT_VERSIONS = null;
 
@@ -45,16 +49,20 @@ public class ResourceDownloadManager {
     private String minecraftVersion;
     private File packFolder;
     private JSONObject data;
+    private JSONObject assetIndex;
 
     public ResourceDownloadManager(String minecraftVersion, File packFolder) {
         this.minecraftVersion = minecraftVersion;
         this.packFolder = packFolder;
         this.data = null;
+        this.assetIndex = null;
     }
 
     private void ensureData() {
-        if (data == null) {
+        if (data == null || assetIndex == null) {
             data = HTTPRequestUtils.getJSONResponse(ASSETS_DATA_URL.replace("%s", minecraftVersion));
+            JSONObject client = (JSONObject) data.get("client-entries");
+            assetIndex = HTTPRequestUtils.getJSONResponse(client.get("asset-index").toString());
         }
     }
 
@@ -122,6 +130,35 @@ public class ResourceDownloadManager {
                 file.delete();
             }
             HTTPRequestUtils.download(file, key);
+        }
+        progressListener.accept(TaskType.DONE, "", 100.0);
+    }
+
+    public synchronized void downloadLanguages(TriConsumer<TaskType, String, Double> progressListener) {
+        ensureData();
+        JSONObject json = (JSONObject) assetIndex.get("objects");
+        Map<String, String> langEntries = new LinkedHashMap<>();
+        for (Object obj : json.keySet()) {
+            String key = (String) obj;
+            if (key.startsWith("minecraft/lang/")) {
+                langEntries.put(key, ((JSONObject) json.get(key)).get("hash").toString());
+            }
+        }
+        File assetsFolder = new File(packFolder, "assets");
+        assetsFolder.mkdirs();
+        int size = langEntries.size();
+        int i = 0;
+        for (Entry<String, String> entry : langEntries.entrySet()) {
+            String name = entry.getKey();
+            String hash = entry.getValue();
+            double percentage = ((double) ++i / (double) size) * 100;
+            progressListener.accept(TaskType.DOWNLOAD, "assets/" + name, percentage);
+            File file = name.isEmpty() || name.equals("/") ? assetsFolder : new File(assetsFolder, name);
+            file.getParentFile().mkdirs();
+            if (file.exists()) {
+                file.delete();
+            }
+            HTTPRequestUtils.download(file, MOJANG_RESOURCES_URL + hash.substring(0, 2) + "/" + hash);
         }
         progressListener.accept(TaskType.DONE, "", 100.0);
     }

@@ -95,7 +95,7 @@ public class GUIMain {
             g.dispose();
 
             main: while (true) {
-                int input = JOptionPane.showOptionDialog(null, messageLabel, title, JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, icon, new Object[] {"Check for Updates", "Validate Plugin Configs", "Generate Default Configs", "Download Assets", "Block Model Renderer (1.13+)", "Visit Links"}, null);
+                int input = JOptionPane.showOptionDialog(null, messageLabel, title, JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, icon, new Object[] {"Check for Updates", "Validate Plugin Configs", "Generate Default Configs", "Download Assets", "Block Model Renderer (1.13+)", "Minecraft Font Renderer (1.13+)", "Visit Links"}, null);
                 switch (input) {
                     case 0:
                         checkForUpdates(title, icon, version);
@@ -113,6 +113,9 @@ public class GUIMain {
                         blockModelRenderer(title, resizedIcon, icon);
                         break main;
                     case 5:
+                        minecraftFontRenderer(title, resizedIcon, icon);
+                        break main;
+                    case 6:
                         visitLinks(title, icon);
                         break;
                     default:
@@ -311,6 +314,10 @@ public class GUIMain {
 
     protected static void blockModelRenderer(String title, BufferedImage image, Icon icon) throws IllegalAccessException {
         new BlockModelRenderer(title, image, icon);
+    }
+
+    protected static void minecraftFontRenderer(String title, BufferedImage image, Icon icon) {
+        new MinecraftFontRenderer(title, image, icon);
     }
 
     protected static JLabel createLabel(String message, float fontSize) {

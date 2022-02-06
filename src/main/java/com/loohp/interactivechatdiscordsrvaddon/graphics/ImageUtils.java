@@ -2,12 +2,10 @@ package com.loohp.interactivechatdiscordsrvaddon.graphics;
 
 import com.loohp.blockmodelrenderer.utils.MathUtils;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ComponentFlattening;
 import com.loohp.interactivechat.utils.ComponentModernizing;
-import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CharacterData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CharacterDataArray;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
@@ -37,8 +35,8 @@ public class ImageUtils {
     public static String hash(BufferedImage image) {
         StringBuilder sb = new StringBuilder();
         int[] colors = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());
-        for (int i = 0; i < colors.length; i++) {
-            sb.append(Integer.toHexString(colors[i]));
+        for (int color : colors) {
+            sb.append(Integer.toHexString(color));
         }
         return sb.toString();
     }
@@ -411,8 +409,8 @@ public class ImageUtils {
         return resizeImageAbs(source, w, h);
     }
 
-    public static BufferedImage printComponentNoShadow(ResourceManager manager, BufferedImage image, Component component, int centerX, int topY, float fontSize, boolean dynamicFontSize) {
-        Component text = ComponentFlattening.flatten(ComponentStringUtils.convertTranslatables(ComponentModernizing.modernize(component), InteractiveChatDiscordSrvAddon.plugin.language));
+    public static BufferedImage printComponentNoShadow(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int centerX, int topY, float fontSize, boolean dynamicFontSize) {
+        Component text = ComponentFlattening.flatten(ComponentStringUtils.convertTranslatables(ComponentModernizing.modernize(component), manager.getLanguageManager().getTranslateFunction().ofLanguage(language)));
         String striped = ChatColorUtils.stripColor(ChatColorUtils.filterIllegalColorCodes(PlainTextComponentSerializer.plainText().serialize(text)));
 
         if (dynamicFontSize) {
@@ -420,7 +418,7 @@ public class ImageUtils {
         }
 
         BufferedImage textImage = new BufferedImage(image.getWidth() + centerX, image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
-        CharacterDataArray characterDataArray = CharacterDataArray.fromComponent(text);
+        CharacterDataArray characterDataArray = CharacterDataArray.fromComponent(text, legacyRGB);
         char[] chars = characterDataArray.getChars();
         CharacterData[] data = characterDataArray.getData();
         if (UnicodeUtils.icu4JAvailable()) {
@@ -480,13 +478,13 @@ public class ImageUtils {
         return image;
     }
 
-    public static BufferedImage printComponentRightAligned(ResourceManager manager, BufferedImage image, Component component, int topX, int topY, float fontSize) {
-        return printComponentRightAligned(manager, image, component, topX, topY, fontSize, CHAT_COLOR_BACKGROUND_FACTOR);
+    public static BufferedImage printComponentRightAligned(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize) {
+        return printComponentRightAligned(manager, image, component, language, legacyRGB, topX, topY, fontSize, CHAT_COLOR_BACKGROUND_FACTOR);
     }
 
-    public static BufferedImage printComponentRightAligned(ResourceManager manager, BufferedImage image, Component component, int topX, int topY, float fontSize, double shadowFactor) {
+    public static BufferedImage printComponentRightAligned(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize, double shadowFactor) {
         BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        textImage = printComponent(manager, textImage, component, 0, 0, fontSize, shadowFactor);
+        textImage = printComponent(manager, textImage, component, language, legacyRGB, 0, 0, fontSize, shadowFactor);
         int lastX = 0;
         for (int x = 0; x < textImage.getWidth() - 9; x++) {
             for (int y = 0; y < textImage.getHeight(); y++) {
@@ -502,13 +500,13 @@ public class ImageUtils {
         return image;
     }
 
-    public static BufferedImage printComponent(ResourceManager manager, BufferedImage image, Component component, int topX, int topY, float fontSize) {
-        return printComponent(manager, image, component, topX, topY, fontSize, CHAT_COLOR_BACKGROUND_FACTOR);
+    public static BufferedImage printComponent(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize) {
+        return printComponent(manager, image, component, language, legacyRGB, topX, topY, fontSize, CHAT_COLOR_BACKGROUND_FACTOR);
     }
 
-    public static BufferedImage printComponent(ResourceManager manager, BufferedImage image, Component component, int topX, int topY, float fontSize, double shadowFactor) {
+    public static BufferedImage printComponent(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize, double shadowFactor) {
         BufferedImage temp = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        temp = printComponent0(manager, temp, component, topX, topY, fontSize, 1);
+        temp = printComponent0(manager, temp, component, language, legacyRGB, topX, topY, fontSize, 1);
         BufferedImage shadow = multiply(copyImage(temp), shadowFactor);
         Graphics2D g = image.createGraphics();
         g.drawImage(shadow, (int) (fontSize * 0.15), (int) (fontSize * 0.15), null);
@@ -517,10 +515,10 @@ public class ImageUtils {
         return image;
     }
 
-    private static BufferedImage printComponent0(ResourceManager manager, BufferedImage image, Component component, int topX, int topY, float fontSize, double factor) {
-        Component text = ComponentFlattening.flatten(ComponentStringUtils.convertTranslatables(ComponentModernizing.modernize(component), InteractiveChatDiscordSrvAddon.plugin.language));
+    private static BufferedImage printComponent0(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize, double factor) {
+        Component text = ComponentFlattening.flatten(ComponentStringUtils.convertTranslatables(ComponentModernizing.modernize(component), manager.getLanguageManager().getTranslateFunction().ofLanguage(language)));
         BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
-        CharacterDataArray characterDataArray = CharacterDataArray.fromComponent(text);
+        CharacterDataArray characterDataArray = CharacterDataArray.fromComponent(text, legacyRGB);
         char[] chars = characterDataArray.getChars();
         CharacterData[] data = characterDataArray.getData();
         if (UnicodeUtils.icu4JAvailable()) {
@@ -560,10 +558,6 @@ public class ImageUtils {
         g.drawImage(textImage, 0, topY - image.getHeight(), null);
         g.dispose();
         return image;
-    }
-
-    private static TextColor darker(TextColor color, double factor) {
-        return TextColor.color(Math.max((int) (color.red() * factor), 0), Math.max((int) (color.green() * factor), 0), Math.max((int) (color.blue() * factor), 0));
     }
 
 }

@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 public class CharacterDataArray {
 
-    public static CharacterDataArray fromComponent(Component component) {
+    public static CharacterDataArray fromComponent(Component component, boolean legacyRGB) {
         List<CharacterData> data = new LinkedList<>();
         StringBuilder sb = new StringBuilder();
         component = ComponentFlattening.flatten(component);
@@ -33,9 +33,9 @@ public class CharacterDataArray {
             List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
             String content;
             if (each instanceof TextComponent) {
-                content = ChatColorUtils.filterIllegalColorCodes(((TextComponent) each).content());
+                content = ChatColorUtils.filterIllegalColorCodes(((TextComponent) each).content(), legacyRGB);
             } else {
-                content = ChatColorUtils.filterIllegalColorCodes(PlainTextComponentSerializer.plainText().serialize(each));
+                content = ChatColorUtils.filterIllegalColorCodes(PlainTextComponentSerializer.plainText().serialize(each), legacyRGB);
             }
             if (content.isEmpty()) {
                 continue;
