@@ -294,10 +294,8 @@ public class MinecraftFontRenderer extends JFrame {
         int maxX = getWidth() / 5 * 4;
         int maxY = getHeight() / 2;
         if (textAreaInput.getWidth() > maxX || textAreaInput.getHeight() > maxY) {
-            SwingUtilities.invokeLater(() -> {
-                textAreaInput.setSize(maxX, maxY);
-                textAreaInput.repaint();
-            });
+            textAreaInput.setSize(maxX, maxY);
+            textAreaInput.repaint();
         }
     }
 
@@ -345,6 +343,7 @@ public class MinecraftFontRenderer extends JFrame {
         resourceBar.setValue(0);
         resourceBar.setVisible(true);
         textAreaResources.setText("Loading Resources...");
+        updateTextAreaInputSize();
 
         List<String> resourceOrder;
         int valuePerPack;
@@ -415,6 +414,7 @@ public class MinecraftFontRenderer extends JFrame {
         }
         reloadResourcesButton.setEnabled(true);
         resourceBar.setVisible(false);
+        updateTextAreaInputSize();
         resourceLock.unlock();
     }
 
