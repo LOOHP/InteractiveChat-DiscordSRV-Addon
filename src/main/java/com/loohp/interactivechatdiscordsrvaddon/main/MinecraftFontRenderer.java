@@ -101,6 +101,7 @@ public class MinecraftFontRenderer extends JFrame {
     private JTextField backgroundColorTextField;
     private JComboBox<LanguageData> comboBoxLanguages;
     private JButton buttonDownloadLanguages;
+    private JScrollPane scrollPaneTextInput;
 
     private ResourceManager resourceManager;
 
@@ -291,13 +292,12 @@ public class MinecraftFontRenderer extends JFrame {
     }
 
     public void updateTextAreaInputSize() {
-        int maxX = getWidth() / 5 * 4;
-        int maxY = getHeight() / 2;
-        if (textAreaInput.getWidth() > maxX || textAreaInput.getHeight() > maxY) {
-            SwingUtilities.invokeLater(() -> {
-                textAreaInput.setSize(maxX, maxY);
-                textAreaInput.repaint();
-            });
+        int maxX = getWidth() - textAreaResources.getWidth();
+        int y = textAreaInput.getHeight();
+        if (textAreaInput.getWidth() > maxX) {
+            textAreaInput.setMaximumSize(new Dimension(maxX, y));
+            textAreaInput.setPreferredSize(new Dimension(maxX, y));
+            textAreaInput.setSize(maxX, y);
         }
     }
 
@@ -345,6 +345,7 @@ public class MinecraftFontRenderer extends JFrame {
         resourceBar.setValue(0);
         resourceBar.setVisible(true);
         textAreaResources.setText("Loading Resources...");
+        updateTextAreaInputSize();
 
         List<String> resourceOrder;
         int valuePerPack;
@@ -415,6 +416,7 @@ public class MinecraftFontRenderer extends JFrame {
         }
         reloadResourcesButton.setEnabled(true);
         resourceBar.setVisible(false);
+        updateTextAreaInputSize();
         resourceLock.unlock();
     }
 
@@ -601,8 +603,10 @@ public class MinecraftFontRenderer extends JFrame {
         label1.setText("Text Input");
         panel.add(label1, new GridConstraints(0, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         textAreaResources = new JTextArea();
+        textAreaResources.setColumns(0);
         textAreaResources.setEditable(false);
         textAreaResources.setLineWrap(false);
+        textAreaResources.setText("Loading Resources...");
         panel.add(textAreaResources, new GridConstraints(1, 10, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_GROW, new Dimension(-1, 200), new Dimension(150, -1), null, 0, false));
         reloadResourcesButton = new JButton();
         reloadResourcesButton.setText("Reload Resources");
@@ -631,7 +635,7 @@ public class MinecraftFontRenderer extends JFrame {
         legacyTextCheckBox = new JCheckBox();
         legacyTextCheckBox.setSelected(false);
         legacyTextCheckBox.setText("Legacy Text");
-        panel.add(legacyTextCheckBox, new GridConstraints(0, 5, 1, 5, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(legacyTextCheckBox, new GridConstraints(0, 9, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer1 = new Spacer();
         panel.add(spacer1, new GridConstraints(4, 9, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final Spacer spacer2 = new Spacer();
@@ -650,14 +654,14 @@ public class MinecraftFontRenderer extends JFrame {
         buttonDownloadLanguages = new JButton();
         buttonDownloadLanguages.setText("Download All Languages");
         panel.add(buttonDownloadLanguages, new GridConstraints(4, 8, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final JScrollPane scrollPane1 = new JScrollPane();
-        panel.add(scrollPane1, new GridConstraints(1, 0, 3, 10, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        scrollPaneTextInput = new JScrollPane();
+        panel.add(scrollPaneTextInput, new GridConstraints(1, 0, 3, 10, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         textAreaInput = new JTextArea();
         textAreaInput.setColumns(0);
         textAreaInput.setLineWrap(true);
         textAreaInput.setWrapStyleWord(true);
-        scrollPane1.setViewportView(textAreaInput);
-        label1.setLabelFor(scrollPane1);
+        scrollPaneTextInput.setViewportView(textAreaInput);
+        label1.setLabelFor(scrollPaneTextInput);
     }
 
     /**
