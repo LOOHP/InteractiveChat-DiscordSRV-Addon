@@ -6,6 +6,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class TextureResource {
 
@@ -40,8 +41,8 @@ public class TextureResource {
 
     private void loadImage() {
         if (isTexture && texture == null) {
-            try {
-                this.texture = ImageIO.read(file.getInputStream());
+            try (InputStream inputStream = file.getInputStream()) {
+                this.texture = ImageIO.read(inputStream);
             } catch (IOException e) {
                 e.printStackTrace();
             }

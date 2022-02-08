@@ -89,18 +89,18 @@ public class ItemRenderUtils {
             providedTextures.put(ResourceRegistry.SHIELD_BASE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(shieldAsset.getBase()));
             providedTextures.put(ResourceRegistry.SHIELD_PATTERNS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(shieldAsset.getPatterns()));
         } else if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
-            providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "steve"));
+            BufferedImage skinImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "steve").getTexture();
             try {
                 String base64 = SkinUtils.getSkinValue(item.getItemMeta());
                 if (base64 != null) {
                     JSONObject json = (JSONObject) new JSONParser().parse(new String(Base64.getDecoder().decode(base64)));
                     String value = (String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url");
-                    BufferedImage skinImage = ImageUtils.downloadImage(value);
-                    providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(skinImage));
+                    skinImage = ImageUtils.downloadImage(value);
                 }
             } catch (ParseException e) {
                 e.printStackTrace();
             }
+            providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(ModelUtils.convertToModernSkinTexture(skinImage)));
         } else if (xMaterial.equals(XMaterial.ELYTRA)) {
             int durability = item.getType().getMaxDurability() - (InteractiveChat.version.isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
             if (durability <= 1) {

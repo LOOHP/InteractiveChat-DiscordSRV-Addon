@@ -396,7 +396,7 @@ public class ImageGeneration {
         Map<String, TextureResource> providedTextures = new HashMap<>();
         Map<PlayerModelItemPosition, PlayerModelItem> modelItems = new HashMap<>();
 
-        providedTextures.put(ResourceRegistry.SKIN_FULL_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(skin));
+        providedTextures.put(ResourceRegistry.SKIN_FULL_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(ModelUtils.convertToModernSkinTexture(skin)));
 
         if (ItemStackUtils.isWearable(leggings)) {
             XMaterial type = XMaterialUtils.matchXMaterial(leggings);

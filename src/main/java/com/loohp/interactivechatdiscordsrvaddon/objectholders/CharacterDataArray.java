@@ -40,8 +40,9 @@ public class CharacterDataArray {
             if (content.isEmpty()) {
                 continue;
             }
+            CharacterData characterData = new CharacterData(font, color, decorations);
             for (char c : content.toCharArray()) {
-                data.add(new CharacterData(font, color, decorations));
+                data.add(characterData);
                 sb.append(c);
             }
         }

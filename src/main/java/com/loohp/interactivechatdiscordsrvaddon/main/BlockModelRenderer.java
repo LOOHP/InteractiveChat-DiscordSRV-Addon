@@ -15,6 +15,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.Mo
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ModelUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.SpawnEggTintData;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintIndexData;
@@ -601,7 +602,13 @@ public class BlockModelRenderer extends JFrame {
             File file = data.getThird().getSelectedFile();
             if (file != null && file.getName().endsWith(".png")) {
                 try {
-                    providedTextures.put(texturePlaceholder, new GeneratedTextureResource(ImageIO.read(file)));
+                    BufferedImage image;
+                    if (texturePlaceholder.equals(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER) || texturePlaceholder.equals(ResourceRegistry.SKIN_FULL_TEXTURE_PLACEHOLDER)) {
+                        image = ModelUtils.convertToModernSkinTexture(ImageIO.read(file));
+                    } else {
+                        image = ImageIO.read(file);
+                    }
+                    providedTextures.put(texturePlaceholder, new GeneratedTextureResource(image));
                 } catch (Throwable e) {
                     e.printStackTrace();
                 }

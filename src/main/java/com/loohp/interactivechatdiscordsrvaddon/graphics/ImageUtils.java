@@ -361,10 +361,9 @@ public class ImageUtils {
     }
 
     public static BufferedImage copyAndGetSubImage(BufferedImage source, int x, int y, int w, int h) {
-        BufferedImage img = source.getSubimage(x, y, w, h); //fill in the corners of the desired crop location here
-        BufferedImage copyOfImage = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        BufferedImage copyOfImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = copyOfImage.createGraphics();
-        g.drawImage(img, 0, 0, null);
+        g.drawImage(source, -x, -y, null);
         g.dispose();
         return copyOfImage;
     }
