@@ -136,6 +136,7 @@ public class PotionUtils {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public static ChatColor getPotionEffectChatColor(PotionEffectType type) throws Exception {
         int id = type.getId();
         if (InteractiveChat.version.isOld()) {

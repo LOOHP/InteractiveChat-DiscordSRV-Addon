@@ -76,11 +76,7 @@ public class TextureResource {
     }
 
     public boolean hasTextureMeta() {
-        if (resourceKey == null || manager == null) {
-            return false;
-        }
-        TextureResource meta = manager.getTexture(resourceKey.contains(".") ? resourceKey + MCMETA_SUFFIX : resourceKey + PNG_MCMETA_SUFFIX, false);
-        return meta != null && meta.isTextureMeta();
+        return getTextureMeta() != null;
     }
 
     public TextureMeta getTextureMeta() {

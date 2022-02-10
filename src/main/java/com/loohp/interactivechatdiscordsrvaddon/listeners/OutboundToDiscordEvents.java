@@ -551,7 +551,7 @@ public class OutboundToDiscordEvents implements Listener {
 
                                     if (customP.getHover().isEnabled()) {
                                         usingHoverClick = true;
-                                        String hoverText = PlaceholderParser.parse(icSender, CustomStringUtils.applyReplacementRegex(customP.getHover().getText(), result, 1));
+                                        String hoverText = ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(icSender, CustomStringUtils.applyReplacementRegex(customP.getHover().getText(), result, 1)));
                                         Color color = ColorUtils.getFirstColor(hoverText);
                                         hoverClick.hoverText(LegacyComponentSerializer.legacySection().deserialize(hoverText));
                                         if (color != null) {
@@ -605,7 +605,7 @@ public class OutboundToDiscordEvents implements Listener {
 
                                 if (customP.getHover().isEnabled()) {
                                     usingHoverClick = true;
-                                    String hoverText = PlaceholderParser.parse(icSender, CustomStringUtils.applyReplacementRegex(customP.getHover().getText(), result, 1));
+                                    String hoverText = ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(icSender, CustomStringUtils.applyReplacementRegex(customP.getHover().getText(), result, 1)));
                                     Color color = ColorUtils.getFirstColor(hoverText);
                                     hoverClick.hoverText(LegacyComponentSerializer.legacySection().deserialize(hoverText));
                                     if (color != null) {
