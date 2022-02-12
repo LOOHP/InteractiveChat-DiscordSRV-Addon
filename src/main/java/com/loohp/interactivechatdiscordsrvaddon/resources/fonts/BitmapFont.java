@@ -3,26 +3,27 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.ints.IntSets;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class BitmapFont extends MinecraftFont {
 
     public static final double ITALIC_SHEAR_X = -4.0 / 14.0;
-    protected Map<String, BufferedImage> charImages;
+    protected Int2ObjectMap<BufferedImage> charImages;
     private String resourceLocation;
     private int height;
     private int ascent;
@@ -40,14 +41,14 @@ public class BitmapFont extends MinecraftFont {
 
     @Override
     public void reloadFonts() {
-        this.charImages = new HashMap<>();
+        this.charImages = new Int2ObjectOpenHashMap<>();
         if (chars.isEmpty()) {
             return;
         }
 
         TextureResource resourceFile = manager.getFontManager().getFontResource(resourceLocation);
         if (resourceFile == null || !resourceFile.isTexture()) {
-            throw new RuntimeException(resourceLocation + " is not a valid font resource");
+            throw new ResourceLoadingException(resourceLocation + " is not a valid font resource");
         }
         BufferedImage fontFileImage = resourceFile.getTexture();
 
@@ -59,8 +60,8 @@ public class BitmapFont extends MinecraftFont {
                 int xIncrement = fontFileImage.getWidth() / line.codePointCount(0, line.length());
                 int x = 0;
                 for (int i = 0; i < line.length(); ) {
-                    String character = new String(Character.toChars(line.codePointAt(i)));
-                    i += Math.max(1, character.length());
+                    int character = line.codePointAt(i);
+                    i += character < 0x10000 ? 1 : 2;
                     int lastX = 3 * scale;
                     for (int x0 = x; x0 < x + xIncrement; x0++) {
                         for (int y0 = y; y0 < y + yIncrement; y0++) {
@@ -75,7 +76,7 @@ public class BitmapFont extends MinecraftFont {
                         lastX = fontFileImage.getWidth() - x;
                     }
                     if (lastX > 0) {
-                        charImages.put(character, ImageUtils.copyAndGetSubImage(fontFileImage, x, y, lastX, yIncrement));
+                        charImages.put(character, fontFileImage.getSubimage(x, y, lastX, yIncrement));
                     }
                     x += xIncrement;
                 }
@@ -106,14 +107,14 @@ public class BitmapFont extends MinecraftFont {
 
     @Override
     public boolean canDisplayCharacter(String character) {
-        return charImages.containsKey(character);
+        return charImages.containsKey(character.codePointAt(0));
     }
 
     @Override
     public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations) {
         decorations = sortDecorations(decorations);
         Color awtColor = new Color(color.value());
-        BufferedImage charImage = ImageUtils.copyImage(charImages.get(character));
+        BufferedImage charImage = ImageUtils.copyImage(charImages.get(character.codePointAt(0)));
         int originalW = charImage.getWidth();
         float scale = fontSize / 8;
         float ascent = this.ascent - 7;
@@ -204,7 +205,7 @@ public class BitmapFont extends MinecraftFont {
     @Override
     public Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color) {
         Color awtColor = new Color(color.value());
-        BufferedImage charImage = ImageUtils.copyImage(charImages.get(character));
+        BufferedImage charImage = ImageUtils.copyImage(charImages.get(character.codePointAt(0)));
         float descent = height - this.ascent - 1;
         charImage = ImageUtils.resizeImageFillHeight(charImage, Math.abs(Math.round(fontSize + (ascent + descent) * scale)));
         charImage = ImageUtils.multiply(charImage, ImageUtils.changeColorTo(ImageUtils.copyImage(charImage), awtColor));
@@ -212,8 +213,8 @@ public class BitmapFont extends MinecraftFont {
     }
 
     @Override
-    public Collection<String> getDisplayableCharacters() {
-        return Collections.unmodifiableSet(charImages.keySet());
+    public IntSet getDisplayableCharacters() {
+        return IntSets.unmodifiable(charImages.keySet());
     }
 
 }

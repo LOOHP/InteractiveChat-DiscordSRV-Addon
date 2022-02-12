@@ -6,11 +6,13 @@ import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.AbstractManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.LegacyUnicodeFont.GlyphSize;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 import java.awt.geom.AffineTransform;
 import java.io.BufferedInputStream;
@@ -38,7 +40,6 @@ public class FontManager extends AbstractManager {
         this.files = new HashMap<>();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected void loadDirectory(String namespace, ResourcePackFile root) {
         if (!root.exists() || !root.isDirectory()) {
@@ -79,13 +80,13 @@ public class FontManager extends AbstractManager {
                                 case "legacy_unicode":
                                     String template = fontJson.get("template").toString();
                                     DataInputStream sizesInput = new DataInputStream(new BufferedInputStream(getFontResource(fontJson.get("sizes").toString()).getFile().getInputStream()));
-                                    Map<String, GlyphSize> sizes = new HashMap<>();
+                                    Int2ObjectOpenHashMap<GlyphSize> sizes = new Int2ObjectOpenHashMap<>();
                                     for (int i = 0; ; i++) {
                                         try {
                                             byte b = sizesInput.readByte();
                                             byte start = (byte) ((b >> 4) & 15);
                                             byte end = (byte) (b & 15);
-                                            sizes.put(new String(Character.toChars(i)), new GlyphSize(start, end));
+                                            sizes.put(i, new GlyphSize(start, end));
                                         } catch (EOFException e) {
                                             break;
                                         }
@@ -106,7 +107,7 @@ public class FontManager extends AbstractManager {
                                     break;
                             }
                         } catch (Exception e) {
-                            new RuntimeException("Unable to load font provider " + index + " in " + file.getAbsolutePath(), e).printStackTrace();
+                            new ResourceLoadingException("Unable to load font provider " + index + " in " + file.getAbsolutePath(), e).printStackTrace();
                         }
                     }
                     FontProvider existingProvider = fonts.get(key);
@@ -124,7 +125,7 @@ public class FontManager extends AbstractManager {
                         existingProvider.prependProviders(providedFonts);
                     }
                 } catch (Exception e) {
-                    new RuntimeException("Unable to load font " + file.getAbsolutePath(), e).printStackTrace();
+                    new ResourceLoadingException("Unable to load font " + file.getAbsolutePath(), e).printStackTrace();
                 }
             }
         }

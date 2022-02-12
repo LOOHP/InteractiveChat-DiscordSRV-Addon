@@ -31,7 +31,7 @@ public class AssetsDownloader {
     private static final DecimalFormat FORMAT = new DecimalFormat("0.0");
     private static final ReentrantLock LOCK = new ReentrantLock(true);
 
-    @SuppressWarnings({"unchecked", "deprecation"})
+    @SuppressWarnings("deprecation")
     public static void loadAssets(File rootFolder, boolean force, boolean clean, CommandSender... senders) throws Exception {
         if (!Arrays.asList(senders).contains(Bukkit.getConsoleSender())) {
             List<CommandSender> senderList = new ArrayList<>(Arrays.asList(senders));

@@ -1,6 +1,7 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 
@@ -28,7 +29,7 @@ public interface ResourcePackFile extends AutoCloseable {
 
     ResourcePackFile getChild(String name);
 
-    InputStream getInputStream();
+    InputStream getInputStream() throws IOException;
 
     default Collection<ResourcePackFile> listFilesRecursively() {
         return listFilesRecursively(null);

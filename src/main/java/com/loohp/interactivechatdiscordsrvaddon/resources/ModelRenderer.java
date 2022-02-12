@@ -360,6 +360,7 @@ public class ModelRenderer implements AutoCloseable {
         return new Model(hexahedrons);
     }
 
+    @SuppressWarnings("SuspiciousNameCombination")
     private Model generateStandardRenderModel(BlockModel blockModel, ResourceManager manager, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, boolean enchanted, boolean skin) {
         Map<String, BufferedImage> cachedResize = new ConcurrentHashMap<>();
         List<ModelElement> elements = new ArrayList<>(blockModel.getElements());
@@ -475,7 +476,7 @@ public class ModelRenderer implements AutoCloseable {
                                 images[i] = ImageUtils.flipHorizontal(images[i]);
                                 x1 = images[i].getWidth() - x1;
                             }
-                            images[i] = ImageUtils.copyAndGetSubImage(images[i], (int) x1, (int) y1, Math.max(1, dX), Math.max(1, dY));
+                            images[i] = ImageUtils.copyAndGetSubImage(images[i], x1, y1, Math.max(1, dX), Math.max(1, dY));
                             int rotationAngle = faceData.getRotation();
                             if (rotationAngle % 360 != 0) {
                                 images[i] = ImageUtils.rotateImageByDegrees(images[i], rotationAngle);

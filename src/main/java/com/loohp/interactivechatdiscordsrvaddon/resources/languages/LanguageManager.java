@@ -4,6 +4,7 @@ import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechatdiscordsrvaddon.resources.AbstractManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
 
@@ -66,7 +67,7 @@ public class LanguageManager extends AbstractManager {
                     }
                     translations.put(file.getName().substring(0, file.getName().lastIndexOf(".")), mapping);
                 } catch (Exception e) {
-                    new RuntimeException("Unable to load language " + file.getAbsolutePath(), e).printStackTrace();
+                    new ResourceLoadingException("Unable to load language " + file.getAbsolutePath(), e).printStackTrace();
                 }
             } else if (name.endsWith(".lang")) {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8))) {
@@ -80,7 +81,7 @@ public class LanguageManager extends AbstractManager {
                     }
                     translations.put(file.getName().substring(0, file.getName().lastIndexOf(".")), mapping);
                 } catch (Exception e) {
-                    new RuntimeException("Unable to load language " + file.getAbsolutePath(), e).printStackTrace();
+                    new ResourceLoadingException("Unable to load language " + file.getAbsolutePath(), e).printStackTrace();
                 }
             }
         }

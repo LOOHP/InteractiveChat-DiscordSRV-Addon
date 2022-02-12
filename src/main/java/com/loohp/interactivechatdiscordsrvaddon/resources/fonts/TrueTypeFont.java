@@ -3,8 +3,12 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
+import it.unimi.dsi.fastutil.ints.IntLinkedOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.ints.IntSets;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -16,13 +20,9 @@ import java.awt.font.TextAttribute;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 public class TrueTypeFont extends MinecraftFont {
 
@@ -33,12 +33,12 @@ public class TrueTypeFont extends MinecraftFont {
     private float size;
     private float oversample;
     private String exclude;
-    private Set<String> displayableCharacters;
-    private Graphics2D internalGraphics;
 
+    private IntSet displayableCharacters;
+    private Graphics2D internalGraphics;
     private Font font;
 
-    public TrueTypeFont(ResourceManager manager, FontProvider provider, String resourceLocation, AffineTransform shift, float size, float oversample, String exclude) throws Exception {
+    public TrueTypeFont(ResourceManager manager, FontProvider provider, String resourceLocation, AffineTransform shift, float size, float oversample, String exclude) {
         super(manager, provider);
         this.resourceLocation = resourceLocation;
         this.shift = shift;
@@ -50,14 +50,14 @@ public class TrueTypeFont extends MinecraftFont {
         try {
             GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
         } catch (Throwable e) {
-            throw new RuntimeException("No fonts provided by the JVM or the Operating System!\nCheck the Q&A section in https://www.spigotmc.org/resources/83917/ for more information", e);
+            throw new ResourceLoadingException("No fonts provided by the JVM or the Operating System!\nCheck the Q&A section in https://www.spigotmc.org/resources/83917/ for more information", e);
         }
         reloadFonts();
     }
 
     @Override
     public void reloadFonts() {
-        this.displayableCharacters = Collections.emptySet();
+        this.displayableCharacters = IntSets.emptySet();
         if (this.internalGraphics != null) {
             this.internalGraphics.dispose();
             this.internalGraphics = null;
@@ -68,14 +68,14 @@ public class TrueTypeFont extends MinecraftFont {
             this.internalGraphics = INTERNAL_IMAGE.createGraphics();
             this.internalGraphics.setFont(font.deriveFont(size));
 
-            Set<String> displayableCharacters = new HashSet<>();
+            IntSet displayableCharacters = new IntLinkedOpenHashSet();
             for (int i = 0; i < 0x10F800; i += 1) {
                 String character = new String(Character.toChars(i));
                 if (!this.exclude.contains(character) && canDisplayCharacter(character)) {
-                    displayableCharacters.add(character);
+                    displayableCharacters.add(i);
                 }
             }
-            this.displayableCharacters = Collections.unmodifiableSet(displayableCharacters);
+            this.displayableCharacters = IntSets.unmodifiable(displayableCharacters);
         } catch (FontFormatException | IOException e) {
             e.printStackTrace();
         }
@@ -117,7 +117,7 @@ public class TrueTypeFont extends MinecraftFont {
     }
 
     @Override
-    public Collection<String> getDisplayableCharacters() {
+    public IntSet getDisplayableCharacters() {
         return displayableCharacters;
     }
 
@@ -140,8 +140,8 @@ public class TrueTypeFont extends MinecraftFont {
                 case OBFUSCATED:
                     magicCharImages = new BufferedImage[OBFUSCATE_OVERLAP_COUNT];
                     for (int i = 0; i < magicCharImages.length; i++) {
-                        String magicCharater = ComponentStringUtils.toMagic(provider, character);
-                        magicCharImages[i] = provider.forCharacter(magicCharater).getCharacterImage(magicCharater, fontSize, color).orElse(new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB));
+                        String magicCharacter = ComponentStringUtils.toMagic(provider, character);
+                        magicCharImages[i] = provider.forCharacter(magicCharacter).getCharacterImage(magicCharacter, fontSize, color).orElse(new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB));
                     }
                     break;
                 case BOLD:

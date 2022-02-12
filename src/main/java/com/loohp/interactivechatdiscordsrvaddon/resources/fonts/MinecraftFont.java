@@ -3,10 +3,10 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
+import it.unimi.dsi.fastutil.ints.IntSet;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,7 +53,7 @@ public abstract class MinecraftFont {
 
     public abstract Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color);
 
-    public abstract Collection<String> getDisplayableCharacters();
+    public abstract IntSet getDisplayableCharacters();
 
     public static class FontRenderResult {
 

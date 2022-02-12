@@ -8,6 +8,7 @@ import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.AbstractManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
@@ -174,7 +175,7 @@ public class ModelManager extends AbstractManager {
                 Collections.reverse(overrides);
                 models.put(key, new BlockModel(this, parent, ambientocclusion, guiLight, display, texture, elements, overrides));
             } catch (Exception e) {
-                new RuntimeException("Unable to load block model " + file.getAbsolutePath(), e).printStackTrace();
+                new ResourceLoadingException("Unable to load block model " + file.getAbsolutePath(), e).printStackTrace();
             }
         }
         this.models.putAll(models);

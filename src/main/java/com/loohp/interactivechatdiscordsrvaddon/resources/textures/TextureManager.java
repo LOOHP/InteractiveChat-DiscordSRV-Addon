@@ -6,6 +6,7 @@ import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.AbstractManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimation.TextureAnimationFrames;
@@ -104,7 +105,7 @@ public class TextureManager extends AbstractManager {
                     textures.put(key + "." + extension, new TextureResource(this, key, file));
                 }
             } catch (Exception e) {
-                new RuntimeException("Unable to load block model " + file.getAbsolutePath(), e).printStackTrace();
+                new ResourceLoadingException("Unable to load block model " + file.getAbsolutePath(), e).printStackTrace();
             }
         }
         this.textures.putAll(textures);

@@ -4,30 +4,43 @@ import com.loohp.interactivechat.libs.org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ResourcePackSystemFile implements ResourcePackFile {
 
-    private File root;
+    private ResourcePackSystemFile root;
     private File file;
+    private Set<InputStream> streams;
 
     public ResourcePackSystemFile(File file) {
-        this.root = file;
+        this.root = this;
         this.file = file;
+        this.streams = new HashSet<>();
     }
 
-    private ResourcePackSystemFile(File root, File file) {
+    private ResourcePackSystemFile(ResourcePackSystemFile root, File file) {
         this.root = root;
         this.file = file;
+        this.streams = null;
     }
 
     public File getFile() {
         return file;
+    }
+
+    public ResourcePackSystemFile getResourceSystemRoot() {
+        return root;
+    }
+
+    public boolean isResourceSystemRoot() {
+        return root == this;
     }
 
     @Override
@@ -37,7 +50,7 @@ public class ResourcePackSystemFile implements ResourcePackFile {
 
     @Override
     public String getParent() {
-        if (root.equals(file)) {
+        if (isResourceSystemRoot()) {
             return null;
         }
         return file.getParent();
@@ -82,37 +95,36 @@ public class ResourcePackSystemFile implements ResourcePackFile {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((file == null) ? 0 : file.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
         }
-        if (!(obj instanceof ResourcePackSystemFile)) {
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        ResourcePackSystemFile other = (ResourcePackSystemFile) obj;
-        if (file == null) {
-            return other.file == null;
-        } else {
-            return file.equals(other.file);
+        ResourcePackSystemFile that = (ResourcePackSystemFile) o;
+        if (!Objects.equals(isResourceSystemRoot(), that.isResourceSystemRoot())) {
+            return false;
         }
+        if (isResourceSystemRoot()) {
+            return Objects.equals(file, that.file);
+        }
+        return Objects.equals(root, that.root) && Objects.equals(file, that.file);
     }
 
     @Override
-    public InputStream getInputStream() {
-        try {
-            return new FileInputStream(file);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return null;
+    public int hashCode() {
+        if (isResourceSystemRoot()) {
+            return Objects.hash(file);
         }
+        return Objects.hash(root, file);
+    }
+
+    @Override
+    public InputStream getInputStream() throws IOException {
+        InputStream stream = new FileInputStream(file);
+        root.streams.add(stream);
+        return stream;
     }
 
     @Override
@@ -122,7 +134,12 @@ public class ResourcePackSystemFile implements ResourcePackFile {
 
     @Override
     public void close() {
-
+        for (InputStream stream : root.streams) {
+            try {
+                stream.close();
+            } catch (IOException ignore) {
+            }
+        }
     }
 
 }

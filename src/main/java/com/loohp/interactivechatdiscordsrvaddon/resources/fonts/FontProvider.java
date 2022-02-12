@@ -1,18 +1,20 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
 import com.loohp.interactivechat.libs.org.apache.commons.lang3.StringEscapeUtils;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntLists;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class FontProvider {
 
     private String key;
     private List<MinecraftFont> providers;
-    private List<String> displayableCharacters;
+    private IntList displayableCharacters;
 
     public FontProvider(String key, List<MinecraftFont> providers) {
         this.key = key;
@@ -26,11 +28,11 @@ public class FontProvider {
     }
 
     private void reload() {
-        Set<String> displayableCharacters = new HashSet<>();
+        IntList displayableCharacters = new IntArrayList();
         for (MinecraftFont font : this.providers) {
             displayableCharacters.addAll(font.getDisplayableCharacters());
         }
-        this.displayableCharacters = new ArrayList<>(displayableCharacters);
+        this.displayableCharacters = displayableCharacters;
     }
 
     public String getNamespacedKey() {
@@ -41,8 +43,8 @@ public class FontProvider {
         return Collections.unmodifiableList(providers);
     }
 
-    public List<String> getDisplayableCharacters() {
-        return Collections.unmodifiableList(displayableCharacters);
+    public IntList getDisplayableCharacters() {
+        return IntLists.unmodifiable(displayableCharacters);
     }
 
     public void reloadFonts() {
@@ -60,12 +62,13 @@ public class FontProvider {
         return null;
     }
 
+    @SuppressWarnings("deprecation")
     public MinecraftFont forCharacter(String character) {
         MinecraftFont font = forCharacterOrNull(character);
         if (font != null) {
             return font;
         }
-        throw new RuntimeException("No font provider can display the character \"" + character + "\" (" + StringEscapeUtils.escapeJava(character) + ") for the font \"" + key + "\", this is likely due to an issue with your resource pack setup.");
+        throw new ResourceLoadingException("No font provider can display the character \"" + character + "\" (" + StringEscapeUtils.escapeJava(character) + ") for the font \"" + key + "\", this is likely due to an issue with your resource pack setup.");
     }
 
 }

@@ -6,19 +6,18 @@ import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.ints.IntSets;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 public class LegacyUnicodeFont extends MinecraftFont {
 
@@ -36,11 +35,11 @@ public class LegacyUnicodeFont extends MinecraftFont {
         return String.format("%04x", i).substring(0, 2);
     }
 
-    protected Map<String, Optional<BufferedImage>> charImages;
-    private Map<String, GlyphSize> sizes;
+    protected Int2ObjectMap<Optional<BufferedImage>> charImages;
+    private Int2ObjectMap<GlyphSize> sizes;
     private String template;
 
-    public LegacyUnicodeFont(ResourceManager manager, FontProvider provider, Map<String, GlyphSize> sizes, String template) {
+    public LegacyUnicodeFont(ResourceManager manager, FontProvider provider, Int2ObjectMap<GlyphSize> sizes, String template) {
         super(manager, provider);
         this.sizes = sizes;
         this.template = template;
@@ -49,7 +48,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
 
     @Override
     public void reloadFonts() {
-        this.charImages = new HashMap<>();
+        this.charImages = new Int2ObjectOpenHashMap<>();
 
         if (!hasTemplate()) {
             return;
@@ -64,10 +63,10 @@ public class LegacyUnicodeFont extends MinecraftFont {
             int u = 0;
             for (int y = 0; y < 256; y += 16) {
                 for (int x = 0; x < 256; x += 16) {
-                    String character = new String(Character.toChars(i + u));
+                    int character = i + u;
                     GlyphSize size = sizes.get(character);
                     if (size.getEnd() - size.getStart() > 0) {
-                        charImages.put(character, Optional.of(ImageUtils.copyAndGetSubImage(fontFileImage, x + size.getStart(), y, size.getEnd() - size.getStart() + 1, 16)));
+                        charImages.put(character, Optional.of(fontFileImage.getSubimage(x + size.getStart(), y, size.getEnd() - size.getStart() + 1, 16)));
                     } else {
                         charImages.put(character, Optional.empty());
                     }
@@ -77,11 +76,11 @@ public class LegacyUnicodeFont extends MinecraftFont {
         }
     }
 
-    public Set<String> getCharacterSets() {
+    public IntSet getCharacterSets() {
         return charImages.keySet();
     }
 
-    public Map<String, GlyphSize> getSizes() {
+    public Int2ObjectMap<GlyphSize> getSizes() {
         return sizes;
     }
 
@@ -95,14 +94,14 @@ public class LegacyUnicodeFont extends MinecraftFont {
 
     @Override
     public boolean canDisplayCharacter(String character) {
-        return charImages.containsKey(character);
+        return charImages.containsKey(character.codePointAt(0));
     }
 
     @Override
     public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations) {
         decorations = sortDecorations(decorations);
         Color awtColor = new Color(color.value());
-        Optional<BufferedImage> optCharImage = charImages.getOrDefault(character, Optional.of(ImageUtils.copyImage(MISSING_CHARACTER)));
+        Optional<BufferedImage> optCharImage = charImages.getOrDefault(character.codePointAt(0), Optional.of(MISSING_CHARACTER));
         if (optCharImage.isPresent()) {
             BufferedImage charImage = ImageUtils.copyImage(optCharImage.get());
             int originalW = charImage.getWidth();
@@ -122,8 +121,8 @@ public class LegacyUnicodeFont extends MinecraftFont {
                         charImage = new BufferedImage(charImage.getWidth(), charImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
                         Graphics2D g = charImage.createGraphics();
                         for (int i = 0; i < OBFUSCATE_OVERLAP_COUNT; i++) {
-                            String magicCharater = ComponentStringUtils.toMagic(provider, character);
-                            BufferedImage magicImage = provider.forCharacter(magicCharater).getCharacterImage(magicCharater, fontSize, color).orElse(new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB));
+                            String magicCharacter = ComponentStringUtils.toMagic(provider, character);
+                            BufferedImage magicImage = provider.forCharacter(magicCharacter).getCharacterImage(magicCharacter, fontSize, color).orElse(new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB));
                             g.drawImage(magicImage, 0, 0, charImage.getWidth(), charImage.getHeight(), null);
                         }
                         g.dispose();
@@ -187,7 +186,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
     @Override
     public Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color) {
         Color awtColor = new Color(color.value());
-        Optional<BufferedImage> optCharImage = charImages.getOrDefault(character, Optional.of(ImageUtils.copyImage(MISSING_CHARACTER)));
+        Optional<BufferedImage> optCharImage = charImages.getOrDefault(character.codePointAt(0), Optional.of(MISSING_CHARACTER));
         if (optCharImage.isPresent()) {
             BufferedImage charImage = ImageUtils.copyImage(optCharImage.get());
             charImage = ImageUtils.resizeImageFillHeight(charImage, Math.round(fontSize));
@@ -199,8 +198,8 @@ public class LegacyUnicodeFont extends MinecraftFont {
     }
 
     @Override
-    public Collection<String> getDisplayableCharacters() {
-        return Collections.unmodifiableSet(charImages.keySet());
+    public IntSet getDisplayableCharacters() {
+        return IntSets.unmodifiable(charImages.keySet());
     }
 
     public static class GlyphSize {

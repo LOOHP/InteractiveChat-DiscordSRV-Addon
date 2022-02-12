@@ -11,8 +11,8 @@ import com.loohp.interactivechat.utils.ComponentCompacting;
 import com.loohp.interactivechat.utils.ComponentFlattening;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.ItemNBTUtils;
-import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontProvider;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
@@ -49,10 +49,10 @@ public class ComponentStringUtils {
         if (provider == null) {
             return RandomStringUtils.random(str.length());
         }
-        List<String> list = provider.getDisplayableCharacters();
+        IntList list = provider.getDisplayableCharacters();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < str.length(); i++) {
-            sb.append(list.get(ThreadLocalRandom.current().nextInt(list.size())));
+            sb.append(Character.toChars(list.getInt(ThreadLocalRandom.current().nextInt(list.size()))));
         }
         return sb.toString();
     }
@@ -116,8 +116,7 @@ public class ComponentStringUtils {
             if (child instanceof TranslatableComponent) {
                 TranslatableComponent trans = (TranslatableComponent) child;
                 List<Component> withs = new ArrayList<>(trans.args());
-                for (int u = 0; u < withs.size(); u++) {
-                    Component with = withs.get(u);
+                for (Component with : withs) {
                     ItemStack itemstack = extractItemStack(with);
                     if (itemstack != null) {
                         return itemstack;

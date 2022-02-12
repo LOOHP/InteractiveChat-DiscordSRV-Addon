@@ -69,7 +69,7 @@ public class ResourceManager implements AutoCloseable {
         }
         ResourcePackFile packMcmeta = resourcePack.getChild("pack.mcmeta");
         if (!packMcmeta.exists()) {
-            new RuntimeException(resourcePackName + " does not have a pack.mcmeta").printStackTrace();
+            new ResourceLoadingException(resourcePackName + " does not have a pack.mcmeta").printStackTrace();
             ResourcePackInfo info = new ResourcePackInfo(resourcePack, resourcePackName, "pack.mcmeta not found");
             resourcePackInfo.add(0, info);
             return info;
@@ -79,7 +79,7 @@ public class ResourceManager implements AutoCloseable {
         try (InputStreamReader reader = new InputStreamReader(new BOMInputStream(packMcmeta.getInputStream()), StandardCharsets.UTF_8)) {
             json = (JSONObject) new JSONParser().parse(reader);
         } catch (Throwable e) {
-            new RuntimeException("Unable to read pack.mcmeta for " + resourcePackName, e).printStackTrace();
+            new ResourceLoadingException("Unable to read pack.mcmeta for " + resourcePackName, e).printStackTrace();
             ResourcePackInfo info = new ResourcePackInfo(resourcePack, resourcePackName, "Unable to read pack.mcmeta");
             resourcePackInfo.add(0, info);
             return info;
@@ -105,7 +105,7 @@ public class ResourceManager implements AutoCloseable {
                 description = description.color(NamedTextColor.GRAY);
             }
         } catch (Exception e) {
-            new RuntimeException("Invalid pack.mcmeta for " + resourcePackName, e).printStackTrace();
+            new ResourceLoadingException("Invalid pack.mcmeta for " + resourcePackName, e).printStackTrace();
             ResourcePackInfo info = new ResourcePackInfo(resourcePack, resourcePackName, "Invalid pack.mcmeta");
             resourcePackInfo.add(0, info);
             return info;
@@ -115,7 +115,7 @@ public class ResourceManager implements AutoCloseable {
         try {
             loadAssets(assetsFolder);
         } catch (Exception e) {
-            new RuntimeException("Unable to load assets for " + resourcePackName, e).printStackTrace();
+            new ResourceLoadingException("Unable to load assets for " + resourcePackName, e).printStackTrace();
             ResourcePackInfo info = new ResourcePackInfo(resourcePack, resourcePackName, false, "Unable to load assets", format, description);
             resourcePackInfo.add(0, info);
             return info;

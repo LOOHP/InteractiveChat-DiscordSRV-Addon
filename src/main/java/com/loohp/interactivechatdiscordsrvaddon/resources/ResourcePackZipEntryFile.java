@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -138,45 +139,25 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((zipPath == null) ? 0 : zipPath.hashCode());
-        result = prime * result + ((zipRoot == null) ? 0 : zipRoot.hashCode());
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
+    public boolean equals(Object o) {
+        if (this == o) {
             return true;
         }
-        if (!(obj instanceof ResourcePackZipEntryFile)) {
+        if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        ResourcePackZipEntryFile other = (ResourcePackZipEntryFile) obj;
-        if (zipPath == null) {
-            if (other.zipPath != null) {
-                return false;
-            }
-        } else if (!zipPath.equals(other.zipPath)) {
-            return false;
-        }
-        if (zipRoot == null) {
-            return other.zipRoot == null;
-        } else {
-            return zipRoot.equals(other.zipRoot);
-        }
+        ResourcePackZipEntryFile that = (ResourcePackZipEntryFile) o;
+        return Objects.equals(absoluteRootPath, that.absoluteRootPath) && Objects.equals(zipRoot, that.zipRoot) && Objects.equals(zipPath, that.zipPath);
     }
 
     @Override
-    public InputStream getInputStream() {
-        try {
-            return zipRoot.getInputStream(zipEntry);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
+    public int hashCode() {
+        return Objects.hash(absoluteRootPath, zipRoot, zipPath);
+    }
+
+    @Override
+    public InputStream getInputStream() throws IOException {
+        return zipRoot.getInputStream(zipEntry);
     }
 
     @Override
