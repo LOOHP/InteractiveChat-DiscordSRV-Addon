@@ -99,10 +99,13 @@ public class ModelRenderer implements AutoCloseable {
         this.modelThreads = modelThreads;
         this.renderThreads = renderThreads;
 
+        int modelThreadSize = modelThreads.getAsInt();
+        int renderThreadSize = renderThreads.getAsInt();
+
         ThreadFactory factory0 = threadFactoryBuilder.apply("InteractiveChatDiscordSRVAddon Async Model Resolving Thread #%d");
-        this.modelResolvingService = new ThreadPoolExecutor(modelThreads.getAsInt(), modelThreads.getAsInt(), 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), factory0);
+        this.modelResolvingService = new ThreadPoolExecutor(modelThreadSize, modelThreadSize, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), factory0);
         ThreadFactory factory1 = threadFactoryBuilder.apply("InteractiveChatDiscordSRVAddon Async Model Rendering Thread #%d");
-        this.renderingService = new ThreadPoolExecutor(renderThreads.getAsInt(), renderThreads.getAsInt(), 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), factory1);
+        this.renderingService = new ThreadPoolExecutor(renderThreadSize, renderThreadSize, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), factory1);
         ThreadFactory factory2 = threadFactoryBuilder.apply("InteractiveChatDiscordSRVAddon Async Model Renderer Control Thread");
         this.controlService = Executors.newSingleThreadScheduledExecutor(factory2);
 
@@ -122,10 +125,12 @@ public class ModelRenderer implements AutoCloseable {
     }
 
     public synchronized void reloadPoolSize() {
-        this.modelResolvingService.setCorePoolSize(modelThreads.getAsInt());
-        this.modelResolvingService.setMaximumPoolSize(modelThreads.getAsInt());
-        this.renderingService.setCorePoolSize(renderThreads.getAsInt());
-        this.renderingService.setMaximumPoolSize(renderThreads.getAsInt());
+        int modelThreadSize = modelThreads.getAsInt();
+        int renderThreadSize = renderThreads.getAsInt();
+        this.modelResolvingService.setMaximumPoolSize(modelThreadSize);
+        this.modelResolvingService.setCorePoolSize(modelThreadSize);
+        this.renderingService.setMaximumPoolSize(renderThreadSize);
+        this.renderingService.setCorePoolSize(renderThreadSize);
     }
 
     public RenderResult renderPlayer(int width, int height, ResourceManager manager, boolean post1_8, boolean slim, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, Map<PlayerModelItemPosition, PlayerModelItem> modelItems) {

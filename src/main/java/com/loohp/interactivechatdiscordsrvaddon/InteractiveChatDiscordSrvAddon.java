@@ -248,7 +248,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         }
 
         reloadTextures(false, false);
-        modelRenderer = new ModelRenderer(str -> new ThreadFactoryBuilder().setNameFormat(str).build(),() -> InteractiveChatDiscordSrvAddon.plugin.cacheTimeout, image -> ImageGeneration.getEnchantedImage(image), image -> ImageGeneration.getRawEnchantedImage(image), () -> 8, () -> Runtime.getRuntime().availableProcessors());
+        modelRenderer = new ModelRenderer(str -> new ThreadFactoryBuilder().setNameFormat(str).build(), () -> InteractiveChatDiscordSrvAddon.plugin.cacheTimeout, image -> ImageGeneration.getEnchantedImage(image), image -> ImageGeneration.getRawEnchantedImage(image), () -> 8, () -> Runtime.getRuntime().availableProcessors());
 
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
             for (ICPlayer player : ICPlayerFactory.getOnlineICPlayers()) {
