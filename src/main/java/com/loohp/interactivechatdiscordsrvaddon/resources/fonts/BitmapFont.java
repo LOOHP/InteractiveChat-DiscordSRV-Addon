@@ -23,7 +23,7 @@ import java.util.Optional;
 public class BitmapFont extends MinecraftFont {
 
     public static final double ITALIC_SHEAR_X = -4.0 / 14.0;
-    protected Int2ObjectMap<BufferedImage> charImages;
+    protected Int2ObjectMap<FontTextureResource> charImages;
     private String resourceLocation;
     private int height;
     private int ascent;
@@ -46,18 +46,18 @@ public class BitmapFont extends MinecraftFont {
             return;
         }
 
-        TextureResource resourceFile = manager.getFontManager().getFontResource(resourceLocation);
-        if (resourceFile == null || !resourceFile.isTexture()) {
+        TextureResource resource = manager.getFontManager().getFontResource(resourceLocation);
+        if (resource == null || !resource.isTexture()) {
             throw new ResourceLoadingException(resourceLocation + " is not a valid font resource");
         }
-        BufferedImage fontFileImage = resourceFile.getTexture();
+        BufferedImage fontBaseImage = resource.getTexture();
 
-        int yIncrement = fontFileImage.getHeight() / chars.size();
+        int yIncrement = fontBaseImage.getHeight() / chars.size();
         this.scale = Math.abs(height == 0 ? 0 : yIncrement / height);
         int y = 0;
         for (String line : chars) {
             if (!line.isEmpty()) {
-                int xIncrement = fontFileImage.getWidth() / line.codePointCount(0, line.length());
+                int xIncrement = fontBaseImage.getWidth() / line.codePointCount(0, line.length());
                 int x = 0;
                 for (int i = 0; i < line.length(); ) {
                     int character = line.codePointAt(i);
@@ -65,18 +65,18 @@ public class BitmapFont extends MinecraftFont {
                     int lastX = 3 * scale;
                     for (int x0 = x; x0 < x + xIncrement; x0++) {
                         for (int y0 = y; y0 < y + yIncrement; y0++) {
-                            int alpha = (fontFileImage.getRGB(x0, y0) >> 24) & 0xff;
+                            int alpha = (fontBaseImage.getRGB(x0, y0) >> 24) & 0xff;
                             if (alpha != 0) {
                                 lastX = x0 - x + 1;
                                 break;
                             }
                         }
                     }
-                    if (x + lastX >= fontFileImage.getWidth()) {
-                        lastX = fontFileImage.getWidth() - x;
+                    if (x + lastX >= fontBaseImage.getWidth()) {
+                        lastX = fontBaseImage.getWidth() - x;
                     }
                     if (lastX > 0) {
-                        charImages.put(character, fontFileImage.getSubimage(x, y, lastX, yIncrement));
+                        charImages.put(character, new FontTextureResource(resource, x, y, lastX, yIncrement));
                     }
                     x += xIncrement;
                 }
@@ -114,7 +114,7 @@ public class BitmapFont extends MinecraftFont {
     public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations) {
         decorations = sortDecorations(decorations);
         Color awtColor = new Color(color.value());
-        BufferedImage charImage = ImageUtils.copyImage(charImages.get(character.codePointAt(0)));
+        BufferedImage charImage = charImages.get(character.codePointAt(0)).getFontImage();
         int originalW = charImage.getWidth();
         float scale = fontSize / 8;
         float ascent = this.ascent - 7;
@@ -205,7 +205,7 @@ public class BitmapFont extends MinecraftFont {
     @Override
     public Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color) {
         Color awtColor = new Color(color.value());
-        BufferedImage charImage = ImageUtils.copyImage(charImages.get(character.codePointAt(0)));
+        BufferedImage charImage = charImages.get(character.codePointAt(0)).getFontImage();
         float descent = height - this.ascent - 1;
         charImage = ImageUtils.resizeImageFillHeight(charImage, Math.abs(Math.round(fontSize + (ascent + descent) * scale)));
         charImage = ImageUtils.multiply(charImage, ImageUtils.changeColorTo(ImageUtils.copyImage(charImage), awtColor));

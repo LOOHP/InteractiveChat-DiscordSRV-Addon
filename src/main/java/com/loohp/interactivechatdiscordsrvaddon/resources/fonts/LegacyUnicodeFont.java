@@ -4,6 +4,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -22,20 +23,22 @@ import java.util.Optional;
 public class LegacyUnicodeFont extends MinecraftFont {
 
     public static final double ITALIC_SHEAR_X = -4.0 / 14.0;
-    private static final BufferedImage MISSING_CHARACTER = new BufferedImage(8, 16, BufferedImage.TYPE_INT_ARGB);
+    private static final Optional<FontTextureResource> MISSING_CHARACTER;
 
     static {
-        Graphics2D g = MISSING_CHARACTER.createGraphics();
+        BufferedImage missingCharacter = new BufferedImage(8, 16, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = missingCharacter.createGraphics();
         g.setColor(Color.WHITE);
         g.drawRect(1, 1, 6, 14);
         g.dispose();
+        MISSING_CHARACTER = Optional.of(new FontTextureResource(new GeneratedTextureResource(missingCharacter)));
     }
 
     public static String getSectionSubstring(int i) {
         return String.format("%04x", i).substring(0, 2);
     }
 
-    protected Int2ObjectMap<Optional<BufferedImage>> charImages;
+    protected Int2ObjectMap<Optional<FontTextureResource>> charImages;
     private Int2ObjectMap<GlyphSize> sizes;
     private String template;
 
@@ -59,14 +62,14 @@ public class LegacyUnicodeFont extends MinecraftFont {
             if (resource == null) {
                 continue;
             }
-            BufferedImage fontFileImage = resource.getTexture(256, 256);
+            BufferedImage fontBaseImage = resource.getTexture(256, 256);
             int u = 0;
             for (int y = 0; y < 256; y += 16) {
                 for (int x = 0; x < 256; x += 16) {
                     int character = i + u;
                     GlyphSize size = sizes.get(character);
                     if (size.getEnd() - size.getStart() > 0) {
-                        charImages.put(character, Optional.of(fontFileImage.getSubimage(x + size.getStart(), y, size.getEnd() - size.getStart() + 1, 16)));
+                        charImages.put(character, Optional.of(new FontTextureResource(resource, 256, 256, x + size.getStart(), y, size.getEnd() - size.getStart() + 1, 16)));
                     } else {
                         charImages.put(character, Optional.empty());
                     }
@@ -101,9 +104,9 @@ public class LegacyUnicodeFont extends MinecraftFont {
     public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations) {
         decorations = sortDecorations(decorations);
         Color awtColor = new Color(color.value());
-        Optional<BufferedImage> optCharImage = charImages.getOrDefault(character.codePointAt(0), Optional.of(MISSING_CHARACTER));
+        Optional<FontTextureResource> optCharImage = charImages.getOrDefault(character.codePointAt(0), MISSING_CHARACTER);
         if (optCharImage.isPresent()) {
-            BufferedImage charImage = ImageUtils.copyImage(optCharImage.get());
+            BufferedImage charImage = optCharImage.get().getFontImage();
             int originalW = charImage.getWidth();
             charImage = ImageUtils.resizeImageFillHeight(charImage, Math.round(fontSize));
             int w = charImage.getWidth();
@@ -186,9 +189,9 @@ public class LegacyUnicodeFont extends MinecraftFont {
     @Override
     public Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color) {
         Color awtColor = new Color(color.value());
-        Optional<BufferedImage> optCharImage = charImages.getOrDefault(character.codePointAt(0), Optional.of(MISSING_CHARACTER));
+        Optional<FontTextureResource> optCharImage = charImages.getOrDefault(character.codePointAt(0), MISSING_CHARACTER);
         if (optCharImage.isPresent()) {
-            BufferedImage charImage = ImageUtils.copyImage(optCharImage.get());
+            BufferedImage charImage = optCharImage.get().getFontImage();
             charImage = ImageUtils.resizeImageFillHeight(charImage, Math.round(fontSize));
             charImage = ImageUtils.multiply(charImage, ImageUtils.changeColorTo(ImageUtils.copyImage(charImage), awtColor));
             return Optional.of(charImage);

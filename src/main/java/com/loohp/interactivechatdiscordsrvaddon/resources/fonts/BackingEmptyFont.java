@@ -1,6 +1,7 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap.Entry;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
@@ -23,7 +24,7 @@ public class BackingEmptyFont extends LegacyUnicodeFont {
             int character = entry.getIntKey();
             GlyphSize size = entry.getValue();
             if (size.getEnd() - size.getStart() > 0) {
-                charImages.put(character, Optional.of(new BufferedImage(size.getEnd() - size.getStart() + 1, 16, BufferedImage.TYPE_INT_ARGB)));
+                charImages.put(character, Optional.of(new FontTextureResource(new GeneratedTextureResource(new BufferedImage(size.getEnd() - size.getStart() + 1, 16, BufferedImage.TYPE_INT_ARGB)))));
             }
         }
     }

@@ -6,8 +6,11 @@ import java.awt.image.BufferedImage;
 
 public class GeneratedTextureResource extends TextureResource {
 
+    private BufferedImage image;
+
     public GeneratedTextureResource(BufferedImage image) {
         super(null, null, null, image);
+        this.image = image;
     }
 
     public GeneratedTextureResource(ResourcePackFile file) {

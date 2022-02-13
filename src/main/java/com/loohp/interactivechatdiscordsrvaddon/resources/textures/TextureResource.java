@@ -7,6 +7,9 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
 
 public class TextureResource {
 
@@ -17,7 +20,7 @@ public class TextureResource {
     private String resourceKey;
     private ResourcePackFile file;
     private boolean isTexture;
-    private BufferedImage texture;
+    private Reference<BufferedImage> texture;
 
     public TextureResource(TextureManager manager, String resourceKey, ResourcePackFile file, boolean isTexture) {
         this.manager = manager;
@@ -27,25 +30,32 @@ public class TextureResource {
         this.texture = null;
     }
 
-    public TextureResource(TextureManager manager, String resourceKey, ResourcePackFile file, BufferedImage image) {
+    protected TextureResource(TextureManager manager, String resourceKey, ResourcePackFile file, BufferedImage image) {
         this.manager = manager;
         this.resourceKey = resourceKey;
         this.file = file;
         this.isTexture = true;
-        this.texture = image;
+        this.texture = new WeakReference<>(image);
     }
 
     public TextureResource(TextureManager manager, String resourceKey, ResourcePackFile file) {
         this(manager, resourceKey, file, false);
     }
 
-    private void loadImage() {
-        if (isTexture && texture == null) {
-            try (InputStream inputStream = file.getInputStream()) {
-                this.texture = ImageIO.read(inputStream);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    private BufferedImage loadImage() {
+        if (!isTexture) {
+            throw new IllegalStateException(resourceKey + " is not a texture!");
+        }
+        BufferedImage image;
+        if (texture != null && (image = texture.get()) != null) {
+            return image;
+        }
+        try (InputStream inputStream = file.getInputStream()) {
+            image = ImageIO.read(inputStream);
+            this.texture = new WeakReference<>(image);
+            return image;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -54,13 +64,12 @@ public class TextureResource {
     }
 
     public BufferedImage getTexture(int w, int h) {
-        loadImage();
-        return ImageUtils.toCompatibleImage(ImageUtils.resizeImageAbs(texture, w, h));
+        return ImageUtils.toCompatibleImage(ImageUtils.resizeImageAbs(loadImage(), w, h));
     }
 
     public BufferedImage getTexture() {
         loadImage();
-        return ImageUtils.toCompatibleImage(ImageUtils.copyImage(texture));
+        return ImageUtils.toCompatibleImage(ImageUtils.copyImage(loadImage()));
     }
 
     public boolean hasFile() {
