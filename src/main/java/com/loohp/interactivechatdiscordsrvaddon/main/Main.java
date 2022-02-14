@@ -1,6 +1,10 @@
 package com.loohp.interactivechatdiscordsrvaddon.main;
 
+import com.loohp.interactivechatdiscordsrvaddon.libs.LibraryLoader;
+
 import javax.swing.JOptionPane;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
 import java.io.BufferedReader;
@@ -20,7 +24,7 @@ import java.util.zip.ZipFile;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException {
         boolean found = false;
         for (File file : new File(".").listFiles()) {
             String fileName = file.getName();
@@ -59,6 +63,7 @@ public class Main {
             if (GraphicsEnvironment.isHeadless() || Arrays.asList(args).contains("--nogui")) {
                 System.out.println("InteractiveChat.jar is required run addon tools.");
             } else {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                 Toolkit.getDefaultToolkit().beep();
                 JOptionPane.showMessageDialog(null, "InteractiveChat.jar is required run InteractiveChat DiscordSRV Addon tools.", "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -66,6 +71,7 @@ public class Main {
     }
 
     public static void run(String[] args) {
+        LibraryLoader.loadLibraries(new File("InteractiveChatDiscordSrvAddon", "libs"));
         if (GraphicsEnvironment.isHeadless() || Arrays.asList(args).contains("--nogui")) {
             CMLMain.launch(args);
         } else {

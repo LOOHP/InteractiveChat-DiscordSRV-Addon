@@ -1,5 +1,6 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
+import com.loohp.blockmodelrenderer.utils.ColorUtils;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
@@ -26,11 +27,13 @@ public class LegacyUnicodeFont extends MinecraftFont {
     private static final Optional<FontTextureResource> MISSING_CHARACTER;
 
     static {
-        BufferedImage missingCharacter = new BufferedImage(8, 16, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = missingCharacter.createGraphics();
-        g.setColor(Color.WHITE);
-        g.drawRect(1, 1, 6, 14);
-        g.dispose();
+        BufferedImage missingCharacter = new BufferedImage(5, 8, BufferedImage.TYPE_INT_ARGB);
+        for (int i = 0; i < 8; ++i) {
+            for (int j = 0; j < 5; ++j) {
+                boolean flag = j == 0 || j + 1 == 5 || i == 0 || i + 1 == 8;
+                missingCharacter.setRGB(j, i, flag ? 0xFFFFFFFF : 0);
+            }
+        }
         MISSING_CHARACTER = Optional.of(new FontTextureResource(new GeneratedTextureResource(missingCharacter)));
     }
 
@@ -67,11 +70,13 @@ public class LegacyUnicodeFont extends MinecraftFont {
             for (int y = 0; y < 256; y += 16) {
                 for (int x = 0; x < 256; x += 16) {
                     int character = i + u;
-                    GlyphSize size = sizes.get(character);
-                    if (size.getEnd() - size.getStart() > 0) {
-                        charImages.put(character, Optional.of(new FontTextureResource(resource, 256, 256, x + size.getStart(), y, size.getEnd() - size.getStart() + 1, 16)));
-                    } else {
-                        charImages.put(character, Optional.empty());
+                    if (character != 0) {
+                        GlyphSize size = sizes.get(character);
+                        if (size.getEnd() - size.getStart() > 0) {
+                            charImages.put(character, Optional.of(new FontTextureResource(resource, 256, 256, x + size.getStart(), y, size.getEnd() - size.getStart() + 1, 16)));
+                        } else {
+                            charImages.put(character, Optional.empty());
+                        }
                     }
                     u++;
                 }
@@ -102,18 +107,22 @@ public class LegacyUnicodeFont extends MinecraftFont {
 
     @Override
     public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations) {
+        if (character.equals(" ")) {
+            return printSpace(image, x, y, fontSize, lastItalicExtraWidth, color, decorations);
+        }
         decorations = sortDecorations(decorations);
         Color awtColor = new Color(color.value());
         Optional<FontTextureResource> optCharImage = charImages.getOrDefault(character.codePointAt(0), MISSING_CHARACTER);
         if (optCharImage.isPresent()) {
             BufferedImage charImage = optCharImage.get().getFontImage();
             int originalW = charImage.getWidth();
-            charImage = ImageUtils.resizeImageFillHeight(charImage, Math.round(fontSize));
+            charImage = ImageUtils.resizeImageFillHeight(charImage, (int) Math.floor(fontSize));
             int w = charImage.getWidth();
             int h = charImage.getHeight();
             charImage = ImageUtils.multiply(charImage, ImageUtils.changeColorTo(ImageUtils.copyImage(charImage), awtColor));
             int beforeTransformW = w;
-            int pixelSize = Math.round((float) beforeTransformW / (float) originalW);
+            double accuratePixelSize = (double) beforeTransformW / (double) originalW;
+            int pixelSize = (int) Math.round(accuratePixelSize);
             int strikeSize = (int) (fontSize / 8);
             int boldSize = (int) (fontSize / 16.0 * 2);
             int italicExtraWidth = 0;
@@ -135,7 +144,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
                         for (int x0 = 0; x0 < charImage.getWidth(); x0++) {
                             for (int y0 = 0; y0 < charImage.getHeight(); y0++) {
                                 int pixelColor = charImage.getRGB(x0, y0);
-                                int alpha = (pixelColor >> 24) & 0xff;
+                                int alpha = ColorUtils.getAlpha(pixelColor);
                                 if (alpha != 0) {
                                     for (int i = 0; i < boldSize; i++) {
                                         boldImage.setRGB(x0 + i, y0, pixelColor);
@@ -162,14 +171,14 @@ public class LegacyUnicodeFont extends MinecraftFont {
                         charImage = ImageUtils.expandCenterAligned(charImage, 0, 0, 0, pixelSize);
                         g = charImage.createGraphics();
                         g.setColor(awtColor);
-                        g.fillRect(0, (int) (fontSize / 2), charImage.getWidth(), strikeSize);
+                        g.fillRect(0, (int) (fontSize / 2), w, strikeSize);
                         g.dispose();
                         break;
                     case UNDERLINED:
                         charImage = ImageUtils.expandCenterAligned(charImage, 0, strikeSize * 2, 0, pixelSize);
                         g = charImage.createGraphics();
                         g.setColor(awtColor);
-                        g.fillRect(0, (int) (fontSize), charImage.getWidth(), strikeSize);
+                        g.fillRect(0, (int) (fontSize), w, strikeSize);
                         g.dispose();
                         break;
                     default:
@@ -180,7 +189,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
             int extraWidth = italic ? 0 : lastItalicExtraWidth;
             g.drawImage(charImage, x + extraWidth, y, null);
             g.dispose();
-            return new FontRenderResult(image, w + extraWidth, h, pixelSize, italicExtraWidth);
+            return new FontRenderResult(image, w + extraWidth, h, (int) Math.floor(accuratePixelSize + 1), italicExtraWidth);
         } else {
             return new FontRenderResult(image, 0, 0, 0, 0);
         }
@@ -188,6 +197,9 @@ public class LegacyUnicodeFont extends MinecraftFont {
 
     @Override
     public Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color) {
+        if (character.equals(" ")) {
+            return Optional.of(getSpaceImage(fontSize));
+        }
         Color awtColor = new Color(color.value());
         Optional<FontTextureResource> optCharImage = charImages.getOrDefault(character.codePointAt(0), MISSING_CHARACTER);
         if (optCharImage.isPresent()) {

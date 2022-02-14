@@ -124,6 +124,9 @@ public class TrueTypeFont extends MinecraftFont {
     @SuppressWarnings("rawtypes")
     @Override
     public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations) {
+        if (character.equals(" ")) {
+            return printSpace(image, x, y, fontSize, lastItalicExtraWidth, color, decorations);
+        }
         float scale = fontSize / 16;
         fontSize = fontSize - (13 - this.size);
         decorations = sortDecorations(decorations);
@@ -195,6 +198,9 @@ public class TrueTypeFont extends MinecraftFont {
 
     @Override
     public Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color) {
+        if (character.equals(" ")) {
+            return Optional.of(getSpaceImage(fontSize));
+        }
         BufferedImage image = new BufferedImage((int) (10 * fontSize), (int) (10 * fontSize), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
         Font fontToPrint = font.deriveFont(fontSize);

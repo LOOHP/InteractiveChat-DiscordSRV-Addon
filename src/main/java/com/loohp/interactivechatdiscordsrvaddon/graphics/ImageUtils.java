@@ -379,8 +379,8 @@ public class ImageUtils {
     }
 
     public static BufferedImage resizeImage(BufferedImage source, double factor) {
-        int w = (int) (source.getWidth() * factor);
-        int h = (int) (source.getHeight() * factor);
+        int w = (int) Math.round(source.getWidth() * factor);
+        int h = (int) Math.round(source.getHeight() * factor);
         return resizeImageAbs(source, w, h);
     }
 
@@ -403,12 +403,12 @@ public class ImageUtils {
     }
 
     public static BufferedImage resizeImageFillWidth(BufferedImage source, int width) {
-        int height = (int) (source.getHeight() * ((double) width / (double) source.getWidth()));
+        int height = (int) Math.round(source.getHeight() * ((double) width / (double) source.getWidth()));
         return resizeImageAbs(source, width, height);
     }
 
     public static BufferedImage resizeImageFillHeight(BufferedImage source, int height) {
-        int width = (int) (source.getWidth() * ((double) height / (double) source.getHeight()));
+        int width = (int) Math.round(source.getWidth() * ((double) height / (double) source.getHeight()));
         return resizeImageAbs(source, width, height);
     }
 

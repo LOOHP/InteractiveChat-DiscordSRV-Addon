@@ -7,6 +7,8 @@ import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.utils.FileUtils;
+import com.loohp.interactivechatdiscordsrvaddon.libs.LibraryDownloadManager;
+import com.loohp.interactivechatdiscordsrvaddon.libs.LibraryLoader;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceDownloadManager;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
@@ -138,6 +140,70 @@ public class AssetsDownloader {
         }, (key, dataBytes) -> {
             InteractiveChatDiscordSrvAddon.plugin.extras.put(key, dataBytes);
         });
+    }
+
+    public static void loadLibraries(File rootFolder) {
+        try {
+            File hashes = new File(rootFolder, "hashes.json");
+            if (!hashes.exists()) {
+                try (PrintWriter pw = new PrintWriter(new OutputStreamWriter(new FileOutputStream(hashes), StandardCharsets.UTF_8))) {
+                    pw.println("{}");
+                    pw.flush();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            JSONObject json;
+            try (InputStreamReader hashReader = new InputStreamReader(new FileInputStream(hashes), StandardCharsets.UTF_8)) {
+                json = (JSONObject) new JSONParser().parse(hashReader);
+            } catch (Throwable e) {
+                new RuntimeException("Invalid hashes.json! It will be reset.", e).printStackTrace();
+                json = new JSONObject();
+            }
+            String oldHash = InteractiveChatDiscordSrvAddon.plugin.defaultResourceHash = json.containsKey("libs") ? json.get("libs").toString() : "EMPTY";
+            String oldVersion = json.containsKey("version") ? json.get("version").toString() : "EMPTY";
+
+            File libsFolder = new File(rootFolder, "libs");
+            libsFolder.mkdirs();
+
+            LibraryDownloadManager downloadManager = new LibraryDownloadManager(libsFolder);
+
+            String hash = downloadManager.getHash();
+
+            if (!hash.equals(oldHash) || !InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion().equals(oldVersion)) {
+                downloadManager.downloadLibraries((result, jarName) -> {
+                    if (result) {
+                        Bukkit.getConsoleSender().sendMessage("[ICDiscordSrvAddon] Downloaded library \"" + jarName + "\"");
+                    } else {
+                        Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to download library \"" + jarName + "\"");
+                    }
+                });
+            }
+
+            LibraryLoader.loadLibraries(libsFolder, (file, e) -> {
+                String jarName = file.getName();
+                if (e == null) {
+                    Bukkit.getConsoleSender().sendMessage("[ICDiscordSrvAddon] Loaded library \"" + jarName + "\"");
+                } else {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load library \"" + jarName + "\"");
+                    e.printStackTrace();
+                }
+            });
+
+            json.put("libs", hash);
+            json.put("version", InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion());
+
+            try (PrintWriter pw = new PrintWriter(new OutputStreamWriter(new FileOutputStream(hashes), StandardCharsets.UTF_8))) {
+                Gson g = new GsonBuilder().setPrettyPrinting().create();
+                pw.println(g.toJson(new JsonParser().parse(json.toString())));
+                pw.flush();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static String getEntryName(String name) {

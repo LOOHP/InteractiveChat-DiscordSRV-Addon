@@ -7,6 +7,7 @@ import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.updater.Version;
 import com.loohp.interactivechat.utils.FileUtils;
 import com.loohp.interactivechat.utils.HTTPRequestUtils;
+import com.loohp.interactivechatdiscordsrvaddon.libs.LibraryDownloadManager;
 import com.loohp.interactivechatdiscordsrvaddon.registry.InteractiveChatRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceDownloadManager;
 
@@ -94,7 +95,8 @@ public class GUIMain {
             g.drawImage(image, 0, 0, 32, 32, null);
             g.dispose();
 
-            main: while (true) {
+            main:
+            while (true) {
                 int input = JOptionPane.showOptionDialog(null, messageLabel, title, JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, icon, new Object[] {"Check for Updates", "Validate Plugin Configs", "Generate Default Configs", "Download Assets", "Block Model Renderer (1.13+)", "Minecraft Font Renderer (1.13+)", "Visit Links"}, null);
                 switch (input) {
                     case 0:
@@ -247,6 +249,8 @@ public class GUIMain {
     protected static void downloadAssets(String title, BufferedImage image, Icon icon) {
         File defaultAssetsFolder = new File("InteractiveChatDiscordSrvAddon/built-in", "Default");
         defaultAssetsFolder.mkdirs();
+        File libsFolder = new File("InteractiveChatDiscordSrvAddon", "libs");
+        libsFolder.mkdirs();
 
         JPanel panel = new JPanel();
         panel.add(GUIMain.createLabel("Select Minecraft Version: ", 13));
@@ -260,7 +264,8 @@ public class GUIMain {
             return;
         }
 
-        ResourceDownloadManager downloadManager = new ResourceDownloadManager((String) options.getSelectedItem(), defaultAssetsFolder);
+        ResourceDownloadManager resourceDownloadManager = new ResourceDownloadManager((String) options.getSelectedItem(), defaultAssetsFolder);
+        LibraryDownloadManager libraryDownloadManager = new LibraryDownloadManager(libsFolder);
         JFrame frame = new JFrame(title);
         frame.setIconImage(image);
         frame.setSize(800, 175);
@@ -284,7 +289,7 @@ public class GUIMain {
 
         CompletableFuture<Void> future = new CompletableFuture<>();
         new Thread(() -> {
-            downloadManager.downloadResources((type, fileName, percentage) -> {
+            resourceDownloadManager.downloadResources((type, fileName, percentage) -> {
                 switch (type) {
                     case CLIENT_DOWNLOAD:
                         label.setText("<html>Downloading Assets:<br>Downloading client jar<html/>");
@@ -299,6 +304,11 @@ public class GUIMain {
                     case DONE:
                         label.setText("<html>Done!<html/>");
                         break;
+                }
+            });
+            libraryDownloadManager.downloadLibraries((downloadResult, jarName) -> {
+                if (downloadResult) {
+                    label.setText("<html>Downloaded library \"" + jarName + "\"<html/>");
                 }
             });
             future.complete(null);

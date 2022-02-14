@@ -58,17 +58,13 @@ public class BitmapFont extends MinecraftFont {
         int y = 0;
         for (String line : chars) {
             if (!line.isEmpty()) {
-                int codePointsCount = line.codePointCount(0, line.length());
-                if (codePointsCount == 1) {
-                    int character = line.codePointAt(0);
-                    charImages.put(character, new FontTextureResource(resource, 0, y, fontBaseImage.getWidth(), yIncrement));
-                } else {
-                    int xIncrement = fontBaseImage.getWidth() / codePointsCount;
-                    int x = 0;
-                    for (int i = 0; i < line.length(); ) {
-                        int character = line.codePointAt(i);
-                        i += character < 0x10000 ? 1 : 2;
-                        int lastX = 3 * scale;
+                int xIncrement = fontBaseImage.getWidth() / line.codePointCount(0, line.length());
+                int x = 0;
+                for (int i = 0; i < line.length(); ) {
+                    int character = line.codePointAt(i);
+                    i += character < 0x10000 ? 1 : 2;
+                    if (i != 0 && i != 32) {
+                        int lastX = 0;
                         for (int x0 = x; x0 < x + xIncrement; x0++) {
                             for (int y0 = y; y0 < y + yIncrement; y0++) {
                                 int alpha = ColorUtils.getAlpha(fontBaseImage.getRGB(x0, y0));
@@ -78,14 +74,14 @@ public class BitmapFont extends MinecraftFont {
                                 }
                             }
                         }
-                        if (x + lastX >= fontBaseImage.getWidth()) {
+                        if (x + lastX > fontBaseImage.getWidth()) {
                             lastX = fontBaseImage.getWidth() - x;
                         }
                         if (lastX > 0) {
                             charImages.put(character, new FontTextureResource(resource, x, y, lastX, yIncrement));
                         }
-                        x += xIncrement;
                     }
+                    x += xIncrement;
                 }
             }
             y += yIncrement;
@@ -119,6 +115,9 @@ public class BitmapFont extends MinecraftFont {
 
     @Override
     public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations) {
+        if (character.equals(" ")) {
+            return printSpace(image, x, y, fontSize, lastItalicExtraWidth, color, decorations);
+        }
         decorations = sortDecorations(decorations);
         Color awtColor = new Color(color.value());
         BufferedImage charImage = charImages.get(character.codePointAt(0)).getFontImage();
@@ -126,13 +125,14 @@ public class BitmapFont extends MinecraftFont {
         float scale = fontSize / 8;
         float ascent = this.ascent - 7;
         float descent = height - this.ascent - 1;
-        int fillHeight = Math.round(fontSize + (ascent + descent) * scale);
+        int fillHeight = (int) Math.floor(fontSize + (ascent + descent) * scale);
         charImage = ImageUtils.resizeImageFillHeight(charImage, Math.abs(fillHeight));
         int w = charImage.getWidth();
         int h = charImage.getHeight();
         charImage = ImageUtils.multiply(charImage, ImageUtils.changeColorTo(ImageUtils.copyImage(charImage), awtColor));
         int beforeTransformW = w;
-        int pixelSize = Math.round((float) beforeTransformW / (float) originalW);
+        double accuratePixelSize = (double) beforeTransformW / (double) originalW;
+        int pixelSize = (int) Math.round(accuratePixelSize);
         int strikeSize = (int) (fontSize / 8.0);
         int boldSize = (int) (fontSize / 16.0 * 3);
         int italicExtraWidth = 0;
@@ -154,7 +154,7 @@ public class BitmapFont extends MinecraftFont {
                     for (int x0 = 0; x0 < charImage.getWidth(); x0++) {
                         for (int y0 = 0; y0 < charImage.getHeight(); y0++) {
                             int pixelColor = charImage.getRGB(x0, y0);
-                            int alpha = (pixelColor >> 24) & 0xff;
+                            int alpha = ColorUtils.getAlpha(pixelColor);
                             if (alpha != 0) {
                                 for (int i = 0; i < boldSize; i++) {
                                     boldImage.setRGB(x0 + i, y0, pixelColor);
@@ -181,14 +181,14 @@ public class BitmapFont extends MinecraftFont {
                     charImage = ImageUtils.expandCenterAligned(charImage, 0, 0, 0, pixelSize * this.scale);
                     g = charImage.createGraphics();
                     g.setColor(awtColor);
-                    g.fillRect(0, (int) (fontSize / 2), charImage.getWidth(), strikeSize);
+                    g.fillRect(0, (int) (fontSize / 2), w, strikeSize);
                     g.dispose();
                     break;
                 case UNDERLINED:
                     charImage = ImageUtils.expandCenterAligned(charImage, 0, strikeSize * 2, 0, pixelSize * this.scale);
                     g = charImage.createGraphics();
                     g.setColor(awtColor);
-                    g.fillRect(0, (int) (fontSize), charImage.getWidth(), strikeSize);
+                    g.fillRect(0, (int) (fontSize), w, strikeSize);
                     g.dispose();
                     break;
                 default:
@@ -198,19 +198,22 @@ public class BitmapFont extends MinecraftFont {
         Graphics2D g = image.createGraphics();
         int extraWidth = italic ? 0 : lastItalicExtraWidth;
         int sign = fillHeight >= 0 ? 1 : -1;
-        int spaceWidth = pixelSize * this.scale;
+        int spaceWidth = (int) Math.floor(accuratePixelSize * this.scale);
         if (sign > 0) {
             g.drawImage(charImage, x + extraWidth, (int) (y - ascent * scale), null);
         } else {
-            g.drawImage(charImage, x + extraWidth, (int) (y - ascent * scale), -x, charImage.getHeight(), null);
-            spaceWidth += scale * 2;
+            g.drawImage(ImageUtils.flipVertically(charImage), x + extraWidth, y, -w, -h, null);
+            spaceWidth = (int) Math.ceil(spaceWidth + accuratePixelSize * 8) + 1;
         }
         g.dispose();
-        return new FontRenderResult(image, (w + extraWidth) * sign, h, spaceWidth, italicExtraWidth);
+        return new FontRenderResult(image, w * sign + extraWidth, h, spaceWidth, italicExtraWidth);
     }
 
     @Override
     public Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color) {
+        if (character.equals(" ")) {
+            return Optional.of(getSpaceImage(fontSize));
+        }
         Color awtColor = new Color(color.value());
         BufferedImage charImage = charImages.get(character.codePointAt(0)).getFontImage();
         float descent = height - this.ascent - 1;
