@@ -112,7 +112,10 @@ public class LegacyUnicodeFont extends MinecraftFont {
         }
         decorations = sortDecorations(decorations);
         Color awtColor = new Color(color.value());
-        Optional<FontTextureResource> optCharImage = charImages.getOrDefault(character.codePointAt(0), MISSING_CHARACTER);
+        Optional<FontTextureResource> optCharImage = charImages.get(character.codePointAt(0));
+        if (optCharImage == null) {
+            optCharImage = MISSING_CHARACTER;
+        }
         if (optCharImage.isPresent()) {
             BufferedImage charImage = optCharImage.get().getFontImage();
             int originalW = charImage.getWidth();
@@ -201,7 +204,10 @@ public class LegacyUnicodeFont extends MinecraftFont {
             return Optional.of(getSpaceImage(fontSize));
         }
         Color awtColor = new Color(color.value());
-        Optional<FontTextureResource> optCharImage = charImages.getOrDefault(character.codePointAt(0), MISSING_CHARACTER);
+        Optional<FontTextureResource> optCharImage = charImages.get(character.codePointAt(0));
+        if (optCharImage == null) {
+            optCharImage = MISSING_CHARACTER;
+        }
         if (optCharImage.isPresent()) {
             BufferedImage charImage = optCharImage.get().getFontImage();
             charImage = ImageUtils.resizeImageFillHeight(charImage, Math.round(fontSize));
