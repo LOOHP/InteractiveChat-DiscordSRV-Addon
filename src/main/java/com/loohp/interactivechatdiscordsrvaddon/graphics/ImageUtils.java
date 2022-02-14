@@ -6,6 +6,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ComponentFlattening;
 import com.loohp.interactivechat.utils.ComponentModernizing;
+import com.loohp.interactivechat.utils.HashUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CharacterData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CharacterDataArray;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
@@ -23,6 +24,8 @@ import java.awt.GraphicsEnvironment;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -40,12 +43,19 @@ public class ImageUtils {
     public static final double CHAT_COLOR_BACKGROUND_FACTOR = 0.19;
 
     public static String hash(BufferedImage image) {
-        StringBuilder sb = new StringBuilder();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
         int[] colors = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());
         for (int color : colors) {
-            sb.append(Integer.toHexString(color));
+            out.write((byte) (color >>> 24));
+            out.write((byte) (color >>> 16));
+            out.write((byte) (color >>> 8));
+            out.write((byte) color);
         }
-        return sb.toString();
+        try {
+            return HashUtils.createSha1String(new ByteArrayInputStream(out.toByteArray()));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static BufferedImage toCompatibleImage(BufferedImage image) {
@@ -305,7 +315,7 @@ public class ImageUtils {
             for (int x = 0; x < image.getWidth(); x++) {
                 int colorValue = image.getRGB(x, y);
                 int alpha = getAlpha(colorValue) + value;
-                int color = getIntFromColor(getRed(colorValue), getGreen(colorValue), getBlue(colorValue), alpha > 255 ? 255 : (Math.max(alpha, 0)));
+                int color = getIntFromColor(getRed(colorValue), getGreen(colorValue), getBlue(colorValue), Math.min(Math.max(alpha, 0), 255));
                 image.setRGB(x, y, color);
             }
         }

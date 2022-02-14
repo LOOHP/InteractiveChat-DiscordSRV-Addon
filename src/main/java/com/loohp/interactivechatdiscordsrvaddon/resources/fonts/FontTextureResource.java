@@ -1,5 +1,7 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
+import com.loohp.interactivechatdiscordsrvaddon.Cache;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 
 import java.awt.image.BufferedImage;
@@ -7,6 +9,16 @@ import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 
 public class FontTextureResource {
+
+    private static long CACHE_TIME = 0;
+
+    public static long getCacheTime() {
+        return CACHE_TIME;
+    }
+
+    public static void setCacheTime(long cacheTime) {
+        CACHE_TIME = cacheTime;
+    }
 
     private Reference<TextureResource> resource;
     private char resourceWidth;
@@ -38,6 +50,7 @@ public class FontTextureResource {
         this(resource, 0, 0, 0, 0, 0, 0);
     }
 
+    @SuppressWarnings("deprecation")
     public BufferedImage getFontImage() {
         if (!isValid()) {
             throw new IllegalStateException("Resource is no longer valid");
@@ -48,6 +61,16 @@ public class FontTextureResource {
             image = textureResource.getTexture();
         } else {
             image = textureResource.getTexture(resourceWidth, resourceHeight);
+        }
+        if (CACHE_TIME > 0) {
+            Reference<BufferedImage> internalReference = textureResource.getUnsafe().getTextureReference();
+            BufferedImage internal;
+            if ((internal = internalReference.get()) != null) {
+                String hash = ImageUtils.hash(internal);
+                if (Cache.getCache(hash) == null) {
+                    Cache.putCache(hash, internal, CACHE_TIME);
+                }
+            }
         }
         if (w < 1 || h < 1) {
             return image;

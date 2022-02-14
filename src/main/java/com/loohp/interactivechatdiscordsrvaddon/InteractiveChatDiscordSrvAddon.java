@@ -27,6 +27,7 @@ import com.loohp.interactivechatdiscordsrvaddon.registry.InteractiveChatRegistry
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
+import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.dependencies.jda.api.Permission;
@@ -426,8 +427,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         shareEnderCommandTitle = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.ShareEnderChest.InventoryTitle"));
 
         language = config.getConfiguration().getString("Resources.Language");
-
         LanguageUtils.loadTranslations(language);
+
+        FontTextureResource.setCacheTime(cacheTimeout);
 
         discordsrv.reloadRegexes();
     }

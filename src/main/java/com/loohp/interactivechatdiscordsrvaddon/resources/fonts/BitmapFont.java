@@ -1,5 +1,6 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
+import com.loohp.blockmodelrenderer.utils.ColorUtils;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
@@ -57,28 +58,34 @@ public class BitmapFont extends MinecraftFont {
         int y = 0;
         for (String line : chars) {
             if (!line.isEmpty()) {
-                int xIncrement = fontBaseImage.getWidth() / line.codePointCount(0, line.length());
-                int x = 0;
-                for (int i = 0; i < line.length(); ) {
-                    int character = line.codePointAt(i);
-                    i += character < 0x10000 ? 1 : 2;
-                    int lastX = 3 * scale;
-                    for (int x0 = x; x0 < x + xIncrement; x0++) {
-                        for (int y0 = y; y0 < y + yIncrement; y0++) {
-                            int alpha = (fontBaseImage.getRGB(x0, y0) >> 24) & 0xff;
-                            if (alpha != 0) {
-                                lastX = x0 - x + 1;
-                                break;
+                int codePointsCount = line.codePointCount(0, line.length());
+                if (codePointsCount == 1) {
+                    int character = line.codePointAt(0);
+                    charImages.put(character, new FontTextureResource(resource, 0, y, fontBaseImage.getWidth(), yIncrement));
+                } else {
+                    int xIncrement = fontBaseImage.getWidth() / codePointsCount;
+                    int x = 0;
+                    for (int i = 0; i < line.length(); ) {
+                        int character = line.codePointAt(i);
+                        i += character < 0x10000 ? 1 : 2;
+                        int lastX = 3 * scale;
+                        for (int x0 = x; x0 < x + xIncrement; x0++) {
+                            for (int y0 = y; y0 < y + yIncrement; y0++) {
+                                int alpha = ColorUtils.getAlpha(fontBaseImage.getRGB(x0, y0));
+                                if (alpha != 0) {
+                                    lastX = x0 - x + 1;
+                                    break;
+                                }
                             }
                         }
+                        if (x + lastX >= fontBaseImage.getWidth()) {
+                            lastX = fontBaseImage.getWidth() - x;
+                        }
+                        if (lastX > 0) {
+                            charImages.put(character, new FontTextureResource(resource, x, y, lastX, yIncrement));
+                        }
+                        x += xIncrement;
                     }
-                    if (x + lastX >= fontBaseImage.getWidth()) {
-                        lastX = fontBaseImage.getWidth() - x;
-                    }
-                    if (lastX > 0) {
-                        charImages.put(character, new FontTextureResource(resource, x, y, lastX, yIncrement));
-                    }
-                    x += xIncrement;
                 }
             }
             y += yIncrement;

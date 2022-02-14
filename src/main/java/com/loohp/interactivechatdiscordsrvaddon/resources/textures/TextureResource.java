@@ -22,12 +22,15 @@ public class TextureResource {
     private boolean isTexture;
     private Reference<BufferedImage> texture;
 
+    private Unsafe unsafe;
+
     public TextureResource(TextureManager manager, String resourceKey, ResourcePackFile file, boolean isTexture) {
         this.manager = manager;
         this.resourceKey = resourceKey;
         this.file = file;
         this.isTexture = isTexture;
         this.texture = null;
+        this.unsafe = null;
     }
 
     protected TextureResource(TextureManager manager, String resourceKey, ResourcePackFile file, BufferedImage image) {
@@ -36,6 +39,7 @@ public class TextureResource {
         this.file = file;
         this.isTexture = true;
         this.texture = new WeakReference<>(image);
+        this.unsafe = null;
     }
 
     public TextureResource(TextureManager manager, String resourceKey, ResourcePackFile file) {
@@ -97,6 +101,29 @@ public class TextureResource {
             return (TextureMeta) meta;
         }
         return null;
+    }
+
+    @SuppressWarnings({"DeprecatedIsStillUsed", "Convert2Lambda", "deprecation"})
+    @Deprecated
+    public Unsafe getUnsafe() {
+        if (unsafe != null) {
+            return unsafe;
+        }
+        return unsafe = new Unsafe() {
+            @Override
+            public Reference<BufferedImage> getTextureReference() {
+                return texture;
+            }
+        };
+    }
+
+    @SuppressWarnings("DeprecatedIsStillUsed")
+    @Deprecated
+    public interface Unsafe {
+
+        @Deprecated
+        Reference<BufferedImage> getTextureReference();
+
     }
 
 }
