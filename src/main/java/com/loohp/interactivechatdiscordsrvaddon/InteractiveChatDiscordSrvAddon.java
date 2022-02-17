@@ -1,3 +1,23 @@
+/*
+ * This file is part of InteractiveChatDiscordSrvAddon.
+ *
+ * Copyright (C) 2022. LoohpJames <jamesloohp@gmail.com>
+ * Copyright (C) 2022. Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.loohp.interactivechatdiscordsrvaddon;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -45,6 +65,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -67,6 +88,15 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public static final int BSTATS_PLUGIN_ID = 8863;
     public static final String CONFIG_ID = "interactivechatdiscordsrvaddon_config";
 
+    public static final List<Permission> requiredPermissions = Collections.unmodifiableList(Arrays.asList(
+        Permission.MESSAGE_READ,
+        Permission.MESSAGE_WRITE,
+        Permission.MESSAGE_MANAGE,
+        Permission.MESSAGE_EMBED_LINKS,
+        Permission.MESSAGE_ATTACH_FILES,
+        Permission.MANAGE_WEBHOOKS
+    ));
+
     public static InteractiveChatDiscordSrvAddon plugin;
     public static InteractiveChat interactivechat;
     public static DiscordSRV discordsrv;
@@ -74,19 +104,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public static boolean isReady = false;
 
     public static boolean debug = false;
-
-    public static List<Permission> requiredPermissions;
-
-    static {
-        List<Permission> requiredPerms = new ArrayList<>();
-        requiredPerms.add(Permission.MESSAGE_READ);
-        requiredPerms.add(Permission.MESSAGE_WRITE);
-        requiredPerms.add(Permission.MESSAGE_MANAGE);
-        requiredPerms.add(Permission.MESSAGE_EMBED_LINKS);
-        requiredPerms.add(Permission.MESSAGE_ATTACH_FILES);
-        requiredPerms.add(Permission.MANAGE_WEBHOOKS);
-        requiredPermissions = Collections.unmodifiableList(requiredPerms);
-    }
 
     protected final ReentrantLock resourceReloadLock = new ReentrantLock(true);
     public Metrics metrics;

@@ -1,3 +1,23 @@
+/*
+ * This file is part of InteractiveChatDiscordSrvAddon.
+ *
+ * Copyright (C) 2022. LoohpJames <jamesloohp@gmail.com>
+ * Copyright (C) 2022. Contributors
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package com.loohp.interactivechatdiscordsrvaddon.listeners;
 
 import com.loohp.interactivechat.InteractiveChat;
@@ -43,6 +63,7 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.SlashCommandEvent;
+import github.scarsz.discordsrv.dependencies.jda.api.exceptions.ErrorResponseException;
 import github.scarsz.discordsrv.dependencies.jda.api.hooks.ListenerAdapter;
 import github.scarsz.discordsrv.dependencies.jda.api.requests.RestAction;
 import me.clip.placeholderapi.PlaceholderAPI;
@@ -283,19 +304,26 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
     }
 
     public void reload() {
-        discordsrv.getMainGuild().retrieveCommands().complete().stream().filter(each -> {
-            return each.getName().equals(PLAYERLIST_LABEL) || each.getName().equals(INVENTORY_LABEL) || each.getName().equals(ENDERCHEST_LABEL);
-        }).map(each -> each.delete()).reduce(RestAction::and).ifPresent(action -> action.complete());
-        if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandEnabled) {
-            discordsrv.getMainGuild().upsertCommand(PLAYERLIST_LABEL, ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandDescription)).queue();
-        }
-        Optional<ICPlaceholder> optInvPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.invPlaceholder)).findFirst();
-        if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandEnabled && optInvPlaceholder.isPresent()) {
-            discordsrv.getMainGuild().upsertCommand(INVENTORY_LABEL, ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())).queue();
-        }
-        Optional<ICPlaceholder> optEnderPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.enderPlaceholder)).findFirst();
-        if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandEnabled && optEnderPlaceholder.isPresent()) {
-            discordsrv.getMainGuild().upsertCommand(ENDERCHEST_LABEL, ChatColorUtils.stripColor(optEnderPlaceholder.get().getDescription())).queue();
+        try {
+            discordsrv.getMainGuild().retrieveCommands().complete().stream().filter(each -> {
+                return each.getName().equals(PLAYERLIST_LABEL) || each.getName().equals(INVENTORY_LABEL) || each.getName().equals(ENDERCHEST_LABEL);
+            }).map(each -> each.delete()).reduce(RestAction::and).ifPresent(action -> action.complete());
+            if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandEnabled) {
+                discordsrv.getMainGuild().upsertCommand(PLAYERLIST_LABEL, ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandDescription)).queue();
+            }
+            Optional<ICPlaceholder> optInvPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.invPlaceholder)).findFirst();
+            if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandEnabled && optInvPlaceholder.isPresent()) {
+                discordsrv.getMainGuild().upsertCommand(INVENTORY_LABEL, ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())).queue();
+            }
+            Optional<ICPlaceholder> optEnderPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.enderPlaceholder)).findFirst();
+            if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandEnabled && optEnderPlaceholder.isPresent()) {
+                discordsrv.getMainGuild().upsertCommand(ENDERCHEST_LABEL, ChatColorUtils.stripColor(optEnderPlaceholder.get().getDescription())).queue();
+            }
+        } catch (ErrorResponseException e) {
+            if (e.getResponse().code == 50001) {
+                throw new DiscordCommandRegistrationException("Scope \"applications.commands\" missing in discord bot application.\nCheck the Q&A section in https://www.spigotmc.org/resources/83917/ for more information", e);
+            }
+            throw new DiscordCommandRegistrationException(e);
         }
     }
 
@@ -550,6 +578,22 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                 break;
             }
         }
+    }
+
+    public static class DiscordCommandRegistrationException extends RuntimeException {
+
+        public DiscordCommandRegistrationException(String message) {
+            super(message);
+        }
+
+        public DiscordCommandRegistrationException(Throwable cause) {
+            super(cause);
+        }
+
+        public DiscordCommandRegistrationException(String message, Throwable throwable) {
+            super(message, throwable);
+        }
+
     }
 
 }
