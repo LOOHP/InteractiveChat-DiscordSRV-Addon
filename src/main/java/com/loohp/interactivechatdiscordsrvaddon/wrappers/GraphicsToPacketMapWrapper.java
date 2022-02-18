@@ -48,6 +48,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -67,6 +68,7 @@ public class GraphicsToPacketMapWrapper {
             nmsWorldMapClass = NMSUtils.getNMSClass("net.minecraft.server.%s.WorldMap", "net.minecraft.world.level.saveddata.maps.WorldMap");
 
             if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_17)) {
+                //noinspection OptionalGetWithoutIsPresent
                 nmsWorldMapBClass = Stream.of(nmsWorldMapClass.getClasses()).filter(each -> each.getName().endsWith("$b")).findFirst().get();
                 nmsWorldMapBClassConstructor = nmsWorldMapBClass.getConstructor(int.class, int.class, int.class, int.class, byte[].class);
             }
@@ -74,14 +76,16 @@ public class GraphicsToPacketMapWrapper {
         }
     }
 
-    private ImageFrame[] frames;
+    private volatile boolean done;
+    private List<ImageFrame> frames;
     private byte[][] colors;
     private ItemStack mapItem;
     private int totalTime;
     private boolean playbackBar;
     private Color backgroundColor;
 
-    public GraphicsToPacketMapWrapper(ImageFrame[] frames, boolean playbackBar, Color backgroundColor) {
+    public GraphicsToPacketMapWrapper(List<ImageFrame> frames, boolean playbackBar, Color backgroundColor) {
+        this.done = true;
         this.frames = frames;
         this.playbackBar = playbackBar;
         this.backgroundColor = backgroundColor;
@@ -89,11 +93,38 @@ public class GraphicsToPacketMapWrapper {
     }
 
     public GraphicsToPacketMapWrapper(BufferedImage image, Color backgroundColor) {
-        this(new ImageFrame[] {new ImageFrame(image)}, false, backgroundColor);
+        this(Collections.singletonList(new ImageFrame(image)), false, backgroundColor);
+    }
+
+    public GraphicsToPacketMapWrapper(boolean playbackBar, Color backgroundColor) {
+        this.done = false;
+        this.frames = null;
+        this.playbackBar = playbackBar;
+        this.backgroundColor = backgroundColor;
+    }
+
+    public boolean futureCompleted() {
+        return done;
+    }
+
+    public boolean futureCancelled() {
+        return done && frames == null;
+    }
+
+    public synchronized void completeFuture(List<ImageFrame> frames) {
+        if (done) {
+            return;
+        }
+        this.frames = frames;
+        this.done = true;
+        update();
     }
 
     public void update() {
-        this.colors = new byte[frames.length][];
+        if (!done) {
+            throw new IllegalStateException("Future has not complete!");
+        }
+        this.colors = new byte[frames.size()][];
         this.mapItem = XMaterial.FILLED_MAP.parseItem();
         if (InteractiveChat.version.isLegacy()) {
             mapItem.setDurability(MAP_ID);
@@ -108,8 +139,8 @@ public class GraphicsToPacketMapWrapper {
         }
         this.totalTime = totalTime;
         int currentTime = 0;
-        for (int i = 0; i < frames.length; i++) {
-            ImageFrame frame = frames[i];
+        int i = 0;
+        for (ImageFrame frame : frames) {
             BufferedImage processedFrame = ImageUtils.resizeImageQuality(ImageUtils.squarify(frame.getImage()), 128, 128);
             if (playbackBar) {
                 Graphics2D g = processedFrame.createGraphics();
@@ -130,10 +161,11 @@ public class GraphicsToPacketMapWrapper {
             }
             this.colors[i] = MapPalette.imageToBytes(processedFrame);
             currentTime += frame.getDelay();
+            i++;
         }
     }
 
-    public ImageFrame[] getImageFrame() {
+    public List<ImageFrame> getImageFrame() {
         return frames;
     }
 
@@ -143,17 +175,21 @@ public class GraphicsToPacketMapWrapper {
 
     public int getFrameAt(int ms) {
         int current = 0;
-        for (int i = 0; i < frames.length; i++) {
-            ImageFrame frame = frames[i];
+        int i = 0;
+        for (ImageFrame frame : frames) {
             current += frame.getDelay();
             if (current >= ms) {
                 return i;
             }
+            i++;
         }
         return -1;
     }
 
     public void show(Player player) {
+        if (!done) {
+            throw new IllegalStateException("Future has not complete!");
+        }
         InteractiveChatDiscordSrvAddon.plugin.imagesViewedCounter.incrementAndGet();
         InboundToGameEvents.MAP_VIEWERS.put(player, this);
 
@@ -169,7 +205,7 @@ public class GraphicsToPacketMapWrapper {
             packet1.getIntegers().write(0, player.getEntityId());
             if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
                 List<Pair<ItemSlot, ItemStack>> list = new ArrayList<>();
-                list.add(new Pair<ItemSlot, ItemStack>(ItemSlot.MAINHAND, mapItem));
+                list.add(new Pair<>(ItemSlot.MAINHAND, mapItem));
                 packet1.getSlotStackPairLists().write(0, list);
             } else {
                 packet1.getItemSlots().write(0, ItemSlot.MAINHAND);

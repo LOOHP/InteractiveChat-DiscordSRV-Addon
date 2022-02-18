@@ -39,32 +39,48 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.function.BiConsumer;
 
 public class GifReader {
 
-    public static ImageFrame[] readGif(InputStream stream) throws IOException {
+    public static Future<List<ImageFrame>> readGif(InputStream stream, ExecutorService service, BiConsumer<List<ImageFrame>, Throwable> completeAction) throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         int nRead;
         byte[] data = new byte[2048];
         while ((nRead = stream.read(data, 0, data.length)) != -1) {
             buffer.write(data, 0, nRead);
         }
-        byte[] input = buffer.toByteArray();
-
-        ImageFrame[] result;
-        result = returnOrNull(() -> readGifMethod0(new ByteArrayInputStream(input)));
-        if (result != null) {
-            return result;
-        }
-        result = returnOrNull(() -> readGifMethod1(new ByteArrayInputStream(input)));
-        if (result != null) {
-            return result;
-        }
-        return returnOrNull(() -> readGifFallbackMethod(new ByteArrayInputStream(input)));
+        stream.close();
+        byte[] targetArray = buffer.toByteArray();
+        return service.submit(() -> {
+            try {
+                List<ImageFrame> result;
+                result = returnOrNull(() -> readGifMethod0(new ByteArrayInputStream(targetArray)));
+                if (result != null) {
+                    completeAction.accept(result, null);
+                    return result;
+                }
+                result = returnOrNull(() -> readGifMethod1(new ByteArrayInputStream(targetArray)));
+                if (result != null) {
+                    completeAction.accept(result, null);
+                    return result;
+                }
+                List<ImageFrame> frames = returnOrNull(() -> readGifFallbackMethod(new ByteArrayInputStream(targetArray)));
+                completeAction.accept(frames, null);
+                return frames;
+            } catch (Throwable e) {
+                completeAction.accept(null, e);
+                return null;
+            }
+        });
     }
 
-    private static ImageFrame[] returnOrNull(ThrowingSupplier<ImageFrame[]> supplier) {
+    private static List<ImageFrame> returnOrNull(ThrowingSupplier<List<ImageFrame>> supplier) {
         try {
             return supplier.get();
         } catch (Throwable e) {
@@ -72,14 +88,14 @@ public class GifReader {
         }
     }
 
-    private static ImageFrame[] readGifMethod0(InputStream stream) throws IOException {
+    private static List<ImageFrame> readGifMethod0(InputStream stream) throws IOException {
         GifDecoder reader = new GifDecoder();
         if (reader.read(stream) == 0) {
-            ImageFrame[] frames = new ImageFrame[reader.getFrameCount()];
+            List<ImageFrame> frames = new ArrayList<>(reader.getFrameCount());
             for (int i = 0; i < reader.getFrameCount(); i++) {
                 BufferedImage image = reader.getFrame(i);
                 int delay = reader.getDelay(i);
-                frames[i] = new ImageFrame(image, delay, "");
+                frames.add(new ImageFrame(image, delay, ""));
             }
             return frames;
         } else {
@@ -87,12 +103,12 @@ public class GifReader {
         }
     }
 
-    private static ImageFrame[] readGifMethod1(InputStream input) throws IOException {
+    private static List<ImageFrame> readGifMethod1(InputStream input) throws IOException {
         ImageReader reader = ImageIO.getImageReadersByFormatName("gif").next();
         ImageInputStream stream = ImageIO.createImageInputStream(input);
         reader.setInput(stream);
 
-        List<ImageFrame> frames = new ArrayList<>();
+        List<ImageFrame> frames = new LinkedList<>();
 
         int width = -1;
         int height = -1;
@@ -131,7 +147,7 @@ public class GifReader {
 
             IIOMetadataNode root = (IIOMetadataNode) reader.getImageMetadata(frameIndex).getAsTree("javax_imageio_gif_image_1.0");
             IIOMetadataNode gce = (IIOMetadataNode) root.getElementsByTagName("GraphicControlExtension").item(0);
-            int delay = Integer.valueOf(gce.getAttribute("delayTime")) * 10;
+            int delay = Integer.parseInt(gce.getAttribute("delayTime")) * 10;
             String disposal = gce.getAttribute("disposalMethod");
 
             int x = 0;
@@ -147,8 +163,8 @@ public class GifReader {
                     Node nodeItem = children.item(nodeIndex);
                     if (nodeItem.getNodeName().equals("ImageDescriptor")) {
                         NamedNodeMap map = nodeItem.getAttributes();
-                        x = Integer.valueOf(map.getNamedItem("imageLeftPosition").getNodeValue());
-                        y = Integer.valueOf(map.getNamedItem("imageTopPosition").getNodeValue());
+                        x = Integer.parseInt(map.getNamedItem("imageLeftPosition").getNodeValue());
+                        y = Integer.parseInt(map.getNamedItem("imageTopPosition").getNodeValue());
                     }
                 }
             }
@@ -175,11 +191,11 @@ public class GifReader {
         }
         reader.dispose();
 
-        return frames.toArray(new ImageFrame[frames.size()]);
+        return frames;
     }
 
-    private static ImageFrame[] readGifFallbackMethod(InputStream input) throws IOException {
-        return new ImageFrame[] {new ImageFrame(ImageIO.read(input))};
+    private static List<ImageFrame> readGifFallbackMethod(InputStream input) throws IOException {
+        return Collections.singletonList(new ImageFrame(ImageIO.read(input)));
     }
 
 }

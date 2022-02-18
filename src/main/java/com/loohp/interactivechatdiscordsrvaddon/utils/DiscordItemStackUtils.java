@@ -100,6 +100,7 @@ public class DiscordItemStackUtils {
     static {
         try {
             try {
+                //noinspection JavaReflectionMemberAccess
                 bukkitBukkitClassGetMapShortMethod = Bukkit.class.getMethod("getMap", short.class);
             } catch (NoSuchMethodException e1) {
             }
@@ -148,20 +149,20 @@ public class DiscordItemStackUtils {
         }
 
         boolean hasMeta = item.hasItemMeta();
-        String description = "";
+        StringBuilder description = new StringBuilder();
 
         if (xMaterial.equals(XMaterial.WRITTEN_BOOK) && hasMeta && item.getItemMeta() instanceof BookMeta) {
             BookMeta meta = (BookMeta) item.getItemMeta();
             String author = meta.getAuthor();
             if (author != null) {
-                description += LanguageUtils.getTranslation(TranslationKeyUtils.getBookAuthor(), language).replaceFirst("%1\\$s", ChatColorUtils.stripColor(author)) + "\n";
+                description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getBookAuthor(), language).replaceFirst("%1\\$s", ChatColorUtils.stripColor(author))).append("\n");
             }
             Generation generation = meta.getGeneration();
             if (generation == null) {
                 generation = Generation.ORIGINAL;
             }
-            description += LanguageUtils.getTranslation(TranslationKeyUtils.getBookGeneration(generation), language) + "\n";
-            description += "\n";
+            description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getBookGeneration(generation), language)).append("\n");
+            description.append("\n");
         }
 
         if (xMaterial.equals(XMaterial.SHIELD) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
@@ -182,7 +183,7 @@ public class DiscordItemStackUtils {
 
                 for (Pattern pattern : patterns) {
                     PatternTypeWrapper type = PatternTypeWrapper.fromPatternType(pattern.getPattern());
-                    description += LanguageUtils.getTranslation(TranslationKeyUtils.getBannerPatternName(type, pattern.getColor()), language) + "\n";
+                    description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getBannerPatternName(type, pattern.getColor()), language)).append("\n");
                 }
             }
         }
@@ -202,29 +203,29 @@ public class DiscordItemStackUtils {
 
             for (Pattern pattern : patterns) {
                 PatternTypeWrapper type = PatternTypeWrapper.fromPatternType(pattern.getPattern());
-                description += LanguageUtils.getTranslation(TranslationKeyUtils.getBannerPatternName(type, pattern.getColor()), language) + "\n";
+                description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getBannerPatternName(type, pattern.getColor()), language)).append("\n");
             }
         }
 
         if (xMaterial.equals(XMaterial.TROPICAL_FISH_BUCKET)) {
             List<String> translations = TranslationKeyUtils.getTropicalFishBucketName(item);
             if (translations.size() > 0) {
-                description += LanguageUtils.getTranslation(translations.get(0), language) + "\n";
+                description.append(LanguageUtils.getTranslation(translations.get(0), language)).append("\n");
                 if (translations.size() > 1) {
-                    description += translations.stream().skip(1).map(each -> LanguageUtils.getTranslation(each, language)).collect(Collectors.joining(", ")) + "\n";
+                    description.append(translations.stream().skip(1).map(each -> LanguageUtils.getTranslation(each, language)).collect(Collectors.joining(", "))).append("\n");
                 }
-                description += "\n";
+                description.append("\n");
             }
         }
 
         if (xMaterial.isOneOf(Arrays.asList("CONTAINS:Music_Disc"))) {
-            description += LanguageUtils.getTranslation(TranslationKeyUtils.getMusicDiscName(item), language) + "\n";
+            description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getMusicDiscName(item), language)).append("\n");
         }
 
         if (xMaterial.equals(XMaterial.FIREWORK_ROCKET)) {
             if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && NBTEditor.contains(item, "Fireworks", "Flight")) {
                 int flight = NBTEditor.getByte(item, "Fireworks", "Flight");
-                description += LanguageUtils.getTranslation(TranslationKeyUtils.getRocketFlightDuration(), language) + " " + flight + "\n";
+                description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getRocketFlightDuration(), language)).append(" ").append(flight).append("\n");
             }
         }
 
@@ -234,7 +235,7 @@ public class DiscordItemStackUtils {
             if (charged != null && !charged.isEmpty()) {
                 ItemStack charge = charged.get(0);
                 String chargeItemName = getDiscordDescription(charge, player).getName();
-                description += LanguageUtils.getTranslation(TranslationKeyUtils.getCrossbowProjectile(), language) + " [**" + chargeItemName + "**]\n\n";
+                description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getCrossbowProjectile(), language)).append(" [**").append(chargeItemName).append("**]\n\n");
             }
         }
 
@@ -256,13 +257,13 @@ public class DiscordItemStackUtils {
             }
             int scale = mapView.getScale().getValue();
             if (!InteractiveChat.version.isLegacy()) {
-                description += LanguageUtils.getTranslation(TranslationKeyUtils.getFilledMapId(), language).replaceFirst("%s", id + "") + "\n";
+                description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getFilledMapId(), language).replaceFirst("%s", id + "")).append("\n");
             } else {
                 name += " (#" + id + ")";
             }
-            description += LanguageUtils.getTranslation(TranslationKeyUtils.getFilledMapScale(), language).replaceFirst("%s", (int) Math.pow(2, scale) + "") + "\n";
-            description += LanguageUtils.getTranslation(TranslationKeyUtils.getFilledMapLevel(), language).replaceFirst("%s", scale + "").replaceFirst("%s", "4") + "\n";
-            description += "\n";
+            description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getFilledMapScale(), language).replaceFirst("%s", (int) Math.pow(2, scale) + "")).append("\n");
+            description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getFilledMapLevel(), language).replaceFirst("%s", scale + "").replaceFirst("%s", "4")).append("\n");
+            description.append("\n");
         }
 
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && !hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS))) {
@@ -276,34 +277,34 @@ public class DiscordItemStackUtils {
                 effects.addAll(meta.getCustomEffects());
 
                 if (effects.isEmpty()) {
-                    description += "**" + LanguageUtils.getTranslation(TranslationKeyUtils.getNoEffect(), language) + "**\n";
+                    description.append("**").append(LanguageUtils.getTranslation(TranslationKeyUtils.getNoEffect(), language)).append("**\n");
                 } else {
                     for (PotionEffect effect : effects) {
                         String key = TranslationKeyUtils.getEffect(effect.getType());
                         String translation = LanguageUtils.getTranslation(key, language);
                         if (key.equals(translation)) {
-                            description += "**" + WordUtils.capitalize(effect.getType().getName().toLowerCase().replace("_", " "));
+                            description.append("**").append(WordUtils.capitalize(effect.getType().getName().toLowerCase().replace("_", " ")));
                         } else {
-                            description += "**" + translation;
+                            description.append("**").append(translation);
                         }
                         int amplifier = effect.getAmplifier();
                         String effectLevelTranslation = LanguageUtils.getTranslation(TranslationKeyUtils.getEffectLevel(amplifier), language);
                         if (effectLevelTranslation.length() > 0) {
-                            description += " " + effectLevelTranslation;
+                            description.append(" ").append(effectLevelTranslation);
                         }
                         if (!effect.getType().isInstant()) {
                             if (xMaterial.equals(XMaterial.LINGERING_POTION)) {
-                                description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() / 4 * 50, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true) + ")";
+                                description.append(" (").append(TimeUtils.getReadableTimeBetween(0, effect.getDuration() / 4 * 50L, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true)).append(")");
                             } else {
-                                description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() * 50, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true) + ")";
+                                description.append(" (").append(TimeUtils.getReadableTimeBetween(0, effect.getDuration() * 50L, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true)).append(")");
                             }
                         }
-                        description += "**\n";
+                        description.append("**\n");
                     }
                 }
 
-                if (!description.equals("")) {
-                    description += "\n";
+                if (!description.toString().equals("")) {
+                    description.append("\n");
                 }
             }
         }
@@ -322,7 +323,7 @@ public class DiscordItemStackUtils {
                         enchName = translation;
                     }
                     if (enchName != null) {
-                        description += "**" + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + LanguageUtils.getTranslation(TranslationKeyUtils.getEnchantmentLevel(level), language)) + "**\n";
+                        description.append("**").append(enchName).append(ench.getMaxLevel() == 1 && level == 1 ? "" : " " + LanguageUtils.getTranslation(TranslationKeyUtils.getEnchantmentLevel(level), language)).append("**\n");
                     }
                 }
             } else {
@@ -338,7 +339,7 @@ public class DiscordItemStackUtils {
                         enchName = translation;
                     }
                     if (enchName != null) {
-                        description += "**" + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + LanguageUtils.getTranslation(TranslationKeyUtils.getEnchantmentLevel(level), language)) + "**\n";
+                        description.append("**").append(enchName).append(ench.getMaxLevel() == 1 && level == 1 ? "" : " " + LanguageUtils.getTranslation(TranslationKeyUtils.getEnchantmentLevel(level), language)).append("**\n");
                     }
                 }
             }
@@ -347,34 +348,34 @@ public class DiscordItemStackUtils {
         if (hasMeta && item.getItemMeta() instanceof LeatherArmorMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_DYE)) {
             LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
             if (NBTEditor.contains(item, "display", "color")) {
-                if (!description.equals("")) {
-                    description += "\n";
+                if (!description.toString().equals("")) {
+                    description.append("\n");
                 }
                 Color color = new Color(meta.getColor().asRGB());
                 String hex = ColorUtils.rgb2Hex(color).toUpperCase();
-                description += LanguageUtils.getTranslation(TranslationKeyUtils.getDyeColor(), language).replaceFirst("%s", hex) + "\n";
+                description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getDyeColor(), language).replaceFirst("%s", hex)).append("\n");
             }
         }
 
         if (hasMeta) {
             ItemMeta meta = item.getItemMeta();
             if (meta.hasLore()) {
-                if (!description.equals("")) {
-                    description += "\n";
+                if (!description.toString().equals("")) {
+                    description.append("\n");
                 }
                 String lore = String.join("\n", meta.getLore());
                 if (DiscordSRV.config().getBoolean("Experiment_MCDiscordReserializer_ToDiscord")) {
                     if (InteractiveChatDiscordSrvAddon.plugin.escapeDiscordMarkdownInItems) {
                         lore = lore.replaceAll(DiscordDataRegistry.getMarkdownSpecialPattern(), "\\\\$1");
                     }
-                    lore = DiscordSerializer.INSTANCE.serialize(ComponentStringUtils.toDiscordSRVComponent(LEGACY_SERIALIZER.deserialize(String.join("\n", meta.getLore()))));
+                    lore = DiscordSerializer.INSTANCE.serialize(ComponentStringUtils.toDiscordSRVComponent(LEGACY_SERIALIZER.deserialize(lore)));
                 } else {
                     lore = ComponentStringUtils.stripColorAndConvertMagic(String.join("\n", meta.getLore()));
                     if (InteractiveChatDiscordSrvAddon.plugin.escapeDiscordMarkdownInItems) {
                         lore = lore.replaceAll(DiscordDataRegistry.getMarkdownSpecialPattern(), "\\\\$1");
                     }
                 }
-                description += lore + "\n";
+                description.append(lore).append("\n");
             }
         }
 
@@ -455,68 +456,67 @@ public class DiscordItemStackUtils {
                 }
             }
             if (useMainHand) {
-                description += "\n";
-                description += LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HAND), language) + "\n";
+                description.append("\n");
+                description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HAND), language)).append("\n");
                 for (String each : mainHand) {
-                    description += each + "\n";
+                    description.append(each).append("\n");
                 }
             }
             if (useOffhand) {
-                description += "\n";
-                description += LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.OFF_HAND), language) + "\n";
+                description.append("\n");
+                description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.OFF_HAND), language)).append("\n");
                 for (String each : offHand) {
-                    description += each + "\n";
+                    description.append(each).append("\n");
                 }
             }
             if (useFeet) {
-                description += "\n";
-                description += LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.FEET), language) + "\n";
+                description.append("\n");
+                description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.FEET), language)).append("\n");
                 for (String each : feet) {
-                    description += each + "\n";
+                    description.append(each).append("\n");
                 }
             }
             if (useLegs) {
-                description += "\n";
-                description += LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.LEGS), language) + "\n";
+                description.append("\n");
+                description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.LEGS), language)).append("\n");
                 for (String each : legs) {
-                    description += each + "\n";
+                    description.append(each).append("\n");
                 }
             }
             if (useChest) {
-                description += "\n";
-                description += LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.CHEST), language) + "\n";
+                description.append("\n");
+                description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.CHEST), language)).append("\n");
                 for (String each : chest) {
-                    description += each + "\n";
+                    description.append(each).append("\n");
                 }
             }
             if (useHead) {
-                description += "\n";
-                description += LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HEAD), language) + "\n";
+                description.append("\n");
+                description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HEAD), language)).append("\n");
                 for (String each : head) {
-                    description += each + "\n";
+                    description.append(each).append("\n");
                 }
             }
         }
 
         if (hasMeta && isUnbreakable(item) && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_UNBREAKABLE)) {
-            if (!description.equals("")) {
-                description += "\n";
+            if (!description.toString().equals("")) {
+                description.append("\n");
             }
-            description += "**" + LanguageUtils.getTranslation(TranslationKeyUtils.getUnbreakable(), language) + "**\n";
+            description.append("**").append(LanguageUtils.getTranslation(TranslationKeyUtils.getUnbreakable(), language)).append("**\n");
         }
 
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_DESTROYS)) {
             if (NBTEditor.contains(item, "CanDestroy") && NBTEditor.getSize(item, "CanDestroy") > 0) {
-                description += "\n";
-                description += LanguageUtils.getTranslation(TranslationKeyUtils.getCanDestroy(), language) + "\n";
-                @SuppressWarnings("unchecked")
+                description.append("\n");
+                description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getCanDestroy(), language)).append("\n");
                 ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "CanDestroy").toJson());
                 for (StringTag materialTag : materialList) {
                     XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
                     if (parsedXMaterial == null) {
-                        description += WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase()) + "\n";
+                        description.append(WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase())).append("\n");
                     } else {
-                        description += LanguageUtils.getTranslation(LanguageUtils.getTranslationKey(parsedXMaterial.parseItem()), language) + "\n";
+                        description.append(LanguageUtils.getTranslation(LanguageUtils.getTranslationKey(parsedXMaterial.parseItem()), language)).append("\n");
                     }
                 }
             }
@@ -524,16 +524,15 @@ public class DiscordItemStackUtils {
 
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_PLACED_ON)) {
             if (NBTEditor.contains(item, "CanPlaceOn") && NBTEditor.getSize(item, "CanPlaceOn") > 0) {
-                description += "\n";
-                description += LanguageUtils.getTranslation(TranslationKeyUtils.getCanPlace(), language) + "\n";
-                @SuppressWarnings("unchecked")
+                description.append("\n");
+                description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getCanPlace(), language)).append("\n");
                 ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "CanPlaceOn").toJson());
                 for (StringTag materialTag : materialList) {
                     XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
                     if (parsedXMaterial == null) {
-                        description += WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase()) + "\n";
+                        description.append(WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase())).append("\n");
                     } else {
-                        description += LanguageUtils.getTranslation(LanguageUtils.getTranslationKey(parsedXMaterial.parseItem()), language) + "\n";
+                        description.append(LanguageUtils.getTranslation(LanguageUtils.getTranslationKey(parsedXMaterial.parseItem()), language)).append("\n");
                     }
                 }
             }
@@ -543,14 +542,14 @@ public class DiscordItemStackUtils {
             int durability = item.getType().getMaxDurability() - (InteractiveChat.version.isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
             int maxDur = item.getType().getMaxDurability();
             if (durability < maxDur) {
-                if (!description.equals("")) {
-                    description += "\n";
+                if (!description.toString().equals("")) {
+                    description.append("\n");
                 }
-                description += "**" + LanguageUtils.getTranslation(TranslationKeyUtils.getDurability(), language).replaceFirst("%s", String.valueOf(durability)).replaceFirst("%s", String.valueOf(maxDur)) + "**\n";
+                description.append("**").append(LanguageUtils.getTranslation(TranslationKeyUtils.getDurability(), language).replaceFirst("%s", String.valueOf(durability)).replaceFirst("%s", String.valueOf(maxDur))).append("**\n");
             }
         }
 
-        return new DiscordDescription(name, description.trim().isEmpty() ? null : description);
+        return new DiscordDescription(name, description.toString().trim().isEmpty() ? null : description.toString());
     }
 
     public static DiscordToolTip getToolTip(ItemStack item, Player player) throws Exception {
@@ -713,9 +712,9 @@ public class DiscordItemStackUtils {
                         }
                         if (!effect.getType().isInstant()) {
                             if (xMaterial.equals(XMaterial.LINGERING_POTION)) {
-                                description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() / 4 * 50, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true) + ")";
+                                description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() / 4 * 50L, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true) + ")";
                             } else {
-                                description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() * 50, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true) + ")";
+                                description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() * 50L, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true) + ")";
                             }
                         }
                         ChatColor color;
@@ -863,44 +862,32 @@ public class DiscordItemStackUtils {
             if (useMainHand) {
                 prints.add(Component.empty());
                 prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HAND), language)));
-                for (Component each : mainHand) {
-                    prints.add(each);
-                }
+                prints.addAll(mainHand);
             }
             if (useOffhand) {
                 prints.add(Component.empty());
                 prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.OFF_HAND), language)));
-                for (Component each : offHand) {
-                    prints.add(each);
-                }
+                prints.addAll(offHand);
             }
             if (useFeet) {
                 prints.add(Component.empty());
                 prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.FEET), language)));
-                for (Component each : feet) {
-                    prints.add(each);
-                }
+                prints.addAll(feet);
             }
             if (useLegs) {
                 prints.add(Component.empty());
                 prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.LEGS), language)));
-                for (Component each : legs) {
-                    prints.add(each);
-                }
+                prints.addAll(legs);
             }
             if (useChest) {
                 prints.add(Component.empty());
                 prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.CHEST), language)));
-                for (Component each : chest) {
-                    prints.add(each);
-                }
+                prints.addAll(chest);
             }
             if (useHead) {
                 prints.add(Component.empty());
                 prints.add(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HEAD), language)));
-                for (Component each : head) {
-                    prints.add(each);
-                }
+                prints.addAll(head);
             }
         }
 

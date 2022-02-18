@@ -78,6 +78,9 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
@@ -134,6 +137,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public String reloadConfigMessage;
     public String reloadTextureMessage;
     public String linkExpired;
+    public String previewLoading;
     public String accountNotLinked;
     public String unableToRetrieveData;
     public String invalidDiscordChannel;
@@ -146,7 +150,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public String discordAttachmentsFormattingText;
     public boolean discordAttachmentsFormattingHoverEnabled = true;
     public String discordAttachmentsFormattingHoverText;
-    public boolean discordAttachmentsUseMaps = true;
+    public boolean discordAttachmentsImagesUseMaps = true;
+    public long discordAttachmentsPreviewLimit = 0;
     public int discordAttachmentTimeout = 0;
     public String discordAttachmentsFormattingImageAppend;
     public String discordAttachmentsFormattingImageAppendHover;
@@ -198,6 +203,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public List<String> resourceOrder = new ArrayList<>();
     public ResourceManager resourceManager;
     public ModelRenderer modelRenderer;
+    public ExecutorService mediaReadingService;
 
     protected Map<String, byte[]> extras = new ConcurrentHashMap<>();
 
@@ -267,6 +273,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         reloadTextures(false, false);
         modelRenderer = new ModelRenderer(str -> new ThreadFactoryBuilder().setNameFormat(str).build(), () -> InteractiveChatDiscordSrvAddon.plugin.cacheTimeout, image -> ImageGeneration.getEnchantedImage(image), image -> ImageGeneration.getRawEnchantedImage(image), () -> 8, () -> Runtime.getRuntime().availableProcessors());
 
+        ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat("InteractiveChatDiscordSRVAddon Async Media Reading Thread #%d").build();
+        mediaReadingService = Executors.newFixedThreadPool(4, factory);
+
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
             for (ICPlayer player : ICPlayerFactory.getOnlineICPlayers()) {
                 cachePlayerSkin(player);
@@ -305,6 +314,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     @Override
     public void onDisable() {
         modelRenderer.close();
+        mediaReadingService.shutdown();
         if (resourceManager != null) {
             resourceManager.close();
         }
@@ -328,6 +338,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         reloadConfigMessage = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.ReloadConfig"));
         reloadTextureMessage = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.ReloadTexture"));
         linkExpired = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.LinkExpired"));
+        previewLoading = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.PreviewLoading"));
         accountNotLinked = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.AccountNotLinked"));
         unableToRetrieveData = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.UnableToRetrieveData"));
         invalidDiscordChannel = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.InvalidDiscordChannel"));
@@ -372,7 +383,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         discordAttachmentsFormattingText = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordAttachments.Formatting.Text"));
         discordAttachmentsFormattingHoverEnabled = config.getConfiguration().getBoolean("DiscordAttachments.Formatting.Hover.Enabled");
         discordAttachmentsFormattingHoverText = ChatColorUtils.translateAlternateColorCodes('&', String.join("\n", config.getConfiguration().getStringList("DiscordAttachments.Formatting.Hover.HoverText")));
-        discordAttachmentsUseMaps = config.getConfiguration().getBoolean("DiscordAttachments.ShowImageUsingMaps");
+        discordAttachmentsImagesUseMaps = config.getConfiguration().getBoolean("DiscordAttachments.ShowImageUsingMaps");
+        discordAttachmentsPreviewLimit = config.getConfiguration().getLong("DiscordAttachments.FileSizeLimit");
         discordAttachmentTimeout = config.getConfiguration().getInt("DiscordAttachments.Timeout") * 20;
         discordAttachmentsFormattingImageAppend = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordAttachments.Formatting.ImageOriginal"));
         discordAttachmentsFormattingImageAppendHover = ChatColorUtils.translateAlternateColorCodes('&', String.join("\n", config.getConfiguration().getStringList("DiscordAttachments.Formatting.Hover.ImageOriginalHover")));

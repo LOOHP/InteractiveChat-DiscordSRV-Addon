@@ -34,10 +34,12 @@ public class ImageFrame {
         this.disposal = disposal;
     }
 
+    public ImageFrame(BufferedImage image, int delay) {
+        this(image, delay, "");
+    }
+
     public ImageFrame(BufferedImage image) {
-        this.image = image;
-        this.delay = 0;
-        this.disposal = "";
+        this(image, 0, "");
     }
 
     public BufferedImage getImage() {

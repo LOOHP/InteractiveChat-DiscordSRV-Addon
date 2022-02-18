@@ -36,6 +36,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater.UpdaterResponse;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
+import com.loohp.interactivechatdiscordsrvaddon.wrappers.GraphicsToPacketMapWrapper;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -169,8 +170,17 @@ public class Commands implements CommandExecutor, TabCompleter {
             if (args.length > 1 && sender instanceof Player) {
                 try {
                     DiscordAttachmentData data = InboundToGameEvents.DATA.get(UUID.fromString(args[1]));
-                    if (data != null && data.isImage()) {
-                        data.getImageMap().show((Player) sender);
+                    if (data != null && (data.isImage() || data.isVideo())) {
+                        GraphicsToPacketMapWrapper imageMap = data.getImageMap();
+                        if (imageMap.futureCancelled()) {
+                            sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.linkExpired);
+                        } else if (imageMap.futureCompleted()) {
+                            imageMap.show((Player) sender);
+                        } else {
+                            sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.previewLoading);
+                        }
+                    } else {
+                        sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.linkExpired);
                     }
                 } catch (Exception e) {
                     sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.linkExpired);

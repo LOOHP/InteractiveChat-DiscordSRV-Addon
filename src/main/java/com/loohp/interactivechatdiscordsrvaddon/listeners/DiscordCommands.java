@@ -159,14 +159,13 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
             inv.setItem(8, offhand);
         }
 
-        Inventory finalRef = inv;
         Bukkit.getScheduler().runTaskAsynchronously(InteractiveChat.plugin, () -> {
             ItemStack skull = SkinUtils.getSkull(player.getUniqueId());
             ItemMeta meta = skull.getItemMeta();
             String name = ChatColorUtils.translateAlternateColorCodes('&', InteractiveChatDiscordSrvAddon.plugin.shareInvCommandSkullName.replace("{Player}", player.getName()));
             meta.setDisplayName(name);
             skull.setItemMeta(meta);
-            finalRef.setItem(0, skull);
+            inv.setItem(0, skull);
         });
 
         InteractiveChatAPI.addInventoryToItemShareList(SharedType.INVENTORY, sha1, inv);
@@ -242,14 +241,13 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
             }
         }
 
-        Inventory finalRef = inv;
         Bukkit.getScheduler().runTaskAsynchronously(InteractiveChat.plugin, () -> {
             ItemStack skull = SkinUtils.getSkull(player.getUniqueId());
             ItemMeta meta = skull.getItemMeta();
             String name = ChatColorUtils.translateAlternateColorCodes('&', InteractiveChatDiscordSrvAddon.plugin.shareInvCommandSkullName.replace("{Player}", player.getName()));
             meta.setDisplayName(name);
             skull.setItemMeta(meta);
-            finalRef.setItem(10, skull);
+            inv.setItem(10, skull);
         });
 
         InteractiveChatAPI.addInventoryToItemShareList(SharedType.INVENTORY1_UPPER, sha1, inv);
@@ -349,7 +347,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                         if (!deleted.get()) {
                             hook.deleteOriginal().queue();
                         }
-                    }, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandDeleteAfter * 20);
+                    }, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandDeleteAfter * 20L);
                 }
             });
             Map<OfflinePlayer, Integer> players;

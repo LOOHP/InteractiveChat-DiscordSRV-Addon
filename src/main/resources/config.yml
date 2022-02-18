@@ -58,7 +58,7 @@ DiscordAttachments:
     Hover:
       Enabled: true
       HoverText:
-        - "&bClick to View"
+        - "&bClick to Preview"
       ImageOriginalHover:
         - "&eOpen Original"
   #Whether to allow previewing images in game using maps
@@ -69,7 +69,7 @@ DiscordAttachments:
     Transparent: false
     #Only used when Transparent is false
     Color: "#36393F"
-  # When enabled, Only websites from the list below is allowed to be shown through in-game maps
+  #When enabled, Only websites from the list below is allowed to be shown through in-game maps
   RestrictImageUrl:
     Enabled: false
     Whitelist:
@@ -83,6 +83,9 @@ DiscordAttachments:
       - "http://media.discordapp.net"
       - "https://textures.minecraft.net"
       - "http://textures.minecraft.net"
+  #If the attachment is larger than the defined size, it won't be downloaded for preview
+  #(In Bytes)
+  FileSizeLimit: 8388608
   Timeout: 86400
   PlaybackBar:
     Enabled: true
@@ -189,6 +192,7 @@ Messages:
   ReloadConfig: "&aICDiscordSRVAddon config has been reloaded!"
   ReloadTexture: "&aICDiscordSRVAddon reloading textures--- (See console for progress)"
   LinkExpired: "&cThis link has been expired! To view this link, please head over to the linked discord channel!"
+  PreviewLoading: "&ePreview is being loaded! Please wait!"
   AccountNotLinked: "&cYou must have you Discord account linked to your Minecraft account to use this!"
   UnableToRetrieveData: "&cUnable to retrieve data."
   InvalidDiscordChannel: "&cYou cannot do that in this channel."
