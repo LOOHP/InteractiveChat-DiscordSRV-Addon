@@ -98,6 +98,10 @@ DiscordCommands:
     #Set this to true ONLY IF you use have multiple servers with interactivechatdiscordsrvaddon AND
     #you use a DIFFERENT channel for each server (i.e. not one shared channel for all servers)
     RespondToCommandsInInvalidChannels: true
+    Messages:
+      #Labels must be lowercase
+      MemberLabel: "member"
+      MemberDescription: "Member to set"
   #Settings for /playerlist
   PlayerList:
     #Enable the /playerlist command to show all online players in a tablist style image
@@ -114,6 +118,10 @@ DiscordCommands:
     EmptyServer: "There are no players online."
     #Delete the tablist message after X seconds (Set to 0 to not have it automatically deleted)
     DeleteAfter: 0
+    Permissions:
+      #Roles allowed to use this command
+      AllowedRoles:
+        - "everyone"
     TablistOptions:
       #The minimum width of the player name section of the playerlist
       #This is measured in pixels
@@ -137,6 +145,8 @@ DiscordCommands:
   ShareInventory:
     #Enable the /inv command on discord
     Enabled: true
+    #Allow the /invasuser associate command on discord
+    AllowAsOthers: true
     #If you do NOT use a shared discord channel for multiple servers, this should ALWAYS be true
     #If you do, set this option on ONE of the servers connected to the discord channel to true, 
     #With all others servers to false.
@@ -147,10 +157,19 @@ DiscordCommands:
         - "&bClick to view!"
     InventoryTitle: "{Player}'s Inventory"
     SkullDisplayName: "&e{Player}"
+    Permissions:
+      #Roles allowed sharing inventory of self
+      SelfAllowedRoles:
+        - "everyone"
+      #Roles allowed looking up inventory of other users
+      OtherAllowedRoles:
+        - "admin"
   #Settings for /ender
   ShareEnderChest:
     #Enable the /ender command on discord
     Enabled: true
+    #Allow the /enderasuser associate command on discord
+    AllowAsOthers: true
     #If you do NOT use a shared discord channel for multiple servers, this should ALWAYS be true
     #If you do, set this option on ONE of the servers connected to the discord channel to true, 
     #With all others servers to false.
@@ -160,6 +179,13 @@ DiscordCommands:
       Hover:
         - "&bClick to view!"
     InventoryTitle: "{Player}'s Ender Chest"
+    Permissions:
+      #Roles allowed sharing inventory of self
+      SelfAllowedRoles:
+        - "everyone"
+      #Roles allowed looking up inventory of other users
+      OtherAllowedRoles:
+        - "admin"
 
 DiscordMention:
   #Link mentions through discordsrv linked accounts
@@ -193,7 +219,7 @@ Messages:
   ReloadTexture: "&aICDiscordSRVAddon reloading textures--- (See console for progress)"
   LinkExpired: "&cThis link has been expired! To view this link, please head over to the linked discord channel!"
   PreviewLoading: "&ePreview is being loaded! Please wait!"
-  AccountNotLinked: "&cYou must have you Discord account linked to your Minecraft account to use this!"
+  AccountNotLinked: "&cA Minecraft account must be linked to this Discord account in order to use this command!"
   UnableToRetrieveData: "&cUnable to retrieve data."
   InvalidDiscordChannel: "&cYou cannot do that in this channel."
   TrueLabel: "&aTrue"

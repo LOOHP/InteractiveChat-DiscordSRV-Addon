@@ -174,6 +174,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public Color playbackBarEmptyColor;
     public String language = "en_us";
     public boolean respondToCommandsInInvalidChannels = true;
+    public String discordMemberLabel = "";
+    public String discordMemberDescription = "";
     public boolean playerlistCommandEnabled = true;
     public String playerlistCommandDescription = "";
     public boolean playerlistCommandIsMainServer = true;
@@ -187,17 +189,24 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public String playerlistCommandEmptyServer = "";
     public Color playerlistCommandColor = new Color(153, 153, 153);
     public int playerlistCommandMinWidth = 0;
+    public Set<String> playerlistCommandRoles = new HashSet<>();
     public boolean shareInvCommandEnabled = true;
+    public boolean shareInvCommandAsOthers = true;
     public boolean shareInvCommandIsMainServer = true;
     public String shareInvCommandInGameMessageText = "";
     public String shareInvCommandInGameMessageHover = "";
     public String shareInvCommandTitle = "";
     public String shareInvCommandSkullName = "";
+    public Set<String> shareInvCommandSelfRoles = new HashSet<>();
+    public Set<String> shareInvCommandOthersRoles = new HashSet<>();
     public boolean shareEnderCommandEnabled = true;
+    public boolean shareEnderCommandAsOthers = true;
     public boolean shareEnderCommandIsMainServer = true;
     public String shareEnderCommandInGameMessageText = "";
     public String shareEnderCommandInGameMessageHover = "";
     public String shareEnderCommandTitle = "";
+    public Set<String> shareEnderCommandSelfRoles = new HashSet<>();
+    public Set<String> shareEnderCommandOthersRoles = new HashSet<>();
     public PlaceholderCooldownManager placeholderCooldownManager = new PlaceholderCooldownManager();
     public String defaultResourceHash = "N/A";
     public List<String> resourceOrder = new ArrayList<>();
@@ -427,6 +436,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
         respondToCommandsInInvalidChannels = config.getConfiguration().getBoolean("DiscordCommands.GlobalSettings.RespondToCommandsInInvalidChannels");
 
+        discordMemberLabel = config.getConfiguration().getString("DiscordCommands.GlobalSettings.Messages.MemberLabel").toLowerCase();
+        discordMemberDescription = config.getConfiguration().getString("DiscordCommands.GlobalSettings.Messages.MemberDescription");
+
         playerlistCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.PlayerList.Enabled");
         playerlistCommandDescription = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.PlayerList.Description"));
         playerlistCommandIsMainServer = config.getConfiguration().getBoolean("DiscordCommands.PlayerList.IsMainServer");
@@ -440,19 +452,26 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         playerlistCommandEmptyServer = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.PlayerList.EmptyServer"));
         playerlistCommandColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordCommands.PlayerList.TablistOptions.SidebarColor"));
         playerlistCommandMinWidth = config.getConfiguration().getInt("DiscordCommands.PlayerList.TablistOptions.PlayerMinWidth");
+        playerlistCommandRoles = new HashSet<>(config.getConfiguration().getStringList("DiscordCommands.PlayerList.Permissions.AllowedRoles"));
 
         shareInvCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.ShareInventory.Enabled");
+        shareInvCommandAsOthers = config.getConfiguration().getBoolean("DiscordCommands.ShareInventory.AllowAsOthers");
         shareInvCommandIsMainServer = config.getConfiguration().getBoolean("DiscordCommands.ShareInventory.IsMainServer");
         shareInvCommandInGameMessageText = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.ShareInventory.InGameMessage.Text"));
         shareInvCommandInGameMessageHover = ChatColorUtils.translateAlternateColorCodes('&', String.join("\n", config.getConfiguration().getStringList("DiscordCommands.ShareInventory.InGameMessage.Hover")));
         shareInvCommandTitle = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.ShareInventory.InventoryTitle"));
         shareInvCommandSkullName = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.ShareInventory.SkullDisplayName"));
+        shareInvCommandSelfRoles = new HashSet<>(config.getConfiguration().getStringList("DiscordCommands.ShareInventory.Permissions.SelfAllowedRoles"));
+        shareInvCommandOthersRoles = new HashSet<>(config.getConfiguration().getStringList("DiscordCommands.ShareInventory.Permissions.OtherAllowedRoles"));
 
         shareEnderCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.ShareEnderChest.Enabled");
+        shareEnderCommandAsOthers = config.getConfiguration().getBoolean("DiscordCommands.ShareEnderChest.AllowAsOthers");
         shareEnderCommandIsMainServer = config.getConfiguration().getBoolean("DiscordCommands.ShareEnderChest.IsMainServer");
         shareEnderCommandInGameMessageText = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.ShareEnderChest.InGameMessage.Text"));
         shareEnderCommandInGameMessageHover = ChatColorUtils.translateAlternateColorCodes('&', String.join("\n", config.getConfiguration().getStringList("DiscordCommands.ShareEnderChest.InGameMessage.Hover")));
         shareEnderCommandTitle = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.ShareEnderChest.InventoryTitle"));
+        shareEnderCommandSelfRoles = new HashSet<>(config.getConfiguration().getStringList("DiscordCommands.ShareEnderChest.Permissions.SelfAllowedRoles"));
+        shareEnderCommandOthersRoles = new HashSet<>(config.getConfiguration().getStringList("DiscordCommands.ShareEnderChest.Permissions.OtherAllowedRoles"));
 
         language = config.getConfiguration().getString("Resources.Language");
         LanguageUtils.loadTranslations(language);
