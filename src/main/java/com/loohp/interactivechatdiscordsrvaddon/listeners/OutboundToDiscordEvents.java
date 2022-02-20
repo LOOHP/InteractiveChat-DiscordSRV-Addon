@@ -36,6 +36,7 @@ import com.loohp.interactivechat.objectholders.ICPlayerFactory;
 import com.loohp.interactivechat.objectholders.MentionPair;
 import com.loohp.interactivechat.objectholders.PlaceholderCooldownManager;
 import com.loohp.interactivechat.objectholders.WebData;
+import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
 import com.loohp.interactivechat.utils.ComponentFlattening;
@@ -130,6 +131,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 
 public class OutboundToDiscordEvents implements Listener {
@@ -329,8 +331,6 @@ public class OutboundToDiscordEvents implements Listener {
         }
     }
 
-    //===== Death Message
-
     @Subscribe(priority = ListenerPriority.HIGHEST)
     public void onGameToDiscord(GameChatMessagePreProcessEvent event) {
         Debug.debug("Triggering onGameToDiscord");
@@ -346,30 +346,17 @@ public class OutboundToDiscordEvents implements Listener {
     }
 
     /*
-    @SuppressWarnings("deprecation")
     @Subscribe(priority = ListenerPriority.HIGHEST)
     public void onVentureChatHookToDiscord(VentureChatMessagePreProcessEvent event) {
-        UUID uuid;
+        ICPlayer icSender = null;
         MineverseChatPlayer mcPlayer = event.getVentureChatEvent().getMineverseChatPlayer();
         if (mcPlayer != null) {
-            uuid = mcPlayer.getUUID();
+            icSender = ICPlayerFactory.getICPlayer(mcPlayer.getUUID());
         } else {
-            Player bukkitPlayer = Bukkit.getPlayer(event.getVentureChatEvent().getUsername());
-            if (bukkitPlayer == null) {
-                return;
-            } else {
-                uuid = bukkitPlayer.getUniqueId();
-            }
+            icSender = ICPlayerFactory.getICPlayerExact(event.getVentureChatEvent().getUsername());
         }
-        ICPlayer player;
-        Player bukkitPlayer = Bukkit.getPlayer(uuid);
-        if (bukkitPlayer != null) {
-            player = ICPlayerFactory.getICPlayer(bukkitPlayer);
-        } else {
-            player = InteractiveChat.remotePlayers.get(uuid);
-            if (player == null) {
-                return;
-            }
+        if (icSender == null) {
+            return;
         }
         Component message = ComponentStringUtils.toRegularComponent(event.getMessageComponent());
 
@@ -378,6 +365,7 @@ public class OutboundToDiscordEvents implements Listener {
         event.setMessageComponent(ComponentStringUtils.toDiscordSRVComponent(message));
     }
     */
+
     @SuppressWarnings("deprecation")
     public Component processGameMessage(ICPlayer icSender, Component component) {
         boolean reserializer = DiscordSRV.config().getBoolean("Experiment_MCDiscordReserializer_ToDiscord");
@@ -426,8 +414,13 @@ public class OutboundToDiscordEvents implements Listener {
                         replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
                     }
 
-                    component = ComponentReplacing.replace(component, InteractiveChat.itemPlaceholder.pattern(), true, LegacyComponentSerializer.legacySection().deserialize(replaceText));
-                    if (InteractiveChatDiscordSrvAddon.plugin.itemImage) {
+                    AtomicBoolean replaced = new AtomicBoolean(false);
+                    Component replaceComponent = LegacyComponentSerializer.legacySection().deserialize(replaceText);
+                    component = ComponentReplacing.replace(component, InteractiveChat.itemPlaceholder.pattern(), true, (groups) -> {
+                        replaced.set(true);
+                        return replaceComponent;
+                    });
+                    if (replaced.get() && InteractiveChatDiscordSrvAddon.plugin.itemImage) {
                         int inventoryId = DATA_ID_PROVIDER.getNext();
                         int position = matcher.start();
 
@@ -477,8 +470,15 @@ public class OutboundToDiscordEvents implements Listener {
                     if (reserializer) {
                         replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
                     }
-                    component = ComponentReplacing.replace(component, InteractiveChat.invPlaceholder.pattern(), true, LegacyComponentSerializer.legacySection().deserialize(replaceText));
-                    if (InteractiveChatDiscordSrvAddon.plugin.invImage) {
+
+                    AtomicBoolean replaced = new AtomicBoolean(false);
+                    Component replaceComponent = LegacyComponentSerializer.legacySection().deserialize(replaceText);
+                    component = ComponentReplacing.replace(component, InteractiveChat.invPlaceholder.pattern(), true, (groups) -> {
+                        replaced.set(true);
+                        return replaceComponent;
+                    });
+
+                    if (replaced.get() && InteractiveChatDiscordSrvAddon.plugin.invImage) {
                         int inventoryId = DATA_ID_PROVIDER.getNext();
                         int position = matcher.start();
 
@@ -515,8 +515,15 @@ public class OutboundToDiscordEvents implements Listener {
                     if (reserializer) {
                         replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
                     }
-                    component = ComponentReplacing.replace(component, InteractiveChat.enderPlaceholder.pattern(), true, LegacyComponentSerializer.legacySection().deserialize(replaceText));
-                    if (InteractiveChatDiscordSrvAddon.plugin.enderImage) {
+
+                    AtomicBoolean replaced = new AtomicBoolean(false);
+                    Component replaceComponent = LegacyComponentSerializer.legacySection().deserialize(replaceText);
+                    component = ComponentReplacing.replace(component, InteractiveChat.enderPlaceholder.pattern(), true, (groups) -> {
+                        replaced.set(true);
+                        return replaceComponent;
+                    });
+
+                    if (replaced.get() && InteractiveChatDiscordSrvAddon.plugin.enderImage) {
                         int inventoryId = DATA_ID_PROVIDER.getNext();
                         int position = matcher.start();
 
@@ -685,7 +692,7 @@ public class OutboundToDiscordEvents implements Listener {
                         if (user != null) {
                             String discordMention = user.getAsMention();
                             for (String name : names) {
-                                component = ComponentReplacing.replace(component, CustomStringUtils.escapeMetaCharacters(InteractiveChat.mentionPrefix + name), true, LegacyComponentSerializer.legacySection().deserialize(discordMention));
+                                component = ComponentReplacing.replace(component, CustomStringUtils.escapeMetaCharacters(Registry.MENTION_TAG_CONVERTER.getTagStyle(InteractiveChat.mentionPrefix + name)), true, LegacyComponentSerializer.legacySection().deserialize(discordMention));
                             }
                         }
                     }
@@ -874,7 +881,7 @@ public class OutboundToDiscordEvents implements Listener {
             if (color.equals(Color.white)) {
                 color = new Color(0xFFFFFE);
             }
-            messageFormat.setColor(color);
+            messageFormat.setColorRaw(color.getRGB());
         }
         if (InteractiveChatDiscordSrvAddon.plugin.advancementDescription && description != null) {
             messageFormat.setDescription(ChatColorUtils.stripColor(description));
@@ -973,7 +980,7 @@ public class OutboundToDiscordEvents implements Listener {
                 }
             }
 
-            Collections.sort(dataList, DISPLAY_DATA_COMPARATOR);
+            dataList.sort(DISPLAY_DATA_COMPARATOR);
 
             Debug.debug("discordMessageSent creating contents");
             List<DiscordMessageContent> contents = createContents(dataList, player.isLocal() ? player.getLocalPlayer() : (Bukkit.getOnlinePlayers().isEmpty() ? null : Bukkit.getOnlinePlayers().iterator().next()));
@@ -1044,7 +1051,7 @@ public class OutboundToDiscordEvents implements Listener {
                 }
             }
 
-            Collections.sort(dataList, DISPLAY_DATA_COMPARATOR);
+            dataList.sort(DISPLAY_DATA_COMPARATOR);
 
             Debug.debug("onMessageReceived creating contents");
             List<DiscordMessageContent> contents = createContents(dataList, player.isLocal() ? player.getLocalPlayer() : (Bukkit.getOnlinePlayers().isEmpty() ? null : Bukkit.getOnlinePlayers().iterator().next()));
