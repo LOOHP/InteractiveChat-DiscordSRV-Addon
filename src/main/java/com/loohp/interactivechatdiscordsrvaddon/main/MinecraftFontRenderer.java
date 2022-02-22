@@ -20,9 +20,9 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.main;
 
-import com.intellij.uiDesigner.core.GridConstraints;
-import com.intellij.uiDesigner.core.GridLayoutManager;
-import com.intellij.uiDesigner.core.Spacer;
+import com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints;
+import com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridLayoutManager;
+import com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.Spacer;
 import com.loohp.interactivechat.libs.com.loohp.yamlconfiguration.YamlConfiguration;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
