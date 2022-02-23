@@ -61,6 +61,7 @@ public class ImageUtils {
 
     public static final Color TEXT_BACKGROUND_COLOR = new Color(0, 0, 0, 180);
     public static final double CHAT_COLOR_BACKGROUND_FACTOR = 0.19;
+    private static final double[] GAUSSIAN_CONSTANTS = new double[] {0.00598, 0.060626, 0.241843, 0.383103, 0.241843, 0.060626, 0.00598};
 
     public static String hash(BufferedImage image) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -445,6 +446,33 @@ public class ImageUtils {
         int w = source.getWidth() + pixels;
         int h = source.getHeight() + pixels;
         return resizeImageAbs(source, w, h);
+    }
+
+    public static BufferedImage applyGaussianBlur(BufferedImage source) {
+        return transposedHBlur(transposedHBlur(source));
+    }
+
+    @SuppressWarnings("SuspiciousNameCombination")
+    private static BufferedImage transposedHBlur(BufferedImage image) {
+        int height = image.getHeight();
+        int width = image.getWidth();
+        BufferedImage result =  new BufferedImage(height, width, BufferedImage.TYPE_INT_RGB);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                double red = 0.0;
+                double green = 0.0;
+                double blue = 0.0;
+                for (int i = 0; i < 7; i++) {
+                    int currentX = Math.max(Math.min(x + i - 3, width - 1), 0);
+                    int pixel = image.getRGB(currentX, y);
+                    red += getRed(pixel) * GAUSSIAN_CONSTANTS[i];
+                    green += getGreen(pixel) * GAUSSIAN_CONSTANTS[i];
+                    blue += getBlue(pixel) * GAUSSIAN_CONSTANTS[i];
+                }
+                result.setRGB(y, x, getIntFromColor((int) red, (int) green, (int) blue, getAlpha(image.getRGB(y, x))));
+            }
+        }
+        return result;
     }
 
     public static BufferedImage printComponentShadowlessDynamicSize(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int centerX, int topY, float fontSize, boolean dynamicFontSize) {

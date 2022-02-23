@@ -44,6 +44,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.M
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.TextureUV;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimation;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;
+import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintIndexData;
 
@@ -192,6 +193,12 @@ public class ModelRenderer implements AutoCloseable {
                         texture = tintIndexData.applyTint(texture, 1);
                         if (resource.hasTextureMeta()) {
                             TextureMeta meta = resource.getTextureMeta();
+                            if (meta.hasProperties()) {
+                                TextureProperties properties = meta.getProperties();
+                                if (properties.isBlur()) {
+                                    texture = ImageUtils.applyGaussianBlur(texture);
+                                }
+                            }
                             if (meta.hasAnimation()) {
                                 TextureAnimation animation = meta.getAnimation();
                                 if (animation.hasWidth() && animation.hasHeight()) {
@@ -319,6 +326,12 @@ public class ModelRenderer implements AutoCloseable {
                 BufferedImage texture = resource.getTexture();
                 if (resource.hasTextureMeta()) {
                     TextureMeta meta = resource.getTextureMeta();
+                    if (meta.hasProperties()) {
+                        TextureProperties properties = meta.getProperties();
+                        if (properties.isBlur()) {
+                            texture = ImageUtils.applyGaussianBlur(texture);
+                        }
+                    }
                     if (meta.hasAnimation()) {
                         TextureAnimation animation = meta.getAnimation();
                         if (animation.hasWidth() && animation.hasHeight()) {
@@ -424,6 +437,12 @@ public class ModelRenderer implements AutoCloseable {
                                 cached = resource.getTexture();
                                 if (resource.hasTextureMeta()) {
                                     TextureMeta meta = resource.getTextureMeta();
+                                    if (meta.hasProperties()) {
+                                        TextureProperties properties = meta.getProperties();
+                                        if (properties.isBlur()) {
+                                            cached = ImageUtils.applyGaussianBlur(cached);
+                                        }
+                                    }
                                     if (meta.hasAnimation()) {
                                         TextureAnimation animation = meta.getAnimation();
                                         if (animation.hasWidth() && animation.hasHeight()) {

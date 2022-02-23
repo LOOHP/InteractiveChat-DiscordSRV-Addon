@@ -34,6 +34,9 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimation;
+import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;
+import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ModelUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils;
@@ -473,7 +476,25 @@ public class BlockModelRenderer extends JFrame {
     }
 
     public BufferedImage getRawEnchantedImage(BufferedImage source) {
-        BufferedImage tintOriginal = resourceManager.getTextureManager().getTexture(ResourceRegistry.MISC_TEXTURE_LOCATION + "enchanted_item_glint").getTexture();
+        TextureResource resource = resourceManager.getTextureManager().getTexture(ResourceRegistry.MISC_TEXTURE_LOCATION + "enchanted_item_glint");
+        BufferedImage tintOriginal = resource.getTexture();
+        if (resource.hasTextureMeta()) {
+            TextureMeta meta = resource.getTextureMeta();
+            if (meta.hasProperties()) {
+                TextureProperties properties = meta.getProperties();
+                if (properties.isBlur()) {
+                    tintOriginal = ImageUtils.applyGaussianBlur(tintOriginal);
+                }
+            }
+            if (meta.hasAnimation()) {
+                TextureAnimation animation = meta.getAnimation();
+                if (animation.hasWidth() && animation.hasHeight()) {
+                    tintOriginal = ImageUtils.copyAndGetSubImage(tintOriginal, 0, 0, animation.getWidth(), animation.getHeight());
+                } else {
+                    tintOriginal = ImageUtils.copyAndGetSubImage(tintOriginal, 0, 0, tintOriginal.getWidth(), tintOriginal.getWidth());
+                }
+            }
+        }
         BufferedImage tintImage = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g3 = tintImage.createGraphics();
         g3.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);

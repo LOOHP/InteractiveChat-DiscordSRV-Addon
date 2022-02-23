@@ -57,7 +57,10 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimation;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;
+import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ContainerTitlePrintingFunction;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils;
@@ -120,10 +123,28 @@ public class ImageGeneration {
     }
 
     public static BufferedImage getRawEnchantedImage(BufferedImage source) {
-        BufferedImage tintOriginal = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.MISC_TEXTURE_LOCATION + "enchanted_item_glint").getTexture();
+        TextureResource resource = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.MISC_TEXTURE_LOCATION + "enchanted_item_glint");
+        BufferedImage tintOriginal = resource.getTexture();
         if (version.get().isOlderOrEqualTo(MCVersion.V1_14)) {
             BufferedImage tinted = ImageUtils.changeColorTo(ImageUtils.copyImage(tintOriginal), ENCHANTMENT_GLINT_LEGACY_COLOR);
             tintOriginal = ImageUtils.multiply(tintOriginal, tinted);
+        }
+        if (resource.hasTextureMeta()) {
+            TextureMeta meta = resource.getTextureMeta();
+            if (meta.hasProperties()) {
+                TextureProperties properties = meta.getProperties();
+                if (properties.isBlur()) {
+                    tintOriginal = ImageUtils.applyGaussianBlur(tintOriginal);
+                }
+            }
+            if (meta.hasAnimation()) {
+                TextureAnimation animation = meta.getAnimation();
+                if (animation.hasWidth() && animation.hasHeight()) {
+                    tintOriginal = ImageUtils.copyAndGetSubImage(tintOriginal, 0, 0, animation.getWidth(), animation.getHeight());
+                } else {
+                    tintOriginal = ImageUtils.copyAndGetSubImage(tintOriginal, 0, 0, tintOriginal.getWidth(), tintOriginal.getWidth());
+                }
+            }
         }
         BufferedImage tintImage = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g3 = tintImage.createGraphics();
