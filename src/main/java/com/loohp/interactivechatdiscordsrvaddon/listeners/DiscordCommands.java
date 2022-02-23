@@ -479,7 +479,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     }
                 }
                 errorCode--;
-                BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.usePlayerInvView ? ImageGeneration.getPlayerInventoryImage(offlineICPlayer.getInventory(), offlineICPlayer) : ImageGeneration.getInventoryImage(offlineICPlayer.getInventory(), offlineICPlayer);
+                BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.usePlayerInvView ? ImageGeneration.getPlayerInventoryImage(offlineICPlayer.getInventory(), offlineICPlayer) : ImageGeneration.getInventoryImage(offlineICPlayer.getInventory(), Component.translatable(TranslationKeyUtils.getDefaultContainerTitle()), offlineICPlayer);
                 errorCode--;
                 Component component = LegacyComponentSerializer.legacySection().deserialize(InteractiveChatDiscordSrvAddon.plugin.shareInvCommandInGameMessageText.replace("{Player}", offlineICPlayer.getName()));
                 errorCode--;
@@ -566,7 +566,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     }
                 }
                 errorCode--;
-                BufferedImage image = ImageGeneration.getInventoryImage(offlineICPlayer.getEnderChest(), offlineICPlayer);
+                BufferedImage image = ImageGeneration.getInventoryImage(offlineICPlayer.getEnderChest(), Component.translatable(TranslationKeyUtils.getEnderChestContainerTitle()), offlineICPlayer);
                 errorCode--;
                 Component component = LegacyComponentSerializer.legacySection().deserialize(InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandInGameMessageText.replace("{Player}", offlineICPlayer.getName()));
                 errorCode--;

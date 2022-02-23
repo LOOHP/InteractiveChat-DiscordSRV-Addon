@@ -18,10 +18,27 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.loohp.interactivechatdiscordsrvaddon.registry;
+package com.loohp.interactivechatdiscordsrvaddon.wrappers;
 
-public class InteractiveChatRegistry {
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import org.bukkit.inventory.Inventory;
 
-    public static final int INTERACTIVE_CHAT_DISCORD_SRV_ADDON_COMPATIBLE_VERSION = 24;
+public class TitledInventoryWrapper {
+
+    private Component title;
+    private Inventory inventory;
+
+    public TitledInventoryWrapper(Component title, Inventory inventory) {
+        this.title = title;
+        this.inventory = inventory;
+    }
+
+    public Component getTitle() {
+        return title;
+    }
+
+    public Inventory getInventory() {
+        return inventory;
+    }
 
 }

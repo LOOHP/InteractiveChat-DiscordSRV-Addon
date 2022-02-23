@@ -22,6 +22,9 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 
 import java.awt.Graphics2D;
@@ -292,6 +295,22 @@ public class ModelUtils {
 
         g.dispose();
         return modernSkin;
+    }
+
+    public static boolean isRenderedUpsideDown(Component component) {
+        return isRenderedUpsideDown(ChatColorUtils.stripColor(PlainTextComponentSerializer.plainText().serialize(component)));
+    }
+
+    public static boolean isRenderedUpsideDown(Component component, boolean hasCape) {
+        return isRenderedUpsideDown(ChatColorUtils.stripColor(PlainTextComponentSerializer.plainText().serialize(component)), hasCape);
+    }
+
+    public static boolean isRenderedUpsideDown(String name) {
+        return isRenderedUpsideDown(name, true);
+    }
+
+    public static boolean isRenderedUpsideDown(String name, boolean hasCape) {
+        return ("Dinnerbone".equals(name) || "Grumm".equals(name)) && hasCape;
     }
 
 }

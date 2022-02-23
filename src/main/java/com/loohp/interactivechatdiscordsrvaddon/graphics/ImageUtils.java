@@ -382,6 +382,15 @@ public class ImageUtils {
         return b;
     }
 
+    public static BufferedImage appendImageBottom(BufferedImage source, BufferedImage append, int middleGap, int bottomSpace) {
+        BufferedImage b = new BufferedImage(Math.max(source.getWidth(), append.getWidth()), source.getHeight() + append.getHeight() + middleGap + bottomSpace, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = b.createGraphics();
+        g.drawImage(source, 0, 0, null);
+        g.drawImage(append, 0, source.getHeight() + middleGap, null);
+        g.dispose();
+        return b;
+    }
+
     public static BufferedImage copyImage(BufferedImage source) {
         BufferedImage b = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = b.createGraphics();
@@ -438,7 +447,7 @@ public class ImageUtils {
         return resizeImageAbs(source, w, h);
     }
 
-    public static BufferedImage printComponentNoShadow(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int centerX, int topY, float fontSize, boolean dynamicFontSize) {
+    public static BufferedImage printComponentShadowlessDynamicSize(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int centerX, int topY, float fontSize, boolean dynamicFontSize) {
         Component text = ComponentFlattening.flatten(ComponentStringUtils.convertTranslatables(ComponentModernizing.modernize(component), manager.getLanguageManager().getTranslateFunction().ofLanguage(language)));
         String striped = ChatColorUtils.stripColor(ChatColorUtils.filterIllegalColorCodes(PlainTextComponentSerializer.plainText().serialize(text)));
 
@@ -556,6 +565,10 @@ public class ImageUtils {
         g.drawImage(temp, 0, 0, null);
         g.dispose();
         return image;
+    }
+
+    public static BufferedImage printComponentShadowless(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize) {
+        return printComponent0(manager, image, component, language, legacyRGB, topX, topY, fontSize, 1);
     }
 
     public static BufferedImage printComponent(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize) {

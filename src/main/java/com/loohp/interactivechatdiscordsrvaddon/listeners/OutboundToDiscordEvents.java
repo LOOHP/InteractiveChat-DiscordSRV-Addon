@@ -44,6 +44,7 @@ import com.loohp.interactivechat.utils.ComponentReplacing;
 import com.loohp.interactivechat.utils.CustomStringUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.InventoryUtils;
+import com.loohp.interactivechat.utils.ItemStackUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechat.utils.PlaceholderParser;
 import com.loohp.interactivechat.utils.PlayerUtils;
@@ -78,6 +79,7 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.Disc
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordToolTip;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.URLRequestUtils;
+import com.loohp.interactivechatdiscordsrvaddon.wrappers.TitledInventoryWrapper;
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.api.ListenerPriority;
 import github.scarsz.discordsrv.api.Subscribe;
@@ -187,7 +189,8 @@ public class OutboundToDiscordEvents implements Listener {
                                 content.getImageUrls().remove("attachment://ToolTip.png");
                                 content.getAttachments().remove("ToolTip.png");
                             }
-                            BufferedImage container = ImageGeneration.getInventoryImage(iData.getInventory().get(), data.getPlayer());
+                            TitledInventoryWrapper inv = iData.getInventory().get();
+                            BufferedImage container = ImageGeneration.getInventoryImage(inv.getInventory(), inv.getTitle(), data.getPlayer());
                             ByteArrayOutputStream contentOs = new ByteArrayOutputStream();
                             ImageIO.write(container, "png", contentOs);
                             content.addAttachment("Container.png", contentOs.toByteArray());
@@ -210,17 +213,17 @@ public class OutboundToDiscordEvents implements Listener {
                     }
                 } else if (iData.getInventory().isPresent()) {
                     Debug.debug("createContents creating inventory discord content");
-                    Inventory inv = iData.getInventory().get();
+                    TitledInventoryWrapper inv = iData.getInventory().get();
                     try {
                         BufferedImage image;
                         if (iData.isPlayerInventory()) {
                             if (InteractiveChatDiscordSrvAddon.plugin.usePlayerInvView) {
-                                image = ImageGeneration.getPlayerInventoryImage(inv, iData.getPlayer());
+                                image = ImageGeneration.getPlayerInventoryImage(inv.getInventory(), iData.getPlayer());
                             } else {
-                                image = ImageGeneration.getInventoryImage(inv, data.getPlayer());
+                                image = ImageGeneration.getInventoryImage(inv.getInventory(), inv.getTitle(), data.getPlayer());
                             }
                         } else {
-                            image = ImageGeneration.getInventoryImage(inv, data.getPlayer());
+                            image = ImageGeneration.getInventoryImage(inv.getInventory(), inv.getTitle(), data.getPlayer());
                         }
                         ByteArrayOutputStream os = new ByteArrayOutputStream();
                         Color color;
@@ -450,7 +453,7 @@ public class OutboundToDiscordEvents implements Listener {
                             component = gameMessageProcessItemEvent.getComponent();
                             title = gameMessageProcessItemEvent.getTitle();
                             if (gameMessageProcessItemEvent.hasInventory()) {
-                                DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.ITEM_CONTAINER, gameMessageProcessItemEvent.getItemStack().clone(), gameMessageProcessItemEvent.getInventory()));
+                                DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.ITEM_CONTAINER, gameMessageProcessItemEvent.getItemStack().clone(), new TitledInventoryWrapper(ItemStackUtils.getDisplayName(item, null), gameMessageProcessItemEvent.getInventory())));
                             } else {
                                 DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.ITEM, gameMessageProcessItemEvent.getItemStack().clone()));
                             }
@@ -497,7 +500,7 @@ public class OutboundToDiscordEvents implements Listener {
                         if (!gameMessageProcessPlayerInventoryEvent.isCancelled()) {
                             component = gameMessageProcessPlayerInventoryEvent.getComponent();
                             title = gameMessageProcessPlayerInventoryEvent.getTitle();
-                            DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.INVENTORY, true, gameMessageProcessPlayerInventoryEvent.getInventory()));
+                            DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.INVENTORY, true, new TitledInventoryWrapper(Component.translatable(TranslationKeyUtils.getDefaultContainerTitle()), gameMessageProcessPlayerInventoryEvent.getInventory())));
                         }
 
                         component = component.append(Component.text("<ICD=" + inventoryId + ">"));
@@ -542,7 +545,7 @@ public class OutboundToDiscordEvents implements Listener {
                         if (!gameMessageProcessInventoryEvent.isCancelled()) {
                             component = gameMessageProcessInventoryEvent.getComponent();
                             title = gameMessageProcessInventoryEvent.getTitle();
-                            DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.ENDERCHEST, gameMessageProcessInventoryEvent.getInventory()));
+                            DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.ENDERCHEST, new TitledInventoryWrapper(Component.translatable(TranslationKeyUtils.getEnderChestContainerTitle()), gameMessageProcessInventoryEvent.getInventory())));
                         }
 
                         component = component.append(Component.text("<ICD=" + inventoryId + ">"));

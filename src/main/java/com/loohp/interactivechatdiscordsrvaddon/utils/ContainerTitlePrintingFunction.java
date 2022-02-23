@@ -18,10 +18,15 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.loohp.interactivechatdiscordsrvaddon.registry;
+package com.loohp.interactivechatdiscordsrvaddon.utils;
 
-public class InteractiveChatRegistry {
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 
-    public static final int INTERACTIVE_CHAT_DISCORD_SRV_ADDON_COMPATIBLE_VERSION = 24;
+import java.awt.image.BufferedImage;
+
+@FunctionalInterface
+public interface ContainerTitlePrintingFunction {
+
+    BufferedImage apply(BufferedImage image, int suggestedX, int suggestedY, float suggestedFontSize, TextColor suggestedDefaultTextColor);
 
 }

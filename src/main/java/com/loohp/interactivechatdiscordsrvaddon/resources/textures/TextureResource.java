@@ -88,11 +88,14 @@ public class TextureResource {
     }
 
     public BufferedImage getTexture(int w, int h) {
-        return ImageUtils.toCompatibleImage(ImageUtils.resizeImageAbs(loadImage(), w, h));
+        BufferedImage image = loadImage();
+        if (image.getWidth() != w || image.getHeight() != h) {
+            image = ImageUtils.resizeImageAbs(image, w, h);
+        }
+        return ImageUtils.toCompatibleImage(image);
     }
 
     public BufferedImage getTexture() {
-        loadImage();
         return ImageUtils.toCompatibleImage(ImageUtils.copyImage(loadImage()));
     }
 

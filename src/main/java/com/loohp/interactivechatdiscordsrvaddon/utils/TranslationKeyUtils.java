@@ -371,4 +371,12 @@ public class TranslationKeyUtils {
         }
     }
 
+    public static String getDefaultContainerTitle() {
+        return "container.inventory";
+    }
+
+    public static String getEnderChestContainerTitle() {
+        return "container.enderchest";
+    }
+
 }
