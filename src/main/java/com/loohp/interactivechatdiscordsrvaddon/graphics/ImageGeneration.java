@@ -385,7 +385,8 @@ public class ImageGeneration {
         BufferedImage cape;
         try {
             JSONObject json;
-            if (player instanceof ICPlayer && ((ICPlayer) player).isLocal()) {
+            ICPlayer icPlayer = player.getPlayer();
+            if (icPlayer != null && icPlayer.isLocal()) {
                 json = (JSONObject) new JSONParser().parse(SkinUtils.getSkinJsonFromProfile(((ICPlayer) player).getLocalPlayer()));
             } else {
                 json = (JSONObject) new JSONParser().parse(new String(Base64.getDecoder().decode(((JSONObject) ((JSONArray) HTTPRequestUtils.getJSONResponse(PLAYER_INFO_URL.replace("%s", player.getUniqueId().toString())).get("properties")).get(0)).get("value").toString())));

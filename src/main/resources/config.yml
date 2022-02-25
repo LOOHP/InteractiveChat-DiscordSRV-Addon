@@ -102,6 +102,8 @@ DiscordCommands:
       #Labels must be lowercase
       MemberLabel: "member"
       MemberDescription: "Member to set"
+      SlotLabel: "slot"
+      SlotDescription: "Slot to choose"
   #Settings for /playerlist
   PlayerList:
     #Enable the /playerlist command to show all online players in a tablist style image
@@ -141,6 +143,26 @@ DiscordCommands:
       #PlaceholderAPI placeholders in the footer are parsed as THE FIRST PLAYER in the playerlist
       FooterText:
         - ""
+  #Settings for /item
+  ShareItem:
+    #Enable the /item command on discord
+    Enabled: true
+    #Allow the /itemasuser associate command on discord
+    AllowAsOthers: true
+    #If you do NOT use a shared discord channel for multiple servers, this should ALWAYS be true
+    #If you do, set this option on ONE of the servers connected to the discord channel to true,
+    #With all others servers to false.
+    IsMainServer: true
+    InGameMessage:
+      Text: "&6{Player} shared an Item: &f{ItemTag}"
+    InventoryTitle: "{Player}'s Item"
+    Permissions:
+      #Roles allowed sharing inventory of self
+      SelfAllowedRoles:
+        - "everyone"
+      #Roles allowed looking up inventory of other users
+      OtherAllowedRoles:
+        - "admin"
   #Settings for /inv
   ShareInventory:
     #Enable the /inv command on discord

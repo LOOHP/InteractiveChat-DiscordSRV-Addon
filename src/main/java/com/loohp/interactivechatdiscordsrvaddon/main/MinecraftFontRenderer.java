@@ -53,8 +53,10 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
@@ -72,12 +74,15 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -255,6 +260,23 @@ public class MinecraftFontRenderer extends JFrame {
             });
         });
 
+        JPopupMenu menu = new JPopupMenu("Actions");
+        JMenuItem copy = new JMenuItem("Copy image");
+        copy.addActionListener(event -> copyImage());
+        menu.add(copy);
+        JMenuItem save = new JMenuItem("Save image as...");
+        save.addActionListener(event -> saveImage());
+        menu.add(save);
+
+        imagePanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    menu.show(imagePanel, e.getX(), e.getY());
+                }
+            }
+        });
+
         comboBoxLanguages.addActionListener(e -> scheduleTextReload());
 
         glowingTextBox.addActionListener(e -> scheduleTextReload());
@@ -262,7 +284,6 @@ public class MinecraftFontRenderer extends JFrame {
         setLocationRelativeTo(null);
         setVisible(true);
 
-        JFrame main = this;
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentMoved(ComponentEvent e) {
@@ -298,7 +319,7 @@ public class MinecraftFontRenderer extends JFrame {
             }
         };
     }
-    
+
     private void scheduleTextReload() {
         executorService.submit(() -> {
             updateTextComponent();
@@ -515,6 +536,16 @@ public class MinecraftFontRenderer extends JFrame {
         }
 
         renderedImage.set(image);
+    }
+
+    public synchronized void copyImage() {
+        BufferedImage image = renderedImage.get();
+        if (image == null) {
+            return;
+        }
+        TransferableImage trans = new TransferableImage(image);
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(trans, null);
     }
 
     public synchronized void saveImage() {

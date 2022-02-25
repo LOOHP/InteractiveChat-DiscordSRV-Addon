@@ -176,6 +176,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public boolean respondToCommandsInInvalidChannels = true;
     public String discordMemberLabel = "";
     public String discordMemberDescription = "";
+    public String discordSlotLabel = "";
+    public String discordSlotDescription = "";
     public boolean playerlistCommandEnabled = true;
     public String playerlistCommandDescription = "";
     public boolean playerlistCommandIsMainServer = true;
@@ -190,6 +192,13 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public Color playerlistCommandColor = new Color(153, 153, 153);
     public int playerlistCommandMinWidth = 0;
     public Set<String> playerlistCommandRoles = new HashSet<>();
+    public boolean shareItemCommandEnabled = true;
+    public boolean shareItemCommandAsOthers = true;
+    public boolean shareItemCommandIsMainServer = true;
+    public String shareItemCommandInGameMessageText = "";
+    public String shareItemCommandTitle = "";
+    public Set<String> shareItemCommandSelfRoles = new HashSet<>();
+    public Set<String> shareItemCommandOthersRoles = new HashSet<>();
     public boolean shareInvCommandEnabled = true;
     public boolean shareInvCommandAsOthers = true;
     public boolean shareInvCommandIsMainServer = true;
@@ -438,6 +447,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
         discordMemberLabel = config.getConfiguration().getString("DiscordCommands.GlobalSettings.Messages.MemberLabel").toLowerCase();
         discordMemberDescription = config.getConfiguration().getString("DiscordCommands.GlobalSettings.Messages.MemberDescription");
+        discordSlotLabel = config.getConfiguration().getString("DiscordCommands.GlobalSettings.Messages.SlotLabel").toLowerCase();
+        discordSlotDescription = config.getConfiguration().getString("DiscordCommands.GlobalSettings.Messages.SlotDescription");
 
         playerlistCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.PlayerList.Enabled");
         playerlistCommandDescription = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.PlayerList.Description"));
@@ -453,6 +464,14 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         playerlistCommandColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordCommands.PlayerList.TablistOptions.SidebarColor"));
         playerlistCommandMinWidth = config.getConfiguration().getInt("DiscordCommands.PlayerList.TablistOptions.PlayerMinWidth");
         playerlistCommandRoles = new HashSet<>(config.getConfiguration().getStringList("DiscordCommands.PlayerList.Permissions.AllowedRoles"));
+
+        shareItemCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.ShareItem.Enabled");
+        shareItemCommandAsOthers = config.getConfiguration().getBoolean("DiscordCommands.ShareItem.AllowAsOthers");
+        shareItemCommandIsMainServer = config.getConfiguration().getBoolean("DiscordCommands.ShareItem.IsMainServer");
+        shareItemCommandInGameMessageText = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.ShareItem.InGameMessage.Text"));
+        shareItemCommandTitle = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.ShareItem.InventoryTitle"));
+        shareItemCommandSelfRoles = new HashSet<>(config.getConfiguration().getStringList("DiscordCommands.ShareItem.Permissions.SelfAllowedRoles"));
+        shareItemCommandOthersRoles = new HashSet<>(config.getConfiguration().getStringList("DiscordCommands.ShareItem.Permissions.OtherAllowedRoles"));
 
         shareInvCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.ShareInventory.Enabled");
         shareInvCommandAsOthers = config.getConfiguration().getBoolean("DiscordCommands.ShareInventory.AllowAsOthers");

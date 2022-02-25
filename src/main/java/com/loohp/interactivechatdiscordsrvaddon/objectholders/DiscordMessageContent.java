@@ -30,6 +30,7 @@ import github.scarsz.discordsrv.dependencies.jda.api.entities.MessageEmbed;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.dependencies.jda.api.requests.RestAction;
 import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.MessageAction;
+import github.scarsz.discordsrv.objects.MessageFormat;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -49,12 +50,12 @@ public class DiscordMessageContent {
     private List<String> description;
     private List<String> imageUrl;
     private String thumbnail;
-    private Color color;
+    private int color;
     private String footer;
     private String footerImageUrl;
     private Map<String, byte[]> attachments;
 
-    public DiscordMessageContent(String authorName, String authorIconUrl, List<String> description, List<String> imageUrl, Color color, Map<String, byte[]> attachments) {
+    public DiscordMessageContent(String authorName, String authorIconUrl, List<String> description, List<String> imageUrl, int color, Map<String, byte[]> attachments) {
         this.authorName = authorName;
         this.authorIconUrl = authorIconUrl;
         this.description = description;
@@ -66,10 +67,18 @@ public class DiscordMessageContent {
     }
 
     public DiscordMessageContent(String authorName, String authorIconUrl, String description, String imageUrl, Color color) {
+        this(authorName, authorIconUrl, new ArrayList<>(Arrays.asList(description)), new ArrayList<>(Arrays.asList(imageUrl)), color.getRGB(), new HashMap<>());
+    }
+
+    public DiscordMessageContent(String authorName, String authorIconUrl, String description, String imageUrl, int color) {
         this(authorName, authorIconUrl, new ArrayList<>(Arrays.asList(description)), new ArrayList<>(Arrays.asList(imageUrl)), color, new HashMap<>());
     }
 
     public DiscordMessageContent(String authorName, String authorIconUrl, Color color) {
+        this(authorName, authorIconUrl, new ArrayList<>(), new ArrayList<>(), color.getRGB(), new HashMap<>());
+    }
+
+    public DiscordMessageContent(String authorName, String authorIconUrl, int color) {
         this(authorName, authorIconUrl, new ArrayList<>(), new ArrayList<>(), color, new HashMap<>());
     }
 
@@ -88,10 +97,26 @@ public class DiscordMessageContent {
         if (embed.getImage() != null) {
             imageUrl.add(embed.getImage().getUrl());
         }
-        this.color = embed.getColor();
+        this.color = embed.getColorRaw();
         if (embed.getThumbnail() != null) {
             this.thumbnail = embed.getThumbnail().getUrl();
         }
+        this.attachments = new HashMap<>();
+    }
+
+    public DiscordMessageContent(MessageFormat messageFormat) {
+        this.authorName = messageFormat.getAuthorName();
+        this.authorIconUrl = messageFormat.getAuthorImageUrl();
+        this.description = new ArrayList<>();
+        if (messageFormat.getDescription() != null) {
+            description.add(messageFormat.getDescription());
+        }
+        this.imageUrl = new ArrayList<>();
+        if (messageFormat.getImageUrl() != null) {
+            imageUrl.add(messageFormat.getImageUrl());
+        }
+        this.color = messageFormat.getColorRaw();
+        this.thumbnail = messageFormat.getThumbnailUrl();
         this.attachments = new HashMap<>();
     }
 
@@ -159,11 +184,11 @@ public class DiscordMessageContent {
         imageUrl.clear();
     }
 
-    public Color getColor() {
+    public int getColor() {
         return color;
     }
 
-    public void setColor(Color color) {
+    public void setColor(int color) {
         this.color = color;
     }
 
@@ -271,7 +296,7 @@ public class DiscordMessageContent {
     }
 
     public WebhookMessageBuilder toWebhookMessageBuilder() {
-        WebhookEmbedBuilder embed = new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(authorName, authorIconUrl, null)).setColor(color.getRGB()).setThumbnailUrl(thumbnail);
+        WebhookEmbedBuilder embed = new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(authorName, authorIconUrl, null)).setColor(color).setThumbnailUrl(thumbnail);
         if (description.size() > 0) {
             embed.setDescription(description.get(0));
         }
@@ -283,9 +308,9 @@ public class DiscordMessageContent {
                 embed.setFooter(new EmbedFooter(footer, footerImageUrl));
             }
         }
-        WebhookMessageBuilder webhookmessage = new WebhookMessageBuilder().addEmbeds(embed.build());
+        WebhookMessageBuilder webhookMessage = new WebhookMessageBuilder().addEmbeds(embed.build());
         for (int i = 1; i < imageUrl.size() || i < description.size(); i++) {
-            WebhookEmbedBuilder otherEmbed = new WebhookEmbedBuilder().setColor(color.getRGB());
+            WebhookEmbedBuilder otherEmbed = new WebhookEmbedBuilder().setColor(color);
             if (i < imageUrl.size()) {
                 otherEmbed.setImageUrl(imageUrl.get(i));
             }
@@ -298,13 +323,13 @@ public class DiscordMessageContent {
                 }
             }
             if (!otherEmbed.isEmpty()) {
-                webhookmessage.addEmbeds(otherEmbed.build());
+                webhookMessage.addEmbeds(otherEmbed.build());
             }
         }
         for (Entry<String, byte[]> entry : attachments.entrySet()) {
-            webhookmessage.addFile(entry.getKey(), entry.getValue());
+            webhookMessage.addFile(entry.getKey(), entry.getValue());
         }
-        return webhookmessage;
+        return webhookMessage;
     }
 
 }

@@ -138,7 +138,8 @@ public class ItemRenderUtils {
                 }
             }
         } else if (xMaterial.equals(XMaterial.CLOCK)) {
-            long time = ((player instanceof ICPlayer && ((ICPlayer) player).isLocal() ? ((ICPlayer) player).getLocalPlayer().getPlayerTime() : Bukkit.getWorlds().get(0).getTime()) % 24000) - 6000;
+            ICPlayer onlinePlayer = player.getPlayer();
+            long time = ((onlinePlayer != null && onlinePlayer.isLocal() ? ((ICPlayer) player).getLocalPlayer().getPlayerTime() : Bukkit.getWorlds().get(0).getTime()) % 24000) - 6000;
             if (time < 0) {
                 time += 24000;
             }
@@ -146,8 +147,8 @@ public class ItemRenderUtils {
             predicates.put(ModelOverrideType.TIME, (float) (timePhase - 0.0078125));
         } else if (xMaterial.equals(XMaterial.COMPASS)) {
             double angle;
-            ICPlayer icplayer;
-            if (player instanceof ICPlayer && (icplayer = (ICPlayer) player).isLocal()) {
+            ICPlayer icplayer = player.getPlayer();
+            if (icplayer != null && icplayer.isLocal()) {
                 if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
                     CompassMeta meta = (CompassMeta) item.getItemMeta();
                     Location target;

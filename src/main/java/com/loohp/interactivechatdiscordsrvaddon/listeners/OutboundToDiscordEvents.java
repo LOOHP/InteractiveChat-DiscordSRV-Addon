@@ -40,6 +40,7 @@ import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
 import com.loohp.interactivechat.utils.ComponentFlattening;
+import com.loohp.interactivechat.utils.ComponentModernizing;
 import com.loohp.interactivechat.utils.ComponentReplacing;
 import com.loohp.interactivechat.utils.CustomStringUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
@@ -58,6 +59,7 @@ import com.loohp.interactivechatdiscordsrvaddon.api.events.GameMessageProcessIte
 import com.loohp.interactivechatdiscordsrvaddon.api.events.GameMessageProcessPlayerInventoryEvent;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AttachmentData;
@@ -89,6 +91,7 @@ import github.scarsz.discordsrv.api.events.DeathMessagePostProcessEvent;
 import github.scarsz.discordsrv.api.events.DiscordGuildMessagePostProcessEvent;
 import github.scarsz.discordsrv.api.events.DiscordGuildMessageSentEvent;
 import github.scarsz.discordsrv.api.events.GameChatMessagePreProcessEvent;
+import github.scarsz.discordsrv.api.events.VentureChatMessagePreProcessEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.ChannelType;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Member;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
@@ -101,6 +104,7 @@ import github.scarsz.discordsrv.util.DiscordUtil;
 import github.scarsz.discordsrv.util.MessageUtil;
 import github.scarsz.discordsrv.util.PlaceholderUtil;
 import github.scarsz.discordsrv.util.WebhookUtil;
+import mineverse.Aust1n46.chat.api.MineverseChatPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
@@ -116,10 +120,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -160,22 +162,20 @@ public class OutboundToDiscordEvents implements Listener {
                     }
                     try {
                         BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer(), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
-                        ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
-                        ImageIO.write(image, "png", itemOs);
+                        byte[] imageData = ImageUtils.toArray(image);
 
                         DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item, player);
 
                         DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", color);
-                        content.addAttachment("Item.png", itemOs.toByteArray());
+                        content.addAttachment("Item.png", imageData);
                         contents.add(content);
 
                         if (InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImage) {
                             DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, player);
                             if (!discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
                                 BufferedImage tooltip = ImageGeneration.getToolTipImage(discordToolTip.getComponents());
-                                ByteArrayOutputStream tooltipOs = new ByteArrayOutputStream();
-                                ImageIO.write(tooltip, "png", tooltipOs);
-                                content.addAttachment("ToolTip.png", tooltipOs.toByteArray());
+                                byte[] tooltipData = ImageUtils.toArray(tooltip);
+                                content.addAttachment("ToolTip.png", tooltipData);
                                 content.addImageUrl("attachment://ToolTip.png");
                             } else {
                                 content.addDescription(description.getDescription().orElse(null));
@@ -191,9 +191,8 @@ public class OutboundToDiscordEvents implements Listener {
                             }
                             TitledInventoryWrapper inv = iData.getInventory().get();
                             BufferedImage container = ImageGeneration.getInventoryImage(inv.getInventory(), inv.getTitle(), data.getPlayer());
-                            ByteArrayOutputStream contentOs = new ByteArrayOutputStream();
-                            ImageIO.write(container, "png", contentOs);
-                            content.addAttachment("Container.png", contentOs.toByteArray());
+                            byte[] containerData = ImageUtils.toArray(container);
+                            content.addAttachment("Container.png", containerData);
                             content.addImageUrl("attachment://Container.png");
                         } else {
                             if (iData.isFilledMap() && iData.getPlayer().isLocal()) {
@@ -202,9 +201,8 @@ public class OutboundToDiscordEvents implements Listener {
                                     content.getAttachments().remove("ToolTip.png");
                                 }
                                 BufferedImage map = ImageGeneration.getMapImage(item, iData.getPlayer().getLocalPlayer());
-                                ByteArrayOutputStream mapOs = new ByteArrayOutputStream();
-                                ImageIO.write(map, "png", mapOs);
-                                content.addAttachment("Map.png", mapOs.toByteArray());
+                                byte[] mapData = ImageUtils.toArray(map);
+                                content.addAttachment("Map.png", mapData);
                                 content.addImageUrl("attachment://Map.png");
                             }
                         }
@@ -225,7 +223,6 @@ public class OutboundToDiscordEvents implements Listener {
                         } else {
                             image = ImageGeneration.getInventoryImage(inv.getInventory(), inv.getTitle(), data.getPlayer());
                         }
-                        ByteArrayOutputStream os = new ByteArrayOutputStream();
                         Color color;
                         switch (type) {
                             case ENDERCHEST:
@@ -238,14 +235,13 @@ public class OutboundToDiscordEvents implements Listener {
                                 color = Color.black;
                                 break;
                         }
-                        ImageIO.write(image, "png", os);
+                        byte[] imageData = ImageUtils.toArray(image);
                         DiscordMessageContent content = new DiscordMessageContent(title, null, null, "attachment://Inventory.png", color);
-                        content.addAttachment("Inventory.png", os.toByteArray());
+                        content.addAttachment("Inventory.png", imageData);
                         if (type.equals(ImageDisplayType.INVENTORY) && InteractiveChatDiscordSrvAddon.plugin.invShowLevel) {
                             int level = iData.getPlayer().getExperienceLevel();
-                            ByteArrayOutputStream bottleOut = new ByteArrayOutputStream();
-                            ImageIO.write(InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, InteractiveChat.version.isOld(), "minecraft:item/experience_bottle", ModelDisplayPosition.GUI, false).getImage(), "png", bottleOut);
-                            content.addAttachment("Level.png", bottleOut.toByteArray());
+                            byte[] bottleData = ImageUtils.toArray(InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, InteractiveChat.version.isOld(), "minecraft:item/experience_bottle", ModelDisplayPosition.GUI, false).getImage());
+                            content.addAttachment("Level.png", bottleData);
                             content.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language).replaceFirst("%s", level + ""));
                             content.setFooterImageUrl("attachment://Level.png");
                         }
@@ -267,9 +263,8 @@ public class OutboundToDiscordEvents implements Listener {
                         if (InteractiveChatDiscordSrvAddon.plugin.hoverUseTooltipImage) {
                             Component print = hData.getHoverText();
                             BufferedImage tooltip = ImageGeneration.getToolTipImage(print, true);
-                            ByteArrayOutputStream tooltipOs = new ByteArrayOutputStream();
-                            ImageIO.write(tooltip, "png", tooltipOs);
-                            content.addAttachment("ToolTip.png", tooltipOs.toByteArray());
+                            byte[] tooltipData = ImageUtils.toArray(tooltip);
+                            content.addAttachment("ToolTip.png", tooltipData);
                             content.addImageUrl("attachment://ToolTip.png");
                             content.addDescription(null);
                         } else {
@@ -303,10 +298,9 @@ public class OutboundToDiscordEvents implements Listener {
                     }
                     if (InteractiveChatDiscordSrvAddon.plugin.hoverImage) {
                         BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_MISC_TEXTURE_LOCATION + "hover_cursor").getTexture();
-                        ByteArrayOutputStream os = new ByteArrayOutputStream();
-                        ImageIO.write(image, "png", os);
+                        byte[] imageData = ImageUtils.toArray(image);
                         content.setAuthorIconUrl("attachment://Hover.png");
-                        content.addAttachment("Hover.png", os.toByteArray());
+                        content.addAttachment("Hover.png", imageData);
                     }
                     if (preview != null) {
                         content.addImageUrl(preview);
@@ -348,7 +342,6 @@ public class OutboundToDiscordEvents implements Listener {
         event.setMessageComponent(ComponentStringUtils.toDiscordSRVComponent(message));
     }
 
-    /*
     @Subscribe(priority = ListenerPriority.HIGHEST)
     public void onVentureChatHookToDiscord(VentureChatMessagePreProcessEvent event) {
         ICPlayer icSender = null;
@@ -367,7 +360,6 @@ public class OutboundToDiscordEvents implements Listener {
 
         event.setMessageComponent(ComponentStringUtils.toDiscordSRVComponent(message));
     }
-    */
 
     @SuppressWarnings("deprecation")
     public Component processGameMessage(ICPlayer icSender, Component component) {
@@ -392,19 +384,7 @@ public class OutboundToDiscordEvents implements Listener {
                     ItemStack item = PlayerUtils.getHeldItem(icSender);
                     boolean isAir = item.getType().equals(Material.AIR);
                     XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
-                    String itemStr;
-                    if (item.hasItemMeta() && item.getItemMeta().hasDisplayName() && !item.getItemMeta().getDisplayName().equals("")) {
-                        itemStr = item.getItemMeta().getDisplayName();
-                    } else {
-                        String itemKey = LanguageUtils.getTranslationKey(item);
-                        itemStr = LanguageUtils.getTranslation(itemKey, InteractiveChatDiscordSrvAddon.plugin.language);
-                        if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
-                            String owner = NBTEditor.getString(item, "SkullOwner", "Name");
-                            if (owner != null) {
-                                itemStr = itemStr.replaceFirst("%s", owner);
-                            }
-                        }
-                    }
+                    String itemStr = PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.convertTranslatables(ComponentModernizing.modernize(ItemStackUtils.getDisplayName(item)), InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)));
                     itemStr = ComponentStringUtils.stripColorAndConvertMagic(itemStr);
 
                     int amount = item.getAmount();
@@ -757,20 +737,18 @@ public class OutboundToDiscordEvents implements Listener {
         DiscordMessageContent content = new DiscordMessageContent(ChatColorUtils.stripColor(meta.getDisplayName()), "attachment://Item.png", color);
         try {
             BufferedImage image = ImageGeneration.getItemStackImage(item, ICPlayerFactory.getICPlayer(player), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
-            ByteArrayOutputStream itemOs = new ByteArrayOutputStream();
-            ImageIO.write(image, "png", itemOs);
+            byte[] itemData = ImageUtils.toArray(image);
 
             DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item, player);
 
-            content.addAttachment("Item.png", itemOs.toByteArray());
+            content.addAttachment("Item.png", itemData);
 
             if (InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImage) {
                 DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, player);
                 if (!discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
                     BufferedImage tooltip = ImageGeneration.getToolTipImage(discordToolTip.getComponents());
-                    ByteArrayOutputStream tooltipOs = new ByteArrayOutputStream();
-                    ImageIO.write(tooltip, "png", tooltipOs);
-                    content.addAttachment("ToolTip.png", tooltipOs.toByteArray());
+                    byte[] tooltipData = ImageUtils.toArray(tooltip);
+                    content.addAttachment("ToolTip.png", tooltipData);
                     content.addImageUrl("attachment://ToolTip.png");
                 } else {
                     content.addDescription(description.getDescription().orElse(null));
@@ -861,11 +839,10 @@ public class OutboundToDiscordEvents implements Listener {
             try {
                 int id = DATA_ID_PROVIDER.getNext();
                 BufferedImage thumbnail = ImageGeneration.getAdvancementIcon(item, advancementType, true, ICPlayerFactory.getICPlayer(event.getPlayer()));
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                ImageIO.write(thumbnail, "png", baos);
+                byte[] thumbnailData = ImageUtils.toArray(thumbnail);
                 content += "<ICA=" + id + ">";
                 messageFormat.setContent(content);
-                RESEND_WITH_ATTACHMENT.put(id, new AttachmentData("Thumbnail.png", baos.toByteArray()));
+                RESEND_WITH_ATTACHMENT.put(id, new AttachmentData("Thumbnail.png", thumbnailData));
                 messageFormat.setThumbnailUrl("attachment://Thumbnail.png");
             } catch (IOException e) {
                 e.printStackTrace();

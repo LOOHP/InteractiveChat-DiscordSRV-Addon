@@ -54,8 +54,10 @@ import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JProgressBar;
 import javax.swing.JSpinner;
 import javax.swing.JTextArea;
@@ -75,6 +77,7 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
@@ -449,6 +452,23 @@ public class BlockModelRenderer extends JFrame {
 
         textFieldResourceKey.setCaretPosition(tabPosition = textFieldResourceKey.getText().length());
 
+        JPopupMenu menu = new JPopupMenu("Actions");
+        JMenuItem copy = new JMenuItem("Copy image");
+        copy.addActionListener(event -> copyImage());
+        menu.add(copy);
+        JMenuItem save = new JMenuItem("Save image as...");
+        save.addActionListener(event -> saveImage());
+        menu.add(save);
+
+        imagePanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    menu.show(imagePanel, e.getX(), e.getY());
+                }
+            }
+        });
+
         setLocationRelativeTo(null);
         setVisible(true);
 
@@ -680,6 +700,15 @@ public class BlockModelRenderer extends JFrame {
         reloadResourcesButton.setEnabled(true);
         spinnerThreads.setEnabled(true);
         lock.unlock();
+    }
+
+    public synchronized void copyImage() {
+        if (renderedImage == null) {
+            return;
+        }
+        TransferableImage trans = new TransferableImage(renderedImage);
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(trans, null);
     }
 
     public synchronized void saveImage() {

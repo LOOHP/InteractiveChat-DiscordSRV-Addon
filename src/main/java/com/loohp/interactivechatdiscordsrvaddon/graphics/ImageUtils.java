@@ -63,6 +63,16 @@ public class ImageUtils {
     public static final double CHAT_COLOR_BACKGROUND_FACTOR = 0.19;
     private static final double[] GAUSSIAN_CONSTANTS = new double[] {0.00598, 0.060626, 0.241843, 0.383103, 0.241843, 0.060626, 0.00598};
 
+    public static ByteArrayOutputStream toOutputStream(BufferedImage image) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", outputStream);
+        return outputStream;
+    }
+
+    public static byte[] toArray(BufferedImage image) throws IOException {
+        return toOutputStream(image).toByteArray();
+    }
+
     public static String hash(BufferedImage image) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         int[] colors = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());

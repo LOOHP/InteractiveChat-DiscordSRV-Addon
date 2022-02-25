@@ -26,7 +26,6 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResour
 
 import java.awt.image.BufferedImage;
 import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
 
 public class FontTextureResource {
 
@@ -40,7 +39,7 @@ public class FontTextureResource {
         CACHE_TIME = cacheTime;
     }
 
-    private Reference<TextureResource> resource;
+    private TextureResource resource;
     private char resourceWidth;
     private char resourceHeight;
     private char x;
@@ -49,7 +48,7 @@ public class FontTextureResource {
     private char h;
 
     public FontTextureResource(TextureResource resource, char resourceWidth, char resourceHeight, char x, char y, char w, char h) {
-        this.resource = new WeakReference<>(resource);
+        this.resource = resource;
         this.resourceWidth = resourceWidth;
         this.resourceHeight = resourceHeight;
         this.x = x;
@@ -72,18 +71,14 @@ public class FontTextureResource {
 
     @SuppressWarnings("deprecation")
     public BufferedImage getFontImage() {
-        if (!isValid()) {
-            throw new IllegalStateException("Resource is no longer valid");
-        }
-        TextureResource textureResource = resource.get();
         BufferedImage image;
         if (resourceWidth < 1 || resourceHeight < 1) {
-            image = textureResource.getTexture();
+            image = resource.getTexture();
         } else {
-            image = textureResource.getTexture(resourceWidth, resourceHeight);
+            image = resource.getTexture(resourceWidth, resourceHeight);
         }
         if (CACHE_TIME > 0) {
-            Reference<BufferedImage> internalReference = textureResource.getUnsafe().getTextureReference();
+            Reference<BufferedImage> internalReference = resource.getUnsafe().getTextureReference();
             BufferedImage internal;
             if ((internal = internalReference.get()) != null) {
                 String hash = ImageUtils.hash(internal);
@@ -98,12 +93,8 @@ public class FontTextureResource {
         return image.getSubimage(x, y, w, h);
     }
 
-    public boolean isValid() {
-        return resource.get() != null;
-    }
-
     public TextureResource getResource() {
-        return resource.get();
+        return resource;
     }
 
     public int getX() {
