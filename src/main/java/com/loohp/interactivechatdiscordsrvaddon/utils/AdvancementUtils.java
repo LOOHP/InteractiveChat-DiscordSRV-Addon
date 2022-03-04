@@ -37,6 +37,8 @@ import java.lang.reflect.Method;
 
 public class AdvancementUtils {
 
+    public static final String MINECRAFT_NAMESPACE = "minecraft";
+
     private static Class<?> craftAdvancementClass;
     private static Method craftAdvancementClassGetHandleMethod;
     private static Class<?> nmsAdvancementClass;
@@ -66,7 +68,7 @@ public class AdvancementUtils {
     public static AdvancementData getAdvancementData(Object advancementObject) {
         try {
             Advancement advancement = (Advancement) advancementObject;
-            boolean isMinecraft = advancement.getKey().getNamespace().equals(NamespacedKey.MINECRAFT);
+            boolean isMinecraft = advancement.getKey().getNamespace().equals(MINECRAFT_NAMESPACE);
             Object craftAdvancement = craftAdvancementClass.cast(advancement);
             Object nmsAdvancement = craftAdvancementClassGetHandleMethod.invoke(craftAdvancement);
             Object nmsAdvancementDisplay = nmsAdvancementClassGetDisplayMethod.invoke(nmsAdvancement);

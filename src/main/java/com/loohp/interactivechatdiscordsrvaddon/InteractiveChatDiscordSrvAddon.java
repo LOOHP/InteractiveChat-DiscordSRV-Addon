@@ -178,6 +178,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public String discordMemberDescription = "";
     public String discordSlotLabel = "";
     public String discordSlotDescription = "";
+    public boolean resourcepackCommandEnabled = true;
+    public String resourcepackCommandDescription = "";
+    public Set<String> resourcepackCommandRoles = new HashSet<>();
     public boolean playerlistCommandEnabled = true;
     public String playerlistCommandDescription = "";
     public boolean playerlistCommandIsMainServer = true;
@@ -449,6 +452,10 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         discordMemberDescription = config.getConfiguration().getString("DiscordCommands.GlobalSettings.Messages.MemberDescription");
         discordSlotLabel = config.getConfiguration().getString("DiscordCommands.GlobalSettings.Messages.SlotLabel").toLowerCase();
         discordSlotDescription = config.getConfiguration().getString("DiscordCommands.GlobalSettings.Messages.SlotDescription");
+
+        resourcepackCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.ResourcePack.Enabled");
+        resourcepackCommandDescription = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.ResourcePack.Description"));
+        resourcepackCommandRoles = new HashSet<>(config.getConfiguration().getStringList("DiscordCommands.ResourcePack.Permissions.AllowedRoles"));
 
         playerlistCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.PlayerList.Enabled");
         playerlistCommandDescription = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.PlayerList.Description"));

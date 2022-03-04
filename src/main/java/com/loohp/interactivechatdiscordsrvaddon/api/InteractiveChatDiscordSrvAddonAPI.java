@@ -23,6 +23,7 @@ package com.loohp.interactivechatdiscordsrvaddon.api;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents.DiscordAttachmentData;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.GraphicsToPacketMapWrapper;
 import org.bukkit.entity.Player;
 
@@ -40,6 +41,16 @@ public class InteractiveChatDiscordSrvAddonAPI {
      */
     public static boolean isReady() {
         return InteractiveChatDiscordSrvAddon.isReady;
+    }
+
+    /**
+     * Get the current active resource manager<br>
+     * A new instance is created whenever the plugin is reloaded
+     *
+     * @return the current resource manager
+     */
+    public static ResourceManager getCurrentResourceManager() {
+        return InteractiveChatDiscordSrvAddon.plugin.resourceManager;
     }
 
     /**

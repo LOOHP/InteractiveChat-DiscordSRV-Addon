@@ -33,6 +33,8 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageMana
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureManager;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -47,6 +49,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ResourceManager implements AutoCloseable {
 
     private List<ResourcePackInfo> resourcePackInfo;
+
     private ModelManager modelManager;
     private TextureManager textureManager;
     private FontManager fontManager;
@@ -57,6 +60,7 @@ public class ResourceManager implements AutoCloseable {
 
     public ResourceManager() {
         this.resourcePackInfo = new LinkedList<>();
+
         this.modelManager = new ModelManager(this);
         this.textureManager = new TextureManager(this);
         this.fontManager = new FontManager(this);
@@ -70,7 +74,7 @@ public class ResourceManager implements AutoCloseable {
         String resourcePackName = resourcePackFile.getName();
         if (!resourcePackFile.exists()) {
             new IllegalArgumentException(resourcePackFile.getAbsolutePath() + " is not a directory nor is a zip file.").printStackTrace();
-            ResourcePackInfo info = new ResourcePackInfo(null, resourcePackName, "Resource Pack is not a directory nor a zip file.");
+            ResourcePackInfo info = new ResourcePackInfo(this, null, resourcePackName, "Resource Pack is not a directory nor a zip file.");
             resourcePackInfo.add(0, info);
             return info;
         }
@@ -82,7 +86,7 @@ public class ResourceManager implements AutoCloseable {
                 resourcePack = new ResourcePackZipEntryFile(resourcePackFile);
             } catch (IOException e) {
                 new IllegalArgumentException(resourcePackFile.getAbsolutePath() + " is an invalid zip file.").printStackTrace();
-                ResourcePackInfo info = new ResourcePackInfo(null, resourcePackName, "Resource Pack is an invalid zip file.");
+                ResourcePackInfo info = new ResourcePackInfo(this, null, resourcePackName, "Resource Pack is an invalid zip file.");
                 resourcePackInfo.add(0, info);
                 return info;
             }
@@ -90,7 +94,7 @@ public class ResourceManager implements AutoCloseable {
         ResourcePackFile packMcmeta = resourcePack.getChild("pack.mcmeta");
         if (!packMcmeta.exists()) {
             new ResourceLoadingException(resourcePackName + " does not have a pack.mcmeta").printStackTrace();
-            ResourcePackInfo info = new ResourcePackInfo(resourcePack, resourcePackName, "pack.mcmeta not found");
+            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, resourcePackName, "pack.mcmeta not found");
             resourcePackInfo.add(0, info);
             return info;
         }
@@ -100,7 +104,7 @@ public class ResourceManager implements AutoCloseable {
             json = (JSONObject) new JSONParser().parse(reader);
         } catch (Throwable e) {
             new ResourceLoadingException("Unable to read pack.mcmeta for " + resourcePackName, e).printStackTrace();
-            ResourcePackInfo info = new ResourcePackInfo(resourcePack, resourcePackName, "Unable to read pack.mcmeta");
+            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, resourcePackName, "Unable to read pack.mcmeta");
             resourcePackInfo.add(0, info);
             return info;
         }
@@ -126,9 +130,18 @@ public class ResourceManager implements AutoCloseable {
             }
         } catch (Exception e) {
             new ResourceLoadingException("Invalid pack.mcmeta for " + resourcePackName, e).printStackTrace();
-            ResourcePackInfo info = new ResourcePackInfo(resourcePack, resourcePackName, "Invalid pack.mcmeta");
+            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, resourcePackName, "Invalid pack.mcmeta");
             resourcePackInfo.add(0, info);
             return info;
+        }
+
+        BufferedImage icon = null;
+        ResourcePackFile packIcon = resourcePack.getChild("pack.png");
+        if (packIcon.exists()) {
+            try {
+                icon = ImageIO.read(packIcon.getInputStream());
+            } catch (Exception ignore) {
+            }
         }
 
         ResourcePackFile assetsFolder = resourcePack.getChild("assets");
@@ -136,17 +149,17 @@ public class ResourceManager implements AutoCloseable {
             loadAssets(assetsFolder);
         } catch (Exception e) {
             new ResourceLoadingException("Unable to load assets for " + resourcePackName, e).printStackTrace();
-            ResourcePackInfo info = new ResourcePackInfo(resourcePack, resourcePackName, false, "Unable to load assets", format, description);
+            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, resourcePackName, false, "Unable to load assets", format, description, icon);
             resourcePackInfo.add(0, info);
             return info;
         }
 
-        ResourcePackInfo info = new ResourcePackInfo(resourcePack, resourcePackName, true, null, format, description);
+        ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, resourcePackName, true, null, format, description, icon);
         resourcePackInfo.add(0, info);
         return info;
     }
 
-    private void loadAssets(ResourcePackFile assetsFolder) throws Exception {
+    private void loadAssets(ResourcePackFile assetsFolder) {
         if (!assetsFolder.exists() || !assetsFolder.isDirectory()) {
             throw new IllegalArgumentException(assetsFolder.getAbsolutePath() + " is not a directory.");
         }
@@ -195,10 +208,6 @@ public class ResourceManager implements AutoCloseable {
 
     public List<ResourcePackInfo> getResourcePackInfo() {
         return Collections.unmodifiableList(resourcePackInfo);
-    }
-
-    public void setResourcePackInfo(List<ResourcePackInfo> resourcePackInfo) {
-        this.resourcePackInfo = resourcePackInfo;
     }
 
     public ModelManager getModelManager() {

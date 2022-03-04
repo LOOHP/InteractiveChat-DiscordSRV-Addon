@@ -96,6 +96,8 @@ public class ResourceRegistry {
     public static final String GRASS_COLORMAP_LOCATION = COLORMAP_TEXTURE_LOCATION + "grass";
     public static final String FOLIAGE_COLORMAP_LOCATION = COLORMAP_TEXTURE_LOCATION + "foliage";
 
+    public static final String UNKNOWN_PACK_ICON_LOCATION = MISC_TEXTURE_LOCATION + "unknown_pack";
+
     public static final double ENCHANTMENT_GLINT_FACTOR = 190.0 / 255.0;
 
 }

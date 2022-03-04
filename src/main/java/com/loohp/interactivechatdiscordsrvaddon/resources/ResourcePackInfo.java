@@ -23,8 +23,11 @@ package com.loohp.interactivechatdiscordsrvaddon.resources;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 
+import java.awt.image.BufferedImage;
+
 public class ResourcePackInfo {
 
+    private ResourceManager manager;
     private ResourcePackFile file;
     private boolean status;
     private boolean exist;
@@ -32,8 +35,10 @@ public class ResourcePackInfo {
     private String name;
     private int packFormat;
     private Component description;
+    private BufferedImage icon;
 
-    private ResourcePackInfo(ResourcePackFile file, String name, boolean status, boolean exist, String rejectedReason, int packFormat, Component description) {
+    private ResourcePackInfo(ResourceManager manager, ResourcePackFile file, String name, boolean status, boolean exist, String rejectedReason, int packFormat, Component description, BufferedImage icon) {
+        this.manager = manager;
         this.file = file;
         this.name = name;
         this.status = status;
@@ -41,14 +46,15 @@ public class ResourcePackInfo {
         this.rejectedReason = rejectedReason;
         this.packFormat = packFormat;
         this.description = description;
+        this.icon = icon;
     }
 
-    public ResourcePackInfo(ResourcePackFile file, String name, boolean status, String rejectedReason, int packFormat, Component description) {
-        this(file, name, status, true, rejectedReason, packFormat, description);
+    public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, String name, boolean status, String rejectedReason, int packFormat, Component description, BufferedImage icon) {
+        this(manager, file, name, status, true, rejectedReason, packFormat, description, icon);
     }
 
-    public ResourcePackInfo(ResourcePackFile file, String name, String rejectedReason) {
-        this(file, name, false, false, rejectedReason, -1, null);
+    public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, String name, String rejectedReason) {
+        this(manager, file, name, false, false, rejectedReason, -1, null, null);
     }
 
     public ResourcePackFile getResourcePackFile() {
@@ -76,11 +82,19 @@ public class ResourcePackInfo {
     }
 
     public int comparePackFormat() {
-        return ResourceRegistry.RESOURCE_PACK_VERSION < packFormat ? 1 : (ResourceRegistry.RESOURCE_PACK_VERSION > packFormat ? -1 : 0);
+        return Integer.compare(packFormat, ResourceRegistry.RESOURCE_PACK_VERSION);
     }
 
     public Component getDescription() {
         return description;
+    }
+
+    public BufferedImage getRawIcon() {
+        return icon;
+    }
+
+    public BufferedImage getIcon() {
+        return icon == null ? manager.getTextureManager().getTexture(ResourceRegistry.UNKNOWN_PACK_ICON_LOCATION).getTexture() : icon;
     }
 
 }

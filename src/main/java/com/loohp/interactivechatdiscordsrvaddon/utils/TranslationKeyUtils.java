@@ -79,11 +79,11 @@ public class TranslationKeyUtils {
                 getEffectKeyMethod = nmsMobEffectListClass.getMethod("a");
 
                 nmsItemRecordClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemRecord", "net.minecraft.world.item.ItemRecord");
-                try {
-                    nmsItemRecordTranslationKeyField = nmsItemRecordClass.getDeclaredField("c");
-                } catch (NoSuchFieldException e) {
-                    nmsItemRecordTranslationKeyField = nmsItemRecordClass.getDeclaredField("a");
-                }
+                nmsItemRecordTranslationKeyField = NMSUtils.reflectiveLookup(Field.class, () -> {
+                    return nmsItemRecordClass.getDeclaredField("c");
+                }, () -> {
+                    return nmsItemRecordClass.getDeclaredField("a");
+                });
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -91,11 +91,11 @@ public class TranslationKeyUtils {
             try {
                 if (InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_17)) {
                     nmsMobEffectListClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MobEffectList", "net.minecraft.world.effect.MobEffectList");
-                    try {
-                        getEffectFromIdMethod = nmsMobEffectListClass.getMethod("fromId", int.class);
-                    } catch (Exception e) {
-                        getEffectFromIdMethod = nmsMobEffectListClass.getMethod("byId", int.class);
-                    }
+                    getEffectFromIdMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
+                        return nmsMobEffectListClass.getMethod("fromId", int.class);
+                    }, () -> {
+                        return nmsMobEffectListClass.getMethod("byId", int.class);
+                    });
                     getEffectKeyMethod = nmsMobEffectListClass.getMethod("c");
                 }
             } catch (Exception e) {
@@ -106,12 +106,12 @@ public class TranslationKeyUtils {
             craftItemStackClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.inventory.CraftItemStack");
             nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemStack", "net.minecraft.world.item.ItemStack");
             asNMSCopyMethod = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class);
-            try {
-                nmsGetItemMethod = nmsItemStackClass.getMethod("getItem");
-            } catch (Exception e) {
-                nmsGetItemMethod = nmsItemStackClass.getMethod("c");
-            }
-        } catch (ClassNotFoundException | SecurityException | NoSuchMethodException e) {
+            nmsGetItemMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
+                return nmsItemStackClass.getMethod("getItem");
+            }, () -> {
+                return nmsItemStackClass.getMethod("c");
+            });
+        } catch (SecurityException | ReflectiveOperationException e) {
             e.printStackTrace();
         }
     }
@@ -130,6 +130,10 @@ public class TranslationKeyUtils {
         } else {
             return "pack.incompatible.new";
         }
+    }
+
+    public static String getServerResourcePack() {
+        return "addServer.resourcePack";
     }
 
     public static String getFilledMapId() {

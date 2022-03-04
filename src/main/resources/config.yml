@@ -104,6 +104,16 @@ DiscordCommands:
       MemberDescription: "Member to set"
       SlotLabel: "slot"
       SlotDescription: "Slot to choose"
+  #Settings for /resourcepack
+  ResourcePack:
+    #Enable the /resourcepack command to show installed resource packs on interactivechatdiscordsrvaddon
+    Enabled: true
+    #The description of this command on discord
+    Description: "Show applied resource packs on discord!"
+    Permissions:
+      #Roles allowed to use this command
+      AllowedRoles:
+        - "everyone"
   #Settings for /playerlist
   PlayerList:
     #Enable the /playerlist command to show all online players in a tablist style image
@@ -256,7 +266,7 @@ Settings:
   CacheTimeout: 300
   EscapePlaceholdersSentFromDiscord: true
   EscapeDiscordMarkdownFormattingInItems: true
-  ReducedAssetsDownloadInfo: false
+  ReducedAssetsDownloadInfo: true
 
 Debug:
   PrintInfoToConsole: false

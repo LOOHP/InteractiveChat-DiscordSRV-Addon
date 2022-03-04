@@ -45,25 +45,25 @@ public class ResourcePackUtils {
         try {
             craftServerClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.CraftServer");
             craftServerGetServerMethod = craftServerClass.getMethod("getServer");
-            try {
-                nmsGetResourcePackMethod = craftServerGetServerMethod.getReturnType().getMethod("getResourcePack");
-            } catch (Exception e) {
-                nmsGetResourcePackMethod = craftServerGetServerMethod.getReturnType().getMethod("T");
-            }
+            nmsGetResourcePackMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
+                return craftServerGetServerMethod.getReturnType().getMethod("getResourcePack");
+            }, () -> {
+                return craftServerGetServerMethod.getReturnType().getMethod("T");
+            });
             try {
                 nmsMinecraftVersionClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MinecraftVersion", "net.minecraft.MinecraftVersion");
                 nmsMinecraftVersionConstructor = nmsMinecraftVersionClass.getDeclaredConstructor();
                 nmsMinecraftVersionConstructor.setAccessible(true);
                 nmsMinecraftVersionObject = nmsMinecraftVersionConstructor.newInstance();
-                try {
-                    nmsMinecraftVersionGetPackVersionMethod = nmsMinecraftVersionClass.getMethod("getPackVersion");
-                } catch (Exception e) {
-                    nmsMinecraftVersionGetPackVersionMethod = nmsMinecraftVersionClass.getMethod("getPackVersion", com.mojang.bridge.game.PackType.class);
+                nmsMinecraftVersionGetPackVersionMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
+                    return nmsMinecraftVersionClass.getMethod("getPackVersion");
+                }, () -> {
                     mojangPackTypeResourceEnumObject = com.mojang.bridge.game.PackType.RESOURCE;
-                }
-            } catch (Exception e) {
+                    return nmsMinecraftVersionClass.getMethod("getPackVersion", com.mojang.bridge.game.PackType.class);
+                });
+            } catch (Exception ignore) {
             }
-        } catch (ClassNotFoundException | NoSuchMethodException | SecurityException e) {
+        } catch (SecurityException | ReflectiveOperationException e) {
             e.printStackTrace();
         }
     }

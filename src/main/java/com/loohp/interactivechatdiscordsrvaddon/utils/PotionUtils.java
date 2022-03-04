@@ -68,19 +68,22 @@ public class PotionUtils {
             craftItemStackClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.inventory.CraftItemStack");
             nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemStack", "net.minecraft.world.item.ItemStack");
             asNMSCopyMethod = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class);
-            try {
-                nmsItemHasTagMethod = nmsItemStackClass.getMethod("hasTag");
-                nmsItemHasGetMethod = nmsItemStackClass.getMethod("getTag");
-            } catch (Exception e) {
-                nmsItemHasTagMethod = nmsItemStackClass.getMethod("r");
-                nmsItemHasGetMethod = nmsItemStackClass.getMethod("s");
-            }
+            nmsItemHasTagMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
+                return nmsItemStackClass.getMethod("hasTag");
+            }, () -> {
+                return nmsItemStackClass.getMethod("r");
+            });
+            nmsItemHasGetMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
+                return nmsItemStackClass.getMethod("getTag");
+            }, () -> {
+                return nmsItemStackClass.getMethod("s");
+            });
             nmsNbtTagCompoundClass = NMSUtils.getNMSClass("net.minecraft.server.%s.NBTTagCompound", "net.minecraft.nbt.NBTTagCompound");
-            try {
-                nmsNbtTagGetStringMethod = nmsNbtTagCompoundClass.getMethod("getString", String.class);
-            } catch (Exception e) {
-                nmsNbtTagGetStringMethod = nmsNbtTagCompoundClass.getMethod("l", String.class);
-            }
+            nmsNbtTagGetStringMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
+                return nmsNbtTagCompoundClass.getMethod("getString", String.class);
+            }, () -> {
+                return nmsNbtTagCompoundClass.getMethod("l", String.class);
+            });
             nmsMobEffectListClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MobEffectList", "net.minecraft.world.effect.MobEffectList");
             if (InteractiveChat.version.isOld()) {
                 craftPotionBrewerClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.potion.CraftPotionBrewer");
