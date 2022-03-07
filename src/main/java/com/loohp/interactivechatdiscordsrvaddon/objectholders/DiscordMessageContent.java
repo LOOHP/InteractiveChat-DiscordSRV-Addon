@@ -20,6 +20,7 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.objectholders;
 
+import club.minnced.discord.webhook.send.WebhookEmbed;
 import club.minnced.discord.webhook.send.WebhookEmbed.EmbedAuthor;
 import club.minnced.discord.webhook.send.WebhookEmbed.EmbedFooter;
 import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
@@ -330,6 +331,88 @@ public class DiscordMessageContent {
             webhookMessage.addFile(entry.getKey(), entry.getValue());
         }
         return webhookMessage;
+    }
+
+    public List<MessageEmbed> toJDAMessageEmbeds() {
+        List<MessageEmbed> list = new ArrayList<>();
+        EmbedBuilder embed = new EmbedBuilder().setAuthor(authorName, null, authorIconUrl).setColor(color).setThumbnail(thumbnail);
+        if (description.size() > 0) {
+            embed.setDescription(description.get(0));
+        }
+        if (imageUrl.size() > 0) {
+            String url = imageUrl.get(0);
+            embed.setImage(url);
+        }
+        if (imageUrl.size() == 1 || description.size() == 1) {
+            if (footer != null) {
+                if (footerImageUrl == null) {
+                    embed.setFooter(footer);
+                } else {
+                    embed.setFooter(footer, footerImageUrl);
+                }
+            }
+        }
+        list.add(embed.build());
+        for (int i = 1; i < imageUrl.size() || i < description.size(); i++) {
+            Set<String> usedAttachments = new HashSet<>();
+            EmbedBuilder otherEmbed = new EmbedBuilder().setColor(color);
+            if (i < imageUrl.size()) {
+                String url = imageUrl.get(i);
+                otherEmbed.setImage(url);
+                usedAttachments.add(url);
+            }
+            if (i < description.size()) {
+                otherEmbed.setDescription(description.get(i));
+            }
+            if (!(i + 1 < imageUrl.size() || i + 1 < description.size())) {
+                if (footer != null) {
+                    if (footerImageUrl == null) {
+                        otherEmbed.setFooter(footer);
+                    } else {
+                        otherEmbed.setFooter(footer, footerImageUrl);
+                    }
+                }
+            }
+            if (!otherEmbed.isEmpty()) {
+                list.add(otherEmbed.build());
+            }
+        }
+        return list;
+    }
+
+    public List<WebhookEmbed> toWebhookEmbeds() {
+        List<WebhookEmbed> list = new ArrayList<>();
+        WebhookEmbedBuilder embed = new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(authorName, authorIconUrl, null)).setColor(color).setThumbnailUrl(thumbnail);
+        if (description.size() > 0) {
+            embed.setDescription(description.get(0));
+        }
+        if (imageUrl.size() > 0) {
+            embed.setImageUrl(imageUrl.get(0));
+        }
+        if (imageUrl.size() == 1 || description.size() == 1) {
+            if (footer != null) {
+                embed.setFooter(new EmbedFooter(footer, footerImageUrl));
+            }
+        }
+        list.add(embed.build());
+        for (int i = 1; i < imageUrl.size() || i < description.size(); i++) {
+            WebhookEmbedBuilder otherEmbed = new WebhookEmbedBuilder().setColor(color);
+            if (i < imageUrl.size()) {
+                otherEmbed.setImageUrl(imageUrl.get(i));
+            }
+            if (i < description.size()) {
+                otherEmbed.setDescription(description.get(i));
+            }
+            if (!(i + 1 < imageUrl.size() || i + 1 < description.size())) {
+                if (footer != null) {
+                    otherEmbed.setFooter(new EmbedFooter(footer, footerImageUrl));
+                }
+            }
+            if (!otherEmbed.isEmpty()) {
+                list.add(otherEmbed.build());
+            }
+        }
+        return list;
     }
 
 }

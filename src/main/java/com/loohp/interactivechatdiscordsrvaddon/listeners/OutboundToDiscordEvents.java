@@ -92,16 +92,15 @@ import github.scarsz.discordsrv.api.events.DiscordGuildMessageSentEvent;
 import github.scarsz.discordsrv.api.events.GameChatMessagePreProcessEvent;
 import github.scarsz.discordsrv.api.events.VentureChatMessagePreProcessEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.ChannelType;
-import github.scarsz.discordsrv.dependencies.jda.api.entities.Member;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.MessageEmbed;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.User;
 import github.scarsz.discordsrv.dependencies.jda.api.events.message.MessageReceivedEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.hooks.ListenerAdapter;
+import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.MessageAction;
 import github.scarsz.discordsrv.objects.MessageFormat;
-import github.scarsz.discordsrv.util.DiscordUtil;
 import github.scarsz.discordsrv.util.MessageUtil;
-import github.scarsz.discordsrv.util.PlaceholderUtil;
 import github.scarsz.discordsrv.util.WebhookUtil;
 import mineverse.Aust1n46.chat.api.MineverseChatPlayer;
 import org.bukkit.Bukkit;
@@ -131,6 +130,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -947,7 +947,7 @@ public class OutboundToDiscordEvents implements Listener {
                 return;
             }
 
-            message.delete().queue();
+            message.editMessage(text + " ...").queue();
             ICPlayer player = DATA.get(matches.iterator().next()).getPlayer();
 
             List<DiscordDisplayData> dataList = new ArrayList<>();
@@ -965,17 +965,21 @@ public class OutboundToDiscordEvents implements Listener {
             List<DiscordMessageContent> contents = createContents(dataList, player.isLocal() ? player.getLocalPlayer() : (Bukkit.getOnlinePlayers().isEmpty() ? null : Bukkit.getOnlinePlayers().iterator().next()));
 
             DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
-            TextChannel textChannel = discordImageEvent.getChannel();
+            Bukkit.getPluginManager().callEvent(discordImageEvent);
+            Debug.debug("discordMessageSent sending to discord, Cancelled: " + discordImageEvent.isCancelled());
             if (discordImageEvent.isCancelled()) {
-                String restore = discordImageEvent.getOriginalMessage();
-                textChannel.sendMessage(restore).queue();
+                message.editMessage(discordImageEvent.getOriginalMessage()).queue();
             } else {
-                Debug.debug("discordMessageSent sending to discord");
                 text = discordImageEvent.getNewMessage();
-                textChannel.sendMessage(text).queue();
-                for (DiscordMessageContent content : discordImageEvent.getDiscordMessageContents()) {
-                    content.toJDAMessageRestAction(textChannel).queue();
+                MessageAction action = message.editMessage(text);
+                List<MessageEmbed> embeds = new ArrayList<>();
+                for (DiscordMessageContent content : contents) {
+                    embeds.addAll(content.toJDAMessageEmbeds());
+                    for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
+                        action = action.addFile(attachment.getValue(), attachment.getKey());
+                    }
                 }
+                action.setEmbeds(embeds).queue();
             }
         });
     }
@@ -994,6 +998,7 @@ public class OutboundToDiscordEvents implements Listener {
             if (!event.isWebhookMessage()) {
                 return;
             }
+            long messageId = event.getMessageIdLong();
             Message message = event.getMessage();
             TextChannel channel = event.getTextChannel();
             String textOriginal = message.getContentRaw();
@@ -1018,7 +1023,14 @@ public class OutboundToDiscordEvents implements Listener {
                 return;
             }
 
-            message.delete().queue();
+            String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(channel);
+            WebhookClient client = WebhookClient.withUrl(webHookUrl);
+
+            if (client == null) {
+                throw new NullPointerException("Unable to get the Webhook client URL for the TextChannel " + channel.getName());
+            }
+
+            client.edit(messageId, text + " ...");
             ICPlayer player = DATA.get(matches.iterator().next()).getPlayer();
 
             List<DiscordDisplayData> dataList = new ArrayList<>();
@@ -1035,51 +1047,22 @@ public class OutboundToDiscordEvents implements Listener {
             Debug.debug("onMessageReceived creating contents");
             List<DiscordMessageContent> contents = createContents(dataList, player.isLocal() ? player.getLocalPlayer() : (Bukkit.getOnlinePlayers().isEmpty() ? null : Bukkit.getOnlinePlayers().iterator().next()));
 
-            List<WebhookMessageBuilder> messagesToSend = new ArrayList<>();
-
             DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
-            TextChannel textChannel = discordImageEvent.getChannel();
+            Bukkit.getPluginManager().callEvent(discordImageEvent);
+
+            Debug.debug("onMessageReceived sending to discord, Cancelled: " + discordImageEvent.isCancelled());
             if (discordImageEvent.isCancelled()) {
-                String restore = discordImageEvent.getOriginalMessage();
-                messagesToSend.add(new WebhookMessageBuilder().setContent(restore));
+                client.edit(messageId, discordImageEvent.getOriginalMessage());
             } else {
                 text = discordImageEvent.getNewMessage();
-                messagesToSend.add(new WebhookMessageBuilder().setContent(text));
-                for (DiscordMessageContent content : discordImageEvent.getDiscordMessageContents()) {
-                    messagesToSend.add(content.toWebhookMessageBuilder());
-                }
-            }
-
-            String avatarUrl = player.isLocal() ? DiscordSRV.getAvatarUrl(player.getLocalPlayer()) : null;
-            String username = DiscordSRV.config().getString("Experiment_WebhookChatMessageUsernameFormat")
-                .replace("%displayname%", MessageUtil.strip(player.getDisplayName()))
-                .replace("%username%", player.getName());
-            username = PlaceholderUtil.replacePlaceholders(username, player.isLocal() ? player.getLocalPlayer() : Bukkit.getOfflinePlayer(player.getUniqueId()));
-            username = MessageUtil.strip(username);
-
-            String userId = DiscordSRV.getPlugin().getAccountLinkManager().getDiscordId(player.getUniqueId());
-            if (userId != null) {
-                Member member = DiscordUtil.getMemberById(userId);
-                if (member != null) {
-                    if (DiscordSRV.config().getBoolean("Experiment_WebhookChatMessageAvatarFromDiscord")) {
-                        avatarUrl = member.getUser().getEffectiveAvatarUrl();
-                    }
-                    if (DiscordSRV.config().getBoolean("Experiment_WebhookChatMessageUsernameFromDiscord")) {
-                        username = member.getEffectiveName();
+                WebhookMessageBuilder builder = new WebhookMessageBuilder().setContent(text);
+                for (DiscordMessageContent content : contents) {
+                    builder.addEmbeds(content.toWebhookEmbeds());
+                    for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
+                        builder.addFile(attachment.getKey(), attachment.getValue());
                     }
                 }
-            }
-
-            String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(textChannel);
-            WebhookClient client = WebhookClient.withUrl(webHookUrl);
-
-            if (client == null) {
-                throw new NullPointerException("Unable to get the Webhook client URL for the TextChannel " + textChannel.getName());
-            }
-
-            Debug.debug("onMessageReceived sending to discord");
-            for (WebhookMessageBuilder builder : messagesToSend) {
-                client.send(builder.setUsername(username).setAvatarUrl(avatarUrl).build());
+                client.edit(messageId, builder.build());
             }
             client.close();
         }

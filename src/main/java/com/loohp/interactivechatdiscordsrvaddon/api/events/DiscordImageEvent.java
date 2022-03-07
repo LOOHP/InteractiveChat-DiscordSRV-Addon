@@ -76,10 +76,6 @@ public class DiscordImageEvent extends Event implements Cancellable {
         return channel;
     }
 
-    public void setChannel(TextChannel channel) {
-        this.channel = channel;
-    }
-
     public String getOriginalMessage() {
         return originalMessage;
     }
