@@ -618,6 +618,9 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                 }
                 errorCode--;
                 ItemStack itemStack = resolveItemStack(event, offlineICPlayer);
+                if (itemStack == null) {
+                    itemStack = new ItemStack(Material.AIR);
+                }
                 errorCode--;
                 BufferedImage itemImage = ImageGeneration.getItemStackImage(itemStack, offlineICPlayer, true);
                 errorCode--;
