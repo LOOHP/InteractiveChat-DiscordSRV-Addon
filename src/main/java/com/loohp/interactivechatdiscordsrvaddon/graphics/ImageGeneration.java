@@ -253,12 +253,17 @@ public class ImageGeneration {
         InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();
         Debug.debug("ImageGeneration creating player inventory image of " + player.getName());
 
+        BufferedImage background = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.IC_GUI_TEXTURE_LOCATION + "player_inventory").getTexture(356, 336);
+
         Object playerInventoryData = player.getProperty("player_inventory");
-        BufferedImage background;
         if (playerInventoryData != null && playerInventoryData instanceof BufferedImage) {
-            background = ImageUtils.copyImage((BufferedImage) playerInventoryData);
-        } else {
-            background = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.IC_GUI_TEXTURE_LOCATION + "player_inventory").getTexture(356, 336);
+            BufferedImage playerBackground = ImageUtils.copyImage((BufferedImage) playerInventoryData);
+            Object mask = player.getProperty("player_inventory_mask");
+            if (mask == null) {
+                background = playerBackground;
+            } else {
+                background = ImageUtils.combineWithBinMask(background, playerBackground, (byte[]) mask);
+            }
         }
 
         String key = PLAYER_INVENTORY_CACHE_KEY + HashUtils.createSha1(player.getUniqueId().toString(), inventory) + ImageUtils.hash(background);

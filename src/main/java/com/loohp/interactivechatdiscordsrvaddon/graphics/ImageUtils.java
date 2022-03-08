@@ -50,7 +50,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.BitSet;
 
+import static com.loohp.blockmodelrenderer.utils.ColorUtils.composite;
 import static com.loohp.blockmodelrenderer.utils.ColorUtils.getAlpha;
 import static com.loohp.blockmodelrenderer.utils.ColorUtils.getBlue;
 import static com.loohp.blockmodelrenderer.utils.ColorUtils.getGreen;
@@ -147,6 +149,27 @@ public class ImageUtils {
             }
         }
         return image;
+    }
+
+    public static BufferedImage combineWithBinMask(BufferedImage background, BufferedImage foreground, byte[] foregroundMask) {
+        BitSet bits = BitSet.valueOf(foregroundMask);
+        int i = 0;
+        for (int y = 0; y < background.getHeight(); y++) {
+            for (int x = 0; x < background.getWidth(); x++) {
+                int colorValue = foreground.getRGB(x, y);
+                if (bits.get(i++)) {
+                    background.setRGB(x, y, colorValue);
+                } else {
+                    int alpha = getAlpha(colorValue);
+                    if (alpha >= 255) {
+                        background.setRGB(x, y, colorValue);
+                    } else if (alpha > 0) {
+                        background.setRGB(x, y, composite(colorValue, background.getRGB(x, y)));
+                    }
+                }
+            }
+        }
+        return background;
     }
 
     public static BufferedImage rotateImageByDegrees(BufferedImage img, double angle) {

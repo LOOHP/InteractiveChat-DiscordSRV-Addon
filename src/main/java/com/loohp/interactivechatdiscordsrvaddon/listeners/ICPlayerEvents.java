@@ -85,6 +85,10 @@ public class ICPlayerEvents implements Listener {
                             BufferedImage image = ImageUtils.downloadImage(value);
                             player.addProperties(key, image);
                             cachedProperties.put(key, image);
+                        } else if (value.endsWith(".bin")) {
+                            byte[] data = HTTPRequestUtils.download(value);
+                            player.addProperties(key, data);
+                            cachedProperties.put(key, data);
                         } else {
                             player.addProperties(key, value);
                             cachedProperties.put(key, value);
