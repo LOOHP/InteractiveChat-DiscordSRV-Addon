@@ -82,7 +82,6 @@ import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.Optio
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.OptionType;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.OptionData;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.SubcommandData;
-import github.scarsz.discordsrv.dependencies.jda.api.requests.RestAction;
 import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.WebhookMessageUpdateAction;
 import me.clip.placeholderapi.PlaceholderAPI;
 import net.md_5.bungee.api.ChatColor;
@@ -373,7 +372,13 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
             String slotLabel = InteractiveChatDiscordSrvAddon.plugin.discordSlotLabel;
             String slotDescription = InteractiveChatDiscordSrvAddon.plugin.discordSlotDescription;
 
-            guild.retrieveCommands().complete().stream().filter(each -> DISCORD_COMMANDS.contains(each.getName())).map(each -> each.delete()).reduce(RestAction::and).ifPresent(action -> action.complete());
+            guild.retrieveCommands().complete().stream().filter(each -> DISCORD_COMMANDS.contains(each.getName())).forEach(each -> {
+                try {
+                    each.delete().complete();
+                } catch (Exception e) {
+                    new DiscordCommandRegistrationException("Error while deleting discord command " + each.getName(), e).printStackTrace();
+                }
+            });
             if (InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandEnabled) {
                 guild.upsertCommand(RESOURCEPACK_LABEL, ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandDescription)).setDefaultEnabled(false).queue(command -> {
                     command.updatePrivileges(guild, JDAUtils.toWhitelistedCommandPrivileges(guild, JDAUtils.toRoles(guild, InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandRoles))).queue();
