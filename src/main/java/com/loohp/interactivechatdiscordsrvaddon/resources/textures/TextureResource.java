@@ -66,7 +66,7 @@ public class TextureResource {
         this(manager, resourceKey, file, false);
     }
 
-    private BufferedImage loadImage() {
+    private synchronized BufferedImage loadImage() {
         if (!isTexture) {
             throw new IllegalStateException(resourceKey + " is not a texture!");
         }
@@ -76,10 +76,13 @@ public class TextureResource {
         }
         try (InputStream inputStream = file.getInputStream()) {
             image = ImageIO.read(inputStream);
+            if (image == null) {
+                throw new IOException("Image is null!");
+            }
             this.texture = new WeakReference<>(image);
             return image;
         } catch (IOException e) {
-            throw new UncheckedIOException(e);
+            throw new UncheckedIOException("Unable to load image " + resourceKey, e);
         }
     }
 
@@ -92,11 +95,11 @@ public class TextureResource {
         if (image.getWidth() != w || image.getHeight() != h) {
             image = ImageUtils.resizeImageAbs(image, w, h);
         }
-        return ImageUtils.toCompatibleImage(image);
+        return image;
     }
 
     public BufferedImage getTexture() {
-        return ImageUtils.toCompatibleImage(ImageUtils.copyImage(loadImage()));
+        return ImageUtils.copyImage(loadImage());
     }
 
     public boolean hasFile() {

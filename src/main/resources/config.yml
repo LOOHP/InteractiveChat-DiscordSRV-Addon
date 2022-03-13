@@ -108,6 +108,10 @@ DiscordCommands:
   ResourcePack:
     #Enable the /resourcepack command to show installed resource packs on interactivechatdiscordsrvaddon
     Enabled: true
+    #If you do NOT use a shared discord channel for multiple servers, this should ALWAYS be true
+    #If you do, set this option on ONE of the servers connected to the discord channel to true,
+    #With all others servers to false.
+    IsMainServer: true
     #The description of this command on discord
     Description: "Show applied resource packs on discord!"
     Permissions:

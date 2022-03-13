@@ -180,6 +180,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public String discordSlotDescription = "";
     public boolean resourcepackCommandEnabled = true;
     public String resourcepackCommandDescription = "";
+    public boolean resourcepackCommandIsMainServer = true;
     public Set<String> resourcepackCommandRoles = new HashSet<>();
     public boolean playerlistCommandEnabled = true;
     public String playerlistCommandDescription = "";
@@ -455,6 +456,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
         resourcepackCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.ResourcePack.Enabled");
         resourcepackCommandDescription = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.ResourcePack.Description"));
+        resourcepackCommandIsMainServer = config.getConfiguration().getBoolean("DiscordCommands.ResourcePack.IsMainServer");
         resourcepackCommandRoles = new HashSet<>(config.getConfiguration().getStringList("DiscordCommands.ResourcePack.Permissions.AllowedRoles"));
 
         playerlistCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.PlayerList.Enabled");

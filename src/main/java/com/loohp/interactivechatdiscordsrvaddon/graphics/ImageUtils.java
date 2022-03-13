@@ -39,8 +39,6 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.UnicodeUtils;
 import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsEnvironment;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
@@ -88,27 +86,6 @@ public class ImageUtils {
             return HashUtils.createSha1String(new ByteArrayInputStream(out.toByteArray()));
         } catch (Exception e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    public static BufferedImage toCompatibleImage(BufferedImage image) {
-        try {
-            GraphicsConfiguration gfxConfig = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
-
-            if (image.getColorModel().equals(gfxConfig.getColorModel())) {
-                return image;
-            }
-
-            BufferedImage newImage = gfxConfig.createCompatibleImage(image.getWidth(), image.getHeight(), image.getTransparency());
-
-            Graphics2D g2d = newImage.createGraphics();
-
-            g2d.drawImage(image, 0, 0, null);
-            g2d.dispose();
-
-            return newImage;
-        } catch (Exception e) {
-            return image;
         }
     }
 
@@ -489,7 +466,7 @@ public class ImageUtils {
     private static BufferedImage transposedHBlur(BufferedImage image) {
         int height = image.getHeight();
         int width = image.getWidth();
-        BufferedImage result =  new BufferedImage(height, width, BufferedImage.TYPE_INT_RGB);
+        BufferedImage result = new BufferedImage(height, width, BufferedImage.TYPE_INT_RGB);
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 double red = 0.0;
