@@ -130,6 +130,8 @@ DiscordCommands:
     IsMainServer: true
     #List other players on the same network if connected to bungeecord
     ListBungeecordPlayers: true
+    #List only players on servers where InteractiveChat is installed and has info about
+    OnlyInteractiveChatServers: true
     #Message to display when no one is online
     EmptyServer: "There are no players online."
     #Delete the tablist message after X seconds (Set to 0 to not have it automatically deleted)

@@ -613,8 +613,11 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     List<ValueTrios<UUID, String, Integer>> bungeePlayers = InteractiveChatAPI.getBungeecordPlayerList().get();
                     players = new LinkedHashMap<>(bungeePlayers.size());
                     for (ValueTrios<UUID, String, Integer> playerinfo : bungeePlayers) {
-                        if (!VanishUtils.isVanished(playerinfo.getFirst())) {
-                            players.put(Bukkit.getOfflinePlayer(playerinfo.getFirst()), playerinfo.getThird());
+                        UUID uuid = playerinfo.getFirst();
+                        if (!VanishUtils.isVanished(uuid)) {
+                            if (!InteractiveChatDiscordSrvAddon.plugin.playerlistCommandOnlyInteractiveChatServers || ICPlayerFactory.getICPlayer(uuid) != null) {
+                                players.put(Bukkit.getOfflinePlayer(uuid), playerinfo.getThird());
+                            }
                         }
                     }
                 } catch (InterruptedException | ExecutionException e) {
