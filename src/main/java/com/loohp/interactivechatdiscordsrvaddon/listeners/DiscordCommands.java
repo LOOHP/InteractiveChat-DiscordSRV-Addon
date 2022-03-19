@@ -472,10 +472,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                             }
                             break;
                     }
-                } catch (ErrorResponseException e) {
-                    if (e.getResponse().code != 10063) {
-                        e.printStackTrace();
-                    }
+                } catch (Throwable ignore) {
                 }
             });
             if (InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandEnabled && InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandIsMainServer) {
