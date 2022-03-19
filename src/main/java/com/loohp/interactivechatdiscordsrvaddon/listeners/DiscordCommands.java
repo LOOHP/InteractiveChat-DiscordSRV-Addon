@@ -441,35 +441,41 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
             String slotDescription = InteractiveChatDiscordSrvAddon.plugin.discordSlotDescription;
 
             guild.retrieveCommands().complete().forEach(each -> {
-                switch (each.getName()) {
-                    case RESOURCEPACK_LABEL:
-                        if (InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandIsMainServer) {
-                            each.delete().complete();
-                        }
-                        break;
-                    case PLAYERLIST_LABEL:
-                        if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandIsMainServer) {
-                            each.delete().complete();
-                        }
-                        break;
-                    case ITEM_LABEL:
-                    case ITEM_OTHER_LABEL:
-                        if (InteractiveChatDiscordSrvAddon.plugin.shareItemCommandIsMainServer) {
-                            each.delete().complete();
-                        }
-                        break;
-                    case INVENTORY_LABEL:
-                    case INVENTORY_OTHER_LABEL:
-                        if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandIsMainServer) {
-                            each.delete().complete();
-                        }
-                        break;
-                    case ENDERCHEST_LABEL:
-                    case ENDERCHEST_OTHER_LABEL:
-                        if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandIsMainServer) {
-                            each.delete().complete();
-                        }
-                        break;
+                try {
+                    switch (each.getName()) {
+                        case RESOURCEPACK_LABEL:
+                            if (InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandIsMainServer) {
+                                each.delete().complete();
+                            }
+                            break;
+                        case PLAYERLIST_LABEL:
+                            if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandIsMainServer) {
+                                each.delete().complete();
+                            }
+                            break;
+                        case ITEM_LABEL:
+                        case ITEM_OTHER_LABEL:
+                            if (InteractiveChatDiscordSrvAddon.plugin.shareItemCommandIsMainServer) {
+                                each.delete().complete();
+                            }
+                            break;
+                        case INVENTORY_LABEL:
+                        case INVENTORY_OTHER_LABEL:
+                            if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandIsMainServer) {
+                                each.delete().complete();
+                            }
+                            break;
+                        case ENDERCHEST_LABEL:
+                        case ENDERCHEST_OTHER_LABEL:
+                            if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandIsMainServer) {
+                                each.delete().complete();
+                            }
+                            break;
+                    }
+                } catch (ErrorResponseException e) {
+                    if (e.getResponse().code != 10063) {
+                        e.printStackTrace();
+                    }
                 }
             });
             if (InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandEnabled && InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandIsMainServer) {

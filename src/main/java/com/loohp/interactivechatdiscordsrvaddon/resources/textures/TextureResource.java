@@ -82,7 +82,7 @@ public class TextureResource {
             this.texture = new WeakReference<>(image);
             return image;
         } catch (IOException e) {
-            throw new UncheckedIOException("Unable to load image " + resourceKey, e);
+            throw new UncheckedIOException("Unable to load image " + resourceKey + " from " + file.getAbsolutePath(), e);
         }
     }
 
