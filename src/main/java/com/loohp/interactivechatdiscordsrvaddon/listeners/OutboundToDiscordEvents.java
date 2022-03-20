@@ -147,7 +147,9 @@ public class OutboundToDiscordEvents implements Listener {
 
     private static List<DiscordMessageContent> createContents(List<DiscordDisplayData> dataList, Player player) {
         List<DiscordMessageContent> contents = new ArrayList<>();
+        int i = -1;
         for (DiscordDisplayData data : dataList) {
+            i++;
             if (data instanceof ImageDisplayData) {
                 ImageDisplayData iData = (ImageDisplayData) data;
                 ImageDisplayType type = iData.getType();
@@ -165,8 +167,8 @@ public class OutboundToDiscordEvents implements Listener {
 
                         DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item, player);
 
-                        DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item.png", color);
-                        content.addAttachment("Item.png", imageData);
+                        DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item_" + i + ".png", color);
+                        content.addAttachment("Item_" + i + ".png", imageData);
                         contents.add(content);
 
                         if (InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImage) {
@@ -174,8 +176,8 @@ public class OutboundToDiscordEvents implements Listener {
                             if (!discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
                                 BufferedImage tooltip = ImageGeneration.getToolTipImage(discordToolTip.getComponents());
                                 byte[] tooltipData = ImageUtils.toArray(tooltip);
-                                content.addAttachment("ToolTip.png", tooltipData);
-                                content.addImageUrl("attachment://ToolTip.png");
+                                content.addAttachment("ToolTip_" + i + ".png", tooltipData);
+                                content.addImageUrl("attachment://ToolTip_" + i + ".png");
                             } else {
                                 content.addDescription(description.getDescription().orElse(null));
                             }
@@ -185,24 +187,24 @@ public class OutboundToDiscordEvents implements Listener {
 
                         if (type.equals(ImageDisplayType.ITEM_CONTAINER)) {
                             if (!description.getDescription().isPresent()) {
-                                content.getImageUrls().remove("attachment://ToolTip.png");
-                                content.getAttachments().remove("ToolTip.png");
+                                content.getImageUrls().remove("attachment://ToolTip_" + i + ".png");
+                                content.getAttachments().remove("ToolTip_" + i + ".png");
                             }
                             TitledInventoryWrapper inv = iData.getInventory().get();
                             BufferedImage container = ImageGeneration.getInventoryImage(inv.getInventory(), inv.getTitle(), data.getPlayer());
                             byte[] containerData = ImageUtils.toArray(container);
-                            content.addAttachment("Container.png", containerData);
-                            content.addImageUrl("attachment://Container.png");
+                            content.addAttachment("Container_" + i + ".png", containerData);
+                            content.addImageUrl("attachment://Container_" + i + ".png");
                         } else {
                             if (iData.isFilledMap() && iData.getPlayer().isLocal()) {
                                 if (!description.getDescription().isPresent()) {
-                                    content.getImageUrls().remove("attachment://ToolTip.png");
-                                    content.getAttachments().remove("ToolTip.png");
+                                    content.getImageUrls().remove("attachment://ToolTip_" + i + ".png");
+                                    content.getAttachments().remove("ToolTip_" + i + ".png");
                                 }
                                 BufferedImage map = ImageGeneration.getMapImage(item, iData.getPlayer().getLocalPlayer());
                                 byte[] mapData = ImageUtils.toArray(map);
-                                content.addAttachment("Map.png", mapData);
-                                content.addImageUrl("attachment://Map.png");
+                                content.addAttachment("Map_" + i + ".png", mapData);
+                                content.addImageUrl("attachment://Map_" + i + ".png");
                             }
                         }
                     } catch (Exception e) {
@@ -235,14 +237,14 @@ public class OutboundToDiscordEvents implements Listener {
                                 break;
                         }
                         byte[] imageData = ImageUtils.toArray(image);
-                        DiscordMessageContent content = new DiscordMessageContent(title, null, null, "attachment://Inventory.png", color);
-                        content.addAttachment("Inventory.png", imageData);
+                        DiscordMessageContent content = new DiscordMessageContent(title, null, null, "attachment://Inventory_" + i + ".png", color);
+                        content.addAttachment("Inventory_" + i + ".png", imageData);
                         if (type.equals(ImageDisplayType.INVENTORY) && InteractiveChatDiscordSrvAddon.plugin.invShowLevel) {
                             int level = iData.getPlayer().getExperienceLevel();
                             byte[] bottleData = ImageUtils.toArray(InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, InteractiveChat.version.isOld(), "minecraft:item/experience_bottle", ModelDisplayPosition.GUI, false).getImage());
-                            content.addAttachment("Level.png", bottleData);
+                            content.addAttachment("Level_" + i + ".png", bottleData);
                             content.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language).replaceFirst("%s", level + ""));
-                            content.setFooterImageUrl("attachment://Level.png");
+                            content.setFooterImageUrl("attachment://Level_" + i + ".png");
                         }
                         contents.add(content);
                     } catch (Exception e) {
@@ -263,8 +265,8 @@ public class OutboundToDiscordEvents implements Listener {
                             Component print = hData.getHoverText();
                             BufferedImage tooltip = ImageGeneration.getToolTipImage(print, true);
                             byte[] tooltipData = ImageUtils.toArray(tooltip);
-                            content.addAttachment("ToolTip.png", tooltipData);
-                            content.addImageUrl("attachment://ToolTip.png");
+                            content.addAttachment("ToolTip_" + i + ".png", tooltipData);
+                            content.addImageUrl("attachment://ToolTip_" + i + ".png");
                             content.addDescription(null);
                         } else {
                             body += ComponentStringUtils.stripColorAndConvertMagic(InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(hData.getHoverText()));
@@ -298,8 +300,8 @@ public class OutboundToDiscordEvents implements Listener {
                     if (InteractiveChatDiscordSrvAddon.plugin.hoverImage) {
                         BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_MISC_TEXTURE_LOCATION + "hover_cursor").getTexture();
                         byte[] imageData = ImageUtils.toArray(image);
-                        content.setAuthorIconUrl("attachment://Hover.png");
-                        content.addAttachment("Hover.png", imageData);
+                        content.setAuthorIconUrl("attachment://Hover_" + i + ".png");
+                        content.addAttachment("Hover_" + i + ".png", imageData);
                     }
                     if (preview != null) {
                         content.addImageUrl(preview);
