@@ -20,7 +20,7 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
-public class UnicodeUtils {
+public class ICU4JUtils {
 
     private static boolean icu4JPresent = false;
     private static boolean icu4jClassNotFoundThrown = false;

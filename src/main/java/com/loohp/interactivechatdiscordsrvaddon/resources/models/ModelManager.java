@@ -62,7 +62,7 @@ public class ModelManager extends AbstractManager {
     }
 
     @Override
-    protected void loadDirectory(String namespace, ResourcePackFile root) {
+    protected void loadDirectory(String namespace, ResourcePackFile root, Object... meta) {
         if (!root.exists() || !root.isDirectory()) {
             throw new IllegalArgumentException(root.getAbsolutePath() + " is not a directory.");
         }

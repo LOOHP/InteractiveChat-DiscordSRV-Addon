@@ -22,8 +22,11 @@ package com.loohp.interactivechatdiscordsrvaddon.resources;
 
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageMeta;
 
 import java.awt.image.BufferedImage;
+import java.util.Collections;
+import java.util.Map;
 
 public class ResourcePackInfo {
 
@@ -35,9 +38,10 @@ public class ResourcePackInfo {
     private String name;
     private int packFormat;
     private Component description;
+    private Map<String, LanguageMeta> languageMeta;
     private BufferedImage icon;
 
-    private ResourcePackInfo(ResourceManager manager, ResourcePackFile file, String name, boolean status, boolean exist, String rejectedReason, int packFormat, Component description, BufferedImage icon) {
+    private ResourcePackInfo(ResourceManager manager, ResourcePackFile file, String name, boolean status, boolean exist, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon) {
         this.manager = manager;
         this.file = file;
         this.name = name;
@@ -46,15 +50,16 @@ public class ResourcePackInfo {
         this.rejectedReason = rejectedReason;
         this.packFormat = packFormat;
         this.description = description;
+        this.languageMeta = Collections.unmodifiableMap(languageMeta);
         this.icon = icon;
     }
 
-    public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, String name, boolean status, String rejectedReason, int packFormat, Component description, BufferedImage icon) {
-        this(manager, file, name, status, true, rejectedReason, packFormat, description, icon);
+    public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, String name, boolean status, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon) {
+        this(manager, file, name, status, true, rejectedReason, packFormat, description, languageMeta, icon);
     }
 
     public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, String name, String rejectedReason) {
-        this(manager, file, name, false, false, rejectedReason, -1, null, null);
+        this(manager, file, name, false, false, rejectedReason, -1, null, Collections.emptyMap(), null);
     }
 
     public ResourcePackFile getResourcePackFile() {
@@ -87,6 +92,10 @@ public class ResourcePackInfo {
 
     public Component getDescription() {
         return description;
+    }
+
+    public Map<String, LanguageMeta> getLanguageMeta() {
+        return languageMeta;
     }
 
     public BufferedImage getRawIcon() {

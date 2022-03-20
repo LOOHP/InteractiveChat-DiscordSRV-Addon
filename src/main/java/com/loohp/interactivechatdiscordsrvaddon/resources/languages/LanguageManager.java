@@ -44,6 +44,7 @@ import java.util.stream.Collectors;
 
 public class LanguageManager extends AbstractManager {
 
+    private Map<String, LanguageMeta> languageMeta;
     private Map<String, Map<String, String>> translations;
     private List<Consumer<LanguageReloadEvent>> reloadListeners;
     private TranslateFunction translateFunction;
@@ -51,6 +52,7 @@ public class LanguageManager extends AbstractManager {
 
     public LanguageManager(ResourceManager manager) {
         super(manager);
+        this.languageMeta = new HashMap<>();
         this.translations = new HashMap<>();
         this.reloadListeners = Collections.synchronizedList(new LinkedList<>());
         this.translateFunction = (translationKey, language) -> {
@@ -64,9 +66,16 @@ public class LanguageManager extends AbstractManager {
     }
 
     @Override
-    protected void loadDirectory(String namespace, ResourcePackFile root) {
+    protected void loadDirectory(String namespace, ResourcePackFile root, Object... meta) {
         if (!root.exists() || !root.isDirectory()) {
             throw new IllegalArgumentException(root.getAbsolutePath() + " is not a directory.");
+        }
+        if (meta.length >= 0) {
+            try {
+                this.languageMeta.putAll((Map<? extends String, ? extends LanguageMeta>) meta[0]);
+            } catch (Throwable e) {
+                new ResourceLoadingException("Invalid meta arguments, Map<? extends String, ? extends LanguageMeta> expected!", e).printStackTrace();
+            }
         }
         JSONParser parser = new JSONParser();
         Map<String, Map<String, String>> translations = new HashMap<>();
@@ -160,6 +169,14 @@ public class LanguageManager extends AbstractManager {
     public void resetAvailableLanguagesSupplier() {
         this.availableLanguagesSupplier = () -> translations.keySet();
         reload();
+    }
+
+    public Map<String, LanguageMeta> getAllLanguageMeta() {
+        return Collections.unmodifiableMap(languageMeta);
+    }
+
+    public LanguageMeta getLanguageMeta(String language) {
+        return languageMeta.get(language);
     }
 
     @Override

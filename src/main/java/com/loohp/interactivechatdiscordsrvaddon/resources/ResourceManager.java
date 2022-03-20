@@ -30,6 +30,7 @@ import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.JsonUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureManager;
 
@@ -41,8 +42,10 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -111,6 +114,7 @@ public class ResourceManager implements AutoCloseable {
 
         int format;
         Component description = null;
+        Map<String, LanguageMeta> languageMeta = new HashMap<>();
         try {
             JSONObject packJson = (JSONObject) json.get("pack");
             format = ((Number) packJson.get("pack_format")).intValue();
@@ -127,6 +131,19 @@ public class ResourceManager implements AutoCloseable {
             }
             if (description.color() == null) {
                 description = description.color(NamedTextColor.GRAY);
+            }
+
+            JSONObject languageJson = (JSONObject) json.get("language");
+            if (languageJson != null) {
+                for (Object obj : languageJson.keySet()) {
+                    String language = (String) obj;
+                    JSONObject meta = (JSONObject) languageJson.get(language);
+                    String region = (String) meta.get("region");
+                    String name = (String) meta.get("name");
+                    boolean bidirectional = (boolean) meta.get("bidirectional");
+                    System.out.println(region + " " + name);
+                    languageMeta.put(language, new LanguageMeta(language, region, name, bidirectional));
+                }
             }
         } catch (Exception e) {
             new ResourceLoadingException("Invalid pack.mcmeta for " + resourcePackName, e).printStackTrace();
@@ -146,20 +163,20 @@ public class ResourceManager implements AutoCloseable {
 
         ResourcePackFile assetsFolder = resourcePack.getChild("assets");
         try {
-            loadAssets(assetsFolder);
+            loadAssets(assetsFolder, languageMeta);
         } catch (Exception e) {
             new ResourceLoadingException("Unable to load assets for " + resourcePackName, e).printStackTrace();
-            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, resourcePackName, false, "Unable to load assets", format, description, icon);
+            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, resourcePackName, false, "Unable to load assets", format, description, languageMeta, icon);
             resourcePackInfo.add(0, info);
             return info;
         }
 
-        ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, resourcePackName, true, null, format, description, icon);
+        ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, resourcePackName, true, null, format, description, languageMeta, icon);
         resourcePackInfo.add(0, info);
         return info;
     }
 
-    private void loadAssets(ResourcePackFile assetsFolder) {
+    private void loadAssets(ResourcePackFile assetsFolder, Map<String, LanguageMeta> languageMeta) {
         if (!assetsFolder.exists() || !assetsFolder.isDirectory()) {
             throw new IllegalArgumentException(assetsFolder.getAbsolutePath() + " is not a directory.");
         }
@@ -196,7 +213,7 @@ public class ResourceManager implements AutoCloseable {
                 String namespace = folder.getName();
                 ResourcePackFile lang = folder.getChild("lang");
                 if (lang.exists() && lang.isDirectory()) {
-                    ((AbstractManager) languageManager).loadDirectory(namespace, lang);
+                    ((AbstractManager) languageManager).loadDirectory(namespace, lang, languageMeta);
                 }
             }
         }

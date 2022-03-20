@@ -18,26 +18,36 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.loohp.interactivechatdiscordsrvaddon.resources;
+package com.loohp.interactivechatdiscordsrvaddon.resources.languages;
 
-public abstract class AbstractManager {
+public class LanguageMeta {
 
-    protected ResourceManager manager;
+    private String language;
+    private String region;
+    private String name;
+    private boolean bidirectional;
 
-    public AbstractManager(ResourceManager manager) {
-        this.manager = manager;
+    public LanguageMeta(String language, String region, String name, boolean bidirectional) {
+        this.language = language;
+        this.region = region;
+        this.name = name;
+        this.bidirectional = bidirectional;
     }
 
-    public ResourceManager getManager() {
-        return manager;
+    public String getLanguage() {
+        return language;
     }
 
-    public boolean isValid() {
-        return manager.isValid();
+    public String getRegion() {
+        return region;
     }
 
-    protected abstract void loadDirectory(String namespace, ResourcePackFile root, Object... meta);
+    public String getName() {
+        return name;
+    }
 
-    protected abstract void reload();
+    public boolean isBidirectional() {
+        return bidirectional;
+    }
 
 }

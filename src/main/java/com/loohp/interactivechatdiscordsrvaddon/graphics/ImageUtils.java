@@ -32,9 +32,10 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.CharacterDataArray
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.MinecraftFont;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.MinecraftFont.FontRenderResult;
+import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageMeta;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.IntToIntFunction;
-import com.loohp.interactivechatdiscordsrvaddon.utils.UnicodeUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ICU4JUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
@@ -497,14 +498,16 @@ public class ImageUtils {
         CharacterDataArray characterDataArray = CharacterDataArray.fromComponent(text, legacyRGB);
         char[] chars = characterDataArray.getChars();
         CharacterData[] data = characterDataArray.getData();
-        if (UnicodeUtils.icu4JAvailable()) {
-            String shaped = UnicodeUtils.shaping(new String(chars));
+
+        LanguageMeta languageMeta = manager.getLanguageManager().getLanguageMeta(language);
+        if (languageMeta != null && languageMeta.isBidirectional() && ICU4JUtils.icu4JAvailable()) {
+            String shaped = ICU4JUtils.shaping(new String(chars));
             if (shaped.length() == chars.length) {
                 chars = shaped.toCharArray();
             }
-            byte[] levels = UnicodeUtils.getBidirectionalLevels(chars);
-            UnicodeUtils.bidirectionalReorderVisually(levels, data);
-            UnicodeUtils.bidirectionalReorderVisually(levels, chars);
+            byte[] levels = ICU4JUtils.getBidirectionalLevels(chars);
+            ICU4JUtils.bidirectionalReorderVisually(levels, data);
+            ICU4JUtils.bidirectionalReorderVisually(levels, chars);
         }
 
         int x = centerX;
@@ -630,14 +633,16 @@ public class ImageUtils {
         CharacterDataArray characterDataArray = CharacterDataArray.fromComponent(text, legacyRGB);
         char[] chars = characterDataArray.getChars();
         CharacterData[] data = characterDataArray.getData();
-        if (UnicodeUtils.icu4JAvailable()) {
-            String shaped = UnicodeUtils.shaping(new String(chars));
+
+        LanguageMeta languageMeta = manager.getLanguageManager().getLanguageMeta(language);
+        if (languageMeta != null && languageMeta.isBidirectional() && ICU4JUtils.icu4JAvailable()) {
+            String shaped = ICU4JUtils.shaping(new String(chars));
             if (shaped.length() == chars.length) {
                 chars = shaped.toCharArray();
             }
-            byte[] levels = UnicodeUtils.getBidirectionalLevels(chars);
-            UnicodeUtils.bidirectionalReorderVisually(levels, data);
-            UnicodeUtils.bidirectionalReorderVisually(levels, chars);
+            byte[] levels = ICU4JUtils.getBidirectionalLevels(chars);
+            ICU4JUtils.bidirectionalReorderVisually(levels, data);
+            ICU4JUtils.bidirectionalReorderVisually(levels, chars);
         }
 
         int x = topX;
