@@ -141,7 +141,6 @@ public class ResourceManager implements AutoCloseable {
                     String region = (String) meta.get("region");
                     String name = (String) meta.get("name");
                     boolean bidirectional = (boolean) meta.get("bidirectional");
-                    System.out.println(region + " " + name);
                     languageMeta.put(language, new LanguageMeta(language, region, name, bidirectional));
                 }
             }
