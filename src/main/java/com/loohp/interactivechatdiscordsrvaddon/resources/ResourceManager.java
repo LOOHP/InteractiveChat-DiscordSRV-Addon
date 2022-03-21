@@ -38,6 +38,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -154,8 +155,8 @@ public class ResourceManager implements AutoCloseable {
         BufferedImage icon = null;
         ResourcePackFile packIcon = resourcePack.getChild("pack.png");
         if (packIcon.exists()) {
-            try {
-                icon = ImageIO.read(packIcon.getInputStream());
+            try (InputStream inputStream = packIcon.getInputStream()) {
+                icon = ImageIO.read(inputStream);
             } catch (Exception ignore) {
             }
         }
