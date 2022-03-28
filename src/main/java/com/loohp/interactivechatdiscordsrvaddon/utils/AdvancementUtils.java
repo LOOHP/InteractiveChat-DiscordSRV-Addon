@@ -26,7 +26,6 @@ import com.loohp.interactivechat.utils.ItemStackUtils;
 import com.loohp.interactivechat.utils.NMSUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
-import org.bukkit.NamespacedKey;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.inventory.ItemStack;

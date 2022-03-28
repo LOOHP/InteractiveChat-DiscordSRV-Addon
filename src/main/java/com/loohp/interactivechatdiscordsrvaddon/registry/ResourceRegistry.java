@@ -100,4 +100,8 @@ public class ResourceRegistry {
 
     public static final double ENCHANTMENT_GLINT_FACTOR = 190.0 / 255.0;
 
+    public static final int SHIELD_COOLDOWN = 100;
+    public static final int ENDER_PEARL_COOLDOWN = 20;
+    public static final int CHORUS_FRUIT_COOLDOWN = 20;
+
 }

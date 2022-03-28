@@ -25,7 +25,6 @@ import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechatdiscordsrvaddon.Cache;
-import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.AbstractManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
@@ -185,6 +184,10 @@ public class ModelManager extends AbstractManager {
                         for (Object obj1 : predicateJson.keySet()) {
                             String predicateTypeKey = obj1.toString();
                             ModelOverrideType type = ModelOverrideType.fromKey(predicateTypeKey);
+                            if (type == null) {
+                                new ResourceLoadingException("Invalid model override type " + predicateTypeKey + " in block model " + file.getAbsolutePath()).printStackTrace();
+                                continue;
+                            }
                             Object value = predicateJson.get(predicateTypeKey);
                             predicates.put(type, ((Number) value).floatValue());
                         }

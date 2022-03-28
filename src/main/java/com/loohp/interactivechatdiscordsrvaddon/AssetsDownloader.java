@@ -27,13 +27,17 @@ import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.utils.FileUtils;
+import com.loohp.interactivechat.utils.HTTPRequestUtils;
+import com.loohp.interactivechat.utils.HashUtils;
 import com.loohp.interactivechatdiscordsrvaddon.libs.LibraryDownloadManager;
 import com.loohp.interactivechatdiscordsrvaddon.libs.LibraryLoader;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceDownloadManager;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackUtils;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -162,6 +166,56 @@ public class AssetsDownloader {
         });
     }
 
+    public static ServerResourcePackDownloadResult downloadServerResourcePack(File packFolder) {
+        String url = InteractiveChatDiscordSrvAddon.plugin.alternateResourcePackURL;
+        String hash = InteractiveChatDiscordSrvAddon.plugin.alternateResourcePackHash;
+        if (url == null || url.isEmpty()) {
+            url = ResourcePackUtils.getServerResourcePack();
+            hash = ResourcePackUtils.getServerResourcePackHash();
+            if (url == null || url.isEmpty()) {
+                return new ServerResourcePackDownloadResult(ServerResourcePackDownloadResultType.NO_PACK);
+            }
+        }
+        File desFile = hash != null && !hash.isEmpty() ? new File(packFolder, hash) : null;
+        if (desFile != null && desFile.exists()) {
+            try {
+                if (hash != null && !hash.isEmpty()) {
+                    String packHash = HashUtils.createSha1String(desFile);
+                    if (packHash.equalsIgnoreCase(hash)) {
+                        return new ServerResourcePackDownloadResult(ServerResourcePackDownloadResultType.SUCCESS_NO_CHANGES, desFile, packHash, hash);
+                    }
+                }
+            } catch (Exception ignore) {
+            }
+        }
+        Arrays.stream(packFolder.listFiles()).forEach(each -> {
+            if (each.isFile()) {
+                each.delete();
+            }
+        });
+        byte[] packData = HTTPRequestUtils.download(url);
+        if (packData != null) {
+            try {
+                String packHash = HashUtils.createSha1String(new ByteArrayInputStream(packData));
+                desFile = new File(packFolder, packHash);
+                if (hash == null || hash.isEmpty()) {
+                    FileUtils.copy(new ByteArrayInputStream(packData), desFile);
+                    return new ServerResourcePackDownloadResult(ServerResourcePackDownloadResultType.SUCCESS_NO_HASH, desFile);
+                } else {
+                    if (packHash.equalsIgnoreCase(hash)) {
+                        FileUtils.copy(new ByteArrayInputStream(packData), desFile);
+                        return new ServerResourcePackDownloadResult(ServerResourcePackDownloadResultType.SUCCESS_WITH_HASH, desFile, packHash, hash);
+                    }
+                    return new ServerResourcePackDownloadResult(ServerResourcePackDownloadResultType.FAILURE_WRONG_HASH, packHash, hash);
+                }
+            } catch (Exception e) {
+                return new ServerResourcePackDownloadResult(ServerResourcePackDownloadResultType.FAILURE_WRONG_HASH, null, "ERROR", hash, e);
+            }
+        } else {
+            return new ServerResourcePackDownloadResult(ServerResourcePackDownloadResultType.FAILURE_DOWNLOAD);
+        }
+    }
+
     public static void loadLibraries(File rootFolder) {
         try {
             File hashes = new File(rootFolder, "hashes.json");
@@ -236,6 +290,68 @@ public class AssetsDownloader {
             return name.substring(pos + 1);
         }
         return name;
+    }
+
+    public static class ServerResourcePackDownloadResult {
+
+        private ServerResourcePackDownloadResultType type;
+        private File resourcePackFile;
+        private String packHash;
+        private String expectedHash;
+        private Throwable error;
+
+        public ServerResourcePackDownloadResult(ServerResourcePackDownloadResultType type, File resourcePackFile, String packHash, String expectedHash, Throwable error) {
+            this.type = type;
+            this.resourcePackFile = resourcePackFile;
+            this.packHash = packHash;
+            this.expectedHash = expectedHash;
+            this.error = error;
+        }
+
+        public ServerResourcePackDownloadResult(ServerResourcePackDownloadResultType type, File resourcePackFile, String packHash, String expectedHash) {
+            this(type, resourcePackFile, packHash, expectedHash, null);
+        }
+
+        public ServerResourcePackDownloadResult(ServerResourcePackDownloadResultType type, String packHash, String expectedHash) {
+            this(type, null, packHash, expectedHash, null);
+        }
+
+        public ServerResourcePackDownloadResult(ServerResourcePackDownloadResultType type, Throwable error) {
+            this(type, null, null, null, error);
+        }
+
+        public ServerResourcePackDownloadResult(ServerResourcePackDownloadResultType type, File resourcePackFile) {
+            this(type, resourcePackFile, null, null, null);
+        }
+
+        public ServerResourcePackDownloadResult(ServerResourcePackDownloadResultType type) {
+            this(type, null, null, null, null);
+        }
+
+        public ServerResourcePackDownloadResultType getType() {
+            return type;
+        }
+
+        public File getResourcePackFile() {
+            return resourcePackFile;
+        }
+
+        public String getPackHash() {
+            return packHash;
+        }
+
+        public String getExpectedHash() {
+            return expectedHash;
+        }
+
+        public Throwable getError() {
+            return error;
+        }
+
+    }
+
+    public enum ServerResourcePackDownloadResultType {
+        NO_PACK, SUCCESS_NO_CHANGES, SUCCESS_NO_HASH, SUCCESS_WITH_HASH, FAILURE_DOWNLOAD, FAILURE_WRONG_HASH;
     }
 
 }

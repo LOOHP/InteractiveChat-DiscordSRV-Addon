@@ -49,6 +49,7 @@ import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.PlayerModelItem;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.PlayerModelItemPosition;
@@ -62,6 +63,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureManage
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.utils.BundleUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ContainerTitlePrintingFunction;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils.ItemStackProcessResult;
@@ -75,6 +77,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BundleMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.map.MapCursor;
@@ -87,8 +90,8 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -112,10 +115,11 @@ public class ImageGeneration {
     public static final int TABLIST_INTERNAL_HEIGHT = 146;
     public static final Color TABLIST_BACKGROUND = new Color(68, 68, 68);
     public static final Color TABLIST_PLAYER_BACKGROUND = new Color(107, 107, 107);
+    public static final Color BUNDLE_FULLNESS_BAR_COLOR = new Color(6711039);
     public static final TextColor INVENTORY_DEFAULT_FONT_COLOR = TextColor.color(4210752);
     private static final String OPTIFINE_CAPE_URL = "https://optifine.net/capes/%s.png";
     private static final String PLAYER_INFO_URL = "https://sessionserver.mojang.com/session/minecraft/profile/%s";
-    
+
     private static Supplier<ResourceManager> resourceManager = () -> InteractiveChatDiscordSrvAddon.plugin.resourceManager;
     private static Supplier<MCVersion> version = () -> InteractiveChat.version;
 
@@ -756,12 +760,12 @@ public class ImageGeneration {
         }
 
         if (item.getType().getMaxDurability() > 0) {
-            int durability = item.getType().getMaxDurability() - (version.get().isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
             int maxDur = item.getType().getMaxDurability();
-            double percentage = ((double) durability / (double) maxDur);
+            int durability = maxDur - (version.get().isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
+            double percentage = Math.max(0.0, Math.min(1.0, ((double) durability / (double) maxDur)));
             if (percentage < 1) {
                 int hue = (int) (125 * percentage);
-                int length = (int) (26 * percentage);
+                int length = (int) Math.round(26 * percentage);
                 Color color = Color.getHSBColor((float) hue / 360, 1, 1);
 
                 Graphics2D g4 = itemImage.createGraphics();
@@ -772,6 +776,18 @@ public class ImageGeneration {
                 g4.fillPolygon(new int[] {4, 4 + length, 4 + length, 4}, new int[] {26, 26, 28, 28}, 4);
                 g4.dispose();
             }
+        }
+        if (xMaterial.equals(XMaterial.BUNDLE)) {
+            double fullness = Math.max(0.0, Math.min(1.0, BundleUtils.getFullnessPercentage(((BundleMeta) item.getItemMeta()).getItems())));
+            int length = (int) Math.round(26 * fullness);
+
+            Graphics2D g4 = itemImage.createGraphics();
+            g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+            g4.setColor(Color.BLACK);
+            g4.fillPolygon(new int[] {4, 30, 30, 4}, new int[] {26, 26, 30, 30}, 4);
+            g4.setColor(BUNDLE_FULLNESS_BAR_COLOR);
+            g4.fillPolygon(new int[] {4, 4 + length, 4 + length, 4}, new int[] {26, 26, 28, 28}, 4);
+            g4.dispose();
         }
 
         if (amount != 1) {
@@ -874,39 +890,67 @@ public class ImageGeneration {
     }
 
     public static BufferedImage getToolTipImage(Component print) {
-        return getToolTipImage(Arrays.asList(print), false);
+        return getToolTipImage(print, false);
     }
 
     public static BufferedImage getToolTipImage(Component print, boolean allowLineBreaks) {
-        return getToolTipImage(Arrays.asList(print), allowLineBreaks);
+        return getToolTipImage(Collections.singletonList(ToolTipComponent.of(print)), allowLineBreaks);
     }
 
-    public static BufferedImage getToolTipImage(List<Component> prints) {
+    public static BufferedImage getToolTipImage(List<ToolTipComponent<?>> prints) {
         return getToolTipImage(prints, false);
     }
 
-    public static BufferedImage getToolTipImage(List<Component> prints, boolean allowLineBreaks) {
-        if (prints.isEmpty()) {
+    public static BufferedImage getToolTipImage(List<ToolTipComponent<?>> prints, boolean allowLineBreaks) {
+        if (prints.isEmpty() || !(prints.get(0).getToolTipComponent() instanceof Component)) {
             Debug.debug("ImageGeneration creating tooltip image");
         } else {
-            Debug.debug("ImageGeneration creating tooltip image of " + InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(prints.get(0)));
+            Debug.debug("ImageGeneration creating tooltip image of " + InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize((Component) prints.get(0).getToolTipComponent()));
         }
 
         if (allowLineBreaks) {
-            List<Component> newList = new ArrayList<>();
-            for (Component component : prints) {
-                newList.addAll(ComponentStyling.splitAtLineBreaks(component));
+            List<ToolTipComponent<?>> newList = new ArrayList<>();
+            for (ToolTipComponent<?> component : prints) {
+                if (component instanceof Component) {
+                    for (Component newComponent : ComponentStyling.splitAtLineBreaks((Component) component)) {
+                        newList.add(ToolTipComponent.of(newComponent));
+                    }
+                } else {
+                    newList.add(component);
+                }
             }
             prints = newList;
         }
 
-        BufferedImage image = new BufferedImage(2240, prints.size() * 20 + 15, BufferedImage.TYPE_INT_ARGB);
+        int requiredHeight = prints.stream().mapToInt(each -> {
+            Object component = each.getToolTipComponent();
+            if (component instanceof Component) {
+                return 20;
+            } else if (component instanceof BufferedImage) {
+                return ((BufferedImage) component).getHeight() + 16;
+            } else {
+                return 0;
+            }
+        }).sum() + 15;
+
+        BufferedImage image = new BufferedImage(2240, requiredHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = image.createGraphics();
 
         int topX = image.getWidth() / 5 * 2;
-        for (int i = 0; i < prints.size(); i++) {
-            Component text = prints.get(i);
-            ImageUtils.printComponent(resourceManager.get(), image, text, InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), topX + 8, 8 + 20 * i, 16);
+        int currentY = 8;
+        for (ToolTipComponent<?> print : prints) {
+            Object component = print.getToolTipComponent();
+            if (component instanceof Component) {
+                ImageUtils.printComponent(resourceManager.get(), image, (Component) component, InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), topX + 8, currentY, 16);
+                currentY += 20;
+            } else if (component instanceof BufferedImage) {
+                currentY += 5;
+                BufferedImage componentImage = (BufferedImage) component;
+                g.drawImage(componentImage, topX + 8, currentY, null);
+                currentY += componentImage.getHeight() + 11;
+            }
         }
+        g.dispose();
 
         int firstX = 0;
         outer:
@@ -933,22 +977,23 @@ public class ImageGeneration {
 
         BufferedImage background = new BufferedImage(lastX - topX + 9, image.getHeight(), BufferedImage.TYPE_INT_ARGB);
 
-        Graphics2D g = background.createGraphics();
-        g.setColor(new Color(36, 1, 92));
-        g.fillRect(2, 2, background.getWidth() - 4, background.getHeight() - 4);
-        g.setColor(new Color(16, 1, 16));
-        g.fillRect(4, 4, background.getWidth() - 8, background.getHeight() - 8);
-        g.fillRect(0, 2, 2, background.getHeight() - 4);
-        g.fillRect(background.getWidth() - 2, 2, 2, background.getHeight() - 4);
-        g.fillRect(2, 0, background.getWidth() - 4, 2);
-        g.fillRect(2, background.getHeight() - 2, background.getWidth() - 4, 2);
-        g.dispose();
+        Graphics2D g2 = background.createGraphics();
+        g2.setColor(new Color(36, 1, 92));
+        g2.fillRect(2, 2, background.getWidth() - 4, background.getHeight() - 4);
+        g2.setColor(new Color(16, 1, 16));
+        g2.fillRect(4, 4, background.getWidth() - 8, background.getHeight() - 8);
+        g2.fillRect(0, 2, 2, background.getHeight() - 4);
+        g2.fillRect(background.getWidth() - 2, 2, 2, background.getHeight() - 4);
+        g2.fillRect(2, 0, background.getWidth() - 4, 2);
+        g2.fillRect(2, background.getHeight() - 2, background.getWidth() - 4, 2);
+        g2.dispose();
 
         int offsetX = Math.max(topX - firstX, 0);
         BufferedImage output = new BufferedImage(offsetX + background.getWidth(), background.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2 = output.createGraphics();
-        g2.drawImage(background, offsetX, 0, null);
-        g2.drawImage(image, -firstX, 0, null);
+        Graphics2D g3 = output.createGraphics();
+        g3.drawImage(background, offsetX, 0, null);
+        g3.drawImage(image, -firstX, 0, null);
+        g3.dispose();
 
         return output;
     }
@@ -1221,32 +1266,6 @@ public class ImageGeneration {
         return new GenericContainerBackgroundResult(resultImage, expandedX, expandedY);
     }
 
-    public static class GenericContainerBackgroundResult {
-
-        private BufferedImage image;
-        private int expandedX;
-        private int expandedY;
-
-        private GenericContainerBackgroundResult(BufferedImage image, int expandedX, int expandedY) {
-            this.image = image;
-            this.expandedX = expandedX;
-            this.expandedY = expandedY;
-        }
-
-        public BufferedImage getBackgroundImage() {
-            return image;
-        }
-
-        public int getExpandedX() {
-            return expandedX;
-        }
-
-        public int getExpandedY() {
-            return expandedY;
-        }
-
-    }
-
     public static BufferedImage getPingIcon(int ms) {
         BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "icons").getTexture();
         int scale = icons.getWidth() / 256;
@@ -1284,6 +1303,83 @@ public class ImageGeneration {
                     return ImageUtils.copyAndGetSubImage(icons, 0, 128 * scale + offsetY, 26 * scale, 26 * scale);
             }
         }
+    }
+
+    public static BufferedImage getBundleContainerInterface(OfflineICPlayer offlineICPlayer, List<ItemStack> items) throws IOException {
+        BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "container/bundle").getTexture(256, 256);
+        int gridWidth = BundleUtils.getContainerGridSizeX(items.size());
+        int gridHeight = BundleUtils.getContainerGridSizeY(items.size());
+        boolean isFull = BundleUtils.getFullness(items) >= 64;
+
+        BufferedImage image = new BufferedImage(36 * gridWidth + 4, 40 * gridHeight + 4, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = image.createGraphics();
+
+        BufferedImage topCorner = ImageUtils.copyAndGetSubImage(icons, 0, 40, 2, 2);
+        g.drawImage(topCorner, 0, 0, null);
+        g.drawImage(topCorner, image.getWidth() - 2, 0, null);
+
+        BufferedImage horizontalTop = ImageUtils.copyAndGetSubImage(icons, 0, 40, 36, 2);
+        BufferedImage horizontalBottom = ImageUtils.copyAndGetSubImage(icons, 0, 120, 36, 2);
+        for (int x = 2; x < image.getWidth() - 2; x += horizontalTop.getWidth()) {
+            g.drawImage(horizontalTop, x, 0, null);
+            g.drawImage(horizontalBottom, x, image.getHeight() - 2, null);
+        }
+
+        BufferedImage vertical = ImageUtils.copyAndGetSubImage(icons, 0, 36, 2, 40);
+        for (int y = 2; y < image.getHeight() - 2; y += vertical.getHeight()) {
+            g.drawImage(vertical, 0, y, null);
+            g.drawImage(vertical, image.getWidth() - 2, y, null);
+        }
+
+        BufferedImage bottomCorner = ImageUtils.copyAndGetSubImage(icons, 0, 120, 2, 2);
+        g.drawImage(bottomCorner, 0, image.getHeight() - 2, null);
+        g.drawImage(bottomCorner, image.getWidth() - 2, image.getHeight() - 2, null);
+
+        BufferedImage slot = ImageUtils.copyAndGetSubImage(icons, 0, 0, 36, 40);
+        BufferedImage fullSlot = ImageUtils.copyAndGetSubImage(icons, 0, 80, 36, 40);
+
+        int i = -1;
+        for (int y = 2; y < image.getHeight() - 2; y += vertical.getHeight()) {
+            for (int x = 2; x < image.getWidth() - 2; x += horizontalTop.getWidth()) {
+                i++;
+                if (i < items.size()) {
+                    g.drawImage(slot, x, y, null);
+                    BufferedImage itemImage = getRawItemImage(items.get(i), offlineICPlayer);
+                    g.drawImage(itemImage, x + 2, y + 2, null);
+                } else {
+                    g.drawImage(isFull ? fullSlot : slot, x, y, null);
+                }
+            }
+        }
+
+        g.dispose();
+        return image;
+    }
+
+    public static class GenericContainerBackgroundResult {
+
+        private BufferedImage image;
+        private int expandedX;
+        private int expandedY;
+
+        private GenericContainerBackgroundResult(BufferedImage image, int expandedX, int expandedY) {
+            this.image = image;
+            this.expandedX = expandedX;
+            this.expandedY = expandedY;
+        }
+
+        public BufferedImage getBackgroundImage() {
+            return image;
+        }
+
+        public int getExpandedX() {
+            return expandedX;
+        }
+
+        public int getExpandedY() {
+            return expandedY;
+        }
+
     }
 
 }

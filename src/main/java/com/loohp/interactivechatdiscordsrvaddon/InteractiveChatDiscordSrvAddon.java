@@ -33,6 +33,7 @@ import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechat.utils.SkinUtils;
+import com.loohp.interactivechatdiscordsrvaddon.AssetsDownloader.ServerResourcePackDownloadResult;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
@@ -46,6 +47,7 @@ import com.loohp.interactivechatdiscordsrvaddon.registry.InteractiveChatRegistry
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
 import github.scarsz.discordsrv.DiscordSRV;
@@ -196,6 +198,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public String playerlistCommandEmptyServer = "";
     public Color playerlistCommandColor = new Color(153, 153, 153);
     public int playerlistCommandMinWidth = 0;
+    public List<String> playerlistOrderingTypes = new ArrayList<>();
+    public List<String> playerlistOrderingPlaceholders = new ArrayList<>();
     public Set<String> playerlistCommandRoles = new HashSet<>();
     public boolean shareItemCommandEnabled = true;
     public boolean shareItemCommandAsOthers = true;
@@ -224,6 +228,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public PlaceholderCooldownManager placeholderCooldownManager = new PlaceholderCooldownManager();
     public String defaultResourceHash = "N/A";
     public List<String> resourceOrder = new ArrayList<>();
+    public boolean includeServerResourcePack = true;
+    public String alternateResourcePackURL = "";
+    public String alternateResourcePackHash = "";
     public ResourceManager resourceManager;
     public ModelRenderer modelRenderer;
     public ExecutorService mediaReadingService;
@@ -281,6 +288,10 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
             } else {
                 resourcepacks.mkdirs();
             }
+        }
+        File serverResourcePack = new File(getDataFolder(), "server-resource-packs");
+        if (!serverResourcePack.exists()) {
+            serverResourcePack.mkdirs();
         }
 
         if (!compatible()) {
@@ -382,6 +393,10 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
             resourceOrder.add(pack);
         }
 
+        includeServerResourcePack = config.getConfiguration().getBoolean("Resources.IncludeServerResourcePack");
+        alternateResourcePackURL = config.getConfiguration().getString("Resources.AlternateServerResourcePack.URL");
+        alternateResourcePackHash = config.getConfiguration().getString("Resources.AlternateServerResourcePack.Hash");
+
         itemImage = config.getConfiguration().getBoolean("InventoryImage.Item.Enabled");
         invImage = config.getConfiguration().getBoolean("InventoryImage.Inventory.Enabled");
         enderImage = config.getConfiguration().getBoolean("InventoryImage.EnderChest.Enabled");
@@ -475,6 +490,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         playerlistCommandColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordCommands.PlayerList.TablistOptions.SidebarColor"));
         playerlistCommandMinWidth = config.getConfiguration().getInt("DiscordCommands.PlayerList.TablistOptions.PlayerMinWidth");
         playerlistCommandRoles = new HashSet<>(config.getConfiguration().getStringList("DiscordCommands.PlayerList.Permissions.AllowedRoles"));
+        playerlistOrderingTypes = config.getConfiguration().getStringList("DiscordCommands.PlayerList.TablistOptions.PlayerOrder.OrderBy");
+        playerlistOrderingPlaceholders = config.getConfiguration().getStringList("DiscordCommands.PlayerList.TablistOptions.PlayerOrder.Placeholders");
 
         shareItemCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.ShareItem.Enabled");
         shareItemCommandAsOthers = config.getConfiguration().getBoolean("DiscordCommands.ShareItem.AllowAsOthers");
@@ -547,6 +564,42 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                 List<String> resourceList = new ArrayList<>();
                 resourceList.add("Default");
                 resourceList.addAll(resourceOrder);
+
+                File serverResourcePackFolder = new File(getDataFolder(), "server-resource-packs");
+                File serverResourcePack = null;
+                if (includeServerResourcePack) {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Checking for server resource pack...");
+                    ServerResourcePackDownloadResult result = AssetsDownloader.downloadServerResourcePack(serverResourcePackFolder);
+                    serverResourcePack = result.getResourcePackFile();
+                    if (result.getError() != null) {
+                        result.getError().printStackTrace();
+                    }
+                    switch (result.getType()) {
+                        case SUCCESS_NO_CHANGES:
+                            sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] Server resource pack found with verification hash: No changes", senders);
+                            resourceList.add(serverResourcePack.getName());
+                            break;
+                        case SUCCESS_WITH_HASH:
+                            sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] Server resource pack found with verification hash: Hash changed, downloaded", senders);
+                            resourceList.add(serverResourcePack.getName());
+                            break;
+                        case SUCCESS_NO_HASH:
+                            sendMessage(ChatColor.GREEN + "[ICDiscordSrvAddon] Server resource pack found without verification hash: Downloaded", senders);
+                            resourceList.add(serverResourcePack.getName());
+                            break;
+                        case FAILURE_WRONG_HASH:
+                            sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Server resource pack had wrong hash (expected " + result.getExpectedHash() + ", found " + result.getPackHash() + ")", senders);
+                            sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Server resource pack will not be applied: Hash check failure", senders);
+                            break;
+                        case FAILURE_DOWNLOAD:
+                            sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Failed to download server resource pack", senders);
+                            break;
+                        case NO_PACK:
+                            Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] No server resource pack found");
+                            break;
+                    }
+                }
+
                 sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Reloading ResourceManager: " + ChatColor.YELLOW + String.join(", ", resourceList), senders);
 
                 ResourceManager resourceManager = new ResourceManager();
@@ -560,16 +613,39 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                 });
 
                 Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"Default\" resources...");
-                resourceManager.loadResources(new File(getDataFolder() + "/built-in", "Default"));
+                resourceManager.loadResources(new File(getDataFolder() + "/built-in", "Default"), ResourcePackType.BUILT_IN);
                 for (String resourceName : resourceOrder) {
                     try {
                         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"" + resourceName + "\" resources...");
                         File resourcePackFile = new File(getDataFolder(), "resourcepacks/" + resourceName);
-                        ResourcePackInfo info = resourceManager.loadResources(resourcePackFile);
+                        ResourcePackInfo info = resourceManager.loadResources(resourcePackFile, ResourcePackType.LOCAL);
                         if (info.getStatus()) {
-                            if (info.comparePackFormat() > 0) {
+                            if (info.compareServerPackFormat() > 0) {
                                 sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] Warning: \"" + resourceName + "\" was made for a newer version of Minecraft!", senders);
-                            } else if (info.comparePackFormat() < 0) {
+                            } else if (info.compareServerPackFormat() < 0) {
+                                sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] Warning: \"" + resourceName + "\" was made for an older version of Minecraft!", senders);
+                            }
+                        } else {
+                            if (info.getRejectedReason() == null) {
+                                sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load \"" + resourceName + "\"", senders);
+                            } else {
+                                sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load \"" + resourceName + "\", Reason: " + info.getRejectedReason(), senders);
+                            }
+                        }
+                    } catch (Exception e) {
+                        sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load \"" + resourceName + "\"", senders);
+                        e.printStackTrace();
+                    }
+                }
+                if (includeServerResourcePack && serverResourcePack != null && serverResourcePack.exists()) {
+                    String resourceName = serverResourcePack.getName();
+                    try {
+                        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"" + resourceName + "\" resources...");
+                        ResourcePackInfo info = resourceManager.loadResources(serverResourcePack, ResourcePackType.SERVER);
+                        if (info.getStatus()) {
+                            if (info.compareServerPackFormat() > 0) {
+                                sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] Warning: \"" + resourceName + "\" was made for a newer version of Minecraft!", senders);
+                            } else if (info.compareServerPackFormat() < 0) {
                                 sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] Warning: \"" + resourceName + "\" was made for an older version of Minecraft!", senders);
                             }
                         } else {

@@ -21,8 +21,13 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources;
 
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import com.loohp.interactivechat.utils.LanguageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageMeta;
+import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 
 import java.awt.image.BufferedImage;
 import java.util.Collections;
@@ -32,6 +37,7 @@ public class ResourcePackInfo {
 
     private ResourceManager manager;
     private ResourcePackFile file;
+    private ResourcePackType type;
     private boolean status;
     private boolean exist;
     private String rejectedReason;
@@ -41,9 +47,10 @@ public class ResourcePackInfo {
     private Map<String, LanguageMeta> languageMeta;
     private BufferedImage icon;
 
-    private ResourcePackInfo(ResourceManager manager, ResourcePackFile file, String name, boolean status, boolean exist, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon) {
+    private ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, String name, boolean status, boolean exist, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon) {
         this.manager = manager;
         this.file = file;
+        this.type = type;
         this.name = name;
         this.status = status;
         this.exist = exist;
@@ -54,16 +61,32 @@ public class ResourcePackInfo {
         this.icon = icon;
     }
 
-    public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, String name, boolean status, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon) {
-        this(manager, file, name, status, true, rejectedReason, packFormat, description, languageMeta, icon);
+    public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, String name, boolean status, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon) {
+        this(manager, file, type, name, status, true, rejectedReason, packFormat, description, languageMeta, icon);
     }
 
-    public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, String name, String rejectedReason) {
-        this(manager, file, name, false, false, rejectedReason, -1, null, Collections.emptyMap(), null);
+    public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, String name, String rejectedReason) {
+        this(manager, file, type, name, false, false, rejectedReason, -1, null, Collections.emptyMap(), null);
+    }
+
+    public ResourceManager getManager() {
+        return manager;
     }
 
     public ResourcePackFile getResourcePackFile() {
         return file;
+    }
+
+    public ResourcePackType getType() {
+        return type;
+    }
+
+    public int getPackOrder() {
+        return manager.getResourcePackInfo().indexOf(this);
+    }
+
+    public boolean isValid() {
+        return manager.isValid();
     }
 
     public boolean getStatus() {
@@ -78,7 +101,19 @@ public class ResourcePackInfo {
         return exist;
     }
 
+    public String getRawName() {
+        return name;
+    }
+
     public String getName() {
+        switch (type) {
+            case BUILT_IN:
+            case LOCAL:
+                return name;
+            case WORLD:
+            case SERVER:
+                return LanguageUtils.getTranslation(TranslationKeyUtils.getWorldSpecificResources(), InteractiveChatDiscordSrvAddon.plugin.language);
+        }
         return name;
     }
 
@@ -86,12 +121,25 @@ public class ResourcePackInfo {
         return packFormat;
     }
 
-    public int comparePackFormat() {
+    public int compareServerPackFormat() {
         return Integer.compare(packFormat, ResourceRegistry.RESOURCE_PACK_VERSION);
     }
 
-    public Component getDescription() {
+    public Component getRawDescription() {
         return description;
+    }
+
+    public Component getDescription() {
+        Component component = description;
+        String space = PlainTextComponentSerializer.plainText().serialize(description).isEmpty() ? "" : " ";
+        switch (type) {
+            case BUILT_IN:
+            case WORLD:
+            case SERVER:
+                component = component.append(Component.empty().append(Component.text(space + "(").append(Component.translatable(TranslationKeyUtils.getServerResourcePackType(type))).append(Component.text(")"))).color(NamedTextColor.GRAY));
+                break;
+        }
+        return component;
     }
 
     public Map<String, LanguageMeta> getLanguageMeta() {

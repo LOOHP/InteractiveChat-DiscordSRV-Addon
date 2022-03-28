@@ -23,7 +23,6 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.models;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -51,23 +50,16 @@ public class ModelOverride {
 
     public boolean test(Map<ModelOverrideType, Float> data) {
         if (data == null) {
-            return false;
+            data = Collections.emptyMap();
         }
-        boolean result = true;
-        Map<ModelOverrideType, Float> dataCopy = new EnumMap<>(ModelOverrideType.class);
-        dataCopy.putAll(data);
         for (Entry<ModelOverrideType, Float> entry : predicates.entrySet()) {
-            Float value = dataCopy.remove(entry.getKey());
-            if (value == null) {
-                value = 0F;
-            }
+            float value = data.getOrDefault(entry.getKey(), Float.NEGATIVE_INFINITY);
             float valueComparing = entry.getValue();
             if (value < valueComparing) {
-                result = false;
-                break;
+                return false;
             }
         }
-        return result && dataCopy.isEmpty();
+        return true;
     }
 
     public enum ModelOverrideType {
@@ -92,7 +84,7 @@ public class ModelOverride {
 
         public static ModelOverrideType fromKey(String key) {
             for (ModelOverrideType type : values()) {
-                if (key.toUpperCase().equals(type.toString())) {
+                if (key.equalsIgnoreCase(type.toString())) {
                     return type;
                 }
             }

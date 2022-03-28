@@ -31,6 +31,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RenderResult;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
@@ -568,14 +569,14 @@ public class BlockModelRenderer extends JFrame {
         PrintStream original = System.err;
         try {
             resourceManager = new ResourceManager();
-            resourceManager.loadResources(new File("InteractiveChatDiscordSrvAddon/built-in", "Default"));
+            resourceManager.loadResources(new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN);
             resourceBar.setValue(valuePerPack);
             for (String resourceName : resourceOrder) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 System.setErr(new PrintStream(baos));
                 try {
                     File resourcePackFile = new File("InteractiveChatDiscordSrvAddon/resourcepacks/" + resourceName);
-                    ResourcePackInfo info = resourceManager.loadResources(resourcePackFile);
+                    ResourcePackInfo info = resourceManager.loadResources(resourcePackFile, ResourcePackType.LOCAL);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

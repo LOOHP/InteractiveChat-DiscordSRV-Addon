@@ -34,8 +34,8 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.MinecraftFont;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.MinecraftFont.FontRenderResult;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageMeta;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
-import com.loohp.interactivechatdiscordsrvaddon.utils.IntToIntFunction;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ICU4JUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.IntToIntFunction;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;

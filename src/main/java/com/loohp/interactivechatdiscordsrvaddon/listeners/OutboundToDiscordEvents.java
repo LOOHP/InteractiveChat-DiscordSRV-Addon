@@ -33,6 +33,7 @@ import com.loohp.interactivechat.objectholders.ICPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.ICPlayerFactory;
 import com.loohp.interactivechat.objectholders.MentionPair;
+import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 import com.loohp.interactivechat.objectholders.PlaceholderCooldownManager;
 import com.loohp.interactivechat.objectholders.WebData;
 import com.loohp.interactivechat.registry.Registry;
@@ -145,7 +146,7 @@ public class OutboundToDiscordEvents implements Listener {
     private static final IDProvider DATA_ID_PROVIDER = new IDProvider();
     private static final Map<UUID, ItemStack> DEATH_BY = new ConcurrentHashMap<>();
 
-    private static List<DiscordMessageContent> createContents(List<DiscordDisplayData> dataList, Player player) {
+    private static List<DiscordMessageContent> createContents(List<DiscordDisplayData> dataList, OfflineICPlayer player) {
         List<DiscordMessageContent> contents = new ArrayList<>();
         int i = -1;
         for (DiscordDisplayData data : dataList) {
@@ -735,17 +736,19 @@ public class OutboundToDiscordEvents implements Listener {
             color = Color.black;
         }
         Player player = event.getPlayer();
+        ICPlayer icPlayer = ICPlayerFactory.getICPlayer(player);
+
         DiscordMessageContent content = new DiscordMessageContent(ChatColorUtils.stripColor(meta.getDisplayName()), "attachment://Item.png", color);
         try {
             BufferedImage image = ImageGeneration.getItemStackImage(item, ICPlayerFactory.getICPlayer(player), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
             byte[] itemData = ImageUtils.toArray(image);
 
-            DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item, player);
+            DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item, icPlayer);
 
             content.addAttachment("Item.png", itemData);
 
             if (InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImage) {
-                DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, player);
+                DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, icPlayer);
                 if (!discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
                     BufferedImage tooltip = ImageGeneration.getToolTipImage(discordToolTip.getComponents());
                     byte[] tooltipData = ImageUtils.toArray(tooltip);
@@ -964,7 +967,7 @@ public class OutboundToDiscordEvents implements Listener {
             dataList.sort(DISPLAY_DATA_COMPARATOR);
 
             Debug.debug("discordMessageSent creating contents");
-            List<DiscordMessageContent> contents = createContents(dataList, player.isLocal() ? player.getLocalPlayer() : (Bukkit.getOnlinePlayers().isEmpty() ? null : Bukkit.getOnlinePlayers().iterator().next()));
+            List<DiscordMessageContent> contents = createContents(dataList, player);
 
             DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
             Bukkit.getPluginManager().callEvent(discordImageEvent);
@@ -1047,7 +1050,7 @@ public class OutboundToDiscordEvents implements Listener {
             dataList.sort(DISPLAY_DATA_COMPARATOR);
 
             Debug.debug("onMessageReceived creating contents");
-            List<DiscordMessageContent> contents = createContents(dataList, player.isLocal() ? player.getLocalPlayer() : (Bukkit.getOnlinePlayers().isEmpty() ? null : Bukkit.getOnlinePlayers().iterator().next()));
+            List<DiscordMessageContent> contents = createContents(dataList, player);
 
             DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
             Bukkit.getPluginManager().callEvent(discordImageEvent);

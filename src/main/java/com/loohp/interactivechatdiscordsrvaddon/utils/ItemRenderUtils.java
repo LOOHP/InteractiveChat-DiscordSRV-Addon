@@ -44,7 +44,9 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintIndexData;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World.Environment;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BundleMeta;
 import org.bukkit.inventory.meta.CompassMeta;
 import org.bukkit.inventory.meta.CrossbowMeta;
 import org.bukkit.inventory.meta.Damageable;
@@ -59,8 +61,8 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -91,16 +93,29 @@ public class ItemRenderUtils {
         TintIndexData tintIndexData = TintUtils.getTintData(xMaterial);
         Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
         Map<String, TextureResource> providedTextures = new HashMap<>();
+
+        if (!player.isRightHanded()) {
+            predicates.put(ModelOverrideType.LEFTHANDED, 1F);
+        }
         if (NBTEditor.contains(item, "CustomModelData")) {
             int customModelData = NBTEditor.getInt(item, "CustomModelData");
             predicates.put(ModelOverrideType.CUSTOM_MODEL_DATA, (float) customModelData);
         }
+        if (item.getType().getMaxDurability() > 0) {
+            int maxDur = item.getType().getMaxDurability();
+            int damage = InteractiveChat.version.isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage();
+            predicates.put(ModelOverrideType.DAMAGE, (float) damage / (float) maxDur);
+            predicates.put(ModelOverrideType.DAMAGED, DiscordItemStackUtils.isUnbreakable(item) || (damage <= 0) ? 0F : 1F);
+        }
+
         if (xMaterial.equals(XMaterial.CHEST) || xMaterial.equals(XMaterial.TRAPPED_CHEST)) {
             LocalDate time = LocalDate.now();
-            if (time.getMonth().equals(Month.DECEMBER) && (time.getDayOfMonth() == 24 || time.getDayOfMonth() == 25 || time.getDayOfMonth() == 26)) {
+            Month month = time.getMonth();
+            int day = time.getDayOfMonth();
+            if (month.equals(Month.DECEMBER) && (day == 24 || day == 25 || day == 26)) {
                 directLocation = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + "christmas_chest";
             }
-        } else if (xMaterial.isOneOf(Arrays.asList("CONTAINS:banner"))) {
+        } else if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:banner"))) {
             BannerAssetResult bannerAsset = BannerGraphics.generateBannerAssets(item);
             providedTextures.put(ResourceRegistry.BANNER_BASE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(bannerAsset.getBase()));
             providedTextures.put(ResourceRegistry.BANNER_PATTERNS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(bannerAsset.getPatterns()));
@@ -108,6 +123,12 @@ public class ItemRenderUtils {
             BannerAssetResult shieldAsset = BannerGraphics.generateShieldAssets(item);
             providedTextures.put(ResourceRegistry.SHIELD_BASE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(shieldAsset.getBase()));
             providedTextures.put(ResourceRegistry.SHIELD_PATTERNS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(shieldAsset.getPatterns()));
+            predicates.put(ModelOverrideType.BLOCKING, 0F);
+            ICPlayer icplayer = player.getPlayer();
+            if (icplayer != null && icplayer.isLocal()) {
+                int cooldown = icplayer.getLocalPlayer().getCooldown(item.getType());
+                predicates.put(ModelOverrideType.COOLDOWN, (float) cooldown / (float) ResourceRegistry.SHIELD_COOLDOWN);
+            }
         } else if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
             BufferedImage skinImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "steve").getTexture();
             try {
@@ -206,7 +227,7 @@ public class ItemRenderUtils {
 
             predicates.put(ModelOverrideType.ANGLE, (float) (angle - 0.015625));
         } else if (xMaterial.equals(XMaterial.LIGHT)) {
-            int level = 15;
+            int level = 16;
             Object blockStateObj = item.getItemMeta().serialize().get("BlockStateTag");
             if (blockStateObj != null && blockStateObj instanceof Map) {
                 Object levelObj = ((Map<?, Object>) blockStateObj).get("level");
@@ -287,7 +308,7 @@ public class ItemRenderUtils {
                     }
                 }
             }
-        } else if (xMaterial.isOneOf(Arrays.asList("CONTAINS:spawn_egg"))) {
+        } else if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:spawn_egg"))) {
             SpawnEggTintData tintData = TintUtils.getSpawnEggTint(xMaterial);
             if (tintData != null) {
                 BufferedImage baseImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg").getTexture();
@@ -302,10 +323,44 @@ public class ItemRenderUtils {
                 providedTextures.put(ResourceRegistry.SPAWN_EGG_PLACEHOLDER, new GeneratedTextureResource(baseImage));
                 providedTextures.put(ResourceRegistry.SPAWN_EGG_OVERLAY_PLACEHOLDER, new GeneratedTextureResource(overlayImage));
             }
-        } else if (InteractiveChat.version.isLegacy() && xMaterial.isOneOf(Arrays.asList("CONTAINS:bed"))) {
+        } else if (InteractiveChat.version.isLegacy() && xMaterial.isOneOf(Collections.singletonList("CONTAINS:bed"))) {
             String colorName = xMaterial.name().replace("_BED", "").toLowerCase();
             BufferedImage bedTexture = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "bed/" + colorName).getTexture();
             providedTextures.put(ResourceRegistry.LEGACY_BED_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(bedTexture));
+        } else if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_9) && (xMaterial.equals(XMaterial.ENDER_PEARL))) {
+            ICPlayer icplayer = player.getPlayer();
+            if (icplayer != null && icplayer.isLocal()) {
+                int cooldown = icplayer.getLocalPlayer().getCooldown(item.getType());
+                predicates.put(ModelOverrideType.COOLDOWN, (float) cooldown / (float) ResourceRegistry.ENDER_PEARL_COOLDOWN);
+            }
+        } else if (xMaterial.equals(XMaterial.CHORUS_FRUIT)) {
+            ICPlayer icplayer = player.getPlayer();
+            if (icplayer != null && icplayer.isLocal()) {
+                int cooldown = icplayer.getLocalPlayer().getCooldown(item.getType());
+                predicates.put(ModelOverrideType.COOLDOWN, (float) cooldown / (float) ResourceRegistry.CHORUS_FRUIT_COOLDOWN);
+            }
+        } else if (xMaterial.equals(XMaterial.FISHING_ROD)) {
+            predicates.put(ModelOverrideType.CAST, 0F);
+            ICPlayer icplayer = player.getPlayer();
+            if (icplayer != null && icplayer.isLocal()) {
+                Player bukkitPlayer = icplayer.getLocalPlayer();
+                if (FishUtils.getPlayerFishingHook(bukkitPlayer) != null) {
+                    ItemStack mainHandItem = bukkitPlayer.getEquipment().getItemInHand();
+                    if (InteractiveChat.version.isOld()) {
+                        if (mainHandItem != null && mainHandItem.equals(item)) {
+                            predicates.put(ModelOverrideType.CAST, 1F);
+                        }
+                    } else {
+                        ItemStack offHandItem = bukkitPlayer.getEquipment().getItemInOffHand();
+                        if ((mainHandItem != null && mainHandItem.equals(item)) || ((offHandItem != null && offHandItem.equals(item)) && (mainHandItem == null || !XMaterial.matchXMaterial(mainHandItem).equals(XMaterial.FISHING_ROD)))) {
+                            predicates.put(ModelOverrideType.CAST, 1F);
+                        }
+                    }
+                }
+            }
+        } else if (xMaterial.equals(XMaterial.BUNDLE)) {
+            float fullness = BundleUtils.getFullnessPercentage(((BundleMeta) item.getItemMeta()).getItems());
+            predicates.put(ModelOverrideType.FILLED, fullness);
         }
         return new ItemStackProcessResult(requiresEnchantmentGlint, predicates, providedTextures, tintIndexData, directLocation);
     }

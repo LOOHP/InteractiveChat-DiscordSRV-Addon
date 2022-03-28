@@ -43,6 +43,7 @@ import com.loohp.interactivechat.objectholders.ICPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.ICPlayerFactory;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
+import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechat.objectholders.ValueTrios;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
@@ -91,7 +92,6 @@ import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.EquipmentSlot;
@@ -155,11 +155,14 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                 if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandEnabled && InteractiveChatDiscordSrvAddon.plugin.playerlistCommandIsMainServer) {
                     for (ICPlayer player : ICPlayerFactory.getOnlineICPlayers()) {
                         if (!player.isLocal()) {
-                            String text = InteractiveChatDiscordSrvAddon.plugin.playerlistCommandPlayerFormat +
-                                " " + InteractiveChatDiscordSrvAddon.plugin.playerlistCommandHeader +
-                                " " + InteractiveChatDiscordSrvAddon.plugin.playerlistCommandFooter;
+                            StringBuilder text = new StringBuilder(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandPlayerFormat +
+                                                                       " " + InteractiveChatDiscordSrvAddon.plugin.playerlistCommandHeader +
+                                                                       " " + InteractiveChatDiscordSrvAddon.plugin.playerlistCommandFooter);
+                            for (String placeholder : InteractiveChatDiscordSrvAddon.plugin.playerlistOrderingPlaceholders) {
+                                text.append(" ").append(placeholder);
+                            }
                             try {
-                                BungeeMessageSender.requestParsedPlaceholders(System.currentTimeMillis(), player.getUniqueId(), text);
+                                BungeeMessageSender.requestParsedPlaceholders(System.currentTimeMillis(), player.getUniqueId(), text.toString());
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
@@ -417,6 +420,89 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
         return chat.getGroupInfoInteger(Bukkit.getWorlds().get(0).getName(), group, "weight", Integer.MIN_VALUE);
     }
 
+    @SuppressWarnings("deprecation")
+    private static List<ValueTrios<UUID, Component, Integer>> sortPlayers(List<String> orderTypes, List<String> placeholders, List<ValueTrios<UUID, Component, Integer>> players, Map<UUID, ValuePairs<Integer, String>> playerInfo) {
+        if (players.size() <= 1) {
+            return players;
+        }
+        Comparator<ValueTrios<UUID, Component, Integer>> comparator = Comparator.comparing(each -> 0);
+        for (String orderType : orderTypes) {
+            switch (orderType.toUpperCase()) {
+                case "GROUP":
+                    comparator = comparator.thenComparing(each -> {
+                        ValuePairs<Integer, String> info = playerInfo.get(each.getFirst());
+                        if (info == null) {
+                            return Integer.MIN_VALUE;
+                        }
+                        return info.getFirst();
+                    });
+                    break;
+                case "GROUP_REVERSE":
+                    comparator = comparator.thenComparing(Comparator.comparing(each -> {
+                        ValuePairs<Integer, String> info = playerInfo.get(((ValueTrios<UUID, Component, Integer>) each).getFirst());
+                        if (info == null) {
+                            return Integer.MIN_VALUE;
+                        }
+                        return info.getFirst();
+                    }).reversed());
+                    break;
+                case "PLAYERNAME":
+                    comparator = comparator.thenComparing(each -> {
+                        ValuePairs<Integer, String> info = playerInfo.get(each.getFirst());
+                        if (info == null) {
+                            return "";
+                        }
+                        return info.getSecond();
+                    });
+                    break;
+                case "PLAYERNAME_REVERSE":
+                    comparator = comparator.thenComparing(Comparator.comparing(each -> {
+                        ValuePairs<Integer, String> info = playerInfo.get(((ValueTrios<UUID, Component, Integer>) each).getFirst());
+                        if (info == null) {
+                            return "";
+                        }
+                        return info.getSecond();
+                    }).reversed());
+                    break;
+                case "PLACEHOLDERS":
+                    for (String placeholder : placeholders) {
+                        comparator = comparator.thenComparing(Comparator.comparing(each -> {
+                            String parsedString = PlaceholderParser.parse(ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(((ValueTrios<UUID, Component, Integer>) each).getFirst()), placeholder);
+                            double value = Double.MAX_VALUE;
+                            try {
+                                value = Double.parseDouble(parsedString);
+                            } catch (NumberFormatException ignore) {
+                            }
+                            return value;
+                        }).thenComparing(each -> {
+                            return PlaceholderParser.parse(ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(((ValueTrios<UUID, Component, Integer>) each).getFirst()), placeholder);
+                        }));
+                    }
+                    break;
+                case "PLACEHOLDERS_REVERSE":
+                    for (String placeholder : placeholders) {
+                        comparator = comparator.thenComparing(Comparator.comparing(each -> {
+                            String parsedString = PlaceholderParser.parse(ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(((ValueTrios<UUID, Component, Integer>) each).getFirst()), placeholder);
+                            double value = Double.MAX_VALUE;
+                            try {
+                                value = Double.parseDouble(parsedString);
+                            } catch (NumberFormatException ignore) {
+                            }
+                            return value;
+                        }).thenComparing(each -> {
+                            return PlaceholderParser.parse(ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(((ValueTrios<UUID, Component, Integer>) each).getFirst()), placeholder);
+                        }).reversed());
+                    }
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown player ordering type " + orderType);
+            }
+        }
+        comparator = comparator.thenComparing(each -> PlainTextComponentSerializer.plainText().serialize(each.getSecond())).thenComparing(each -> each.getFirst());
+        players.sort(comparator);
+        return players;
+    }
+
     private DiscordSRV discordsrv;
     private Map<String, Component> components;
 
@@ -545,6 +631,10 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
 
     @Override
     public void onSlashCommand(SlashCommandEvent event) {
+        Guild guild = discordsrv.getMainGuild();
+        if (event.getGuild().getIdLong() != guild.getIdLong()) {
+            return;
+        }
         if (!(event.getChannel() instanceof TextChannel)) {
             return;
         }
@@ -559,11 +649,14 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                 for (ResourcePackInfo packInfo : InteractiveChatDiscordSrvAddon.plugin.resourceManager.getResourcePackInfo()) {
                     i++;
                     String packName = packInfo.getName();
-                    Component description = packInfo.getDescription();
+                    Component description = ComponentStringUtils.convertTranslatables(ComponentModernizing.modernize(packInfo.getDescription()), InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language));
                     EmbedBuilder builder = new EmbedBuilder().setAuthor(packName).setThumbnail("attachment://" + i + ".png");
                     if (packInfo.getStatus()) {
                         builder.setDescription(PlainTextComponentSerializer.plainText().serialize(description));
                         ChatColor firstColor = ChatColorUtils.getColor(LegacyComponentSerializer.builder().useUnusualXRepeatedCharacterHexFormat().character(ChatColorUtils.COLOR_CHAR).build().serialize(description));
+                        if (firstColor == null) {
+                            firstColor = ChatColor.WHITE;
+                        }
                         Color color = ColorUtils.getColor(firstColor);
                         if (color == null) {
                             color = new Color(0xAAAAAA);
@@ -571,9 +664,9 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                             color = new Color(0xFFFFFE);
                         }
                         builder.setColor(color);
-                        if (packInfo.comparePackFormat() > 0) {
+                        if (packInfo.compareServerPackFormat() > 0) {
                             builder.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getNewIncompatiblePack(), InteractiveChatDiscordSrvAddon.plugin.language));
-                        } else if (packInfo.comparePackFormat() < 0) {
+                        } else if (packInfo.compareServerPackFormat() < 0) {
                             builder.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getOldIncompatiblePack(), InteractiveChatDiscordSrvAddon.plugin.language));
                         }
                     } else {
@@ -639,16 +732,16 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     try {
                         String[] groups = getGroups();
                         List<ValueTrios<UUID, Component, Integer>> player = new ArrayList<>();
-                        Map<UUID, Integer> playerGroups = new HashMap<>();
+                        Map<UUID, ValuePairs<Integer, String>> playerInfo = new HashMap<>();
                         for (Entry<OfflinePlayer, Integer> entry : players.entrySet()) {
                             OfflinePlayer bukkitOfflinePlayer = entry.getKey();
                             @SuppressWarnings("deprecation")
                             OfflineICPlayer offlinePlayer = ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(bukkitOfflinePlayer.getUniqueId());
-                            playerGroups.put(offlinePlayer.getUniqueId(), getPlayerGroupOrder(groups, bukkitOfflinePlayer));
+                            playerInfo.put(offlinePlayer.getUniqueId(), new ValuePairs<>(getPlayerGroupOrder(groups, bukkitOfflinePlayer), offlinePlayer.getName()));
                             player.add(new ValueTrios<>(offlinePlayer.getUniqueId(), LegacyComponentSerializer.legacySection().deserialize(ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(offlinePlayer, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandPlayerFormat))), entry.getValue()));
                         }
                         errorCode--;
-                        player.sort(Comparator.comparing(each -> playerGroups.getOrDefault(((ValueTrios<UUID, Component, Integer>) each).getFirst(), Integer.MIN_VALUE)).thenComparing(each -> ((ValueTrios<UUID, Component, Integer>) each).getFirst()));
+                        sortPlayers(InteractiveChatDiscordSrvAddon.plugin.playerlistOrderingTypes, InteractiveChatDiscordSrvAddon.plugin.playerlistOrderingPlaceholders, player, playerInfo);
                         errorCode--;
                         @SuppressWarnings("deprecation")
                         OfflineICPlayer firstPlayer = ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(players.keySet().iterator().next().getUniqueId());
@@ -754,8 +847,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                 discordsrv.broadcastMessageToMinecraftServer(minecraftChannel, ComponentStringUtils.toDiscordSRVComponent(Component.text(key)), event.getUser());
                 if (InteractiveChatDiscordSrvAddon.plugin.shareItemCommandIsMainServer) {
                     errorCode--;
-                    Player bukkitPlayer = icplayer == null || !icplayer.isLocal() ? null : icplayer.getLocalPlayer();
-                    DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(itemStack, bukkitPlayer);
+                    DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(itemStack, offlineICPlayer);
                     errorCode--;
                     Color color = DiscordItemStackUtils.getDiscordColor(itemStack);
                     if (color == null || color.equals(Color.WHITE)) {
@@ -768,7 +860,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     action.addFile(data, "Item.png");
                     errorCode--;
                     if (InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImage) {
-                        DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(itemStack, bukkitPlayer);
+                        DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(itemStack, offlineICPlayer);
                         if (!discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
                             BufferedImage tooltip = ImageGeneration.getToolTipImage(discordToolTip.getComponents());
                             byte[] tooltipData = ImageUtils.toArray(tooltip);

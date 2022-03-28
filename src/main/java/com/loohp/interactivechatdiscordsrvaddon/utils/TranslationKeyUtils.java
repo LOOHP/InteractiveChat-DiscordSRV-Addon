@@ -24,6 +24,7 @@ import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NMSUtils;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackType;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.PatternTypeWrapper;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.DyeColor;
@@ -134,6 +135,41 @@ public class TranslationKeyUtils {
 
     public static String getServerResourcePack() {
         return "addServer.resourcePack";
+    }
+
+    public static String getServerResourcePackType(ResourcePackType type) {
+        if (InteractiveChat.version.isLegacy()) {
+            switch (type) {
+                case BUILT_IN:
+                    return "built-in";
+                case WORLD:
+                    return "world";
+                case LOCAL:
+                    return "local";
+                case SERVER:
+                    return "server";
+            }
+        } else {
+            switch (type) {
+                case BUILT_IN:
+                    return "pack.source.builtin";
+                case WORLD:
+                    return "pack.source.world";
+                case LOCAL:
+                    return "pack.source.local";
+                case SERVER:
+                    return "pack.source.server";
+            }
+        }
+        return "";
+    }
+
+    public static String getWorldSpecificResources() {
+        if (InteractiveChat.version.isLegacy()) {
+            return "addServer.resourcePack";
+        } else {
+            return "resourcePack.server.name";
+        }
     }
 
     public static String getFilledMapId() {
@@ -290,13 +326,13 @@ public class TranslationKeyUtils {
         List<String> list = new ArrayList<>();
         if (!InteractiveChat.version.isLegacy() && NBTEditor.contains(bucket, "BucketVariantTag")) {
             int variance = NBTEditor.getInt(bucket, "BucketVariantTag");
-            int predefinedType = TropicalFishUtils.getPredefinedType(variance);
+            int predefinedType = FishUtils.getPredefinedType(variance);
             if (predefinedType >= 0) {
                 list.add("entity.minecraft.tropical_fish.predefined." + predefinedType);
             } else {
-                DyeColor baseColor = TropicalFishUtils.getTropicalFishBaseColor(variance);
-                DyeColor patternColor = TropicalFishUtils.getTropicalFishPatternColor(variance);
-                list.add("entity.minecraft.tropical_fish.type." + TropicalFishUtils.getTropicalFishTypeName(variance));
+                DyeColor baseColor = FishUtils.getTropicalFishBaseColor(variance);
+                DyeColor patternColor = FishUtils.getTropicalFishPatternColor(variance);
+                list.add("entity.minecraft.tropical_fish.type." + FishUtils.getTropicalFishTypeName(variance));
                 list.add("color.minecraft." + baseColor.toString().toLowerCase());
                 if (!baseColor.equals(patternColor)) {
                     list.add("color.minecraft." + patternColor.toString().toLowerCase());
@@ -381,6 +417,10 @@ public class TranslationKeyUtils {
 
     public static String getEnderChestContainerTitle() {
         return "container.enderchest";
+    }
+
+    public static String getBundleFullness() {
+        return "item.minecraft.bundle.fullness";
     }
 
 }

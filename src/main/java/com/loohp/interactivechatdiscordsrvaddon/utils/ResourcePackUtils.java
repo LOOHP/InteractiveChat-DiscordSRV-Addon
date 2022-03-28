@@ -34,6 +34,7 @@ public class ResourcePackUtils {
     private static Class<?> craftServerClass;
     private static Method craftServerGetServerMethod;
     private static Method nmsGetResourcePackMethod;
+    private static Method nmsGetResourcePackHashMethod;
     private static Class<?> nmsMinecraftVersionClass;
     private static Constructor<?> nmsMinecraftVersionConstructor;
     private static Method nmsMinecraftVersionGetPackVersionMethod;
@@ -47,6 +48,11 @@ public class ResourcePackUtils {
             craftServerGetServerMethod = craftServerClass.getMethod("getServer");
             nmsGetResourcePackMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
                 return craftServerGetServerMethod.getReturnType().getMethod("getResourcePack");
+            }, () -> {
+                return craftServerGetServerMethod.getReturnType().getMethod("S");
+            });
+            nmsGetResourcePackHashMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
+                return craftServerGetServerMethod.getReturnType().getMethod("getResourcePackHash");
             }, () -> {
                 return craftServerGetServerMethod.getReturnType().getMethod("T");
             });
@@ -73,6 +79,18 @@ public class ResourcePackUtils {
             Object craftServerObject = craftServerClass.cast(Bukkit.getServer());
             Object nmsMinecraftServerObject = craftServerGetServerMethod.invoke(craftServerObject);
             Object resourcePackStringObject = nmsGetResourcePackMethod.invoke(nmsMinecraftServerObject);
+            return resourcePackStringObject == null ? "" : resourcePackStringObject.toString();
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    public static String getServerResourcePackHash() {
+        try {
+            Object craftServerObject = craftServerClass.cast(Bukkit.getServer());
+            Object nmsMinecraftServerObject = craftServerGetServerMethod.invoke(craftServerObject);
+            Object resourcePackStringObject = nmsGetResourcePackHashMethod.invoke(nmsMinecraftServerObject);
             return resourcePackStringObject == null ? "" : resourcePackStringObject.toString();
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             e.printStackTrace();

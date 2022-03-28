@@ -68,7 +68,7 @@ public class ModelDisplay {
 
         public static ModelDisplayPosition fromKey(String key) {
             for (ModelDisplayPosition position : values()) {
-                if (position.getKeys().contains(key.toLowerCase())) {
+                if (position.getKeys().stream().anyMatch(each -> each.equalsIgnoreCase(key))) {
                     return position;
                 }
             }

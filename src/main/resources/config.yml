@@ -159,6 +159,29 @@ DiscordCommands:
       #PlaceholderAPI placeholders in the footer are parsed as THE FIRST PLAYER in the playerlist
       FooterText:
         - ""
+      PlayerOrder:
+        #How should players be ordered in the playerlist
+        #.
+        #This list is applied from top to bottom
+        #If two players are tied in an ordering type
+        #The next one will be applied until the bottom
+        #If two players are still tied when all ordering types are exhausted
+        #The player's full tablist text component and (then) UUID string will be used to ensure consistent ordering
+        #.
+        #Avalible Ordering Types:
+        #GROUP (Permission group weight from the highest to the lowest)
+        #GROUP_REVERSE (Permission group weight from the lowest to the highest)
+        #PLAYERNAME (Player Name ordering from 0 to 9 then A to Z)
+        #PLAYERNAME_REVERSE (Player Name ordering from Z to A then 9 to 0)
+        #PLACEHOLDERS (Placeholder ordering from small to large numbers then A to Z)
+        #PLACEHOLDERS_REVERSE (Placeholder ordering from Z to A then large to small numbers)
+        OrderBy:
+          - GROUP
+          - PLAYERNAME
+          - PLACEHOLDERS
+        #Placeholder ordering is applied from top to bottom
+        Placeholders:
+          - "%vault_eco_balance%"
   #Settings for /item
   ShareItem:
     #Enable the /item command on discord
@@ -252,6 +275,25 @@ DiscordMention:
   #Use {DiscordMention} for the highlighted player name
   MentionHighlight: "&9{DiscordMention}"
 
+Resources:
+  #Which language should be used in places like the item tooltip
+  #Visit this page for all the languages that Minecraft offers:
+  #https://minecraft.fandom.com/wiki/Language
+  Language: en_us
+  #Put server resource pack from server.properties
+  #at the top of the resource pack ordering list if it is available
+  IncludeServerResourcePack: true
+  #Set this option if you want a separate url as the server resource pack
+  #If the URL is empty, the url and hash from server.properties will be used
+  #If the hash is empty but URL is not, the resource pack hash will not be checked
+  AlternateServerResourcePack:
+    URL: ""
+    Hash: ""
+  #Set which resource pack should be installed and in what order
+  #Visit this page for more info:
+  #https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon/wiki/Resource-Pack
+  Order: []
+
 Messages:
   ReloadConfig: "&aICDiscordSRVAddon config has been reloaded!"
   ReloadTexture: "&aICDiscordSRVAddon reloading textures--- (See console for progress)"
@@ -276,16 +318,6 @@ Settings:
 
 Debug:
   PrintInfoToConsole: false
-
-Resources:
-  #Which language should be used in places like the item tooltip
-  #Visit this page for all the languages that Minecraft offers:
-  #https://minecraft.fandom.com/wiki/Language
-  Language: en_us
-  #Set which resource pack should be installed and in what order
-  #Visit this page for more info:
-  #https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon/wiki/Resource-Pack
-  Order: []
 
 Options:
   Updater: true

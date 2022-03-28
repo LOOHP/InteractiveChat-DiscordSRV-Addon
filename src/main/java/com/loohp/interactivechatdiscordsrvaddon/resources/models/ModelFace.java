@@ -91,7 +91,7 @@ public class ModelFace {
 
         public static ModelFaceSide fromKey(String key) {
             for (ModelFaceSide face : values()) {
-                if (key.toUpperCase().equals(face.toString()) || face.aliases.contains(key.toUpperCase())) {
+                if (key.equalsIgnoreCase(face.toString()) || face.aliases.stream().anyMatch(each -> each.equalsIgnoreCase(key))) {
                     return face;
                 }
             }

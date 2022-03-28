@@ -20,19 +20,44 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
+import com.loohp.interactivechat.utils.NMSUtils;
 import org.bukkit.DyeColor;
+import org.bukkit.entity.FishHook;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.TropicalFish;
 import org.bukkit.entity.TropicalFish.Pattern;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-public class TropicalFishUtils {
+public class FishUtils {
 
     private static final Map<Integer, Integer> PREDEFINED_TROPICAL_FISH = new HashMap<>();
 
+    private static Class<?> craftPlayerClass;
+    private static Class<?> nmsEntityHumanClass;
+    private static Class<?> nmsEntityFishingHookClass;
+    private static Method getNmsEntityPlayerMethod;
+    private static Field nmsHumanFishingHookField;
+    private static Method nmsGetBukkitEntityMethod;
+
     static {
+        try {
+            craftPlayerClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.entity.CraftPlayer");
+            nmsEntityHumanClass = NMSUtils.getNMSClass("net.minecraft.server.%s.EntityHuman", "net.minecraft.world.entity.player.EntityHuman");
+            nmsEntityFishingHookClass = NMSUtils.getNMSClass("net.minecraft.server.%s.EntityFishingHook", "net.minecraft.world.entity.projectile.EntityFishingHook");
+            getNmsEntityPlayerMethod = craftPlayerClass.getMethod("getHandle");
+            nmsHumanFishingHookField = Arrays.stream(nmsEntityHumanClass.getFields()).filter(each -> each.getType().equals(nmsEntityFishingHookClass)).findFirst().get();
+            nmsGetBukkitEntityMethod = nmsEntityFishingHookClass.getMethod("getBukkitEntity");
+        } catch (ClassNotFoundException | NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+
         PREDEFINED_TROPICAL_FISH.put(calculateTropicalFishVariant(TropicalFish.Pattern.STRIPEY, DyeColor.ORANGE, DyeColor.GRAY), 0);
         PREDEFINED_TROPICAL_FISH.put(calculateTropicalFishVariant(TropicalFish.Pattern.FLOPPER, DyeColor.GRAY, DyeColor.GRAY), 1);
         PREDEFINED_TROPICAL_FISH.put(calculateTropicalFishVariant(TropicalFish.Pattern.FLOPPER, DyeColor.GRAY, DyeColor.BLUE), 2);
@@ -97,6 +122,21 @@ public class TropicalFishUtils {
         int base = getTropicalFishBaseVariant(variance);
         int index = getTropicalFishPatternVariant(variance);
         return TropicalFishPattern.getPatternName(base, index);
+    }
+
+    public static FishHook getPlayerFishingHook(Player player) {
+        try {
+            Object craftPlayer = craftPlayerClass.cast(player);
+            Object nmsEntityPlayer = getNmsEntityPlayerMethod.invoke(craftPlayer);
+            Object nmsEntityFishingHook = nmsHumanFishingHookField.get(nmsEntityPlayer);
+            if (nmsEntityFishingHook == null) {
+                return null;
+            }
+            return (FishHook) nmsGetBukkitEntityMethod.invoke(nmsEntityFishingHook);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public static enum TropicalFishPattern {

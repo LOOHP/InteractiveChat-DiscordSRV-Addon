@@ -74,11 +74,11 @@ public class ResourceManager implements AutoCloseable {
         this.uuid = UUID.randomUUID();
     }
 
-    public synchronized ResourcePackInfo loadResources(File resourcePackFile) {
+    public synchronized ResourcePackInfo loadResources(File resourcePackFile, ResourcePackType type) {
         String resourcePackName = resourcePackFile.getName();
         if (!resourcePackFile.exists()) {
             new IllegalArgumentException(resourcePackFile.getAbsolutePath() + " is not a directory nor is a zip file.").printStackTrace();
-            ResourcePackInfo info = new ResourcePackInfo(this, null, resourcePackName, "Resource Pack is not a directory nor a zip file.");
+            ResourcePackInfo info = new ResourcePackInfo(this, null, type, resourcePackName, "Resource Pack is not a directory nor a zip file.");
             resourcePackInfo.add(0, info);
             return info;
         }
@@ -90,7 +90,7 @@ public class ResourceManager implements AutoCloseable {
                 resourcePack = new ResourcePackZipEntryFile(resourcePackFile);
             } catch (IOException e) {
                 new IllegalArgumentException(resourcePackFile.getAbsolutePath() + " is an invalid zip file.").printStackTrace();
-                ResourcePackInfo info = new ResourcePackInfo(this, null, resourcePackName, "Resource Pack is an invalid zip file.");
+                ResourcePackInfo info = new ResourcePackInfo(this, null, type, resourcePackName, "Resource Pack is an invalid zip file.");
                 resourcePackInfo.add(0, info);
                 return info;
             }
@@ -98,7 +98,7 @@ public class ResourceManager implements AutoCloseable {
         ResourcePackFile packMcmeta = resourcePack.getChild("pack.mcmeta");
         if (!packMcmeta.exists()) {
             new ResourceLoadingException(resourcePackName + " does not have a pack.mcmeta").printStackTrace();
-            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, resourcePackName, "pack.mcmeta not found");
+            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, "pack.mcmeta not found");
             resourcePackInfo.add(0, info);
             return info;
         }
@@ -108,7 +108,7 @@ public class ResourceManager implements AutoCloseable {
             json = (JSONObject) new JSONParser().parse(reader);
         } catch (Throwable e) {
             new ResourceLoadingException("Unable to read pack.mcmeta for " + resourcePackName, e).printStackTrace();
-            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, resourcePackName, "Unable to read pack.mcmeta");
+            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, "Unable to read pack.mcmeta");
             resourcePackInfo.add(0, info);
             return info;
         }
@@ -147,7 +147,7 @@ public class ResourceManager implements AutoCloseable {
             }
         } catch (Exception e) {
             new ResourceLoadingException("Invalid pack.mcmeta for " + resourcePackName, e).printStackTrace();
-            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, resourcePackName, "Invalid pack.mcmeta");
+            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, "Invalid pack.mcmeta");
             resourcePackInfo.add(0, info);
             return info;
         }
@@ -166,12 +166,12 @@ public class ResourceManager implements AutoCloseable {
             loadAssets(assetsFolder, languageMeta);
         } catch (Exception e) {
             new ResourceLoadingException("Unable to load assets for " + resourcePackName, e).printStackTrace();
-            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, resourcePackName, false, "Unable to load assets", format, description, languageMeta, icon);
+            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, false, "Unable to load assets", format, description, languageMeta, icon);
             resourcePackInfo.add(0, info);
             return info;
         }
 
-        ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, resourcePackName, true, null, format, description, languageMeta, icon);
+        ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, true, null, format, description, languageMeta, icon);
         resourcePackInfo.add(0, info);
         return info;
     }

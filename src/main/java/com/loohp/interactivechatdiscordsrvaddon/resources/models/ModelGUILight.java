@@ -29,7 +29,7 @@ public enum ModelGUILight {
 
     public static ModelGUILight fromKey(String key) {
         for (ModelGUILight type : values()) {
-            if (key.toUpperCase().equals(type.toString())) {
+            if (key.equalsIgnoreCase(type.toString())) {
                 return type;
             }
         }
