@@ -161,6 +161,14 @@ public class DiscordItemStackUtils {
         boolean hasMeta = item.hasItemMeta();
         StringBuilder description = new StringBuilder();
 
+        if (xMaterial.equals(XMaterial.BUNDLE) && hasMeta && item.getItemMeta() instanceof BundleMeta) {
+            BundleMeta meta = (BundleMeta) item.getItemMeta();
+            List<ItemStack> items = meta.getItems();
+            int fullness = BundleUtils.getFullness(items);
+            description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getBundleFullness(), language).replaceFirst("%s", fullness + "").replaceFirst("%s", "64")).append("\n");
+            description.append("\n");
+        }
+
         if (xMaterial.equals(XMaterial.WRITTEN_BOOK) && hasMeta && item.getItemMeta() instanceof BookMeta) {
             BookMeta meta = (BookMeta) item.getItemMeta();
             String author = meta.getAuthor();

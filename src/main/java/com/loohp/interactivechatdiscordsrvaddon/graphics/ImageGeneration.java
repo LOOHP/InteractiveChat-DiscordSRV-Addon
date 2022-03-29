@@ -166,7 +166,7 @@ public class ImageGeneration {
 
     public static BufferedImage getAdvancementIcon(ItemStack item, AdvancementType advancementType, boolean completed, OfflineICPlayer player) throws IOException {
         BufferedImage frame = ImageUtils.resizeImageAbs(getAdvancementFrame(advancementType, completed), 52, 52);
-        BufferedImage itemImage = getItemStackImage(item, player, false);
+        BufferedImage itemImage = getRawItemImage(item, player);
         Graphics2D g = frame.createGraphics();
         g.drawImage(itemImage, 10, 10, null);
         g.dispose();
