@@ -43,7 +43,6 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.SpawnEggTintData
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintIndexData;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.World.Environment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BundleMeta;
@@ -159,8 +158,18 @@ public class ItemRenderUtils {
                 }
             }
         } else if (xMaterial.equals(XMaterial.CLOCK)) {
+            long time;
             ICPlayer onlinePlayer = player.getPlayer();
-            long time = ((onlinePlayer != null && onlinePlayer.isLocal() ? ((ICPlayer) player).getLocalPlayer().getPlayerTime() : Bukkit.getWorlds().get(0).getTime()) % 24000) - 6000;
+            if (onlinePlayer != null && onlinePlayer.isLocal()) {
+                Player bukkitPlayer = onlinePlayer.getLocalPlayer();
+                if (WorldUtils.isNatural(bukkitPlayer.getWorld())) {
+                    time = (onlinePlayer.getLocalPlayer().getPlayerTime() % 24000) - 6000;
+                } else {
+                    time = RANDOM.nextInt(24000) - 6000;
+                }
+            } else {
+                time = (Bukkit.getWorlds().get(0).getTime() % 24000) - 6000;
+            }
             if (time < 0) {
                 time += 24000;
             }
@@ -170,6 +179,7 @@ public class ItemRenderUtils {
             double angle;
             ICPlayer icplayer = player.getPlayer();
             if (icplayer != null && icplayer.isLocal()) {
+                Player bukkitPlayer = icplayer.getLocalPlayer();
                 if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
                     CompassMeta meta = (CompassMeta) item.getItemMeta();
                     Location target;
@@ -177,14 +187,14 @@ public class ItemRenderUtils {
                         Location lodestone = meta.getLodestone();
                         target = new Location(lodestone.getWorld(), lodestone.getBlockX() + 0.5, lodestone.getBlockY(), lodestone.getBlockZ() + 0.5, lodestone.getYaw(), lodestone.getPitch());
                         requiresEnchantmentGlint = true;
-                    } else if (icplayer.getLocalPlayer().getWorld().getEnvironment().equals(Environment.NORMAL)) {
-                        Location spawn = icplayer.getLocalPlayer().getWorld().getSpawnLocation();
+                    } else if (WorldUtils.isNatural(bukkitPlayer.getWorld())) {
+                        Location spawn = bukkitPlayer.getWorld().getSpawnLocation();
                         target = new Location(spawn.getWorld(), spawn.getBlockX() + 0.5, spawn.getBlockY(), spawn.getBlockZ() + 0.5, spawn.getYaw(), spawn.getPitch());
                     } else {
                         target = null;
                     }
-                    if (target != null && target.getWorld().equals(icplayer.getLocalPlayer().getWorld())) {
-                        Location playerLocation = icplayer.getLocalPlayer().getEyeLocation();
+                    if (target != null && target.getWorld().equals(bukkitPlayer.getWorld())) {
+                        Location playerLocation = bukkitPlayer.getEyeLocation();
                         playerLocation.setPitch(0);
                         Vector looking = playerLocation.getDirection();
                         Vector pointing = target.toVector().subtract(playerLocation.toVector());
@@ -198,10 +208,10 @@ public class ItemRenderUtils {
                         angle = RANDOM.nextDouble();
                     }
                 } else {
-                    if (icplayer.getLocalPlayer().getWorld().getEnvironment().equals(Environment.NORMAL)) {
-                        Location spawn = icplayer.getLocalPlayer().getWorld().getSpawnLocation();
+                    if (WorldUtils.isNatural(bukkitPlayer.getWorld())) {
+                        Location spawn = bukkitPlayer.getWorld().getSpawnLocation();
                         Location target = new Location(spawn.getWorld(), spawn.getBlockX() + 0.5, spawn.getBlockY(), spawn.getBlockZ() + 0.5, spawn.getYaw(), spawn.getPitch());
-                        Location playerLocation = icplayer.getLocalPlayer().getEyeLocation();
+                        Location playerLocation = bukkitPlayer.getEyeLocation();
                         playerLocation.setPitch(0);
                         Vector looking = playerLocation.getDirection();
                         Vector pointing = target.toVector().subtract(playerLocation.toVector());

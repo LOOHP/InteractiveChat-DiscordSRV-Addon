@@ -24,7 +24,6 @@ import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
-import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.AbstractManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
@@ -44,7 +43,6 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class ModelManager extends AbstractManager {
 
@@ -217,50 +215,39 @@ public class ModelManager extends AbstractManager {
         return Collections.unmodifiableMap(models);
     }
 
-    public BlockModel resolveBlockModel(String resourceLocation, boolean post1_8, Map<ModelOverrideType, Float> predicates) {
-        String cacheKey = CACHE_KEY + "/" + resourceLocation + "/" + (predicates == null ? "null" : predicates.entrySet().stream().map(entry -> entry.getKey().name().toLowerCase() + ":" + entry.getValue().toString()).collect(Collectors.joining(";")));
-        Cache<?> cachedModel = Cache.getCache(cacheKey);
-        if (cachedModel != null) {
-            return (BlockModel) cachedModel.getObject();
-        }
-
+    public BlockModel resolveBlockModel(String resourceLocation, boolean is1_8, Map<ModelOverrideType, Float> predicates) {
         BlockModel model = models.get(resourceLocation);
         if (model == null) {
             return null;
         }
         for (ModelOverride override : model.getOverrides()) {
             if (override.test(predicates)) {
-                return resolveBlockModel(override.getModel(), post1_8, null);
+                return resolveBlockModel(override.getModel(), is1_8, null);
             }
         }
-        if (model.getParent() != null) {
-            while (model.getParent() != null) {
-                if (model.getRawParent().equals(ITEM_BASE)) {
-                    break;
-                }
-                if (model.getRawParent().equals(BLOCK_ENTITY_BASE)) {
-                    BlockModel builtinModel = resolveBlockModel(ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + resourceLocation.substring(resourceLocation.lastIndexOf("/") + 1), post1_8, predicates);
-                    if (builtinModel != null) {
-                        return builtinModel;
-                    }
-                    break;
-                }
-                BlockModel parent = models.get(model.getParent());
-                if (parent == null) {
-                    break;
-                }
-                for (ModelOverride override : model.getOverrides()) {
-                    if (override.test(predicates)) {
-                        return resolveBlockModel(override.getModel(), post1_8, null);
-                    }
-                }
-                model = BlockModel.resolve(parent, model, post1_8);
+        while (model.getParent() != null) {
+            if (model.getRawParent().equals(ITEM_BASE)) {
+                break;
             }
+            if (model.getRawParent().equals(BLOCK_ENTITY_BASE)) {
+                BlockModel builtinModel = resolveBlockModel(ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + resourceLocation.substring(resourceLocation.lastIndexOf("/") + 1), is1_8, predicates);
+                if (builtinModel != null) {
+                    return builtinModel;
+                }
+                break;
+            }
+            BlockModel parent = models.get(model.getParent());
+            if (parent == null) {
+                break;
+            }
+            for (ModelOverride override : model.getOverrides()) {
+                if (override.test(predicates)) {
+                    return resolveBlockModel(override.getModel(), is1_8, null);
+                }
+            }
+            model = BlockModel.resolve(parent, model, is1_8);
         }
-        model = BlockModel.resolve(model, post1_8);
-
-        //Cache.putCache(cacheKey, model, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
-        return model;
+        return BlockModel.resolve(model, is1_8);
     }
 
 }

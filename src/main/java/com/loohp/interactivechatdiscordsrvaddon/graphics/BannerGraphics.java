@@ -119,7 +119,7 @@ public class BannerGraphics {
         BufferedImage baseImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "shield_base").getTexture(64, 64);
         BufferedImage patternsImage = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
 
-        BufferedImage baseTint = new BufferedImage(11, 21, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage baseTint = new BufferedImage(12, 22, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = baseTint.createGraphics();
         g.setColor(baseColor);
         g.fillRect(2, 2, 10, 20);
