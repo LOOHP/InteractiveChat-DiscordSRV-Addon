@@ -20,7 +20,7 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.objectholders;
 
-import com.loohp.interactivechat.objectholders.ICPlayer;
+import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.TitledInventoryWrapper;
 import org.bukkit.inventory.ItemStack;
@@ -36,7 +36,7 @@ public class ImageDisplayData extends DiscordDisplayData {
     private final Optional<ItemStack> item;
     private final boolean isFilledMap;
 
-    private ImageDisplayData(ICPlayer player, int position, String title, ImageDisplayType type, TitledInventoryWrapper inventory, boolean isPlayerInventory, ItemStack item, boolean isFilledMap) {
+    private ImageDisplayData(OfflineICPlayer player, int position, String title, ImageDisplayType type, TitledInventoryWrapper inventory, boolean isPlayerInventory, ItemStack item, boolean isFilledMap) {
         super(player, position);
         this.type = type;
         this.title = title;
@@ -46,19 +46,19 @@ public class ImageDisplayData extends DiscordDisplayData {
         this.isFilledMap = isFilledMap;
     }
 
-    public ImageDisplayData(ICPlayer player, int position, String title, ImageDisplayType type, TitledInventoryWrapper inventory) {
+    public ImageDisplayData(OfflineICPlayer player, int position, String title, ImageDisplayType type, TitledInventoryWrapper inventory) {
         this(player, position, title, type, inventory, false, null, false);
     }
 
-    public ImageDisplayData(ICPlayer player, int position, String title, ImageDisplayType type, boolean isPlayerInventory, TitledInventoryWrapper inventory) {
+    public ImageDisplayData(OfflineICPlayer player, int position, String title, ImageDisplayType type, boolean isPlayerInventory, TitledInventoryWrapper inventory) {
         this(player, position, title, type, inventory, isPlayerInventory, null, false);
     }
 
-    public ImageDisplayData(ICPlayer player, int position, String title, ImageDisplayType type, ItemStack itemstack) {
+    public ImageDisplayData(OfflineICPlayer player, int position, String title, ImageDisplayType type, ItemStack itemstack) {
         this(player, position, title, type, null, false, itemstack, FilledMapUtils.isFilledMap(itemstack));
     }
 
-    public ImageDisplayData(ICPlayer player, int position, String title, ImageDisplayType type, ItemStack itemstack, TitledInventoryWrapper inventory) {
+    public ImageDisplayData(OfflineICPlayer player, int position, String title, ImageDisplayType type, ItemStack itemstack, TitledInventoryWrapper inventory) {
         this(player, position, title, type, inventory, false, itemstack, FilledMapUtils.isFilledMap(itemstack));
     }
 

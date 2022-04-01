@@ -21,12 +21,13 @@
 package com.loohp.interactivechatdiscordsrvaddon.wrappers;
 
 import com.loohp.interactivechat.utils.FilledMapUtils;
+import com.loohp.interactivechatdiscordsrvaddon.api.events.MapDataLookupEvent;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.map.MapCursor;
 import org.bukkit.map.MapView;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -48,19 +49,30 @@ public class ItemMapWrapper {
     private byte[] colors;
     private List<MapCursor> icons;
 
-    public ItemMapWrapper(ItemStack itemStack, Player player) throws Exception {
+    public ItemMapWrapper(ItemStack itemStack, Player player) {
         this.itemStack = itemStack;
-        this.icons = new ArrayList<>();
         update(player);
     }
 
-    public void update(Player player) throws Exception {
+    public void update(Player player) {
         if (!FilledMapUtils.isFilledMap(itemStack)) {
             throw new IllegalArgumentException("Provided item is not a filled map");
         }
+        byte[] colors;
+        List<MapCursor> icons;
+        int mapId = FilledMapUtils.getMapId(itemStack);
         MapView mapView = FilledMapUtils.getMapView(itemStack);
-        colors = FilledMapUtils.getColors(mapView, player);
-        icons = FilledMapUtils.getCursors(mapView, player).stream().sorted(ICON_ORDER).collect(Collectors.toList());
+        if (mapView == null) {
+            colors = null;
+            icons = null;
+        } else {
+            colors = FilledMapUtils.getColors(mapView, player);
+            icons = FilledMapUtils.getCursors(mapView, player).stream().sorted(ICON_ORDER).collect(Collectors.toList());
+        }
+        MapDataLookupEvent event = new MapDataLookupEvent(player, mapId, mapView, colors, icons);
+        Bukkit.getPluginManager().callEvent(event);
+        this.colors = event.getColors();
+        this.icons = event.getMapCursors();
     }
 
     public byte[] getColors() {
@@ -68,7 +80,7 @@ public class ItemMapWrapper {
     }
 
     public List<MapCursor> getMapCursors() {
-        return Collections.unmodifiableList(icons);
+        return icons;
     }
 
 }

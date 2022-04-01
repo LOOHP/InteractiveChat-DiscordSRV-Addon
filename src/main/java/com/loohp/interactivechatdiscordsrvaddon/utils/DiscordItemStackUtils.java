@@ -259,21 +259,9 @@ public class DiscordItemStackUtils {
 
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && FilledMapUtils.isFilledMap(item)) {
             MapMeta map = (MapMeta) item.getItemMeta();
-            MapView mapView;
-            int id;
-            if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_13_1)) {
-                mapView = map.getMapView();
-                id = mapView.getId();
-            } else if (InteractiveChat.version.equals(MCVersion.V1_13)) {
-                short shortId = (short) bukkitMapViewClassGetIdMethod.invoke(map);
-                mapView = (MapView) bukkitBukkitClassGetMapShortMethod.invoke(null, shortId);
-                id = shortId;
-            } else {
-                short shortId = item.getDurability();
-                mapView = (MapView) bukkitBukkitClassGetMapShortMethod.invoke(null, shortId);
-                id = shortId;
-            }
-            int scale = mapView.getScale().getValue();
+            MapView mapView = FilledMapUtils.getMapView(item);
+            int id = FilledMapUtils.getMapId(item);
+            int scale = mapView == null ? 0 : mapView.getScale().getValue();
             if (!InteractiveChat.version.isLegacy()) {
                 description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getFilledMapId(), language).replaceFirst("%s", id + "")).append("\n");
             } else {
@@ -691,21 +679,9 @@ public class DiscordItemStackUtils {
 
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && FilledMapUtils.isFilledMap(item)) {
             MapMeta map = (MapMeta) item.getItemMeta();
-            MapView mapView;
-            int id;
-            if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_13_1)) {
-                mapView = map.getMapView();
-                id = mapView.getId();
-            } else if (InteractiveChat.version.equals(MCVersion.V1_13)) {
-                short shortId = (short) bukkitMapViewClassGetIdMethod.invoke(map);
-                mapView = (MapView) bukkitBukkitClassGetMapShortMethod.invoke(null, shortId);
-                id = shortId;
-            } else {
-                short shortId = item.getDurability();
-                mapView = (MapView) bukkitBukkitClassGetMapShortMethod.invoke(null, shortId);
-                id = shortId;
-            }
-            int scale = mapView.getScale().getValue();
+            MapView mapView = FilledMapUtils.getMapView(item);
+            int id = FilledMapUtils.getMapId(item);
+            int scale = mapView == null ? 0 : mapView.getScale().getValue();
             if (!InteractiveChat.version.isLegacy()) {
                 prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getFilledMapId(), language).replaceFirst("%s", id + ""))));
             } else {

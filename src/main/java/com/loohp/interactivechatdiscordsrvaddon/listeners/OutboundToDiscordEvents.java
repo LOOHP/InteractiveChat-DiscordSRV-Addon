@@ -43,6 +43,7 @@ import com.loohp.interactivechat.utils.ComponentFlattening;
 import com.loohp.interactivechat.utils.ComponentModernizing;
 import com.loohp.interactivechat.utils.ComponentReplacing;
 import com.loohp.interactivechat.utils.CustomStringUtils;
+import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.InventoryUtils;
 import com.loohp.interactivechat.utils.ItemStackUtils;
@@ -118,6 +119,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.map.MapView;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -146,7 +148,7 @@ public class OutboundToDiscordEvents implements Listener {
     private static final IDProvider DATA_ID_PROVIDER = new IDProvider();
     private static final Map<UUID, ItemStack> DEATH_BY = new ConcurrentHashMap<>();
 
-    private static List<DiscordMessageContent> createContents(List<DiscordDisplayData> dataList, OfflineICPlayer player) {
+    public static List<DiscordMessageContent> createContents(List<DiscordDisplayData> dataList, OfflineICPlayer player) {
         List<DiscordMessageContent> contents = new ArrayList<>();
         int i = -1;
         for (DiscordDisplayData data : dataList) {
@@ -197,15 +199,21 @@ public class OutboundToDiscordEvents implements Listener {
                             content.addAttachment("Container_" + i + ".png", containerData);
                             content.addImageUrl("attachment://Container_" + i + ".png");
                         } else {
-                            if (iData.isFilledMap() && iData.getPlayer().isLocal()) {
-                                if (!description.getDescription().isPresent()) {
-                                    content.getImageUrls().remove("attachment://ToolTip_" + i + ".png");
-                                    content.getAttachments().remove("ToolTip_" + i + ".png");
+                            if (iData.isFilledMap()) {
+                                MapView mapView = FilledMapUtils.getMapView(item);
+                                boolean isContextual = mapView == null || FilledMapUtils.isContextual(mapView);
+                                ICPlayer icPlayer = iData.getPlayer().getPlayer();
+                                boolean isPlayerLocal = icPlayer != null && icPlayer.isLocal();
+                                if (!isContextual || isPlayerLocal) {
+                                    if (!description.getDescription().isPresent()) {
+                                        content.getImageUrls().remove("attachment://ToolTip_" + i + ".png");
+                                        content.getAttachments().remove("ToolTip_" + i + ".png");
+                                    }
+                                    BufferedImage map = ImageGeneration.getMapImage(item, isPlayerLocal ? icPlayer.getLocalPlayer() : null);
+                                    byte[] mapData = ImageUtils.toArray(map);
+                                    content.addAttachment("Map_" + i + ".png", mapData);
+                                    content.addImageUrl("attachment://Map_" + i + ".png");
                                 }
-                                BufferedImage map = ImageGeneration.getMapImage(item, iData.getPlayer().getLocalPlayer());
-                                byte[] mapData = ImageUtils.toArray(map);
-                                content.addAttachment("Map_" + i + ".png", mapData);
-                                content.addImageUrl("attachment://Map_" + i + ".png");
                             }
                         }
                     } catch (Exception e) {
@@ -953,7 +961,7 @@ public class OutboundToDiscordEvents implements Listener {
             }
 
             message.editMessage(text + " ...").queue();
-            ICPlayer player = DATA.get(matches.iterator().next()).getPlayer();
+            OfflineICPlayer player = DATA.get(matches.iterator().next()).getPlayer();
 
             List<DiscordDisplayData> dataList = new ArrayList<>();
 
@@ -1036,7 +1044,7 @@ public class OutboundToDiscordEvents implements Listener {
             }
 
             client.edit(messageId, text + " ...");
-            ICPlayer player = DATA.get(matches.iterator().next()).getPlayer();
+            OfflineICPlayer player = DATA.get(matches.iterator().next()).getPlayer();
 
             List<DiscordDisplayData> dataList = new ArrayList<>();
 

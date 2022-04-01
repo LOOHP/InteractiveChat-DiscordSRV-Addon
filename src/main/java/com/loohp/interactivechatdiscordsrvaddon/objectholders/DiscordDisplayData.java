@@ -20,24 +20,24 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.objectholders;
 
-import com.loohp.interactivechat.objectholders.ICPlayer;
+import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 
 public abstract class DiscordDisplayData {
 
-    protected final ICPlayer player;
-    protected final int postion;
+    protected final OfflineICPlayer player;
+    protected final int position;
 
-    public DiscordDisplayData(ICPlayer player, int postion) {
+    public DiscordDisplayData(OfflineICPlayer player, int position) {
         this.player = player;
-        this.postion = postion;
+        this.position = position;
     }
 
-    public ICPlayer getPlayer() {
+    public OfflineICPlayer getPlayer() {
         return player;
     }
 
     public int getPosition() {
-        return postion;
+        return position;
     }
 
 }

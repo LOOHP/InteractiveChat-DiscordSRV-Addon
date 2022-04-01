@@ -84,6 +84,7 @@ public class GameMessageEvent extends Event implements Cancellable {
         this.component = PlainTextComponentSerializer.plainText().deserialize(message);
     }
 
+    @Override
     public HandlerList getHandlers() {
         return HANDLERS;
     }

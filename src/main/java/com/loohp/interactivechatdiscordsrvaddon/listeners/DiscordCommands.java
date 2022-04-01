@@ -54,6 +54,7 @@ import com.loohp.interactivechat.utils.CustomStringUtils;
 import com.loohp.interactivechat.utils.HashUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.InventoryUtils;
+import com.loohp.interactivechat.utils.ItemStackUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.PlaceholderParser;
@@ -64,14 +65,15 @@ import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.api.events.InteractiveChatDiscordSRVConfigReloadEvent;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordMessageContent;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayData;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
-import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils;
-import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordDescription;
-import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordToolTip;
 import com.loohp.interactivechatdiscordsrvaddon.utils.JDAUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
+import com.loohp.interactivechatdiscordsrvaddon.wrappers.TitledInventoryWrapper;
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.dependencies.jda.api.EmbedBuilder;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Guild;
@@ -92,11 +94,14 @@ import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.block.BlockState;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
@@ -847,33 +852,43 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                 discordsrv.broadcastMessageToMinecraftServer(minecraftChannel, ComponentStringUtils.toDiscordSRVComponent(Component.text(key)), event.getUser());
                 if (InteractiveChatDiscordSrvAddon.plugin.shareItemCommandIsMainServer) {
                     errorCode--;
-                    DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(itemStack, offlineICPlayer);
-                    errorCode--;
-                    Color color = DiscordItemStackUtils.getDiscordColor(itemStack);
-                    if (color == null || color.equals(Color.WHITE)) {
-                        color = new Color(0xFFFFFE);
-                    }
-                    EmbedBuilder embedBuilder = new EmbedBuilder().setAuthor(description.getName(), null, "attachment://Item.png").setColor(color);
-                    WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(PlainTextComponentSerializer.plainText().serialize(resolvedComponent));
-                    errorCode--;
-                    byte[] data = ImageUtils.toArray(itemImage);
-                    action.addFile(data, "Item.png");
-                    errorCode--;
-                    if (InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImage) {
-                        DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(itemStack, offlineICPlayer);
-                        if (!discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
-                            BufferedImage tooltip = ImageGeneration.getToolTipImage(discordToolTip.getComponents());
-                            byte[] tooltipData = ImageUtils.toArray(tooltip);
-                            action.addFile(tooltipData, "ToolTip.png");
-                            embedBuilder.setImage("attachment://ToolTip.png");
-                        } else {
-                            embedBuilder.setDescription(description.getDescription().orElse(null));
+
+                    Inventory inv = null;
+                    if (itemStack.hasItemMeta() && itemStack.getItemMeta() instanceof BlockStateMeta) {
+                        BlockState bsm = ((BlockStateMeta) itemStack.getItemMeta()).getBlockState();
+                        if (bsm instanceof InventoryHolder) {
+                            Inventory container = ((InventoryHolder) bsm).getInventory();
+                            if (!container.isEmpty()) {
+                                inv = Bukkit.createInventory(null, InventoryUtils.toMultipleOf9(container.getSize()));
+                                for (int j = 0; j < container.getSize(); j++) {
+                                    if (container.getItem(j) != null) {
+                                        if (!container.getItem(j).getType().equals(Material.AIR)) {
+                                            inv.setItem(j, container.getItem(j).clone());
+                                        }
+                                    }
+                                }
+                            }
                         }
-                    } else {
-                        embedBuilder.setDescription(description.getDescription().orElse(null));
                     }
+
+                    ImageDisplayData data;
+                    if (inv != null) {
+                        data = new ImageDisplayData(offlineICPlayer, 0, title, ImageDisplayType.ITEM_CONTAINER, itemStack.clone(), new TitledInventoryWrapper(ItemStackUtils.getDisplayName(itemStack, null), inv));
+                    } else {
+                        data = new ImageDisplayData(offlineICPlayer, 0, title, ImageDisplayType.ITEM, itemStack.clone());
+                    }
+                    List<DiscordMessageContent> contents = OutboundToDiscordEvents.createContents(Collections.singletonList(data), offlineICPlayer);
                     errorCode--;
-                    action.setEmbeds(embedBuilder.build()).queue();
+
+                    WebhookMessageUpdateAction<Message> action = event.getHook().editOriginalEmbeds();
+                    List<MessageEmbed> embeds = new ArrayList<>();
+                    for (DiscordMessageContent content : contents) {
+                        embeds.addAll(content.toJDAMessageEmbeds());
+                        for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
+                            action = action.addFile(attachment.getValue(), attachment.getKey());
+                        }
+                    }
+                    action.setEmbeds(embeds).queue();
                 }
             } catch (Exception e) {
                 e.printStackTrace();

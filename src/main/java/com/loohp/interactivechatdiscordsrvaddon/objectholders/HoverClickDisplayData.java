@@ -23,6 +23,7 @@ package com.loohp.interactivechatdiscordsrvaddon.objectholders;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.objectholders.CustomPlaceholder.ClickEventAction;
 import com.loohp.interactivechat.objectholders.ICPlayer;
+import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 
 import java.awt.Color;
 
@@ -34,7 +35,7 @@ public class HoverClickDisplayData extends DiscordDisplayData {
     private ClickEventAction clickAction;
     private String clickValue;
 
-    public HoverClickDisplayData(ICPlayer player, int position, Color color, String displayText, Component hoverText, ClickEventAction clickAction, String clickValue) {
+    public HoverClickDisplayData(OfflineICPlayer player, int position, Color color, String displayText, Component hoverText, ClickEventAction clickAction, String clickValue) {
         super(player, position);
         this.displayText = displayText;
         this.hoverText = hoverText;

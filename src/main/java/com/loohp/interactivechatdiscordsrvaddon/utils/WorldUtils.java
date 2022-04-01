@@ -21,7 +21,6 @@
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import com.loohp.interactivechat.utils.NMSUtils;
-import net.minecraft.world.level.dimension.DimensionManager;
 import org.bukkit.World;
 
 import java.lang.reflect.InvocationTargetException;
@@ -81,7 +80,6 @@ public class WorldUtils {
             Object craftWorldObject = craftWorldClass.cast(world);
             Object nmsWorldServerObject = getHandleMethod.invoke(craftWorldObject);
             Object nmsDimensionManagerObject = getDimensionManagerMethod.invoke(nmsWorldServerObject);
-            DimensionManager m;
             return getMinecraftKeyMethod.invoke(nmsDimensionManagerObject).toString();
         } catch (IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();

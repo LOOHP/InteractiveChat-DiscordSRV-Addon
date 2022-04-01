@@ -807,7 +807,7 @@ public class ImageGeneration {
         return itemImage;
     }
 
-    public static BufferedImage getMapImage(ItemStack item, Player player) throws Exception {
+    public static BufferedImage getMapImage(ItemStack item, Player player) {
         if (!FilledMapUtils.isFilledMap(item)) {
             throw new IllegalArgumentException("Provided item is not a filled map");
         }
@@ -826,14 +826,18 @@ public class ImageGeneration {
         int ratio = (image.getWidth() - borderOffset * 2) / 128;
 
         ItemMapWrapper data = new ItemMapWrapper(item, player);
-        for (int widthOffset = 0; widthOffset < 128; widthOffset++) {
-            for (int heightOffset = 0; heightOffset < 128; heightOffset++) {
-                byte index = data.getColors()[widthOffset + heightOffset * 128];
-                if (MapPalette.TRANSPARENT != index) {
-                    Color color = MapPalette.getColor(index);
-                    for (int x = 0; x < ratio; x++) {
-                        for (int y = 0; y < ratio; y++) {
-                            image.setRGB(widthOffset * ratio + borderOffset + x, heightOffset * ratio + borderOffset + y, color.getRGB());
+
+        byte[] colors = data.getColors();
+        if (colors != null) {
+            for (int widthOffset = 0; widthOffset < 128; widthOffset++) {
+                for (int heightOffset = 0; heightOffset < 128; heightOffset++) {
+                    byte index = colors[widthOffset + heightOffset * 128];
+                    if (MapPalette.TRANSPARENT != index) {
+                        Color color = MapPalette.getColor(index);
+                        for (int x = 0; x < ratio; x++) {
+                            for (int y = 0; y < ratio; y++) {
+                                image.setRGB(widthOffset * ratio + borderOffset + x, heightOffset * ratio + borderOffset + y, color.getRGB());
+                            }
                         }
                     }
                 }
@@ -846,42 +850,45 @@ public class ImageGeneration {
         BufferedImage asset = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.MAP_TEXTURE_LOCATION + "map_icons").getTexture();
         int iconWidth = asset.getWidth() / MAP_ICON_PER_ROLE;
 
-        for (MapCursor icon : data.getMapCursors()) {
-            int x = icon.getX() + 128;
-            int y = icon.getY() + 128;
-            double rotation = (360.0 / 16.0 * (double) icon.getDirection()) + 180.0;
-            int type = icon.getType().ordinal();
-            Component component;
-            try {
-                component = LegacyComponentSerializer.legacySection().deserializeOrNull(icon.getCaption());
-            } catch (Throwable e) {
-                component = null;
-            }
+        List<MapCursor> mapCursors = data.getMapCursors();
+        if (mapCursors != null) {
+            for (MapCursor icon : mapCursors) {
+                int x = icon.getX() + 128;
+                int y = icon.getY() + 128;
+                double rotation = (360.0 / 16.0 * (double) icon.getDirection()) + 180.0;
+                int type = icon.getType().ordinal();
+                Component component;
+                try {
+                    component = LegacyComponentSerializer.legacySection().deserializeOrNull(icon.getCaption());
+                } catch (Throwable e) {
+                    component = null;
+                }
 
-            //String name
-            BufferedImage iconImage = ImageUtils.copyAndGetSubImage(asset, type % MAP_ICON_PER_ROLE * iconWidth, type / MAP_ICON_PER_ROLE * iconWidth, iconWidth, iconWidth);
-            BufferedImage iconImageBig = new BufferedImage(96, 96, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g3 = iconImageBig.createGraphics();
-            g3.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-            g3.drawImage(iconImage, iconImageBig.getWidth() / 6, iconImageBig.getHeight() / 6, 64, 64, null);
-            g3.dispose();
-            iconImage = iconImageBig;
+                //String name
+                BufferedImage iconImage = ImageUtils.copyAndGetSubImage(asset, type % MAP_ICON_PER_ROLE * iconWidth, type / MAP_ICON_PER_ROLE * iconWidth, iconWidth, iconWidth);
+                BufferedImage iconImageBig = new BufferedImage(96, 96, BufferedImage.TYPE_INT_ARGB);
+                Graphics2D g3 = iconImageBig.createGraphics();
+                g3.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+                g3.drawImage(iconImage, iconImageBig.getWidth() / 6, iconImageBig.getHeight() / 6, 64, 64, null);
+                g3.dispose();
+                iconImage = iconImageBig;
 
-            BufferedImage iconCan = new BufferedImage(96, 96, BufferedImage.TYPE_INT_ARGB);
+                BufferedImage iconCan = new BufferedImage(96, 96, BufferedImage.TYPE_INT_ARGB);
 
-            AffineTransform at = new AffineTransform();
-            at.rotate(Math.toRadians(rotation), iconImage.getWidth() / 2.0, iconImage.getHeight() / 2.0);
-            Graphics2D g2d = iconCan.createGraphics();
-            g2d.drawImage(iconImage, at, null);
-            g2d.dispose();
+                AffineTransform at = new AffineTransform();
+                at.rotate(Math.toRadians(rotation), iconImage.getWidth() / 2.0, iconImage.getHeight() / 2.0);
+                Graphics2D g2d = iconCan.createGraphics();
+                g2d.drawImage(iconImage, at, null);
+                g2d.dispose();
 
-            int imageX = x * ratio / 2 + borderOffset;
-            int imageY = y * ratio / 2 + borderOffset;
+                int imageX = x * ratio / 2 + borderOffset;
+                int imageY = y * ratio / 2 + borderOffset;
 
-            g2.drawImage(iconCan, imageX - (iconCan.getWidth() / 2), imageY - (iconCan.getHeight() / 2), 96, 96, null);
+                g2.drawImage(iconCan, imageX - (iconCan.getWidth() / 2), imageY - (iconCan.getHeight() / 2), 96, 96, null);
 
-            if (component != null) {
-                ImageUtils.printComponentShadowlessDynamicSize(resourceManager.get(), image, component, InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), imageX, imageY + 32, 30, true);
+                if (component != null) {
+                    ImageUtils.printComponentShadowlessDynamicSize(resourceManager.get(), image, component, InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), imageX, imageY + 32, 30, true);
+                }
             }
         }
         g2.dispose();
