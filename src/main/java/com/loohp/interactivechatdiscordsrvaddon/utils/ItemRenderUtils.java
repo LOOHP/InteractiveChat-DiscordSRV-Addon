@@ -188,7 +188,7 @@ public class ItemRenderUtils {
                         target = new Location(lodestone.getWorld(), lodestone.getBlockX() + 0.5, lodestone.getBlockY(), lodestone.getBlockZ() + 0.5, lodestone.getYaw(), lodestone.getPitch());
                         requiresEnchantmentGlint = true;
                     } else if (WorldUtils.isNatural(bukkitPlayer.getWorld())) {
-                        Location spawn = bukkitPlayer.getWorld().getSpawnLocation();
+                        Location spawn = bukkitPlayer.getCompassTarget();
                         target = new Location(spawn.getWorld(), spawn.getBlockX() + 0.5, spawn.getBlockY(), spawn.getBlockZ() + 0.5, spawn.getYaw(), spawn.getPitch());
                     } else {
                         target = null;
@@ -209,7 +209,7 @@ public class ItemRenderUtils {
                     }
                 } else {
                     if (WorldUtils.isNatural(bukkitPlayer.getWorld())) {
-                        Location spawn = bukkitPlayer.getWorld().getSpawnLocation();
+                        Location spawn = bukkitPlayer.getCompassTarget();
                         Location target = new Location(spawn.getWorld(), spawn.getBlockX() + 0.5, spawn.getBlockY(), spawn.getBlockZ() + 0.5, spawn.getYaw(), spawn.getPitch());
                         Location playerLocation = bukkitPlayer.getEyeLocation();
                         playerLocation.setPitch(0);
