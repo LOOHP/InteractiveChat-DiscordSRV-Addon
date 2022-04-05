@@ -324,20 +324,6 @@ public class OutboundToDiscordEvents implements Listener {
         return contents;
     }
 
-    @Subscribe(priority = ListenerPriority.LOW)
-    public void onDiscordToGame(DiscordGuildMessagePostProcessEvent event) {
-        Debug.debug("Triggering onDiscordToGame");
-        InteractiveChatDiscordSrvAddon.plugin.messagesCounter.incrementAndGet();
-        github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component component = event.getMinecraftMessage();
-        if (InteractiveChatDiscordSrvAddon.plugin.escapePlaceholdersFromDiscord) {
-            Debug.debug("onDiscordToGame escaping placeholders");
-            for (ICPlaceholder placeholder : InteractiveChat.placeholderList.values()) {
-                component = component.replaceText(github.scarsz.discordsrv.dependencies.kyori.adventure.text.TextReplacementConfig.builder().match(placeholder.getKeyword()).replacement("\\" + placeholder.getKeyword()).build());
-            }
-            event.setMinecraftMessage(component);
-        }
-    }
-
     @Subscribe(priority = ListenerPriority.HIGHEST)
     public void onGameToDiscord(GameChatMessagePreProcessEvent event) {
         Debug.debug("Triggering onGameToDiscord");

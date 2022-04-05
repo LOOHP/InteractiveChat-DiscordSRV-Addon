@@ -197,7 +197,11 @@ public class Charts {
         metrics.addCustomChart(new Metrics.SingleLineChart("resource_packs_installed", new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
-                return Math.max(0, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getResourcePackInfo().size() - 1);
+                try {
+                    return Math.max(0, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getResourcePackInfo().size() - 1);
+                } catch (Throwable e) {
+                    return 0;
+                }
             }
         }));
 

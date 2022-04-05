@@ -20,11 +20,13 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.listeners;
 
+import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.api.events.PrePacketComponentProcessEvent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.ClickEvent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import com.loohp.interactivechat.objectholders.ICPlaceholder;
 import com.loohp.interactivechat.utils.ComponentReplacing;
 import com.loohp.interactivechat.utils.CustomStringUtils;
 import com.loohp.interactivechat.utils.HTTPRequestUtils;
@@ -94,6 +96,20 @@ public class InboundToGameEvents implements Listener {
         Map<Pattern, String> discordRegexes = srv.getDiscordRegexes();
         if (discordRegexes != null) {
             discordRegexes.keySet().removeIf(pattern -> pattern.pattern().equals("@+(everyone|here)"));
+        }
+    }
+
+    @Subscribe(priority = ListenerPriority.LOW)
+    public void onDiscordToGame(DiscordGuildMessagePostProcessEvent event) {
+        Debug.debug("Triggering onDiscordToGame");
+        InteractiveChatDiscordSrvAddon.plugin.messagesCounter.incrementAndGet();
+        github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component component = event.getMinecraftMessage();
+        if (InteractiveChatDiscordSrvAddon.plugin.escapePlaceholdersFromDiscord) {
+            Debug.debug("onDiscordToGame escaping placeholders");
+            for (ICPlaceholder placeholder : InteractiveChat.placeholderList.values()) {
+                component = component.replaceText(github.scarsz.discordsrv.dependencies.kyori.adventure.text.TextReplacementConfig.builder().match(placeholder.getKeyword()).replacement((result, builder) -> builder.content("\\" + result.group())).build());
+            }
+            event.setMinecraftMessage(component);
         }
     }
 
@@ -179,7 +195,7 @@ public class InboundToGameEvents implements Listener {
         String processedMessage = MessageUtil.toLegacy(component);
 
         if (InteractiveChatDiscordSrvAddon.plugin.convertDiscordAttachments) {
-            Debug.debug("onReceiveMessageFromDiscordPre converting discord attachments");
+            Debug.debug("onReceiveMessageFromDiscordPost converting discord attachments");
             Set<String> processedUrl = new HashSet<>();
             for (Attachment attachment : message.getAttachments()) {
                 InteractiveChatDiscordSrvAddon.plugin.attachmentCounter.incrementAndGet();
@@ -303,7 +319,7 @@ public class InboundToGameEvents implements Listener {
                     textComponent = textComponent.clickEvent(ClickEvent.openUrl(url));
                 }
 
-                component = ComponentReplacing.replace(component, CustomStringUtils.escapeMetaCharacters(url), textComponent);
+                component = ComponentReplacing.replace(component, "\\\\?" + CustomStringUtils.escapeMetaCharacters(url), textComponent);
 
                 event.setComponent(component);
             }
