@@ -71,6 +71,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordContentUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.JDAUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.TitledInventoryWrapper;
@@ -877,7 +878,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     } else {
                         data = new ImageDisplayData(offlineICPlayer, 0, title, ImageDisplayType.ITEM, itemStack.clone());
                     }
-                    List<DiscordMessageContent> contents = OutboundToDiscordEvents.createContents(Collections.singletonList(data), offlineICPlayer);
+                    List<DiscordMessageContent> contents = DiscordContentUtils.createContents(Collections.singletonList(data), offlineICPlayer);
                     errorCode--;
 
                     WebhookMessageUpdateAction<Message> action = event.getHook().editOriginalEmbeds();
