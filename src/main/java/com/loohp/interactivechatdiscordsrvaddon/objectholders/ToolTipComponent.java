@@ -23,28 +23,75 @@ package com.loohp.interactivechatdiscordsrvaddon.objectholders;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 
 import java.awt.image.BufferedImage;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ToolTipComponent<T> {
 
-    public static ToolTipComponent<Component> of(Component component) {
-        return new ToolTipComponent<>(component);
+    public static ToolTipComponent<Component> text(Component component) {
+        return new ToolTipComponent<>(component, ToolTipType.TEXT);
     }
 
-    public static ToolTipComponent<BufferedImage> of(BufferedImage image) {
-        return new ToolTipComponent<>(image);
+    public static ToolTipComponent<BufferedImage> image(BufferedImage image) {
+        return new ToolTipComponent<>(image, ToolTipType.IMAGE);
     }
 
     private T toolTipComponent;
+    private ToolTipType<T> type;
 
-    private ToolTipComponent(T toolTipComponent) {
-        if (!(toolTipComponent instanceof Component) && !(toolTipComponent instanceof BufferedImage)) {
-            throw new IllegalArgumentException("ToolTipComponent can only be created with Component or BufferedImage");
-        }
+    private ToolTipComponent(T toolTipComponent, ToolTipType<T> type) {
         this.toolTipComponent = toolTipComponent;
+        this.type = type;
     }
 
     public T getToolTipComponent() {
         return toolTipComponent;
+    }
+
+    public ToolTipType<T> getType() {
+        return type;
+    }
+
+    public static final class ToolTipType<V> {
+
+        public static final ToolTipType<Component> TEXT = new ToolTipType<>("TEXT", Component.class);
+        public static final ToolTipType<BufferedImage> IMAGE = new ToolTipType<>("IMAGE", BufferedImage.class);
+
+        private static final Map<String, ToolTipType<?>> TYPES;
+
+        static {
+            Map<String, ToolTipType<?>> types = new HashMap<>();
+            types.put(TEXT.name(), TEXT);
+            types.put(IMAGE.name(), IMAGE);
+            TYPES = Collections.unmodifiableMap(types);
+        }
+
+        public static Map<String, ToolTipType<?>> values() {
+            return TYPES;
+        }
+
+        private String name;
+        private Class<V> typeClass;
+
+        private ToolTipType(String name, Class<V> typeClass) {
+            this.name = name;
+            this.typeClass = typeClass;
+        }
+
+        public Class<V> getTypeClass() {
+            return typeClass;
+        }
+
+        public String name() {
+            return name;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
+
     }
 
 }

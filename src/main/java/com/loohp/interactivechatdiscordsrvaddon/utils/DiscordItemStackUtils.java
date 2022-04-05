@@ -578,7 +578,7 @@ public class DiscordItemStackUtils {
         XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
 
         Component itemDisplayNameComponent = ItemStackUtils.getDisplayName(item);
-        prints.add(ToolTipComponent.of(itemDisplayNameComponent));
+        prints.add(ToolTipComponent.text(itemDisplayNameComponent));
 
         boolean hasMeta = item.hasItemMeta();
 
@@ -586,22 +586,22 @@ public class DiscordItemStackUtils {
             BundleMeta meta = (BundleMeta) item.getItemMeta();
             List<ItemStack> items = meta.getItems();
             BufferedImage contentsImage = ImageGeneration.getBundleContainerInterface(player, items);
-            prints.add(ToolTipComponent.of(contentsImage));
+            prints.add(ToolTipComponent.image(contentsImage));
             int fullness = BundleUtils.getFullness(items);
-            prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getBundleFullness(), language).replaceFirst("%s", fullness + "").replaceFirst("%s", "64"))));
+            prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getBundleFullness(), language).replaceFirst("%s", fullness + "").replaceFirst("%s", "64"))));
         }
 
         if (xMaterial.equals(XMaterial.WRITTEN_BOOK) && hasMeta && item.getItemMeta() instanceof BookMeta) {
             BookMeta meta = (BookMeta) item.getItemMeta();
             String author = meta.getAuthor();
             if (author != null) {
-                prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getBookAuthor(), language).replaceFirst("%1\\$s", author))));
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getBookAuthor(), language).replaceFirst("%1\\$s", author))));
             }
             Generation generation = meta.getGeneration();
             if (generation == null) {
                 generation = Generation.ORIGINAL;
             }
-            prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getBookGeneration(generation), language))));
+            prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getBookGeneration(generation), language))));
         }
 
         if (xMaterial.equals(XMaterial.SHIELD) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
@@ -622,7 +622,7 @@ public class DiscordItemStackUtils {
 
                 for (Pattern pattern : patterns) {
                     PatternTypeWrapper type = PatternTypeWrapper.fromPatternType(pattern.getPattern());
-                    prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getBannerPatternName(type, pattern.getColor()), language))));
+                    prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getBannerPatternName(type, pattern.getColor()), language))));
                 }
             }
         }
@@ -642,28 +642,28 @@ public class DiscordItemStackUtils {
 
             for (Pattern pattern : patterns) {
                 PatternTypeWrapper type = PatternTypeWrapper.fromPatternType(pattern.getPattern());
-                prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getBannerPatternName(type, pattern.getColor()), language))));
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getBannerPatternName(type, pattern.getColor()), language))));
             }
         }
 
         if (xMaterial.equals(XMaterial.TROPICAL_FISH_BUCKET)) {
             List<String> translations = TranslationKeyUtils.getTropicalFishBucketName(item);
             if (translations.size() > 0) {
-                prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + "" + ChatColor.ITALIC + LanguageUtils.getTranslation(translations.get(0), language))));
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + "" + ChatColor.ITALIC + LanguageUtils.getTranslation(translations.get(0), language))));
                 if (translations.size() > 1) {
-                    prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + "" + ChatColor.ITALIC + translations.stream().skip(1).map(each -> LanguageUtils.getTranslation(each, language)).collect(Collectors.joining(", ")))));
+                    prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + "" + ChatColor.ITALIC + translations.stream().skip(1).map(each -> LanguageUtils.getTranslation(each, language)).collect(Collectors.joining(", ")))));
                 }
             }
         }
 
         if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:Music_Disc"))) {
-            prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getMusicDiscName(item), language))));
+            prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getMusicDiscName(item), language))));
         }
 
         if (xMaterial.equals(XMaterial.FIREWORK_ROCKET)) {
             if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && NBTEditor.contains(item, "Fireworks", "Flight")) {
                 int flight = NBTEditor.getByte(item, "Fireworks", "Flight");
-                prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getRocketFlightDuration(), language) + " " + flight)));
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getRocketFlightDuration(), language) + " " + flight)));
             }
         }
 
@@ -673,7 +673,7 @@ public class DiscordItemStackUtils {
             if (charged != null && !charged.isEmpty()) {
                 ItemStack charge = charged.get(0);
                 Component chargeItemName = (Component) getToolTip(charge, player).getComponents().get(0).getToolTipComponent();
-                prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.WHITE + LanguageUtils.getTranslation(TranslationKeyUtils.getCrossbowProjectile(), language) + " [" + InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(chargeItemName) + ChatColor.WHITE + "]")));
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.WHITE + LanguageUtils.getTranslation(TranslationKeyUtils.getCrossbowProjectile(), language) + " [" + InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(chargeItemName) + ChatColor.WHITE + "]")));
             }
         }
 
@@ -683,12 +683,12 @@ public class DiscordItemStackUtils {
             int id = FilledMapUtils.getMapId(item);
             int scale = mapView == null ? 0 : mapView.getScale().getValue();
             if (!InteractiveChat.version.isLegacy()) {
-                prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getFilledMapId(), language).replaceFirst("%s", id + ""))));
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getFilledMapId(), language).replaceFirst("%s", id + ""))));
             } else {
-                prints.set(0, ToolTipComponent.of(((Component) prints.get(0).getToolTipComponent()).children(Arrays.asList(LegacyComponentSerializer.legacySection().deserialize(ChatColor.WHITE + " (#" + id + ")")))));
+                prints.set(0, ToolTipComponent.text(((Component) prints.get(0).getToolTipComponent()).children(Arrays.asList(LegacyComponentSerializer.legacySection().deserialize(ChatColor.WHITE + " (#" + id + ")")))));
             }
-            prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getFilledMapScale(), language).replaceFirst("%s", (int) Math.pow(2, scale) + ""))));
-            prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getFilledMapLevel(), language).replaceFirst("%s", scale + "").replaceFirst("%s", "4"))));
+            prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getFilledMapScale(), language).replaceFirst("%s", (int) Math.pow(2, scale) + ""))));
+            prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getFilledMapLevel(), language).replaceFirst("%s", scale + "").replaceFirst("%s", "4"))));
         }
 
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && !hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS))) {
@@ -702,7 +702,7 @@ public class DiscordItemStackUtils {
                 effects.addAll(meta.getCustomEffects());
 
                 if (effects.isEmpty()) {
-                    prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(LanguageUtils.getTranslation(TranslationKeyUtils.getNoEffect(), language))));
+                    prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(LanguageUtils.getTranslation(TranslationKeyUtils.getNoEffect(), language))));
                 } else {
                     for (PotionEffect effect : effects) {
                         String key = TranslationKeyUtils.getEffect(effect.getType());
@@ -731,7 +731,7 @@ public class DiscordItemStackUtils {
                         } catch (Throwable e) {
                             color = ChatColor.BLUE;
                         }
-                        prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(color + description)));
+                        prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(color + description)));
                     }
                 }
             }
@@ -751,7 +751,7 @@ public class DiscordItemStackUtils {
                         enchName = translation;
                     }
                     if (enchName != null) {
-                        prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + LanguageUtils.getTranslation(TranslationKeyUtils.getEnchantmentLevel(level), language)))));
+                        prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + LanguageUtils.getTranslation(TranslationKeyUtils.getEnchantmentLevel(level), language)))));
                     }
                 }
             } else {
@@ -767,7 +767,7 @@ public class DiscordItemStackUtils {
                         enchName = translation;
                     }
                     if (enchName != null) {
-                        prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + LanguageUtils.getTranslation(TranslationKeyUtils.getEnchantmentLevel(level), language)))));
+                        prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + enchName + (ench.getMaxLevel() == 1 && level == 1 ? "" : " " + LanguageUtils.getTranslation(TranslationKeyUtils.getEnchantmentLevel(level), language)))));
                     }
                 }
             }
@@ -778,7 +778,7 @@ public class DiscordItemStackUtils {
             if (NBTEditor.contains(item, "display", "color")) {
                 Color color = new Color(meta.getColor().asRGB());
                 String hex = ColorUtils.rgb2Hex(color).toUpperCase();
-                prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getDyeColor(), language).replaceFirst("%s", hex))));
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getDyeColor(), language).replaceFirst("%s", hex))));
             }
         }
 
@@ -786,7 +786,7 @@ public class DiscordItemStackUtils {
             ItemMeta meta = item.getItemMeta();
             if (meta.hasLore()) {
                 for (String lore : meta.getLore()) {
-                    prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_PURPLE + "" + ChatColor.ITALIC + lore)));
+                    prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_PURPLE + "" + ChatColor.ITALIC + lore)));
                 }
             }
         }
@@ -809,7 +809,7 @@ public class DiscordItemStackUtils {
                 String attributeName = attributeTag.getString("AttributeName").replace("minecraft:", "");
                 double amount = attributeTag.getDouble("Amount");
                 int operation = attributeTag.containsKey("Operation") ? attributeTag.getInt("Operation") : 0;
-                ToolTipComponent<?> attributeComponent = ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize((amount < 0 ? ChatColor.RED : ChatColor.BLUE) + LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeModifierKey(amount, operation), language).replaceFirst("%s", ATTRIBUTE_FORMAT.format(Math.abs(amount)) + "").replaceFirst("%s", LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeKey(attributeName), language)).replace("%%", "%")));
+                ToolTipComponent<?> attributeComponent = ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize((amount < 0 ? ChatColor.RED : ChatColor.BLUE) + LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeModifierKey(amount, operation), language).replaceFirst("%s", ATTRIBUTE_FORMAT.format(Math.abs(amount)) + "").replaceFirst("%s", LanguageUtils.getTranslation(TranslationKeyUtils.getAttributeKey(attributeName), language)).replace("%%", "%")));
                 if (attributeTag.containsKey("Slot")) {
                     String slot = attributeTag.getString("Slot");
                     switch (slot) {
@@ -868,52 +868,52 @@ public class DiscordItemStackUtils {
                 }
             }
             if (useMainHand) {
-                prints.add(ToolTipComponent.of(Component.empty()));
-                prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HAND), language))));
+                prints.add(ToolTipComponent.text(Component.empty()));
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HAND), language))));
                 prints.addAll(mainHand);
             }
             if (useOffhand) {
-                prints.add(ToolTipComponent.of(Component.empty()));
-                prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.OFF_HAND), language))));
+                prints.add(ToolTipComponent.text(Component.empty()));
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.OFF_HAND), language))));
                 prints.addAll(offHand);
             }
             if (useFeet) {
-                prints.add(ToolTipComponent.of(Component.empty()));
-                prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.FEET), language))));
+                prints.add(ToolTipComponent.text(Component.empty()));
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.FEET), language))));
                 prints.addAll(feet);
             }
             if (useLegs) {
-                prints.add(ToolTipComponent.of(Component.empty()));
-                prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.LEGS), language))));
+                prints.add(ToolTipComponent.text(Component.empty()));
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.LEGS), language))));
                 prints.addAll(legs);
             }
             if (useChest) {
-                prints.add(ToolTipComponent.of(Component.empty()));
-                prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.CHEST), language))));
+                prints.add(ToolTipComponent.text(Component.empty()));
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.CHEST), language))));
                 prints.addAll(chest);
             }
             if (useHead) {
-                prints.add(ToolTipComponent.of(Component.empty()));
-                prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HEAD), language))));
+                prints.add(ToolTipComponent.text(Component.empty()));
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HEAD), language))));
                 prints.addAll(head);
             }
         }
 
         if (hasMeta && isUnbreakable(item) && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_UNBREAKABLE)) {
-            prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.BLUE + LanguageUtils.getTranslation(TranslationKeyUtils.getUnbreakable(), language))));
+            prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.BLUE + LanguageUtils.getTranslation(TranslationKeyUtils.getUnbreakable(), language))));
         }
 
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_DESTROYS)) {
             if (NBTEditor.contains(item, "CanDestroy") && NBTEditor.getSize(item, "CanDestroy") > 0) {
-                prints.add(ToolTipComponent.of(Component.empty()));
-                prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getCanDestroy(), language))));
+                prints.add(ToolTipComponent.text(Component.empty()));
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getCanDestroy(), language))));
                 ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "CanDestroy").toJson());
                 for (StringTag materialTag : materialList) {
                     XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
                     if (parsedXMaterial == null) {
-                        prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_GRAY + WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase()))));
+                        prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_GRAY + WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase()))));
                     } else {
-                        prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_GRAY + LanguageUtils.getTranslation(LanguageUtils.getTranslationKey(parsedXMaterial.parseItem()), language))));
+                        prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_GRAY + LanguageUtils.getTranslation(LanguageUtils.getTranslationKey(parsedXMaterial.parseItem()), language))));
                     }
                 }
             }
@@ -921,15 +921,15 @@ public class DiscordItemStackUtils {
 
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_PLACED_ON)) {
             if (NBTEditor.contains(item, "CanPlaceOn") && NBTEditor.getSize(item, "CanPlaceOn") > 0) {
-                prints.add(ToolTipComponent.of(Component.empty()));
-                prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getCanPlace(), language))));
+                prints.add(ToolTipComponent.text(Component.empty()));
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getCanPlace(), language))));
                 ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "CanPlaceOn").toJson());
                 for (StringTag materialTag : materialList) {
                     XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
                     if (parsedXMaterial == null) {
-                        prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_GRAY + WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase()))));
+                        prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_GRAY + WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase()))));
                     } else {
-                        prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_GRAY + LanguageUtils.getTranslation(LanguageUtils.getTranslationKey(parsedXMaterial.parseItem()), language))));
+                        prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_GRAY + LanguageUtils.getTranslation(LanguageUtils.getTranslationKey(parsedXMaterial.parseItem()), language))));
                     }
                 }
             }
@@ -939,7 +939,7 @@ public class DiscordItemStackUtils {
             int durability = item.getType().getMaxDurability() - (InteractiveChat.version.isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
             int maxDur = item.getType().getMaxDurability();
             if (durability < maxDur) {
-                prints.add(ToolTipComponent.of(LegacyComponentSerializer.legacySection().deserialize(ChatColor.WHITE + LanguageUtils.getTranslation(TranslationKeyUtils.getDurability(), language).replaceFirst("%s", String.valueOf(durability)).replaceFirst("%s", String.valueOf(maxDur)))));
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.WHITE + LanguageUtils.getTranslation(TranslationKeyUtils.getDurability(), language).replaceFirst("%s", String.valueOf(durability)).replaceFirst("%s", String.valueOf(maxDur)))));
             }
         }
 

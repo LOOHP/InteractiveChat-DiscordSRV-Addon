@@ -50,6 +50,7 @@ import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent.ToolTipType;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.PlayerModelItem;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.PlayerModelItemPosition;
@@ -901,7 +902,7 @@ public class ImageGeneration {
     }
 
     public static BufferedImage getToolTipImage(Component print, boolean allowLineBreaks) {
-        return getToolTipImage(Collections.singletonList(ToolTipComponent.of(print)), allowLineBreaks);
+        return getToolTipImage(Collections.singletonList(ToolTipComponent.text(print)), allowLineBreaks);
     }
 
     public static BufferedImage getToolTipImage(List<ToolTipComponent<?>> prints) {
@@ -909,7 +910,7 @@ public class ImageGeneration {
     }
 
     public static BufferedImage getToolTipImage(List<ToolTipComponent<?>> prints, boolean allowLineBreaks) {
-        if (prints.isEmpty() || !(prints.get(0).getToolTipComponent() instanceof Component)) {
+        if (prints.isEmpty() || !(prints.get(0).getType().equals(ToolTipType.TEXT))) {
             Debug.debug("ImageGeneration creating tooltip image");
         } else {
             Debug.debug("ImageGeneration creating tooltip image of " + InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize((Component) prints.get(0).getToolTipComponent()));
@@ -917,24 +918,24 @@ public class ImageGeneration {
 
         if (allowLineBreaks) {
             List<ToolTipComponent<?>> newList = new ArrayList<>();
-            for (ToolTipComponent<?> component : prints) {
-                if (component instanceof Component) {
-                    for (Component newComponent : ComponentStyling.splitAtLineBreaks((Component) component)) {
-                        newList.add(ToolTipComponent.of(newComponent));
+            for (ToolTipComponent<?> toolTip : prints) {
+                if (toolTip.getType().equals(ToolTipType.TEXT)) {
+                    for (Component newComponent : ComponentStyling.splitAtLineBreaks((Component) toolTip.getToolTipComponent())) {
+                        newList.add(ToolTipComponent.text(newComponent));
                     }
                 } else {
-                    newList.add(component);
+                    newList.add(toolTip);
                 }
             }
             prints = newList;
         }
 
         int requiredHeight = prints.stream().mapToInt(each -> {
-            Object component = each.getToolTipComponent();
-            if (component instanceof Component) {
+            ToolTipType<?> type = each.getType();
+            if (type.equals(ToolTipType.TEXT)) {
                 return 20;
-            } else if (component instanceof BufferedImage) {
-                return ((BufferedImage) component).getHeight() + 16;
+            } else if (type.equals(ToolTipType.IMAGE)) {
+                return ((BufferedImage) each.getToolTipComponent()).getHeight() + 16;
             } else {
                 return 0;
             }
@@ -946,13 +947,13 @@ public class ImageGeneration {
         int topX = image.getWidth() / 5 * 2;
         int currentY = 8;
         for (ToolTipComponent<?> print : prints) {
-            Object component = print.getToolTipComponent();
-            if (component instanceof Component) {
-                ImageUtils.printComponent(resourceManager.get(), image, (Component) component, InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), topX + 8, currentY, 16);
+            ToolTipType<?> type = print.getType();
+            if (type.equals(ToolTipType.TEXT)) {
+                ImageUtils.printComponent(resourceManager.get(), image, (Component) print.getToolTipComponent(), InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), topX + 8, currentY, 16);
                 currentY += 20;
-            } else if (component instanceof BufferedImage) {
+            } else if (type.equals(ToolTipType.IMAGE)) {
                 currentY += 5;
-                BufferedImage componentImage = (BufferedImage) component;
+                BufferedImage componentImage = (BufferedImage) print.getToolTipComponent();
                 g.drawImage(componentImage, topX + 8, currentY, null);
                 currentY += componentImage.getHeight() + 11;
             }
