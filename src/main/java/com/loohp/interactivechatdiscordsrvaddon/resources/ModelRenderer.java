@@ -463,48 +463,56 @@ public class ModelRenderer implements AutoCloseable {
 
                             if (uv == null) {
                                 Point3D[] points;
-                                switch (side) {
-                                    case DOWN:
-                                        points = hexahedron.getDownFace().getPoints();
-                                        break;
-                                    case EAST:
-                                        points = hexahedron.getEastFace().getPoints();
-                                        break;
-                                    case NORTH:
-                                        points = hexahedron.getNorthFace().getPoints();
-                                        break;
-                                    case SOUTH:
-                                        points = hexahedron.getSouthFace().getPoints();
-                                        break;
-                                    case UP:
-                                        points = hexahedron.getUpFace().getPoints();
-                                        break;
-                                    case WEST:
-                                    default:
-                                        points = hexahedron.getWestFace().getPoints();
-                                        break;
-                                }
                                 double x1;
                                 double y1;
                                 double x2;
                                 double y2;
-                                if (points[0].x == points[2].x) {
-                                    x1 = points[0].y;
-                                    y1 = points[0].z;
-                                    x2 = points[2].y;
-                                    y2 = points[2].z;
-                                } else if (points[0].y == points[2].y) {
-                                    x1 = points[0].z;
-                                    y1 = points[0].x;
-                                    x2 = points[2].z;
-                                    y2 = points[2].x;
-                                } else {
-                                    x1 = points[0].y;
-                                    y1 = points[0].x;
-                                    x2 = points[2].y;
-                                    y2 = points[2].x;
+                                switch (side) {
+                                    case DOWN:
+                                        points = hexahedron.getDownFace().getPoints();
+                                        x1 = points[2].z;
+                                        y1 = points[0].x;
+                                        x2 = points[0].z;
+                                        y2 = points[2].x;
+                                        break;
+                                    case EAST:
+                                        points = hexahedron.getEastFace().getPoints();
+                                        x1 = points[2].z;
+                                        y1 = points[2].y;
+                                        x2 = points[0].z;
+                                        y2 = points[0].y;
+                                        break;
+                                    case NORTH:
+                                        points = hexahedron.getNorthFace().getPoints();
+                                        x1 = points[2].x;
+                                        y1 = points[2].y;
+                                        x2 = points[0].x;
+                                        y2 = points[0].y;
+                                        break;
+                                    case SOUTH:
+                                        points = hexahedron.getSouthFace().getPoints();
+                                        x1 = points[0].x;
+                                        y1 = points[2].y;
+                                        x2 = points[2].x;
+                                        y2 = points[0].y;
+                                        break;
+                                    case UP:
+                                        points = hexahedron.getUpFace().getPoints();
+                                        x1 = points[0].z;
+                                        y1 = points[0].x;
+                                        x2 = points[2].z;
+                                        y2 = points[2].x;
+                                        break;
+                                    case WEST:
+                                    default:
+                                        points = hexahedron.getWestFace().getPoints();
+                                        x1 = points[0].z;
+                                        y1 = points[2].y;
+                                        x2 = points[2].z;
+                                        y2 = points[0].y;
+                                        break;
                                 }
-                                uv = new TextureUV(Math.min(x1, x2), Math.min(y1, y2), Math.max(x1, x2), Math.max(y1, y2));
+                                uv = new TextureUV(x1, y1, x2, y2);
                             }
                             uv = uv.getScaled(1, (double) images[i].getHeight() / (double) images[i].getWidth());
                             uv = uv.getScaled((double) images[i].getWidth() / 16.0);
