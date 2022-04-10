@@ -382,7 +382,10 @@ public class DiscordMessageContent {
 
     public List<WebhookEmbed> toWebhookEmbeds() {
         List<WebhookEmbed> list = new ArrayList<>();
-        WebhookEmbedBuilder embed = new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(authorName, authorIconUrl, null)).setColor(color).setThumbnailUrl(thumbnail);
+        WebhookEmbedBuilder embed = new WebhookEmbedBuilder().setColor(color).setThumbnailUrl(thumbnail);
+        if (authorName != null) {
+            embed.setAuthor(new EmbedAuthor(authorName, authorIconUrl, null));
+        }
         if (description.size() > 0) {
             embed.setDescription(description.get(0));
         }

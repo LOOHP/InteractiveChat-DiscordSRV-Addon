@@ -21,6 +21,7 @@
 package com.loohp.interactivechatdiscordsrvaddon.objectholders;
 
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
+import com.loohp.interactivechat.utils.BookUtils;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.TitledInventoryWrapper;
 import org.bukkit.inventory.ItemStack;
@@ -35,8 +36,9 @@ public class ImageDisplayData extends DiscordDisplayData {
     private final boolean isPlayerInventory;
     private final Optional<ItemStack> item;
     private final boolean isFilledMap;
+    private final boolean isBook;
 
-    private ImageDisplayData(OfflineICPlayer player, int position, String title, ImageDisplayType type, TitledInventoryWrapper inventory, boolean isPlayerInventory, ItemStack item, boolean isFilledMap) {
+    private ImageDisplayData(OfflineICPlayer player, int position, String title, ImageDisplayType type, TitledInventoryWrapper inventory, boolean isPlayerInventory, ItemStack item, boolean isFilledMap, boolean isBook) {
         super(player, position);
         this.type = type;
         this.title = title;
@@ -44,22 +46,23 @@ public class ImageDisplayData extends DiscordDisplayData {
         this.isPlayerInventory = isPlayerInventory;
         this.item = Optional.ofNullable(item);
         this.isFilledMap = isFilledMap;
+        this.isBook = isBook;
     }
 
     public ImageDisplayData(OfflineICPlayer player, int position, String title, ImageDisplayType type, TitledInventoryWrapper inventory) {
-        this(player, position, title, type, inventory, false, null, false);
+        this(player, position, title, type, inventory, false, null, false, false);
     }
 
     public ImageDisplayData(OfflineICPlayer player, int position, String title, ImageDisplayType type, boolean isPlayerInventory, TitledInventoryWrapper inventory) {
-        this(player, position, title, type, inventory, isPlayerInventory, null, false);
+        this(player, position, title, type, inventory, isPlayerInventory, null, false, false);
     }
 
     public ImageDisplayData(OfflineICPlayer player, int position, String title, ImageDisplayType type, ItemStack itemstack) {
-        this(player, position, title, type, null, false, itemstack, FilledMapUtils.isFilledMap(itemstack));
+        this(player, position, title, type, null, false, itemstack, FilledMapUtils.isFilledMap(itemstack), BookUtils.isTextBook(itemstack));
     }
 
     public ImageDisplayData(OfflineICPlayer player, int position, String title, ImageDisplayType type, ItemStack itemstack, TitledInventoryWrapper inventory) {
-        this(player, position, title, type, inventory, false, itemstack, FilledMapUtils.isFilledMap(itemstack));
+        this(player, position, title, type, inventory, false, itemstack, FilledMapUtils.isFilledMap(itemstack), BookUtils.isTextBook(itemstack));
     }
 
     public String getTitle() {
@@ -80,6 +83,10 @@ public class ImageDisplayData extends DiscordDisplayData {
 
     public boolean isFilledMap() {
         return isFilledMap;
+    }
+
+    public boolean isBook() {
+        return isBook;
     }
 
     public ImageDisplayType getType() {

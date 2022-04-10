@@ -411,6 +411,10 @@ public class TranslationKeyUtils {
         }
     }
 
+    public static String getBookPageIndicator() {
+        return "book.pageIndicator";
+    }
+
     public static String getDefaultContainerTitle() {
         return "container.inventory";
     }

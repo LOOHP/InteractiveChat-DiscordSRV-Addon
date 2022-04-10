@@ -150,6 +150,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
             int boldSize = (int) (fontSize / 16.0 * 2);
             int italicExtraWidth = 0;
             boolean italic = false;
+            boolean underlineStrikethroughExpanded = false;
             for (TextDecoration decoration : decorations) {
                 switch (decoration) {
                     case OBFUSCATED:
@@ -191,17 +192,19 @@ public class LegacyUnicodeFont extends MinecraftFont {
                         italic = true;
                         break;
                     case STRIKETHROUGH:
-                        charImage = ImageUtils.expandCenterAligned(charImage, 0, 0, 0, pixelSize);
+                        charImage = ImageUtils.expandCenterAligned(charImage, 0, 0, 0, underlineStrikethroughExpanded ? 0 : (pixelSize + 1));
+                        underlineStrikethroughExpanded = true;
                         g = charImage.createGraphics();
                         g.setColor(awtColor);
-                        g.fillRect(0, (int) (fontSize / 2), w, strikeSize);
+                        g.fillRect(0, (int) (fontSize / 2), w + pixelSize + 1, strikeSize);
                         g.dispose();
                         break;
                     case UNDERLINED:
-                        charImage = ImageUtils.expandCenterAligned(charImage, 0, strikeSize * 2, 0, pixelSize);
+                        charImage = ImageUtils.expandCenterAligned(charImage, 0, strikeSize * 2, 0, underlineStrikethroughExpanded ? 0 : (pixelSize + 1));
+                        underlineStrikethroughExpanded = true;
                         g = charImage.createGraphics();
                         g.setColor(awtColor);
-                        g.fillRect(0, (int) (fontSize), w, strikeSize);
+                        g.fillRect(0, (int) (fontSize), w + pixelSize + 1, strikeSize);
                         g.dispose();
                         break;
                     default:

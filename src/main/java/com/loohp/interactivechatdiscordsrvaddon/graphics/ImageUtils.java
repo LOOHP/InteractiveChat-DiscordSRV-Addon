@@ -619,9 +619,11 @@ public class ImageUtils {
     public static BufferedImage printComponent(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize, double shadowFactor) {
         BufferedImage temp = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
         temp = printComponent0(manager, temp, component, language, legacyRGB, topX, topY, fontSize, 1);
-        BufferedImage shadow = multiply(copyImage(temp), shadowFactor);
         Graphics2D g = image.createGraphics();
-        g.drawImage(shadow, (int) (fontSize * 0.15), (int) (fontSize * 0.15), null);
+        if (shadowFactor != 0) {
+            BufferedImage shadow = multiply(copyImage(temp), shadowFactor);
+            g.drawImage(shadow, (int) (fontSize * 0.15), (int) (fontSize * 0.15), null);
+        }
         g.drawImage(temp, 0, 0, null);
         g.dispose();
         return image;

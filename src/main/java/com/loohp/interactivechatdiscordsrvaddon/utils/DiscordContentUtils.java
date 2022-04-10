@@ -24,11 +24,13 @@ import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
+import com.loohp.interactivechat.utils.BookUtils;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.GifSequenceWriter;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordDisplayData;
@@ -42,10 +44,14 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.Disc
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordToolTip;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.TitledInventoryWrapper;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.map.MapView;
 
+import javax.imageio.ImageIO;
+import javax.imageio.stream.ImageOutputStream;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -116,6 +122,23 @@ public class DiscordContentUtils {
                                     byte[] mapData = ImageUtils.toArray(map);
                                     content.addAttachment("Map_" + i + ".png", mapData);
                                     content.addImageUrl("attachment://Map_" + i + ".png");
+                                }
+                            } else if (iData.isBook()) {
+                                List<Component> pages = BookUtils.getPages((BookMeta) item.getItemMeta());
+                                List<BufferedImage> images = ImageGeneration.getBookInterface(pages);
+                                if (!images.isEmpty()) {
+                                    ByteArrayOutputStream output = new ByteArrayOutputStream();
+                                    ImageOutputStream imageOutputStream = ImageIO.createImageOutputStream(output);
+                                    GifSequenceWriter writer = new GifSequenceWriter(imageOutputStream, images.get(0).getType(), 5000, true);
+                                    for (BufferedImage page : images) {
+                                        writer.writeToSequence(page);
+                                    }
+                                    writer.close();
+                                    imageOutputStream.close();
+
+                                    DiscordMessageContent bookContent = new DiscordMessageContent(null, null, null, "attachment://Pages.gif", color);
+                                    bookContent.addAttachment("Pages.gif", output.toByteArray());
+                                    contents.add(bookContent);
                                 }
                             }
                         }

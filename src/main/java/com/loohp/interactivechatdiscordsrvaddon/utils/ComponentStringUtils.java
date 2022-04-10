@@ -22,10 +22,14 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.TextComponent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.TextReplacementConfig;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.TranslatableComponent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent.ShowItem;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration.State;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import com.loohp.interactivechat.libs.org.apache.commons.lang3.RandomStringUtils;
 import com.loohp.interactivechat.utils.ComponentCompacting;
 import com.loohp.interactivechat.utils.ComponentFlattening;
@@ -41,8 +45,113 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
+import java.util.function.ToIntFunction;
+import java.util.stream.Collectors;
 
 public class ComponentStringUtils {
+
+    public static List<Component> applyWordWrap(Component component, Function<String, String> translateFunction, int lineLengthLimit, ToIntFunction<CharacterLengthProviderData> characterLengthProvider) {
+        List<Component> result = new ArrayList<>();
+        int x = 0;
+        List<Component> child = ComponentFlattening.flatten(component).children();
+        Component currentLine = Component.empty();
+        for (Component each : child) {
+            Key font = each.font();
+            if (font == null) {
+                font = Key.key("minecraft:default");
+            }
+            List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
+            if (each instanceof TextComponent) {
+                TextComponent textComponent = (TextComponent) each;
+                String[] sections = textComponent.content().split(" ", -1);
+                int u = 0;
+                for (String section : sections) {
+                    u++;
+                    if (u < sections.length) {
+                        section += " ";
+                    }
+                    int length = 0;
+                    for (int i = 0; i < section.length(); ) {
+                        String c = new String(Character.toChars(section.codePointAt(i)));
+                        i += c.length();
+                        length += characterLengthProvider.applyAsInt(new CharacterLengthProviderData(c, font, decorations));
+                    }
+                    if (x + length > lineLengthLimit) {
+                        if (!PlainTextComponentSerializer.plainText().serialize(currentLine).isEmpty()) {
+                            result.add(currentLine);
+                        }
+                        currentLine = textComponent.content(section);
+                        x = length;
+                        while (length > lineLengthLimit) {
+                            StringBuilder sb = new StringBuilder();
+                            int subLength = 0;
+                            for (int i = 0; i < section.length(); ) {
+                                String c = new String(Character.toChars(section.codePointAt(i)));
+                                i += c.length();
+                                subLength += characterLengthProvider.applyAsInt(new CharacterLengthProviderData(c, font, decorations));
+                                if (subLength > lineLengthLimit) {
+                                    result.add(textComponent.content(sb.toString()));
+                                    section = section.substring(i);
+                                    currentLine = textComponent.content(section);
+                                    length -= subLength;
+                                    x = length;
+                                    break;
+                                }
+                                sb.append(c);
+                            }
+                        }
+                    } else {
+                        currentLine = currentLine.append(textComponent.content(section));
+                        x += length;
+                    }
+                }
+            } else if (each instanceof TranslatableComponent) {
+                TranslatableComponent translatableComponent = (TranslatableComponent) each;
+                TextComponent textComponent = convertSingleTranslatable(translatableComponent, translateFunction);
+                String content = textComponent.content();
+                int length = 0;
+                for (int i = 0; i < content.length(); ) {
+                    int codePoint = content.codePointAt(i);
+                    String c = new String(Character.toChars(codePoint));
+                    i += c.length();
+                    length += characterLengthProvider.applyAsInt(new CharacterLengthProviderData(c, font, decorations));
+                }
+                if (x + length > lineLengthLimit) {
+                    if (!PlainTextComponentSerializer.plainText().serialize(currentLine).isEmpty()) {
+                        result.add(currentLine);
+                    }
+                    currentLine = translatableComponent;
+                    x = 0;
+                } else {
+                    currentLine = currentLine.append(translatableComponent);
+                    x += length;
+                }
+            } else {
+                String content = PlainTextComponentSerializer.plainText().serialize(each);
+                int length = 0;
+                for (int i = 0; i < content.length(); ) {
+                    int codePoint = content.codePointAt(i);
+                    String c = new String(Character.toChars(codePoint));
+                    i += c.length();
+                    length += characterLengthProvider.applyAsInt(new CharacterLengthProviderData(c, font, decorations));
+                }
+                if (x + length > lineLengthLimit) {
+                    if (!PlainTextComponentSerializer.plainText().serialize(currentLine).isEmpty()) {
+                        result.add(currentLine);
+                    }
+                    currentLine = each;
+                    x = 0;
+                } else {
+                    currentLine = currentLine.append(each);
+                    x += length;
+                }
+            }
+        }
+        if (!PlainTextComponentSerializer.plainText().serialize(currentLine).isEmpty()) {
+            result.add(currentLine);
+        }
+        return result;
+    }
 
     public static Component convertTranslatables(Component component, Function<String, String> translateFunction) {
         component = ComponentFlattening.flatten(component);
@@ -53,12 +162,20 @@ public class ComponentStringUtils {
                 TranslatableComponent trans = (TranslatableComponent) current;
                 Component translated = Component.text(translateFunction.apply(trans.key())).style(trans.style());
                 for (Component arg : trans.args()) {
-                    translated = translated.replaceText(TextReplacementConfig.builder().matchLiteral("%s").replacement(convertTranslatables(arg, translateFunction)).once().build());
+                    translated = translated.replaceText(TextReplacementConfig.builder().match("%+(?:[0-9]+\\$)?(?:s|d)").replacement(convertTranslatables(arg, translateFunction)).once().build());
                 }
                 children.set(i, translated);
             }
         }
         return ComponentCompacting.optimize(component.children(children));
+    }
+
+    public static TextComponent convertSingleTranslatable(TranslatableComponent component, Function<String, String> translateFunction) {
+        TextComponent translated = Component.text(translateFunction.apply(component.key())).style(component.style());
+        for (Component arg : component.args()) {
+            translated = (TextComponent) translated.replaceText(TextReplacementConfig.builder().match("%+(?:[0-9]+\\$)?(?:s|d)").replacement(convertTranslatables(arg, translateFunction)).once().build());
+        }
+        return translated;
     }
 
     public static String toMagic(String str) {
@@ -155,6 +272,32 @@ public class ComponentStringUtils {
 
     public static Component toRegularComponent(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component component) {
         return InteractiveChatComponentSerializer.gson().deserialize(github.scarsz.discordsrv.dependencies.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(component));
+    }
+
+    public static class CharacterLengthProviderData {
+
+        private String character;
+        private Key font;
+        private List<TextDecoration> decorations;
+
+        public CharacterLengthProviderData(String character, Key font, List<TextDecoration> decorations) {
+            this.character = character;
+            this.font = font;
+            this.decorations = decorations;
+        }
+
+        public String getCharacter() {
+            return character;
+        }
+
+        public Key getFont() {
+            return font;
+        }
+
+        public List<TextDecoration> getDecorations() {
+            return decorations;
+        }
+
     }
 
 }

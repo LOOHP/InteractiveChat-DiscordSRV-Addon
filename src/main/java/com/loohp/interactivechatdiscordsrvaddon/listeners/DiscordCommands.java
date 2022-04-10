@@ -881,7 +881,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     List<DiscordMessageContent> contents = DiscordContentUtils.createContents(Collections.singletonList(data), offlineICPlayer);
                     errorCode--;
 
-                    WebhookMessageUpdateAction<Message> action = event.getHook().editOriginalEmbeds();
+                    WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(PlainTextComponentSerializer.plainText().serialize(resolvedComponent));
                     List<MessageEmbed> embeds = new ArrayList<>();
                     for (DiscordMessageContent content : contents) {
                         embeds.addAll(content.toJDAMessageEmbeds());

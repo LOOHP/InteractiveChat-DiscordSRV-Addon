@@ -337,7 +337,7 @@ public class ItemRenderUtils {
             String colorName = xMaterial.name().replace("_BED", "").toLowerCase();
             BufferedImage bedTexture = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "bed/" + colorName).getTexture();
             providedTextures.put(ResourceRegistry.LEGACY_BED_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(bedTexture));
-        } else if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_9) && (xMaterial.equals(XMaterial.ENDER_PEARL))) {
+        } else if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_9) && xMaterial.equals(XMaterial.ENDER_PEARL)) {
             ICPlayer icplayer = player.getPlayer();
             if (icplayer != null && icplayer.isLocal()) {
                 int cooldown = icplayer.getLocalPlayer().getCooldown(item.getType());

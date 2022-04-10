@@ -56,6 +56,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.PlayerMo
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.PlayerModelItemPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RenderResult;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.MinecraftFont.FontRenderResult;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
@@ -65,6 +66,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.BundleUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ContainerTitlePrintingFunction;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils.ItemStackProcessResult;
@@ -98,6 +100,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -118,6 +121,7 @@ public class ImageGeneration {
     public static final Color TABLIST_PLAYER_BACKGROUND = new Color(107, 107, 107);
     public static final Color BUNDLE_FULLNESS_BAR_COLOR = new Color(6711039);
     public static final TextColor INVENTORY_DEFAULT_FONT_COLOR = TextColor.color(4210752);
+    public static final int BOOK_LINE_LIMIT = 230;
     private static final String OPTIFINE_CAPE_URL = "https://optifine.net/capes/%s.png";
     private static final String PLAYER_INFO_URL = "https://sessionserver.mojang.com/session/minecraft/profile/%s";
 
@@ -1088,7 +1092,7 @@ public class ImageGeneration {
         for (ValuePairs<BufferedImage, Integer> pair : playerImages) {
             BufferedImage image = pair.getFirst();
             if (showPing) {
-                BufferedImage ping = getPingIcon(pair.getSecond());
+                BufferedImage ping = getPingIcon(pair.getSecond(), false);
                 Graphics2D g = image.createGraphics();
                 g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
                 g.drawImage(ImageUtils.resizeImageAbs(ping, 20, 14), masterOffsetX - 22, (TABLIST_INTERNAL_HEIGHT - 18) / 2 + 2, null);
@@ -1274,7 +1278,7 @@ public class ImageGeneration {
         return new GenericContainerBackgroundResult(resultImage, expandedX, expandedY);
     }
 
-    public static BufferedImage getPingIcon(int ms) {
+    public static BufferedImage getPingIcon(int ms, boolean useNoConnectionIcon) {
         BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "icons").getTexture();
         int scale = icons.getWidth() / 256;
         if (ms < 0) {
@@ -1285,7 +1289,7 @@ public class ImageGeneration {
             return ImageUtils.copyAndGetSubImage(icons, 0, 24 * scale, 10 * scale, 7 * scale);
         } else if (ms < 600) {
             return ImageUtils.copyAndGetSubImage(icons, 0, 32 * scale, 10 * scale, 7 * scale);
-        } else if (ms < 1000) {
+        } else if (!useNoConnectionIcon || ms < 1000) {
             return ImageUtils.copyAndGetSubImage(icons, 0, 40 * scale, 10 * scale, 7 * scale);
         } else {
             return ImageUtils.copyAndGetSubImage(icons, 0, 48 * scale, 10 * scale, 7 * scale);
@@ -1362,6 +1366,52 @@ public class ImageGeneration {
 
         g.dispose();
         return image;
+    }
+
+    public static List<BufferedImage> getBookInterface(List<Component> pages) {
+        BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "book").getTexture(512, 512);
+        BufferedImage background = ImageUtils.copyAndGetSubImage(icons, 38, 0, 296, 364);
+        BufferedImage nextPage = ImageUtils.copyAndGetSubImage(icons, 6, 388, 36, 20);
+        BufferedImage previousPage = ImageUtils.copyAndGetSubImage(icons, 6, 414, 36, 20);
+        int totalPages = pages.size();
+        List<BufferedImage> result = new ArrayList<>(totalPages);
+        int i = 0;
+        for (Component component : pages) {
+            i++;
+            BufferedImage page = ImageUtils.copyImage(background);
+            Graphics2D g = page.createGraphics();
+            if (i < totalPages) {
+                g.drawImage(nextPage, 201, 317, null);
+            }
+            if (i > 1) {
+                g.drawImage(previousPage, 54, 317, null);
+            }
+            Component pageHeader = Component.translatable(TranslationKeyUtils.getBookPageIndicator()).args(Component.text(i), Component.text(totalPages)).color(NamedTextColor.BLACK);
+            ImageUtils.printComponentRightAligned(resourceManager.get(), page, pageHeader, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), 255, 30, 16, 0);
+
+            BufferedImage temp = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB);
+            List<Component> lines = new ArrayList<>();
+            AtomicInteger lastItalicExtraWidth = new AtomicInteger(0);
+            for (Component each : ComponentStyling.splitAtLineBreaks(component)) {
+                lines.addAll(ComponentStringUtils.applyWordWrap(each, resourceManager.get().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language), BOOK_LINE_LIMIT, data -> {
+                    FontRenderResult renderResult = resourceManager.get().getFontManager().getFontProviders(data.getFont().asString()).forCharacter(data.getCharacter()).printCharacter(temp, data.getCharacter(), 0, 0, 16, lastItalicExtraWidth.get(), NamedTextColor.BLACK, data.getDecorations());
+                    lastItalicExtraWidth.set(renderResult.getItalicExtraWidth());
+                    return renderResult.getWidth() + renderResult.getSpaceWidth();
+                }));
+            }
+
+            int y = 58;
+            for (Component each : lines) {
+                each = each.colorIfAbsent(NamedTextColor.BLACK);
+                ImageUtils.printComponent(resourceManager.get(), page, each, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), 34, y, 16, 0);
+                y += 20;
+            }
+
+            result.add(page);
+            g.dispose();
+        }
+
+        return result;
     }
 
     public static class GenericContainerBackgroundResult {
