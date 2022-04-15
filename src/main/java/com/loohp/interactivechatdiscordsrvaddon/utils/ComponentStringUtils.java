@@ -42,6 +42,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
@@ -55,6 +56,7 @@ public class ComponentStringUtils {
         int x = 0;
         List<Component> child = ComponentFlattening.flatten(component).children();
         Component currentLine = Component.empty();
+        boolean nullCurrentLine = true;
         for (Component each : child) {
             Key font = each.font();
             if (font == null) {
@@ -63,46 +65,76 @@ public class ComponentStringUtils {
             List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
             if (each instanceof TextComponent) {
                 TextComponent textComponent = (TextComponent) each;
-                String[] sections = textComponent.content().split(" ", -1);
-                int u = 0;
-                for (String section : sections) {
-                    u++;
-                    if (u < sections.length) {
-                        section += " ";
+                String content = textComponent.content();
+                String[] parts = content.split("\\R", -1);
+                List<TextComponent> split = Arrays.stream(parts).map(p -> textComponent.content(p)).collect(Collectors.toList());
+                int j = 0;
+                for (TextComponent part : split) {
+                    j++;
+                    if (j >= split.size() && part.content().isEmpty()) {
+                        continue;
                     }
-                    int length = 0;
-                    for (int i = 0; i < section.length(); ) {
-                        String c = new String(Character.toChars(section.codePointAt(i)));
-                        i += c.length();
-                        length += characterLengthProvider.applyAsInt(new CharacterLengthProviderData(c, font, decorations));
+                    String[] sections = part.content().split(" ", -1);
+                    int u = 0;
+                    for (String section : sections) {
+                        u++;
+                        if (u < sections.length) {
+                            section += " ";
+                        }
+                        int length = 0;
+                        for (int i = 0; i < section.length(); ) {
+                            String c = new String(Character.toChars(section.codePointAt(i)));
+                            i += c.length();
+                            length += characterLengthProvider.applyAsInt(new CharacterLengthProviderData(c, font, decorations));
+                        }
+                        if (x + length > lineLengthLimit) {
+                            if (!nullCurrentLine) {
+                                result.add(currentLine);
+                            }
+                            currentLine = textComponent.content(section);
+                            nullCurrentLine = false;
+                            x = length;
+                            while (length > lineLengthLimit) {
+                                StringBuilder sb = new StringBuilder();
+                                int subLength = 0;
+                                for (int i = 0; i < section.length(); ) {
+                                    String c = new String(Character.toChars(section.codePointAt(i)));
+                                    i += c.length();
+                                    int currentCharLength = characterLengthProvider.applyAsInt(new CharacterLengthProviderData(c, font, decorations));
+                                    subLength += currentCharLength;
+                                    if (subLength > lineLengthLimit) {
+                                        result.add(textComponent.content(sb.toString()));
+                                        section = section.substring(i - c.length());
+                                        length -= (subLength - currentCharLength);
+                                        if (section.isEmpty()) {
+                                            nullCurrentLine = true;
+                                            currentLine = Component.empty();
+                                            x = 0;
+                                        } else {
+                                            nullCurrentLine = false;
+                                            currentLine = textComponent.content(section);
+                                            x = length;
+                                        }
+                                        break;
+                                    }
+                                    sb.append(c);
+                                }
+                            }
+                        } else {
+                            currentLine = currentLine.append(textComponent.content(section));
+                            nullCurrentLine = false;
+                            x += length;
+                        }
                     }
-                    if (x + length > lineLengthLimit) {
-                        if (!PlainTextComponentSerializer.plainText().serialize(currentLine).isEmpty()) {
+                    if (j < split.size()) {
+                        if (nullCurrentLine) {
+                            result.add(Component.empty());
+                        } else {
                             result.add(currentLine);
                         }
-                        currentLine = textComponent.content(section);
-                        x = length;
-                        while (length > lineLengthLimit) {
-                            StringBuilder sb = new StringBuilder();
-                            int subLength = 0;
-                            for (int i = 0; i < section.length(); ) {
-                                String c = new String(Character.toChars(section.codePointAt(i)));
-                                i += c.length();
-                                subLength += characterLengthProvider.applyAsInt(new CharacterLengthProviderData(c, font, decorations));
-                                if (subLength > lineLengthLimit) {
-                                    result.add(textComponent.content(sb.toString()));
-                                    section = section.substring(i);
-                                    currentLine = textComponent.content(section);
-                                    length -= subLength;
-                                    x = length;
-                                    break;
-                                }
-                                sb.append(c);
-                            }
-                        }
-                    } else {
-                        currentLine = currentLine.append(textComponent.content(section));
-                        x += length;
+                        nullCurrentLine = true;
+                        currentLine = Component.empty();
+                        x = 0;
                     }
                 }
             } else if (each instanceof TranslatableComponent) {
@@ -117,13 +149,15 @@ public class ComponentStringUtils {
                     length += characterLengthProvider.applyAsInt(new CharacterLengthProviderData(c, font, decorations));
                 }
                 if (x + length > lineLengthLimit) {
-                    if (!PlainTextComponentSerializer.plainText().serialize(currentLine).isEmpty()) {
+                    if (!nullCurrentLine) {
                         result.add(currentLine);
                     }
                     currentLine = translatableComponent;
+                    nullCurrentLine = false;
                     x = 0;
                 } else {
                     currentLine = currentLine.append(translatableComponent);
+                    nullCurrentLine = false;
                     x += length;
                 }
             } else {
@@ -136,18 +170,20 @@ public class ComponentStringUtils {
                     length += characterLengthProvider.applyAsInt(new CharacterLengthProviderData(c, font, decorations));
                 }
                 if (x + length > lineLengthLimit) {
-                    if (!PlainTextComponentSerializer.plainText().serialize(currentLine).isEmpty()) {
+                    if (!nullCurrentLine) {
                         result.add(currentLine);
                     }
+                    nullCurrentLine = false;
                     currentLine = each;
                     x = 0;
                 } else {
                     currentLine = currentLine.append(each);
+                    nullCurrentLine = false;
                     x += length;
                 }
             }
         }
-        if (!PlainTextComponentSerializer.plainText().serialize(currentLine).isEmpty()) {
+        if (!nullCurrentLine) {
             result.add(currentLine);
         }
         return result;

@@ -67,6 +67,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureProper
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.BundleUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils.CharacterLengthProviderData;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ContainerTitlePrintingFunction;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils.ItemStackProcessResult;
@@ -100,8 +101,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+import java.util.function.ToIntFunction;
 import java.util.stream.Stream;
 
 @SuppressWarnings("deprecation")
@@ -1390,21 +1391,25 @@ public class ImageGeneration {
             ImageUtils.printComponentRightAligned(resourceManager.get(), page, pageHeader, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), 255, 30, 16, 0);
 
             BufferedImage temp = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB);
+
             List<Component> lines = new ArrayList<>();
-            AtomicInteger lastItalicExtraWidth = new AtomicInteger(0);
-            for (Component each : ComponentStyling.splitAtLineBreaks(component)) {
-                lines.addAll(ComponentStringUtils.applyWordWrap(each, resourceManager.get().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language), BOOK_LINE_LIMIT, data -> {
-                    FontRenderResult renderResult = resourceManager.get().getFontManager().getFontProviders(data.getFont().asString()).forCharacter(data.getCharacter()).printCharacter(temp, data.getCharacter(), 0, 0, 16, lastItalicExtraWidth.get(), NamedTextColor.BLACK, data.getDecorations());
-                    lastItalicExtraWidth.set(renderResult.getItalicExtraWidth());
+            lines.addAll(ComponentStringUtils.applyWordWrap(component, resourceManager.get().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language), BOOK_LINE_LIMIT, new ToIntFunction<CharacterLengthProviderData>() {
+                int lastItalicExtraWidth = 0;
+
+                @Override
+                public int applyAsInt(CharacterLengthProviderData data) {
+                    String character = data.getCharacter();
+                    FontRenderResult renderResult = resourceManager.get().getFontManager().getFontProviders(data.getFont().asString()).forCharacter(character).printCharacter(temp, character, 0, 0, 16, lastItalicExtraWidth, NamedTextColor.BLACK, data.getDecorations());
+                    lastItalicExtraWidth = renderResult.getItalicExtraWidth();
                     return renderResult.getWidth() + renderResult.getSpaceWidth();
-                }));
-            }
+                }
+            }));
 
             int y = 58;
             for (Component each : lines) {
                 each = each.colorIfAbsent(NamedTextColor.BLACK);
                 ImageUtils.printComponent(resourceManager.get(), page, each, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), 34, y, 16, 0);
-                y += 20;
+                y += 18;
             }
 
             result.add(page);
