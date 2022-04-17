@@ -45,12 +45,14 @@ import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent.ToolTipType;
 import com.loohp.interactivechatdiscordsrvaddon.registry.DiscordDataRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.PatternTypeWrapper;
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.dependencies.mcdiscordreserializer.discord.DiscordSerializer;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
+import org.bukkit.FireworkEffect;
 import org.bukkit.Material;
 import org.bukkit.block.Banner;
 import org.bukkit.block.banner.Pattern;
@@ -67,6 +69,8 @@ import org.bukkit.inventory.meta.BundleMeta;
 import org.bukkit.inventory.meta.CrossbowMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
+import org.bukkit.inventory.meta.FireworkEffectMeta;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.MapMeta;
@@ -244,6 +248,49 @@ public class DiscordItemStackUtils {
             if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && NBTEditor.contains(item, "Fireworks", "Flight")) {
                 int flight = NBTEditor.getByte(item, "Fireworks", "Flight");
                 description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getRocketFlightDuration(), language)).append(" ").append(flight).append("\n");
+            }if (hasMeta && item.getItemMeta() instanceof FireworkMeta) {
+                FireworkMeta fireworkMeta = (FireworkMeta) item.getItemMeta();
+                for (FireworkEffect fireworkEffect : fireworkMeta.getEffects()) {
+                    description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkType(fireworkEffect.getType()), language)).append("\n");
+                    if (!fireworkEffect.getColors().isEmpty()) {
+                        description.append("  ").append(fireworkEffect.getColors().stream().map(each -> {
+                            return LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkColor(each), language);
+                        }).collect(Collectors.joining(", "))).append("\n");
+                    }
+                    if (!fireworkEffect.getFadeColors().isEmpty()) {
+                        description.append("  ").append(LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkFade(), language)).append(" ").append(fireworkEffect.getFadeColors().stream().map(each -> {
+                            return LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkColor(each), language);
+                        }).collect(Collectors.joining(", "))).append("\n");
+                    }
+                    if (fireworkEffect.hasTrail()) {
+                        description.append("  ").append(LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkTrail(), language)).append("\n");
+                    }
+                    if (fireworkEffect.hasFlicker()) {
+                        description.append("  ").append(LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkFlicker(), language)).append("\n");
+                    }
+                }
+            }
+        }
+
+        if (xMaterial.equals(XMaterial.FIREWORK_STAR) && hasMeta && item.getItemMeta() instanceof FireworkEffectMeta) {
+            FireworkEffectMeta fireworkEffectMeta = (FireworkEffectMeta) item.getItemMeta();
+            FireworkEffect fireworkEffect = fireworkEffectMeta.getEffect();
+            description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkType(fireworkEffect.getType()), language)).append("\n");
+            if (!fireworkEffect.getColors().isEmpty()) {
+                description.append("  ").append(fireworkEffect.getColors().stream().map(each -> {
+                    return LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkColor(each), language);
+                }).collect(Collectors.joining(", "))).append("\n");
+            }
+            if (!fireworkEffect.getFadeColors().isEmpty()) {
+                description.append("  ").append(LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkFade(), language)).append(" ").append(fireworkEffect.getFadeColors().stream().map(each -> {
+                    return LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkColor(each), language);
+                }).collect(Collectors.joining(", "))).append("\n");
+            }
+            if (fireworkEffect.hasTrail()) {
+                description.append("  ").append(LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkTrail(), language)).append("\n");
+            }
+            if (fireworkEffect.hasFlicker()) {
+                description.append("  ").append(LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkFlicker(), language)).append("\n");
             }
         }
 
@@ -252,8 +299,12 @@ public class DiscordItemStackUtils {
             List<ItemStack> charged = meta.getChargedProjectiles();
             if (charged != null && !charged.isEmpty()) {
                 ItemStack charge = charged.get(0);
-                String chargeItemName = getDiscordDescription(charge, player).getName();
+                DiscordDescription chargeItemInfo = getDiscordDescription(charge, player);
+                String chargeItemName = chargeItemInfo.getName();
                 description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getCrossbowProjectile(), language)).append(" [**").append(chargeItemName).append("**]\n\n");
+                if (XMaterialUtils.matchXMaterial(charge).equals(XMaterial.FIREWORK_ROCKET) && chargeItemInfo.getDescription().isPresent()) {
+                    description.append("  ").append(chargeItemInfo.getDescription().get().replace("\n", "\n  "));
+                }
             }
         }
 
@@ -665,6 +716,50 @@ public class DiscordItemStackUtils {
                 int flight = NBTEditor.getByte(item, "Fireworks", "Flight");
                 prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getRocketFlightDuration(), language) + " " + flight)));
             }
+            if (hasMeta && item.getItemMeta() instanceof FireworkMeta) {
+                FireworkMeta fireworkMeta = (FireworkMeta) item.getItemMeta();
+                for (FireworkEffect fireworkEffect : fireworkMeta.getEffects()) {
+                    prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkType(fireworkEffect.getType()), language))));
+                    if (!fireworkEffect.getColors().isEmpty()) {
+                        prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + "  " + fireworkEffect.getColors().stream().map(each -> {
+                            return LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkColor(each), language);
+                        }).collect(Collectors.joining(", ")))));
+                    }
+                    if (!fireworkEffect.getFadeColors().isEmpty()) {
+                        prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + "  " + LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkFade(), language) + " " + fireworkEffect.getFadeColors().stream().map(each -> {
+                            return LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkColor(each), language);
+                        }).collect(Collectors.joining(", ")))));
+                    }
+                    if (fireworkEffect.hasTrail()) {
+                        prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + "  " + LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkTrail(), language))));
+                    }
+                    if (fireworkEffect.hasFlicker()) {
+                        prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + "  " + LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkFlicker(), language))));
+                    }
+                }
+            }
+        }
+
+        if (xMaterial.equals(XMaterial.FIREWORK_STAR) && hasMeta && item.getItemMeta() instanceof FireworkEffectMeta) {
+            FireworkEffectMeta fireworkEffectMeta = (FireworkEffectMeta) item.getItemMeta();
+            FireworkEffect fireworkEffect = fireworkEffectMeta.getEffect();
+            prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkType(fireworkEffect.getType()), language))));
+            if (!fireworkEffect.getColors().isEmpty()) {
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + "  " + fireworkEffect.getColors().stream().map(each -> {
+                    return LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkColor(each), language);
+                }).collect(Collectors.joining(", ")))));
+            }
+            if (!fireworkEffect.getFadeColors().isEmpty()) {
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + "  " + LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkFade(), language) + " " + fireworkEffect.getFadeColors().stream().map(each -> {
+                    return LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkColor(each), language);
+                }).collect(Collectors.joining(", ")))));
+            }
+            if (fireworkEffect.hasTrail()) {
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + "  " + LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkTrail(), language))));
+            }
+            if (fireworkEffect.hasFlicker()) {
+                prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + "  " + LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkFlicker(), language))));
+            }
         }
 
         if (xMaterial.equals(XMaterial.CROSSBOW)) {
@@ -672,8 +767,18 @@ public class DiscordItemStackUtils {
             List<ItemStack> charged = meta.getChargedProjectiles();
             if (charged != null && !charged.isEmpty()) {
                 ItemStack charge = charged.get(0);
-                Component chargeItemName = (Component) getToolTip(charge, player).getComponents().get(0).getToolTipComponent();
+                List<ToolTipComponent<?>> chargedItemInfo = getToolTip(charge, player).getComponents();
+                Component chargeItemName = (Component) chargedItemInfo.get(0).getToolTipComponent();
                 prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.WHITE + LanguageUtils.getTranslation(TranslationKeyUtils.getCrossbowProjectile(), language) + " [" + InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(chargeItemName) + ChatColor.WHITE + "]")));
+                if (XMaterialUtils.matchXMaterial(charge).equals(XMaterial.FIREWORK_ROCKET)) {
+                    chargedItemInfo.stream().skip(1).forEachOrdered(each -> {
+                        if (each.getType().equals(ToolTipType.TEXT)) {
+                            prints.add(ToolTipComponent.text(Component.text("  ").append((Component)each.getToolTipComponent())));
+                        } else {
+                            prints.add(each);
+                        }
+                    });
+                }
             }
         }
 

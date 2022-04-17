@@ -27,7 +27,9 @@ import com.loohp.interactivechat.utils.NMSUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackType;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.PatternTypeWrapper;
 import org.apache.commons.lang.WordUtils;
+import org.bukkit.Color;
 import org.bukkit.DyeColor;
+import org.bukkit.FireworkEffect;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlot;
@@ -425,6 +427,83 @@ public class TranslationKeyUtils {
 
     public static String getBundleFullness() {
         return "item.minecraft.bundle.fullness";
+    }
+
+    public static String getFireworkType(FireworkEffect.Type type) {
+        if (InteractiveChat.version.isLegacy()) {
+            switch (type) {
+                case BALL:
+                    return "item.fireworksCharge.type.0";
+                case BALL_LARGE:
+                    return "item.fireworksCharge.type.1";
+                case STAR:
+                    return "item.fireworksCharge.type.2";
+                case CREEPER:
+                    return "item.fireworksCharge.type.3";
+                case BURST:
+                    return "item.fireworksCharge.type.4";
+                default:
+                    return "item.fireworksCharge.type";
+            }
+        } else {
+            switch (type) {
+                case BALL:
+                    return "item.minecraft.firework_star.shape.small_ball";
+                case BALL_LARGE:
+                    return "item.minecraft.firework_star.shape.large_ball";
+                case STAR:
+                    return "item.minecraft.firework_star.shape.star";
+                case CREEPER:
+                    return "item.minecraft.firework_star.shape.creeper";
+                case BURST:
+                    return "item.minecraft.firework_star.shape.burst";
+                default:
+                    return "item.minecraft.firework_star.shape";
+            }
+        }
+    }
+
+    public static String getFireworkTrail() {
+        if (InteractiveChat.version.isLegacy()) {
+            return "item.fireworksCharge.trail";
+        } else {
+            return "item.minecraft.firework_star.trail";
+        }
+    }
+
+    public static String getFireworkFlicker() {
+        if (InteractiveChat.version.isLegacy()) {
+            return "item.fireworksCharge.flicker";
+        } else {
+            return "item.minecraft.firework_star.flicker";
+        }
+    }
+
+    public static String getFireworkFade() {
+        if (InteractiveChat.version.isLegacy()) {
+            return "item.fireworksCharge.fadeTo";
+        } else {
+            return "item.minecraft.firework_star.fade_to";
+        }
+    }
+
+    public static String getFireworkColor(Color color) {
+        DyeColor dyeColor = DyeColor.getByFireworkColor(color);
+        if (InteractiveChat.version.isLegacy()) {
+            if (dyeColor == null) {
+                return "item.fireworksCharge.customColor";
+            } else {
+                String colorName = WordUtils.capitalizeFully(dyeColor.name().toLowerCase().replace("_", " ")).replace(" ", "");
+                colorName = colorName.substring(0, 1).toLowerCase() + colorName.substring(1);
+                return "item.fireworksCharge." + colorName;
+            }
+        } else {
+            if (dyeColor == null) {
+                return "item.minecraft.firework_star.custom_color";
+            } else {
+                return "item.minecraft.firework_star." + dyeColor.name().toLowerCase();
+            }
+        }
     }
 
 }
