@@ -44,13 +44,13 @@ public class BlockModel {
         boolean ambientocclusion = (boolean) rootJson.getOrDefault("ambientocclusion", true);
         ModelGUILight guiLight = rootJson.containsKey("gui_light") ? ModelGUILight.fromKey((String) rootJson.get("gui_light")) : null;
         Map<ModelDisplayPosition, ModelDisplay> display = new EnumMap<>(ModelDisplayPosition.class);
-        com.loohp.interactivechat.libs.org.json.simple.JSONObject displayJson = (com.loohp.interactivechat.libs.org.json.simple.JSONObject) rootJson.get("display");
+        JSONObject displayJson = (JSONObject) rootJson.get("display");
         if (displayJson != null) {
             for (Object obj : displayJson.keySet()) {
                 String displayKey = obj.toString();
-                JSONArray rotationArray = (JSONArray) ((com.loohp.interactivechat.libs.org.json.simple.JSONObject) displayJson.get(displayKey)).get("rotation");
-                JSONArray translationArray = (JSONArray) ((com.loohp.interactivechat.libs.org.json.simple.JSONObject) displayJson.get(displayKey)).get("translation");
-                JSONArray scaleArray = (JSONArray) ((com.loohp.interactivechat.libs.org.json.simple.JSONObject) displayJson.get(displayKey)).get("scale");
+                JSONArray rotationArray = (JSONArray) ((JSONObject) displayJson.get(displayKey)).get("rotation");
+                JSONArray translationArray = (JSONArray) ((JSONObject) displayJson.get(displayKey)).get("translation");
+                JSONArray scaleArray = (JSONArray) ((JSONObject) displayJson.get(displayKey)).get("scale");
                 Coordinates3D rotation;
                 if (rotationArray == null) {
                     rotation = new Coordinates3D(0, 0, 0);
@@ -74,7 +74,7 @@ public class BlockModel {
             }
         }
         Map<String, String> texture = new HashMap<>();
-        com.loohp.interactivechat.libs.org.json.simple.JSONObject textureJson = (com.loohp.interactivechat.libs.org.json.simple.JSONObject) rootJson.get("textures");
+        JSONObject textureJson = (JSONObject) rootJson.get("textures");
         if (textureJson != null) {
             for (Object obj : textureJson.keySet()) {
                 String textureKey = obj.toString();
@@ -85,13 +85,13 @@ public class BlockModel {
         JSONArray elementsArray = (JSONArray) rootJson.get("elements");
         if (elementsArray != null) {
             for (Object obj : elementsArray) {
-                com.loohp.interactivechat.libs.org.json.simple.JSONObject elementJson = (com.loohp.interactivechat.libs.org.json.simple.JSONObject) obj;
+                JSONObject elementJson = (JSONObject) obj;
                 JSONArray fromArray = (JSONArray) elementJson.get("from");
                 JSONArray toArray = (JSONArray) elementJson.get("to");
                 Coordinates3D from = new Coordinates3D(((Number) fromArray.get(0)).doubleValue(), ((Number) fromArray.get(1)).doubleValue(), ((Number) fromArray.get(2)).doubleValue());
                 Coordinates3D to = new Coordinates3D(((Number) toArray.get(0)).doubleValue(), ((Number) toArray.get(1)).doubleValue(), ((Number) toArray.get(2)).doubleValue());
                 ModelElementRotation rotation;
-                com.loohp.interactivechat.libs.org.json.simple.JSONObject rotationJson = (com.loohp.interactivechat.libs.org.json.simple.JSONObject) elementJson.get("rotation");
+                JSONObject rotationJson = (JSONObject) elementJson.get("rotation");
                 if (rotationJson == null) {
                     rotation = null;
                 } else {
@@ -109,12 +109,12 @@ public class BlockModel {
                 }
                 boolean shade = (boolean) elementJson.getOrDefault("shade", true);
                 Map<ModelFaceSide, ModelFace> face = new EnumMap<>(ModelFaceSide.class);
-                com.loohp.interactivechat.libs.org.json.simple.JSONObject facesJson = (com.loohp.interactivechat.libs.org.json.simple.JSONObject) elementJson.get("faces");
+                JSONObject facesJson = (JSONObject) elementJson.get("faces");
                 if (facesJson != null) {
                     for (Object obj1 : facesJson.keySet()) {
                         String faceKey = obj1.toString();
                         ModelFaceSide side = ModelFaceSide.fromKey(faceKey);
-                        com.loohp.interactivechat.libs.org.json.simple.JSONObject faceJson = (com.loohp.interactivechat.libs.org.json.simple.JSONObject) facesJson.get(faceKey);
+                        JSONObject faceJson = (JSONObject) facesJson.get(faceKey);
                         TextureUV uv;
                         JSONArray uvArray = (JSONArray) faceJson.get("uv");
                         if (uvArray == null) {
@@ -143,8 +143,8 @@ public class BlockModel {
         JSONArray overridesArray = (JSONArray) rootJson.get("overrides");
         if (overridesArray != null) {
             for (Object obj : overridesArray) {
-                com.loohp.interactivechat.libs.org.json.simple.JSONObject overrideJson = (com.loohp.interactivechat.libs.org.json.simple.JSONObject) obj;
-                com.loohp.interactivechat.libs.org.json.simple.JSONObject predicateJson = (com.loohp.interactivechat.libs.org.json.simple.JSONObject) overrideJson.get("predicate");
+                JSONObject overrideJson = (JSONObject) obj;
+                JSONObject predicateJson = (JSONObject) overrideJson.get("predicate");
                 Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
                 for (Object obj1 : predicateJson.keySet()) {
                     String predicateTypeKey = obj1.toString();

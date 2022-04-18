@@ -685,7 +685,7 @@ public class ImageGeneration {
                 default:
                     isArmor = false;
                     String key = ModelUtils.getItemModelKey(type);
-                    ItemStackProcessResult itemProcessResult = ItemRenderUtils.processItemForRendering(player, helmet);
+                    ItemStackProcessResult itemProcessResult = ItemRenderUtils.processItemForRendering(resourceManager.get(), player, helmet, EquipmentSlot.HEAD, version.get().isOld());
                     boolean enchanted = itemProcessResult.requiresEnchantmentGlint();
                     Map<ModelOverrideType, Float> predicate = itemProcessResult.getPredicates();
                     String modelKey = itemProcessResult.getDirectLocation() == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : itemProcessResult.getDirectLocation();
@@ -708,14 +708,14 @@ public class ImageGeneration {
         if (InteractiveChatDiscordSrvAddon.plugin.renderHandHeldItems) {
             ItemStack rightHand = player.isRightHanded() ? player.getMainHandItem() : player.getOffHandItem();
             if (rightHand != null) {
+                EquipmentSlot slot = player.isRightHanded() ? EquipmentSlot.HAND : EquipmentSlot.valueOf("OFF_HAND");
                 String key = ModelUtils.getItemModelKey(XMaterialUtils.matchXMaterial(rightHand));
-                ItemStackProcessResult itemProcessResult = ItemRenderUtils.processItemForRendering(player, rightHand);
+                ItemStackProcessResult itemProcessResult = ItemRenderUtils.processItemForRendering(resourceManager.get(), player, rightHand, slot, version.get().isOld());
                 boolean enchanted = itemProcessResult.requiresEnchantmentGlint();
                 Map<ModelOverrideType, Float> predicate = itemProcessResult.getPredicates();
                 String modelKey = itemProcessResult.getDirectLocation() == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : itemProcessResult.getDirectLocation();
                 Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
                 TintIndexData tintIndexData = itemProcessResult.getTintIndexData();
-                EquipmentSlot slot = player.isRightHanded() ? EquipmentSlot.HAND : EquipmentSlot.valueOf("OFF_HAND");
                 TextureResource enchantmentGlintResource = OptifineUtils.getEnchantmentGlintOverrideTextures(resourceManager.get(), slot, rightHand).orElse(getDefaultEnchantmentTint());
                 Function<BufferedImage, BufferedImage> enchantmentGlintFunction = img -> getEnchantedImage(enchantmentGlintResource, img);
                 Function<BufferedImage, BufferedImage> rawEnchantmentGlintFunction = img -> getRawEnchantedImage(enchantmentGlintResource, img);
@@ -723,14 +723,14 @@ public class ImageGeneration {
             }
             ItemStack leftHand = player.isRightHanded() ? player.getOffHandItem() : player.getMainHandItem();
             if (leftHand != null) {
+                EquipmentSlot slot = player.isRightHanded() ? EquipmentSlot.valueOf("OFF_HAND") : EquipmentSlot.HAND;
                 String key = ModelUtils.getItemModelKey(XMaterialUtils.matchXMaterial(leftHand));
-                ItemStackProcessResult itemProcessResult = ItemRenderUtils.processItemForRendering(player, leftHand);
+                ItemStackProcessResult itemProcessResult = ItemRenderUtils.processItemForRendering(resourceManager.get(), player, leftHand, slot, version.get().isOld());
                 boolean enchanted = itemProcessResult.requiresEnchantmentGlint();
                 Map<ModelOverrideType, Float> predicate = itemProcessResult.getPredicates();
                 String modelKey = itemProcessResult.getDirectLocation() == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : itemProcessResult.getDirectLocation();
                 Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
                 TintIndexData tintIndexData = itemProcessResult.getTintIndexData();
-                EquipmentSlot slot = player.isRightHanded() ? EquipmentSlot.valueOf("OFF_HAND") : EquipmentSlot.HAND;
                 TextureResource enchantmentGlintResource = OptifineUtils.getEnchantmentGlintOverrideTextures(resourceManager.get(), slot, leftHand).orElse(getDefaultEnchantmentTint());
                 Function<BufferedImage, BufferedImage> enchantmentGlintFunction = img -> getEnchantedImage(enchantmentGlintResource, img);
                 Function<BufferedImage, BufferedImage> rawEnchantmentGlintFunction = img -> getRawEnchantedImage(enchantmentGlintResource, img);
@@ -767,19 +767,15 @@ public class ImageGeneration {
         XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
         int amount = item.getAmount();
         String key = ModelUtils.getItemModelKey(xMaterial);
-        ItemStackProcessResult processResult = ItemRenderUtils.processItemForRendering(player, item);
+        ItemStackProcessResult processResult = ItemRenderUtils.processItemForRendering(resourceManager.get(), player, item, null, version.get().isOld());
         boolean requiresEnchantmentGlint = processResult.requiresEnchantmentGlint();
         Map<ModelOverrideType, Float> predicates = processResult.getPredicates();
         Map<String, TextureResource> providedTextures = processResult.getProvidedTextures();
         TintIndexData tintIndexData = processResult.getTintIndexData();
         String directLocation = processResult.getDirectLocation();
 
-        TextureResource enchantmentGlintResource = OptifineUtils.getEnchantmentGlintOverrideTextures(resourceManager.get(), null, item).orElse(getDefaultEnchantmentTint());
-        Function<BufferedImage, BufferedImage> enchantmentGlintFunction = image -> getEnchantedImage(enchantmentGlintResource, image);
-        Function<BufferedImage, BufferedImage> rawEnchantmentGlintFunction = image -> getRawEnchantedImage(enchantmentGlintResource, image);
-
         BufferedImage itemImage;
-        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, resourceManager.get(), OptifineUtils.getItemPostResolveFunction(resourceManager.get(), null, item, version.get().isOld(), predicates).orElse(null), version.get().isOld(), directLocation == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : directLocation, ModelDisplayPosition.GUI, predicates, providedTextures, tintIndexData, requiresEnchantmentGlint, enchantmentGlintFunction, rawEnchantmentGlintFunction);
+        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, resourceManager.get(), processResult.getPostResolveFunction(), version.get().isOld(), directLocation == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : directLocation, ModelDisplayPosition.GUI, predicates, providedTextures, tintIndexData, requiresEnchantmentGlint, processResult.getEnchantmentGlintFunction(), processResult.getRawEnchantmentGlintFunction());
         if (renderResult.isSuccessful()) {
             itemImage = renderResult.getImage();
         } else {

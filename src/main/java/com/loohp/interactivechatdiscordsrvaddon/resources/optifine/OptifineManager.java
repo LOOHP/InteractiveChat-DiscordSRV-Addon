@@ -157,7 +157,15 @@ public class OptifineManager extends AbstractManager implements IOptifineManager
                 }
                 for (String type : Arrays.asList("png", "json")) {
                     String rootPath = citProperties.getOverrideAsset("", type);
-                    if (rootPath == null) {
+                    if (rootPath != null) {
+                        String extension = rootPath.substring(rootPath.lastIndexOf(".") + 1);
+                        String resourceLocation = resolveAsset(citOverride.getFirst(), rootPath, extension);
+                        if (extension.equalsIgnoreCase("png")) {
+                            overrideTextures.put("", getTexture(resourceLocation));
+                        } else if (extension.equalsIgnoreCase("json")) {
+                            blockModel = resolveBlockModel(resourceLocation, is1_8, predicates);
+                        }
+                    } else {
                         if (modelName != null) {
                             String path = citProperties.getOverrideAsset(modelName, type);
                             if (path != null) {
@@ -165,18 +173,37 @@ public class OptifineManager extends AbstractManager implements IOptifineManager
                                 String resourceLocation = resolveAsset(citOverride.getFirst(), path, extension);
                                 if (extension.equalsIgnoreCase("png")) {
                                     overrideTextures.put("layer0", getTexture(resourceLocation));
-                                } else {
+                                } else if (extension.equalsIgnoreCase("json")) {
                                     blockModel = resolveBlockModel(resourceLocation, is1_8, predicates);
                                 }
                             }
                         }
-                    } else {
-                        String extension = rootPath.substring(rootPath.lastIndexOf(".") + 1);
-                        String resourceLocation = resolveAsset(citOverride.getFirst(), rootPath, extension);
+                    }
+                }
+                for (Entry<String, String> entry : blockModel.getTextures().entrySet()) {
+                    String key = entry.getKey();
+                    String pathK = citProperties.getOverrideAsset(entry.getKey(), "png");
+                    if (pathK != null) {
+                        String extension = pathK.substring(pathK.lastIndexOf(".") + 1);
+                        String resourceLocation = resolveAsset(citOverride.getFirst(), pathK, extension);
                         if (extension.equalsIgnoreCase("png")) {
-                            overrideTextures.put("", getTexture(resourceLocation));
-                        } else {
-                            blockModel = resolveBlockModel(resourceLocation, is1_8, predicates);
+                            overrideTextures.put(key, getTexture(resourceLocation));
+                        }
+                    } else {
+                        String value = entry.getValue();
+                        if (value.contains(":")) {
+                            value = value.substring(value.indexOf(":") + 1);
+                        }
+                        if (value.contains("/")) {
+                            value = value.substring(value.indexOf("/") + 1);
+                        }
+                        String pathV = citProperties.getOverrideAsset(value, "png");
+                        if (pathV != null) {
+                            String extension = pathV.substring(pathV.lastIndexOf(".") + 1);
+                            String resourceLocation = resolveAsset(citOverride.getFirst(), pathV, extension);
+                            if (extension.equalsIgnoreCase("png")) {
+                                overrideTextures.put(key, getTexture(resourceLocation));
+                            }
                         }
                     }
                 }

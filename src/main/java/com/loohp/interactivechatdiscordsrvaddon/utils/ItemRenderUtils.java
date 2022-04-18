@@ -28,14 +28,18 @@ import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.libs.org.json.simple.parser.ParseException;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
+import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.SkinUtils;
 import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.BannerGraphics;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.BannerGraphics.BannerAssetResult;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
@@ -44,6 +48,7 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintIndexData;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BundleMeta;
 import org.bukkit.inventory.meta.CompassMeta;
@@ -66,14 +71,16 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
+import java.util.function.Function;
 
 @SuppressWarnings("deprecation")
 public class ItemRenderUtils {
 
     private static final Random RANDOM = new Random();
 
-    public static ItemStackProcessResult processItemForRendering(OfflineICPlayer player, ItemStack item) throws IOException {
+    public static ItemStackProcessResult processItemForRendering(ResourceManager manager, OfflineICPlayer player, ItemStack item, EquipmentSlot slot, boolean is1_8) throws IOException {
         boolean requiresEnchantmentGlint = false;
         XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
         String directLocation = null;
@@ -88,6 +95,10 @@ public class ItemRenderUtils {
         } else if (item.getEnchantments().size() > 0) {
             requiresEnchantmentGlint = true;
         }
+
+        TextureResource enchantmentGlintResource = OptifineUtils.getEnchantmentGlintOverrideTextures(manager, null, item).orElse(ImageGeneration.getDefaultEnchantmentTint());
+        Function<BufferedImage, BufferedImage> enchantmentGlintFunction = image -> ImageGeneration.getEnchantedImage(enchantmentGlintResource, image);
+        Function<BufferedImage, BufferedImage> rawEnchantmentGlintFunction = image -> ImageGeneration.getRawEnchantedImage(enchantmentGlintResource, image);
 
         TintIndexData tintIndexData = TintUtils.getTintData(xMaterial);
         Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
@@ -372,7 +383,114 @@ public class ItemRenderUtils {
             float fullness = BundleUtils.getFullnessPercentage(((BundleMeta) item.getItemMeta()).getItems());
             predicates.put(ModelOverrideType.FILLED, fullness);
         }
-        return new ItemStackProcessResult(requiresEnchantmentGlint, predicates, providedTextures, tintIndexData, directLocation);
+
+        Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction = OptifineUtils.getItemPostResolveFunction(manager, slot, item, is1_8, predicates).map(function -> {
+            return function.andThen(result -> {
+                Map<String, TextureResource> overrideTextures = result.getSecond();
+                for (Entry<String, TextureResource> entry : overrideTextures.entrySet()) {
+                    String overriddenResource = result.getFirst().getTextures().get(entry.getKey());
+                    if (overriddenResource == null) {
+                        continue;
+                    }
+                    if (!overriddenResource.contains(":")) {
+                        String namespace = result.getFirst().getResourceLocation();
+                        if (namespace.contains(":")) {
+                            namespace = namespace.substring(0, namespace.indexOf(":"));
+                        } else {
+                            namespace = ResourceRegistry.DEFAULT_NAMESPACE;
+                        }
+                        overriddenResource = namespace + ":" + overriddenResource;
+                    }
+                    if (item.getItemMeta() instanceof PotionMeta) {
+                        if (xMaterial.equals(XMaterial.TIPPED_ARROW)) {
+                            if (overriddenResource.equalsIgnoreCase(ResourceRegistry.TIPPED_ARROW_HEAD_PLACEHOLDER)) {
+                                PotionMeta meta = (PotionMeta) item.getItemMeta();
+                                PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
+                                BufferedImage tippedArrowHead = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "tipped_arrow_head").getTexture(32, 32);
+
+                                int color;
+                                try {
+                                    if (meta.hasColor()) {
+                                        color = meta.getColor().asRGB();
+                                    } else {
+                                        color = PotionUtils.getPotionBaseColor(potiontype);
+                                    }
+                                } catch (Throwable e) {
+                                    color = PotionUtils.getPotionBaseColor(PotionType.WATER);
+                                }
+
+                                BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(tippedArrowHead), color);
+                                tippedArrowHead = ImageUtils.multiply(tippedArrowHead, colorOverlay);
+
+                                entry.setValue(new GeneratedTextureResource(tippedArrowHead));
+                            }
+                        } else {
+                            if (overriddenResource.equalsIgnoreCase(ResourceRegistry.POTION_OVERLAY_PLACEHOLDER)) {
+                                PotionMeta meta = (PotionMeta) item.getItemMeta();
+                                PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
+                                BufferedImage potionOverlay = entry.getValue().getTexture(32, 32);
+
+                                int color;
+                                try {
+                                    if (meta.hasColor()) {
+                                        color = meta.getColor().asRGB();
+                                    } else {
+                                        color = PotionUtils.getPotionBaseColor(potiontype);
+                                    }
+                                } catch (Throwable e) {
+                                    color = PotionUtils.getPotionBaseColor(PotionType.WATER);
+                                }
+
+                                BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(potionOverlay), color);
+                                potionOverlay = ImageUtils.multiply(potionOverlay, colorOverlay);
+
+                                entry.setValue(new GeneratedTextureResource(potionOverlay));
+                            }
+                        }
+                    } else if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:spawn_egg"))) {
+                        if (overriddenResource.equalsIgnoreCase(ResourceRegistry.SPAWN_EGG_PLACEHOLDER)) {
+                            SpawnEggTintData tintData = TintUtils.getSpawnEggTint(xMaterial);
+                            if (tintData != null) {
+                                BufferedImage baseImage = entry.getValue().getTexture();
+                                BufferedImage colorBase = ImageUtils.changeColorTo(ImageUtils.copyImage(baseImage), tintData.getBase());
+                                baseImage = ImageUtils.multiply(baseImage, colorBase);
+                                entry.setValue(new GeneratedTextureResource(baseImage));
+                            }
+                        } else if (overriddenResource.equalsIgnoreCase(ResourceRegistry.SPAWN_EGG_OVERLAY_PLACEHOLDER)) {
+                            SpawnEggTintData tintData = TintUtils.getSpawnEggTint(xMaterial);
+                            if (tintData != null) {
+                                BufferedImage overlayImage = entry.getValue().getTexture();
+                                BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(overlayImage), tintData.getOverlay());
+                                overlayImage = ImageUtils.multiply(overlayImage, colorOverlay);
+                                entry.setValue(new GeneratedTextureResource(overlayImage));
+                            }
+                        }
+                    } else if (item.getItemMeta() instanceof LeatherArmorMeta) {
+                        LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
+                        Color color = new Color(meta.getColor().asRGB());
+                        if (xMaterial.equals(XMaterial.LEATHER_HORSE_ARMOR)) {
+                            if (overriddenResource.equalsIgnoreCase(ResourceRegistry.LEATHER_HORSE_ARMOR_PLACEHOLDER)) {
+                                BufferedImage itemImage = entry.getValue().getTexture(32, 32);
+                                BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
+                                itemImage = ImageUtils.multiply(itemImage, colorOverlay);
+                                entry.setValue(new GeneratedTextureResource(itemImage));
+                            }
+                        } else {
+                            if (overriddenResource.equalsIgnoreCase(ResourceRegistry.LEATHER_HELMET_PLACEHOLDER) || overriddenResource.equalsIgnoreCase(ResourceRegistry.LEATHER_CHESTPLATE_PLACEHOLDER) || overriddenResource.equalsIgnoreCase(ResourceRegistry.LEATHER_LEGGINGS_PLACEHOLDER) || overriddenResource.equalsIgnoreCase(ResourceRegistry.LEATHER_BOOTS_PLACEHOLDER)) {
+                                BufferedImage itemImage = entry.getValue().getTexture(32, 32);
+                                BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
+                                itemImage = ImageUtils.multiply(itemImage, colorOverlay);
+                                entry.setValue(new GeneratedTextureResource(itemImage));
+                            }
+                        }
+                    }
+                }
+
+                return result;
+            });
+        }).orElse(null);
+
+        return new ItemStackProcessResult(requiresEnchantmentGlint, predicates, providedTextures, tintIndexData, directLocation, postResolveFunction, enchantmentGlintFunction, rawEnchantmentGlintFunction);
     }
 
     public static class ItemStackProcessResult {
@@ -382,13 +500,19 @@ public class ItemRenderUtils {
         private Map<String, TextureResource> providedTextures;
         private TintIndexData tintIndexData;
         private String directLocation;
+        private Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction;
+        private Function<BufferedImage, BufferedImage> enchantmentGlintFunction;
+        private Function<BufferedImage, BufferedImage> rawEnchantmentGlintFunction;
 
-        public ItemStackProcessResult(boolean requiresEnchantmentGlint, Map<ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, String directLocation) {
+        public ItemStackProcessResult(boolean requiresEnchantmentGlint, Map<ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, String directLocation, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, Function<BufferedImage, BufferedImage> enchantmentGlintFunction, Function<BufferedImage, BufferedImage> rawEnchantmentGlintFunction) {
             this.requiresEnchantmentGlint = requiresEnchantmentGlint;
             this.predicates = predicates;
             this.providedTextures = providedTextures;
-            this.directLocation = directLocation;
             this.tintIndexData = tintIndexData;
+            this.directLocation = directLocation;
+            this.postResolveFunction = postResolveFunction;
+            this.enchantmentGlintFunction = enchantmentGlintFunction;
+            this.rawEnchantmentGlintFunction = rawEnchantmentGlintFunction;
         }
 
         public boolean requiresEnchantmentGlint() {
@@ -409,6 +533,18 @@ public class ItemRenderUtils {
 
         public String getDirectLocation() {
             return directLocation;
+        }
+
+        public Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> getPostResolveFunction() {
+            return postResolveFunction;
+        }
+
+        public Function<BufferedImage, BufferedImage> getEnchantmentGlintFunction() {
+            return enchantmentGlintFunction;
+        }
+
+        public Function<BufferedImage, BufferedImage> getRawEnchantmentGlintFunction() {
+            return rawEnchantmentGlintFunction;
         }
 
     }
