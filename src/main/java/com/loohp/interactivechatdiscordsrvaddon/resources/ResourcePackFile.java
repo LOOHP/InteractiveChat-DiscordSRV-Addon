@@ -27,6 +27,8 @@ import java.util.Collection;
 
 public interface ResourcePackFile extends AutoCloseable {
 
+    ResourcePackFile getPackRootFile();
+
     String getName();
 
     String getParent();

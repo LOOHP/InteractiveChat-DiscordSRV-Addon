@@ -47,7 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class FontManager extends AbstractManager {
+public class FontManager extends AbstractManager implements IFontManager {
 
     public static final String DEFAULT_FONT = "minecraft:default";
 
@@ -160,6 +160,7 @@ public class FontManager extends AbstractManager {
         }
     }
 
+    @Override
     public TextureResource getFontResource(String resourceLocation) {
         String namespace;
         String key;
@@ -190,6 +191,7 @@ public class FontManager extends AbstractManager {
         return null;
     }
 
+    @Override
     public FontProvider getFontProviders(String resourceLocation) {
         if (!resourceLocation.contains(":")) {
             resourceLocation = ResourceRegistry.DEFAULT_NAMESPACE + ":" + resourceLocation;

@@ -248,7 +248,8 @@ public class DiscordItemStackUtils {
             if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && NBTEditor.contains(item, "Fireworks", "Flight")) {
                 int flight = NBTEditor.getByte(item, "Fireworks", "Flight");
                 description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getRocketFlightDuration(), language)).append(" ").append(flight).append("\n");
-            }if (hasMeta && item.getItemMeta() instanceof FireworkMeta) {
+            }
+            if (hasMeta && item.getItemMeta() instanceof FireworkMeta) {
                 FireworkMeta fireworkMeta = (FireworkMeta) item.getItemMeta();
                 for (FireworkEffect fireworkEffect : fireworkMeta.getEffects()) {
                     description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getFireworkType(fireworkEffect.getType()), language)).append("\n");
@@ -773,7 +774,7 @@ public class DiscordItemStackUtils {
                 if (XMaterialUtils.matchXMaterial(charge).equals(XMaterial.FIREWORK_ROCKET)) {
                     chargedItemInfo.stream().skip(1).forEachOrdered(each -> {
                         if (each.getType().equals(ToolTipType.TEXT)) {
-                            prints.add(ToolTipComponent.text(Component.text("  ").append((Component)each.getToolTipComponent())));
+                            prints.add(ToolTipComponent.text(Component.text("  ").append((Component) each.getToolTipComponent())));
                         } else {
                             prints.add(each);
                         }

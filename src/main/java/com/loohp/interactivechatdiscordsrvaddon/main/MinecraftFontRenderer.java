@@ -20,9 +20,6 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.main;
 
-import com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints;
-import com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridLayoutManager;
-import com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.Spacer;
 import com.loohp.interactivechat.libs.com.loohp.yamlconfiguration.YamlConfiguration;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
@@ -421,7 +418,7 @@ public class MinecraftFontRenderer extends JFrame {
 
         PrintStream original = System.err;
         try {
-            resourceManager = new ResourceManager();
+            resourceManager = new ResourceManager(false);
             resourceManager.loadResources(new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN);
             resourceBar.setValue(valuePerPack);
             for (String resourceName : resourceOrder) {
@@ -667,64 +664,64 @@ public class MinecraftFontRenderer extends JFrame {
     private void $$$setupUI$$$() {
         createUIComponents();
         panel = new JPanel();
-        panel.setLayout(new GridLayoutManager(7, 13, new Insets(10, 10, 10, 10), -1, -1));
+        panel.setLayout(new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridLayoutManager(7, 13, new Insets(10, 10, 10, 10), -1, -1));
         final JLabel label1 = new JLabel();
         label1.setText("Text Input");
-        panel.add(label1, new GridConstraints(0, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(label1, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(0, 0, 1, 3, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         textAreaResources = new JTextArea();
         textAreaResources.setColumns(0);
         textAreaResources.setEditable(false);
         textAreaResources.setLineWrap(false);
         textAreaResources.setText("Loading Resources...");
-        panel.add(textAreaResources, new GridConstraints(1, 11, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_GROW, new Dimension(-1, 200), new Dimension(150, -1), null, 0, false));
+        panel.add(textAreaResources, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(1, 11, 1, 2, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, new Dimension(-1, 200), new Dimension(150, -1), null, 0, false));
         reloadResourcesButton = new JButton();
         reloadResourcesButton.setText("Reload Resources");
-        panel.add(reloadResourcesButton, new GridConstraints(0, 12, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(reloadResourcesButton, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(0, 12, 1, 1, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label2 = new JLabel();
         label2.setText("Offset X");
-        panel.add(label2, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        panel.add(spinnerOffsetX, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(label2, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(4, 0, 1, 1, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(spinnerOffsetX, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(4, 1, 1, 1, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label3 = new JLabel();
         label3.setText("Offset Y");
-        panel.add(label3, new GridConstraints(4, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        panel.add(spinnerOffsetY, new GridConstraints(4, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        panel.add(imagePanel, new GridConstraints(5, 0, 2, 11, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        panel.add(label3, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(4, 2, 1, 1, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(spinnerOffsetY, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(4, 3, 1, 1, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(imagePanel, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(5, 0, 2, 11, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         saveButton = new JButton();
         saveButton.setText("Save");
-        panel.add(saveButton, new GridConstraints(6, 12, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(saveButton, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(6, 12, 1, 1, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label4 = new JLabel();
         label4.setText("Background Color");
         label4.setToolTipText("Visual Background Color");
-        panel.add(label4, new GridConstraints(4, 4, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(label4, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(4, 4, 1, 1, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         backgroundColorTextField = new JTextField();
         backgroundColorTextField.setColumns(8);
         backgroundColorTextField.setHorizontalAlignment(11);
         backgroundColorTextField.setText("#000000");
-        panel.add(backgroundColorTextField, new GridConstraints(4, 5, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(backgroundColorTextField, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(4, 5, 1, 1, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         legacyTextCheckBox = new JCheckBox();
         legacyTextCheckBox.setSelected(false);
         legacyTextCheckBox.setText("Legacy Text");
-        panel.add(legacyTextCheckBox, new GridConstraints(0, 10, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final Spacer spacer1 = new Spacer();
-        panel.add(spacer1, new GridConstraints(4, 10, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
-        final Spacer spacer2 = new Spacer();
-        panel.add(spacer2, new GridConstraints(0, 11, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
+        panel.add(legacyTextCheckBox, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(0, 10, 1, 1, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_EAST, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.Spacer spacer1 = new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.Spacer();
+        panel.add(spacer1, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(4, 10, 1, 1, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        final com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.Spacer spacer2 = new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.Spacer();
+        panel.add(spacer2, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(0, 11, 1, 1, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, 1, null, null, null, 0, false));
         final JLabel label5 = new JLabel();
         label5.setText("Language");
         label5.setToolTipText("");
-        panel.add(label5, new GridConstraints(4, 6, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(label5, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(4, 6, 1, 1, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         comboBoxLanguages = new JComboBox();
         comboBoxLanguages.setToolTipText("Language for Translatable Components");
-        panel.add(comboBoxLanguages, new GridConstraints(4, 7, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        final Spacer spacer3 = new Spacer();
-        panel.add(spacer3, new GridConstraints(3, 11, 3, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_VERTICAL, 1, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        panel.add(comboBoxLanguages, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(4, 7, 1, 1, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        final com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.Spacer spacer3 = new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.Spacer();
+        panel.add(spacer3, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(3, 11, 3, 2, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_VERTICAL, 1, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         resourceBar = new JProgressBar();
-        panel.add(resourceBar, new GridConstraints(2, 11, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(resourceBar, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(2, 11, 1, 2, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         buttonDownloadLanguages = new JButton();
         buttonDownloadLanguages.setText("Download All Languages");
-        panel.add(buttonDownloadLanguages, new GridConstraints(4, 8, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(buttonDownloadLanguages, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(4, 8, 1, 1, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         scrollPaneTextInput = new JScrollPane();
-        panel.add(scrollPaneTextInput, new GridConstraints(1, 0, 3, 11, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        panel.add(scrollPaneTextInput, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(1, 0, 3, 11, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_BOTH, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         textAreaInput = new JTextArea();
         textAreaInput.setColumns(0);
         textAreaInput.setLineWrap(true);
@@ -732,7 +729,7 @@ public class MinecraftFontRenderer extends JFrame {
         scrollPaneTextInput.setViewportView(textAreaInput);
         glowingTextBox = new JCheckBox();
         glowingTextBox.setText("Glowing");
-        panel.add(glowingTextBox, new GridConstraints(4, 9, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(glowingTextBox, new com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints(4, 9, 1, 1, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.FILL_NONE, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK | com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW, com.loohp.interactivechat.libs.com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         label1.setLabelFor(scrollPaneTextInput);
     }
 

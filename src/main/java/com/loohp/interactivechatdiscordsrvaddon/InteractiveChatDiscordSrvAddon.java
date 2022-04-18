@@ -231,6 +231,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public boolean includeServerResourcePack = true;
     public String alternateResourcePackURL = "";
     public String alternateResourcePackHash = "";
+    public boolean optifineCustomTextures = true;
     public ResourceManager resourceManager;
     public ModelRenderer modelRenderer;
     public ExecutorService mediaReadingService;
@@ -305,7 +306,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         }
 
         reloadTextures(false, false);
-        modelRenderer = new ModelRenderer(str -> new ThreadFactoryBuilder().setNameFormat(str).build(), () -> InteractiveChatDiscordSrvAddon.plugin.cacheTimeout, image -> ImageGeneration.getEnchantedImage(image), image -> ImageGeneration.getRawEnchantedImage(image), () -> 8, () -> Runtime.getRuntime().availableProcessors());
+        modelRenderer = new ModelRenderer(str -> new ThreadFactoryBuilder().setNameFormat(str).build(), () -> InteractiveChatDiscordSrvAddon.plugin.cacheTimeout, () -> 8, () -> Runtime.getRuntime().availableProcessors());
 
         ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat("InteractiveChatDiscordSRVAddon Async Media Reading Thread #%d").build();
         mediaReadingService = Executors.newFixedThreadPool(4, factory);
@@ -396,6 +397,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         includeServerResourcePack = config.getConfiguration().getBoolean("Resources.IncludeServerResourcePack");
         alternateResourcePackURL = config.getConfiguration().getString("Resources.AlternateServerResourcePack.URL");
         alternateResourcePackHash = config.getConfiguration().getString("Resources.AlternateServerResourcePack.Hash");
+        optifineCustomTextures = config.getConfiguration().getBoolean("Resources.OptifineCustomTextures");
 
         itemImage = config.getConfiguration().getBoolean("InventoryImage.Item.Enabled");
         invImage = config.getConfiguration().getBoolean("InventoryImage.Inventory.Enabled");
@@ -603,7 +605,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                 sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Reloading ResourceManager: " + ChatColor.YELLOW + String.join(", ", resourceList), senders);
 
                 @SuppressWarnings("resource")
-                ResourceManager resourceManager = new ResourceManager();
+                ResourceManager resourceManager = new ResourceManager(InteractiveChatDiscordSrvAddon.plugin.optifineCustomTextures);
                 resourceManager.getLanguageManager().setTranslateFunction((translateKey, language) -> LanguageUtils.getTranslation(translateKey, language));
                 resourceManager.getLanguageManager().setAvailableLanguagesSupplier(() -> LanguageUtils.getLoadedLanguages());
                 resourceManager.getLanguageManager().registerReloadListener(e -> {

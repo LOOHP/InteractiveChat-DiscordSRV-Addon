@@ -32,6 +32,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.optifine.OptifineManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureManager;
 
 import javax.imageio.ImageIO;
@@ -58,17 +59,21 @@ public class ResourceManager implements AutoCloseable {
     private TextureManager textureManager;
     private FontManager fontManager;
     private LanguageManager languageManager;
+    private OptifineManager optifineManager;
 
     private AtomicBoolean isValid;
     private UUID uuid;
 
-    public ResourceManager() {
+    public ResourceManager(boolean optifine) {
         this.resourcePackInfo = new LinkedList<>();
 
         this.modelManager = new ModelManager(this);
         this.textureManager = new TextureManager(this);
         this.fontManager = new FontManager(this);
         this.languageManager = new LanguageManager(this);
+        if (optifine) {
+            this.optifineManager = new OptifineManager(this);
+        }
 
         this.isValid = new AtomicBoolean(true);
         this.uuid = UUID.randomUUID();
@@ -217,10 +222,28 @@ public class ResourceManager implements AutoCloseable {
                 }
             }
         }
+        if (optifineManager != null) {
+            for (ResourcePackFile folder : folders) {
+                if (folder.isDirectory()) {
+                    String namespace = folder.getName();
+                    ResourcePackFile optifine = folder.getChild("optifine");
+                    if (optifine.exists() && optifine.isDirectory()) {
+                        ((AbstractManager) optifineManager).loadDirectory(namespace, optifine);
+                    }
+                    ResourcePackFile mcpatcher = folder.getChild("mcpatcher");
+                    if (mcpatcher.exists() && mcpatcher.isDirectory()) {
+                        ((AbstractManager) optifineManager).loadDirectory(namespace, mcpatcher);
+                    }
+                }
+            }
+        }
         ((AbstractManager) modelManager).reload();
         ((AbstractManager) textureManager).reload();
         ((AbstractManager) fontManager).reload();
         ((AbstractManager) languageManager).reload();
+        if (optifineManager != null) {
+            ((AbstractManager) optifineManager).reload();
+        }
     }
 
     public List<ResourcePackInfo> getResourcePackInfo() {
@@ -242,6 +265,15 @@ public class ResourceManager implements AutoCloseable {
     public LanguageManager getLanguageManager() {
         return languageManager;
     }
+
+    public OptifineManager getOptifineManager() {
+        return optifineManager;
+    }
+
+    public boolean hasOptifineManager() {
+        return optifineManager != null;
+    }
+
 
     public boolean isValid() {
         return isValid.get();

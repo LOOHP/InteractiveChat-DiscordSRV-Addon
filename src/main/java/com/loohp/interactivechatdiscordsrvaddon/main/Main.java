@@ -73,7 +73,8 @@ public class Main {
                     Class<?> classToLoad = Class.forName("com.loohp.interactivechat.main.Main", true, child);
                     Method method = classToLoad.getMethod("mainInteractiveChatDiscordSrvAddon", String[].class);
                     method.invoke(null, new Object[] {args});
-                } catch (MalformedURLException | ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException | URISyntaxException e) {
+                } catch (MalformedURLException | ClassNotFoundException | NoSuchMethodException |
+                         IllegalAccessException | InvocationTargetException | URISyntaxException e) {
                     e.printStackTrace();
                 }
                 break;

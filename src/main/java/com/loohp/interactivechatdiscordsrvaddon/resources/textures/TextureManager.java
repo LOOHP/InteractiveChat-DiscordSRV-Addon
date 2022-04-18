@@ -21,7 +21,6 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources.textures;
 
 import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream;
-import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
@@ -29,7 +28,6 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.AbstractManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
-import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimation.TextureAnimationFrames;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils;
 
 import java.awt.Color;
@@ -37,14 +35,12 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-public class TextureManager extends AbstractManager {
+public class TextureManager extends AbstractManager implements ITextureManager {
 
     public static final String SKIN_REQUIRED = "interactivechatdiscordsrvaddon/skin";
     private static final Color MISSING_TEXTURE_0 = new Color(0, 0, 0);
@@ -70,7 +66,6 @@ public class TextureManager extends AbstractManager {
         this.textures = new HashMap<>();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected void loadDirectory(String namespace, ResourcePackFile root, Object... meta) {
         if (!root.exists() || !root.isDirectory()) {
@@ -93,34 +88,8 @@ public class TextureManager extends AbstractManager {
                     InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
                     JSONObject rootJson = (JSONObject) parser.parse(reader);
                     reader.close();
-                    TextureAnimation animation = null;
-                    if (rootJson.containsKey("animation")) {
-                        JSONObject animationJson = (JSONObject) rootJson.get("animation");
-                        boolean interpolate = (boolean) animationJson.getOrDefault("interpolate", false);
-                        int width = ((Number) animationJson.getOrDefault("width", -1)).intValue();
-                        int height = ((Number) animationJson.getOrDefault("height", -1)).intValue();
-                        int frametime = ((Number) animationJson.getOrDefault("frametime", -1)).intValue();
-                        JSONArray framesArray = ((JSONArray) animationJson.getOrDefault("frames", new JSONArray()));
-                        List<TextureAnimationFrames> frames = new ArrayList<>();
-                        for (Object obj : framesArray) {
-                            if (obj instanceof Number) {
-                                frames.add(new TextureAnimationFrames(((Number) obj).intValue(), frametime));
-                            } else if (obj instanceof JSONObject) {
-                                JSONObject frameJson = (JSONObject) obj;
-                                frames.add(new TextureAnimationFrames(((Number) frameJson.get("index")).intValue(), ((Number) frameJson.get("time")).intValue()));
-                            }
-                        }
-                        animation = new TextureAnimation(interpolate, width, height, frametime, frames);
-                    }
-                    TextureProperties properties = null;
-                    if (rootJson.containsKey("texture")) {
-                        JSONObject propertiesJson = (JSONObject) rootJson.get("texture");
-                        boolean blur = (boolean) propertiesJson.getOrDefault("blur", false);
-                        boolean clamp = (boolean) propertiesJson.getOrDefault("clamp", false);
-                        int[] mipmaps = ((JSONArray) propertiesJson.getOrDefault("mipmaps", new JSONArray())).stream().mapToInt(each -> ((Number) each).intValue()).toArray();
-                        properties = new TextureProperties(blur, clamp, mipmaps);
-                    }
-                    textures.put(key + "." + extension, new TextureMeta(this, key + "." + extension, file, animation, properties));
+                    TextureMeta textureMeta = TextureMeta.fromJson(this, key + "." + extension, file, rootJson);
+                    textures.put(key + "." + extension, textureMeta);
                 } else {
                     textures.put(key + "." + extension, new TextureResource(this, key, file));
                 }
@@ -154,10 +123,7 @@ public class TextureManager extends AbstractManager {
         TintUtils.setGrassAndFoliageColorMap(grassColorArray, foliageColorArray);
     }
 
-    public TextureResource getTexture(String resourceLocation) {
-        return getTexture(resourceLocation, true);
-    }
-
+    @Override
     public TextureResource getTexture(String resourceLocation, boolean returnMissingTexture) {
         if (!resourceLocation.contains(":")) {
             resourceLocation = ResourceRegistry.DEFAULT_NAMESPACE + ":" + resourceLocation;

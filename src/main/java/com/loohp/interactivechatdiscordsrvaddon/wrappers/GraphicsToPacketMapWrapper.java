@@ -263,7 +263,8 @@ public class GraphicsToPacketMapWrapper {
                             packet2.getByteArrays().write(0, colors[current]);
                         }
                         protocollib.sendServerPacket(player, packet2);
-                    } catch (InvocationTargetException | FieldAccessException | InstantiationException | IllegalAccessException | IllegalArgumentException e) {
+                    } catch (InvocationTargetException | FieldAccessException | InstantiationException |
+                             IllegalAccessException | IllegalArgumentException e) {
                         e.printStackTrace();
                     }
                 } else {

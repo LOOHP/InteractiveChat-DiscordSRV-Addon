@@ -64,6 +64,11 @@ public class ResourcePackSystemFile implements ResourcePackFile {
     }
 
     @Override
+    public ResourcePackFile getPackRootFile() {
+        return root;
+    }
+
+    @Override
     public String getName() {
         return file.getName();
     }

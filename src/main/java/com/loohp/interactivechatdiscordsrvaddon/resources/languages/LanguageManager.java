@@ -42,7 +42,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class LanguageManager extends AbstractManager {
+public class LanguageManager extends AbstractManager implements ILanguageManager {
 
     private Map<String, LanguageMeta> languageMeta;
     private Map<String, Map<String, String>> translations;
@@ -153,10 +153,12 @@ public class LanguageManager extends AbstractManager {
         reload();
     }
 
+    @Override
     public String applyTranslations(String str, String language) {
         return translateFunction.apply(str, language);
     }
 
+    @Override
     public List<String> getAvailableLanguages() {
         return availableLanguagesSupplier.get().stream().sorted().collect(Collectors.toList());
     }
@@ -175,6 +177,7 @@ public class LanguageManager extends AbstractManager {
         return Collections.unmodifiableMap(languageMeta);
     }
 
+    @Override
     public LanguageMeta getLanguageMeta(String language) {
         return languageMeta.get(language);
     }

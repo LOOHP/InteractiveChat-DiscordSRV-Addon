@@ -293,6 +293,8 @@ Resources:
   #Visit this page for more info:
   #https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon/wiki/Resource-Pack
   Order: []
+  #Enable (Partial) Optifine Custom Textures CIT support
+  OptifineCustomTextures: true
 
 Messages:
   ReloadConfig: "&aICDiscordSRVAddon config has been reloaded!"

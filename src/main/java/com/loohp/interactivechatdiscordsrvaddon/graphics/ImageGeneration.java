@@ -72,6 +72,7 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.ContainerTitlePrintingFunc
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils.ItemStackProcessResult;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ModelUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.OptifineUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintIndexData;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper;
@@ -79,6 +80,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BundleMeta;
@@ -101,6 +103,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
 import java.util.stream.Stream;
@@ -133,15 +136,14 @@ public class ImageGeneration {
         return TextureManager.getMissingImage(width, length);
     }
 
-    public static BufferedImage getRawEnchantedImage(BufferedImage source) {
-        TextureResource resource = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.MISC_TEXTURE_LOCATION + "enchanted_item_glint");
-        BufferedImage tintOriginal = resource.getTexture();
+    public static BufferedImage getRawEnchantedImage(TextureResource tintResource, BufferedImage source) {
+        BufferedImage tintOriginal = tintResource.getTexture();
         if (version.get().isOlderOrEqualTo(MCVersion.V1_14)) {
             BufferedImage tinted = ImageUtils.changeColorTo(ImageUtils.copyImage(tintOriginal), ENCHANTMENT_GLINT_LEGACY_COLOR);
             tintOriginal = ImageUtils.multiply(tintOriginal, tinted);
         }
-        if (resource.hasTextureMeta()) {
-            TextureMeta meta = resource.getTextureMeta();
+        if (tintResource.hasTextureMeta()) {
+            TextureMeta meta = tintResource.getTextureMeta();
             if (meta.hasProperties()) {
                 TextureProperties properties = meta.getProperties();
                 if (properties.isBlur()) {
@@ -166,8 +168,12 @@ public class ImageGeneration {
         return tintImage;
     }
 
-    public static BufferedImage getEnchantedImage(BufferedImage source) {
-        return ImageUtils.additionNonTransparent(source, getRawEnchantedImage(source), ResourceRegistry.ENCHANTMENT_GLINT_FACTOR);
+    public static BufferedImage getEnchantedImage(TextureResource tintResource, BufferedImage source) {
+        return ImageUtils.additionNonTransparent(source, getRawEnchantedImage(tintResource, source), ResourceRegistry.ENCHANTMENT_GLINT_FACTOR);
+    }
+
+    public static TextureResource getDefaultEnchantmentTint() {
+        return resourceManager.get().getTextureManager().getTexture(ResourceRegistry.MISC_TEXTURE_LOCATION + "enchanted_item_glint");
     }
 
     public static BufferedImage getAdvancementIcon(ItemStack item, AdvancementType advancementType, boolean completed, OfflineICPlayer player) throws IOException {
@@ -478,10 +484,10 @@ public class ImageGeneration {
             BufferedImage leggingsImage = null;
             switch (type) {
                 case LEATHER_LEGGINGS:
-                    leggingsImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_2").getTexture();
+                    leggingsImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "leather_layer_2", EquipmentSlot.LEGS, leggings).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_2").getTexture());
                     LeatherArmorMeta meta = (LeatherArmorMeta) leggings.getItemMeta();
                     Color color = new Color(meta.getColor().asRGB());
-                    BufferedImage armorOverlay = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_2_overlay").getTexture();
+                    BufferedImage armorOverlay = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "leather_layer_2_overlay", EquipmentSlot.LEGS, leggings).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_2_overlay").getTexture());
                     BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(leggingsImage), color);
                     leggingsImage = ImageUtils.multiply(leggingsImage, colorOverlay);
 
@@ -491,26 +497,26 @@ public class ImageGeneration {
                     g2.dispose();
                     break;
                 case CHAINMAIL_LEGGINGS:
-                    leggingsImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "chainmail_layer_2").getTexture();
+                    leggingsImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "chainmail_layer_2", EquipmentSlot.LEGS, leggings).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "chainmail_layer_2").getTexture());
                     break;
                 case GOLDEN_LEGGINGS:
-                    leggingsImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "gold_layer_2").getTexture();
+                    leggingsImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "gold_layer_2", EquipmentSlot.LEGS, leggings).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "gold_layer_2").getTexture());
                     break;
                 case IRON_LEGGINGS:
-                    leggingsImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "iron_layer_2").getTexture();
+                    leggingsImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "iron_layer_2", EquipmentSlot.LEGS, leggings).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "iron_layer_2").getTexture());
                     break;
                 case DIAMOND_LEGGINGS:
-                    leggingsImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "diamond_layer_2").getTexture();
+                    leggingsImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "diamond_layer_2", EquipmentSlot.LEGS, leggings).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "diamond_layer_2").getTexture());
                     break;
                 case NETHERITE_LEGGINGS:
-                    leggingsImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "netherite_layer_2").getTexture();
+                    leggingsImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "netherite_layer_2", EquipmentSlot.LEGS, leggings).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "netherite_layer_2").getTexture());
                     break;
                 default:
                     break;
             }
             if (leggingsImage != null) {
                 if (leggings.getEnchantments().size() > 0) {
-                    leggingsImage = getEnchantedImage(leggingsImage);
+                    leggingsImage = getEnchantedImage(OptifineUtils.getEnchantmentGlintOverrideTextures(resourceManager.get(), EquipmentSlot.LEGS, leggings).orElse(getDefaultEnchantmentTint()), leggingsImage);
                 }
                 providedTextures.put(ResourceRegistry.LEGGINGS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(leggingsImage));
             }
@@ -521,10 +527,10 @@ public class ImageGeneration {
             BufferedImage bootsImage = null;
             switch (type) {
                 case LEATHER_BOOTS:
-                    bootsImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_1").getTexture();
+                    bootsImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "leather_layer_1", EquipmentSlot.FEET, boots).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_1").getTexture());
                     LeatherArmorMeta meta = (LeatherArmorMeta) boots.getItemMeta();
                     Color color = new Color(meta.getColor().asRGB());
-                    BufferedImage armorOverlay = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_1_overlay").getTexture();
+                    BufferedImage armorOverlay = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "leather_layer_1_overlay", EquipmentSlot.FEET, boots).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_1_overlay").getTexture());
                     BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(bootsImage), color);
 
                     bootsImage = ImageUtils.multiply(bootsImage, colorOverlay);
@@ -535,26 +541,26 @@ public class ImageGeneration {
                     g2.dispose();
                     break;
                 case CHAINMAIL_BOOTS:
-                    bootsImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "chainmail_layer_1").getTexture();
+                    bootsImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "chainmail_layer_1", EquipmentSlot.FEET, boots).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "chainmail_layer_1").getTexture());
                     break;
                 case GOLDEN_BOOTS:
-                    bootsImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "gold_layer_1").getTexture();
+                    bootsImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "gold_layer_1", EquipmentSlot.FEET, boots).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "gold_layer_1").getTexture());
                     break;
                 case IRON_BOOTS:
-                    bootsImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "iron_layer_1").getTexture();
+                    bootsImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "iron_layer_1", EquipmentSlot.FEET, boots).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "iron_layer_1").getTexture());
                     break;
                 case DIAMOND_BOOTS:
-                    bootsImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "diamond_layer_1").getTexture();
+                    bootsImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "diamond_layer_1", EquipmentSlot.FEET, boots).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "diamond_layer_1").getTexture());
                     break;
                 case NETHERITE_BOOTS:
-                    bootsImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "netherite_layer_1").getTexture();
+                    bootsImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "netherite_layer_1", EquipmentSlot.FEET, boots).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "netherite_layer_1").getTexture());
                     break;
                 default:
                     break;
             }
             if (bootsImage != null) {
                 if (boots.getEnchantments().size() > 0) {
-                    bootsImage = getEnchantedImage(bootsImage);
+                    bootsImage = getEnchantedImage(OptifineUtils.getEnchantmentGlintOverrideTextures(resourceManager.get(), EquipmentSlot.FEET, boots).orElse(getDefaultEnchantmentTint()), bootsImage);
                 }
 
                 providedTextures.put(ResourceRegistry.BOOTS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(bootsImage));
@@ -567,10 +573,10 @@ public class ImageGeneration {
             boolean isArmor = true;
             switch (type) {
                 case LEATHER_CHESTPLATE:
-                    chestplateImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_1").getTexture();
+                    chestplateImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "leather_layer_1", EquipmentSlot.CHEST, chestplate).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_1").getTexture());
                     LeatherArmorMeta meta = (LeatherArmorMeta) chestplate.getItemMeta();
                     Color color = new Color(meta.getColor().asRGB());
-                    BufferedImage armorOverlay = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_1_overlay").getTexture();
+                    BufferedImage armorOverlay = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "leather_layer_1_overlay", EquipmentSlot.CHEST, chestplate).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_1_overlay").getTexture());
                     BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(chestplateImage), color);
                     chestplateImage = ImageUtils.multiply(chestplateImage, colorOverlay);
 
@@ -580,24 +586,25 @@ public class ImageGeneration {
                     g2.dispose();
                     break;
                 case CHAINMAIL_CHESTPLATE:
-                    chestplateImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "chainmail_layer_1").getTexture();
+                    chestplateImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "chainmail_layer_1", EquipmentSlot.CHEST, chestplate).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "chainmail_layer_1").getTexture());
                     break;
                 case GOLDEN_CHESTPLATE:
-                    chestplateImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "gold_layer_1").getTexture();
+                    chestplateImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "gold_layer_1", EquipmentSlot.CHEST, chestplate).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "gold_layer_1").getTexture());
                     break;
                 case IRON_CHESTPLATE:
-                    chestplateImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "iron_layer_1").getTexture();
+                    chestplateImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "iron_layer_1", EquipmentSlot.CHEST, chestplate).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "iron_layer_1").getTexture());
                     break;
                 case DIAMOND_CHESTPLATE:
-                    chestplateImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "diamond_layer_1").getTexture();
+                    chestplateImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "diamond_layer_1", EquipmentSlot.CHEST, chestplate).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "diamond_layer_1").getTexture());
                     break;
                 case NETHERITE_CHESTPLATE:
-                    chestplateImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "netherite_layer_1").getTexture();
+                    chestplateImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "netherite_layer_1", EquipmentSlot.CHEST, chestplate).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "netherite_layer_1").getTexture());
                     break;
                 case ELYTRA:
                     isArmor = false;
                     chestplateImage = new BufferedImage(150, 150, BufferedImage.TYPE_INT_ARGB);
-                    BufferedImage wing = cape == null ? resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "elytra").getTexture() : cape;
+                    BufferedImage wing = null;
+                    wing = OptifineUtils.getElytraOverrideTextures(resourceManager.get(), EquipmentSlot.CHEST, chestplate).map(t -> t.getTexture()).orElse(cape == null ? resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "elytra").getTexture() : cape);
                     if (wing.getWidth() % 64 != 0 || wing.getHeight() % 32 != 0) {
                         int w = 0;
                         int h = 0;
@@ -623,7 +630,7 @@ public class ImageGeneration {
                     g3.dispose();
 
                     if (chestplate.getEnchantments().size() > 0) {
-                        chestplateImage = getEnchantedImage(chestplateImage);
+                        chestplateImage = getEnchantedImage(OptifineUtils.getEnchantmentGlintOverrideTextures(resourceManager.get(), EquipmentSlot.CHEST, chestplate).orElse(getDefaultEnchantmentTint()), chestplateImage);
                     }
                     elytraImage = chestplateImage;
                 default:
@@ -631,7 +638,7 @@ public class ImageGeneration {
             }
             if (isArmor && chestplateImage != null) {
                 if (chestplate.getEnchantments().size() > 0) {
-                    chestplateImage = getEnchantedImage(chestplateImage);
+                    chestplateImage = getEnchantedImage(OptifineUtils.getEnchantmentGlintOverrideTextures(resourceManager.get(), EquipmentSlot.CHEST, chestplate).orElse(getDefaultEnchantmentTint()), chestplateImage);
                 }
 
                 providedTextures.put(ResourceRegistry.CHESTPLATE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(chestplateImage));
@@ -644,10 +651,10 @@ public class ImageGeneration {
             boolean isArmor = true;
             switch (type) {
                 case LEATHER_HELMET:
-                    helmetImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_1").getTexture();
+                    helmetImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "leather_layer_1", EquipmentSlot.HEAD, helmet).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_1").getTexture());
                     LeatherArmorMeta meta = (LeatherArmorMeta) helmet.getItemMeta();
                     Color color = new Color(meta.getColor().asRGB());
-                    BufferedImage armorOverlay = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_1_overlay").getTexture();
+                    BufferedImage armorOverlay = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "leather_layer_1_overlay", EquipmentSlot.HEAD, helmet).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "leather_layer_1_overlay").getTexture());
                     BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(helmetImage), color);
 
                     helmetImage = ImageUtils.multiply(helmetImage, colorOverlay);
@@ -658,22 +665,22 @@ public class ImageGeneration {
                     g2.dispose();
                     break;
                 case CHAINMAIL_HELMET:
-                    helmetImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "chainmail_layer_1").getTexture();
+                    helmetImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "chainmail_layer_1", EquipmentSlot.HEAD, helmet).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "chainmail_layer_1").getTexture());
                     break;
                 case GOLDEN_HELMET:
-                    helmetImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "gold_layer_1").getTexture();
+                    helmetImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "gold_layer_1", EquipmentSlot.HEAD, helmet).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "gold_layer_1").getTexture());
                     break;
                 case IRON_HELMET:
-                    helmetImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "iron_layer_1").getTexture();
+                    helmetImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "iron_layer_1", EquipmentSlot.HEAD, helmet).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "iron_layer_1").getTexture());
                     break;
                 case DIAMOND_HELMET:
-                    helmetImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "diamond_layer_1").getTexture();
+                    helmetImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "diamond_layer_1", EquipmentSlot.HEAD, helmet).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "diamond_layer_1").getTexture());
                     break;
                 case NETHERITE_HELMET:
-                    helmetImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "netherite_layer_1").getTexture();
+                    helmetImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "netherite_layer_1", EquipmentSlot.HEAD, helmet).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "netherite_layer_1").getTexture());
                     break;
                 case TURTLE_HELMET:
-                    helmetImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "turtle_layer_1").getTexture();
+                    helmetImage = OptifineUtils.getArmorOverrideTextures(resourceManager.get(), "turtle_layer_1", EquipmentSlot.HEAD, helmet).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ARMOR_TEXTURE_LOCATION + "turtle_layer_1").getTexture());
                     break;
                 default:
                     isArmor = false;
@@ -684,12 +691,15 @@ public class ImageGeneration {
                     String modelKey = itemProcessResult.getDirectLocation() == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : itemProcessResult.getDirectLocation();
                     Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
                     TintIndexData tintIndexData = itemProcessResult.getTintIndexData();
-                    modelItems.put(PlayerModelItemPosition.HELMET, new PlayerModelItem(PlayerModelItemPosition.HELMET, modelKey, predicate, enchanted, itemProvidedTextures, tintIndexData));
+                    TextureResource enchantmentGlintResource = OptifineUtils.getEnchantmentGlintOverrideTextures(resourceManager.get(), EquipmentSlot.HEAD, helmet).orElse(getDefaultEnchantmentTint());
+                    Function<BufferedImage, BufferedImage> enchantmentGlintFunction = img -> getEnchantedImage(enchantmentGlintResource, img);
+                    Function<BufferedImage, BufferedImage> rawEnchantmentGlintFunction = img -> getRawEnchantedImage(enchantmentGlintResource, img);
+                    modelItems.put(PlayerModelItemPosition.HELMET, new PlayerModelItem(PlayerModelItemPosition.HELMET, modelKey, OptifineUtils.getItemPostResolveFunction(resourceManager.get(), EquipmentSlot.HEAD, helmet, version.get().isOld(), predicate).orElse(null), predicate, enchanted, itemProvidedTextures, tintIndexData, enchantmentGlintFunction, rawEnchantmentGlintFunction));
                     break;
             }
             if (isArmor) {
                 if (helmet.getEnchantments().size() > 0) {
-                    helmetImage = getEnchantedImage(helmetImage);
+                    helmetImage = getEnchantedImage(OptifineUtils.getEnchantmentGlintOverrideTextures(resourceManager.get(), EquipmentSlot.HEAD, helmet).orElse(getDefaultEnchantmentTint()), helmetImage);
                 }
                 providedTextures.put(ResourceRegistry.HELMET_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(helmetImage));
             }
@@ -705,7 +715,11 @@ public class ImageGeneration {
                 String modelKey = itemProcessResult.getDirectLocation() == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : itemProcessResult.getDirectLocation();
                 Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
                 TintIndexData tintIndexData = itemProcessResult.getTintIndexData();
-                modelItems.put(PlayerModelItemPosition.RIGHT_HAND, new PlayerModelItem(PlayerModelItemPosition.RIGHT_HAND, modelKey, predicate, enchanted, itemProvidedTextures, tintIndexData));
+                EquipmentSlot slot = player.isRightHanded() ? EquipmentSlot.HAND : EquipmentSlot.valueOf("OFF_HAND");
+                TextureResource enchantmentGlintResource = OptifineUtils.getEnchantmentGlintOverrideTextures(resourceManager.get(), slot, rightHand).orElse(getDefaultEnchantmentTint());
+                Function<BufferedImage, BufferedImage> enchantmentGlintFunction = img -> getEnchantedImage(enchantmentGlintResource, img);
+                Function<BufferedImage, BufferedImage> rawEnchantmentGlintFunction = img -> getRawEnchantedImage(enchantmentGlintResource, img);
+                modelItems.put(PlayerModelItemPosition.RIGHT_HAND, new PlayerModelItem(PlayerModelItemPosition.RIGHT_HAND, modelKey, OptifineUtils.getItemPostResolveFunction(resourceManager.get(), slot, rightHand, version.get().isOld(), predicate).orElse(null), predicate, enchanted, itemProvidedTextures, tintIndexData, enchantmentGlintFunction, rawEnchantmentGlintFunction));
             }
             ItemStack leftHand = player.isRightHanded() ? player.getOffHandItem() : player.getMainHandItem();
             if (leftHand != null) {
@@ -716,7 +730,11 @@ public class ImageGeneration {
                 String modelKey = itemProcessResult.getDirectLocation() == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : itemProcessResult.getDirectLocation();
                 Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
                 TintIndexData tintIndexData = itemProcessResult.getTintIndexData();
-                modelItems.put(PlayerModelItemPosition.LEFT_HAND, new PlayerModelItem(PlayerModelItemPosition.LEFT_HAND, modelKey, predicate, enchanted, itemProvidedTextures, tintIndexData));
+                EquipmentSlot slot = player.isRightHanded() ? EquipmentSlot.valueOf("OFF_HAND") : EquipmentSlot.HAND;
+                TextureResource enchantmentGlintResource = OptifineUtils.getEnchantmentGlintOverrideTextures(resourceManager.get(), slot, leftHand).orElse(getDefaultEnchantmentTint());
+                Function<BufferedImage, BufferedImage> enchantmentGlintFunction = img -> getEnchantedImage(enchantmentGlintResource, img);
+                Function<BufferedImage, BufferedImage> rawEnchantmentGlintFunction = img -> getRawEnchantedImage(enchantmentGlintResource, img);
+                modelItems.put(PlayerModelItemPosition.LEFT_HAND, new PlayerModelItem(PlayerModelItemPosition.LEFT_HAND, modelKey, OptifineUtils.getItemPostResolveFunction(resourceManager.get(), slot, leftHand, version.get().isOld(), predicate).orElse(null), predicate, enchanted, itemProvidedTextures, tintIndexData, enchantmentGlintFunction, rawEnchantmentGlintFunction));
             }
         }
 
@@ -756,8 +774,12 @@ public class ImageGeneration {
         TintIndexData tintIndexData = processResult.getTintIndexData();
         String directLocation = processResult.getDirectLocation();
 
+        TextureResource enchantmentGlintResource = OptifineUtils.getEnchantmentGlintOverrideTextures(resourceManager.get(), null, item).orElse(getDefaultEnchantmentTint());
+        Function<BufferedImage, BufferedImage> enchantmentGlintFunction = image -> getEnchantedImage(enchantmentGlintResource, image);
+        Function<BufferedImage, BufferedImage> rawEnchantmentGlintFunction = image -> getRawEnchantedImage(enchantmentGlintResource, image);
+
         BufferedImage itemImage;
-        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, resourceManager.get(), version.get().isOld(), directLocation == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : directLocation, ModelDisplayPosition.GUI, predicates, providedTextures, tintIndexData, requiresEnchantmentGlint);
+        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, resourceManager.get(), OptifineUtils.getItemPostResolveFunction(resourceManager.get(), null, item, version.get().isOld(), predicates).orElse(null), version.get().isOld(), directLocation == null ? ResourceRegistry.ITEM_MODEL_LOCATION + key : directLocation, ModelDisplayPosition.GUI, predicates, providedTextures, tintIndexData, requiresEnchantmentGlint, enchantmentGlintFunction, rawEnchantmentGlintFunction);
         if (renderResult.isSuccessful()) {
             itemImage = renderResult.getImage();
         } else {

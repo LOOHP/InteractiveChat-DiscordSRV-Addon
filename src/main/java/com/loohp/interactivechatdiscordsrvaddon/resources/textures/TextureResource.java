@@ -36,7 +36,7 @@ public class TextureResource {
     public static final String PNG_MCMETA_SUFFIX = ".png.mcmeta";
     public static final String MCMETA_SUFFIX = ".mcmeta";
 
-    private TextureManager manager;
+    private ITextureManager manager;
     private String resourceKey;
     private ResourcePackFile file;
     private boolean isTexture;
@@ -44,7 +44,7 @@ public class TextureResource {
 
     private Unsafe unsafe;
 
-    public TextureResource(TextureManager manager, String resourceKey, ResourcePackFile file, boolean isTexture) {
+    public TextureResource(ITextureManager manager, String resourceKey, ResourcePackFile file, boolean isTexture) {
         this.manager = manager;
         this.resourceKey = resourceKey;
         this.file = file;
@@ -53,7 +53,7 @@ public class TextureResource {
         this.unsafe = null;
     }
 
-    protected TextureResource(TextureManager manager, String resourceKey, ResourcePackFile file, BufferedImage image) {
+    protected TextureResource(ITextureManager manager, String resourceKey, ResourcePackFile file, BufferedImage image) {
         this.manager = manager;
         this.resourceKey = resourceKey;
         this.file = file;
