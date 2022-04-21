@@ -94,6 +94,8 @@ public class TextureResource {
         BufferedImage image = loadImage();
         if (image.getWidth() != w || image.getHeight() != h) {
             image = ImageUtils.resizeImageAbs(image, w, h);
+        } else {
+            image = ImageUtils.copyImage(image);
         }
         return image;
     }

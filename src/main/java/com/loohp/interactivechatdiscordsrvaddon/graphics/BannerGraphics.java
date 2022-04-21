@@ -53,7 +53,7 @@ public class BannerGraphics {
         g.fillRect(0, 0, 42, 41);
         g.dispose();
 
-        baseImage = ImageUtils.add(ImageUtils.multiply(baseImage, baseTint), 40);
+        baseImage = ImageUtils.add(ImageUtils.multiply(baseImage, baseTint, true), 40);
 
         if (!item.hasItemMeta()) {
             return new BannerAssetResult(baseImage, patternsImage);
@@ -125,7 +125,7 @@ public class BannerGraphics {
         g.fillRect(2, 2, 10, 20);
         g.dispose();
 
-        baseImage = ImageUtils.add(ImageUtils.multiply(baseImage, baseTint), 40);
+        baseImage = ImageUtils.add(ImageUtils.multiply(baseImage, baseTint, true), 40);
 
         Graphics2D g2 = patternsImage.createGraphics();
 

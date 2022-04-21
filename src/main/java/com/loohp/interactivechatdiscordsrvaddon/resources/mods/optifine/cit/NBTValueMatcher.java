@@ -18,7 +18,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.loohp.interactivechatdiscordsrvaddon.resources.optifine.cit;
+package com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit;
 
 import java.util.regex.Pattern;
 

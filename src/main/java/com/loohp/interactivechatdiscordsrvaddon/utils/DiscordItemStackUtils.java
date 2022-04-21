@@ -210,7 +210,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:Banner")) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
+        if ((xMaterial.isOneOf(Collections.singletonList("CONTAINS:banner")) && !xMaterial.isOneOf(Collections.singletonList("CONTAINS:banner_pattern"))) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
             List<Pattern> patterns = Collections.emptyList();
             if (!(item.getItemMeta() instanceof BannerMeta)) {
                 if (item.getItemMeta() instanceof BlockStateMeta) {
@@ -242,6 +242,10 @@ public class DiscordItemStackUtils {
 
         if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:Music_Disc"))) {
             description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getMusicDiscName(item), language)).append("\n");
+        }
+
+        if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:banner_pattern"))) {
+            description.append(LanguageUtils.getTranslation(TranslationKeyUtils.getBannerPatternItemName(xMaterial), language)).append("\n");
         }
 
         if (xMaterial.equals(XMaterial.FIREWORK_ROCKET)) {
@@ -710,6 +714,10 @@ public class DiscordItemStackUtils {
 
         if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:Music_Disc"))) {
             prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getMusicDiscName(item), language))));
+        }
+
+        if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:banner_pattern"))) {
+            prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.GRAY + LanguageUtils.getTranslation(TranslationKeyUtils.getBannerPatternItemName(xMaterial), language))));
         }
 
         if (xMaterial.equals(XMaterial.FIREWORK_ROCKET)) {

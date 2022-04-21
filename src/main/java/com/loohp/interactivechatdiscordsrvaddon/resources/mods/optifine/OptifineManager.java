@@ -18,7 +18,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.loohp.interactivechatdiscordsrvaddon.resources.optifine;
+package com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine;
 
 import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
@@ -35,12 +35,12 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
-import com.loohp.interactivechatdiscordsrvaddon.resources.optifine.cit.ArmorProperties;
-import com.loohp.interactivechatdiscordsrvaddon.resources.optifine.cit.CITGlobalProperties;
-import com.loohp.interactivechatdiscordsrvaddon.resources.optifine.cit.CITProperties;
-import com.loohp.interactivechatdiscordsrvaddon.resources.optifine.cit.ElytraProperties;
-import com.loohp.interactivechatdiscordsrvaddon.resources.optifine.cit.EnchantmentProperties;
-import com.loohp.interactivechatdiscordsrvaddon.resources.optifine.cit.ItemProperties;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.ArmorProperties;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.CITGlobalProperties;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.CITProperties;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.ElytraProperties;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.ItemProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;

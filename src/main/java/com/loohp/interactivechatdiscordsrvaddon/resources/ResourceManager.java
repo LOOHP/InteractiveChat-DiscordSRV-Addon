@@ -32,7 +32,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelManager;
-import com.loohp.interactivechatdiscordsrvaddon.resources.optifine.OptifineManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.OptifineManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureManager;
 
 import javax.imageio.ImageIO;

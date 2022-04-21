@@ -18,7 +18,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.loohp.interactivechatdiscordsrvaddon.resources.optifine.cit;
+package com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit;
 
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.IntegerRange;
@@ -30,13 +30,19 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-public class ArmorProperties extends CITProperties {
+public class ItemProperties extends CITProperties {
 
+    private Map<String, String> models;
     private Map<String, String> textures;
 
-    public ArmorProperties(int weight, Set<XMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, NBTValueMatcher> nbtMatch, Map<String, String> textures) {
+    public ItemProperties(int weight, Set<XMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, NBTValueMatcher> nbtMatch, Map<String, String> models, Map<String, String> textures) {
         super(weight, items, stackSize, damage, damageMask, hand, enchantments, nbtMatch);
+        this.models = models;
         this.textures = textures;
+    }
+
+    public Map<String, String> getModels() {
+        return Collections.unmodifiableMap(models);
     }
 
     public Map<String, String> getTextures() {
@@ -45,10 +51,12 @@ public class ArmorProperties extends CITProperties {
 
     @Override
     public String getOverrideAsset(String path, String extension) {
+        int pos = path.lastIndexOf("/");
+        String match = pos < 0 ? path : path.substring(pos + 1);
         if (extension.equalsIgnoreCase("png")) {
-            int pos = path.lastIndexOf("/");
-            String match = pos < 0 ? path : path.substring(pos + 1);
             return textures.get(match);
+        } else if (extension.equalsIgnoreCase("json")) {
+            return models.get(match);
         } else {
             return null;
         }

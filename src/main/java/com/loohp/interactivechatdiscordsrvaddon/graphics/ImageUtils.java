@@ -310,16 +310,21 @@ public class ImageUtils {
     }
 
     public static BufferedImage multiply(BufferedImage image, BufferedImage imageOnTop) {
+        return multiply(image, imageOnTop, false);
+    }
+
+    public static BufferedImage multiply(BufferedImage image, BufferedImage imageOnTop, boolean ignoreTransparent) {
         for (int y = 0; y < image.getHeight() && y < imageOnTop.getHeight(); y++) {
             for (int x = 0; x < image.getWidth() && x < imageOnTop.getWidth(); x++) {
                 int value = image.getRGB(x, y);
                 int multiplyValue = imageOnTop.getRGB(x, y);
-
-                int red = (int) Math.round((double) getRed(value) / 255 * (double) getRed(multiplyValue));
-                int green = (int) Math.round((double) getGreen(value) / 255 * (double) getGreen(multiplyValue));
-                int blue = (int) Math.round((double) getBlue(value) / 255 * (double) getBlue(multiplyValue));
-                int color = getIntFromColor(red, green, blue, getAlpha(value));
-                image.setRGB(x, y, color);
+                if (!ignoreTransparent || getAlpha(multiplyValue) > 0) {
+                    int red = (int) Math.round((double) getRed(value) / 255 * (double) getRed(multiplyValue));
+                    int green = (int) Math.round((double) getGreen(value) / 255 * (double) getGreen(multiplyValue));
+                    int blue = (int) Math.round((double) getBlue(value) / 255 * (double) getBlue(multiplyValue));
+                    int color = getIntFromColor(red, green, blue, getAlpha(value));
+                    image.setRGB(x, y, color);
+                }
             }
         }
 

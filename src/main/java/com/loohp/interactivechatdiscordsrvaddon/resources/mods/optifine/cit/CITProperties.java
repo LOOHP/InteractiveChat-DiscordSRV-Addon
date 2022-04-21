@@ -18,13 +18,12 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.loohp.interactivechatdiscordsrvaddon.resources.optifine.cit;
+package com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import com.loohp.interactivechat.libs.net.querz.nbt.io.ParseException;
-import com.loohp.interactivechat.libs.net.querz.nbt.io.SNBTParser;
+import com.loohp.interactivechat.libs.net.querz.nbt.io.SNBTUtil;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.ByteTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.CompoundTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.DoubleTag;
@@ -46,6 +45,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -54,8 +54,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public abstract class CITProperties {
 
@@ -322,13 +320,7 @@ public abstract class CITProperties {
         }
         try {
             String nbt = ItemNBTUtils.getNMSItemStackJson(itemStack);
-            StringBuffer sb = new StringBuffer();
-            Matcher matcher = Pattern.compile("(?<!\\\\)'(.*?(?<!\\\\))'").matcher(nbt);
-            while (matcher.find()) {
-                matcher.appendReplacement(sb, ("\"" + matcher.group(1).replace("\\", "\\\\").replace("\"", "\\\"") + "\"").replace("\\", "\\\\"));
-            }
-            matcher.appendTail(sb);
-            CompoundTag tag = (CompoundTag) SNBTParser.parse(sb.toString());
+            CompoundTag tag = (CompoundTag) SNBTUtil.fromSNBT(nbt);
             if (tag.containsKey("tag")) {
                 tag = tag.getCompoundTag("tag");
                 for (Entry<String, NBTValueMatcher> entry : nbtMatch.entrySet()) {
@@ -393,7 +385,7 @@ public abstract class CITProperties {
                     }
                 }
             }
-        } catch (ParseException e) {
+        } catch (IOException e) {
             e.printStackTrace();
             return false;
         }

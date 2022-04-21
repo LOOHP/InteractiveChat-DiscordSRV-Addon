@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-public class OptifineUtils {
+public class CustomItemTextureUtils {
 
     public static Optional<Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>>> getItemPostResolveFunction(ResourceManager resourceManager, EquipmentSlot heldSlot, ItemStack itemStack, boolean is1_8, Map<ModelOverrideType, Float> predicates) {
         if (resourceManager.hasOptifineManager()) {

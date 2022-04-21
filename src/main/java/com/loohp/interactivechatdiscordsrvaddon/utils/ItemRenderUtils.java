@@ -29,6 +29,7 @@ import com.loohp.interactivechat.libs.org.json.simple.parser.ParseException;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 import com.loohp.interactivechat.objectholders.ValuePairs;
+import com.loohp.interactivechat.utils.CompassUtils;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.SkinUtils;
 import com.loohp.interactivechat.utils.XMaterialUtils;
@@ -96,7 +97,7 @@ public class ItemRenderUtils {
             requiresEnchantmentGlint = true;
         }
 
-        TextureResource enchantmentGlintResource = OptifineUtils.getEnchantmentGlintOverrideTextures(manager, null, item).orElse(ImageGeneration.getDefaultEnchantmentTint());
+        TextureResource enchantmentGlintResource = CustomItemTextureUtils.getEnchantmentGlintOverrideTextures(manager, null, item).orElse(ImageGeneration.getDefaultEnchantmentTint());
         Function<BufferedImage, BufferedImage> enchantmentGlintFunction = image -> ImageGeneration.getEnchantedImage(enchantmentGlintResource, image);
         Function<BufferedImage, BufferedImage> rawEnchantmentGlintFunction = image -> ImageGeneration.getRawEnchantedImage(enchantmentGlintResource, image);
 
@@ -125,7 +126,7 @@ public class ItemRenderUtils {
             if (month.equals(Month.DECEMBER) && (day == 24 || day == 25 || day == 26)) {
                 directLocation = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + "christmas_chest";
             }
-        } else if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:banner"))) {
+        } else if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:banner")) && !xMaterial.isOneOf(Collections.singletonList("CONTAINS:banner_pattern"))) {
             BannerAssetResult bannerAsset = BannerGraphics.generateBannerAssets(item);
             providedTextures.put(ResourceRegistry.BANNER_BASE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(bannerAsset.getBase()));
             providedTextures.put(ResourceRegistry.BANNER_PATTERNS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(bannerAsset.getPatterns()));
@@ -197,7 +198,6 @@ public class ItemRenderUtils {
                     if (meta.hasLodestone()) {
                         Location lodestone = meta.getLodestone();
                         target = new Location(lodestone.getWorld(), lodestone.getBlockX() + 0.5, lodestone.getBlockY(), lodestone.getBlockZ() + 0.5, lodestone.getYaw(), lodestone.getPitch());
-                        requiresEnchantmentGlint = true;
                     } else if (WorldUtils.isNatural(bukkitPlayer.getWorld())) {
                         Location spawn = bukkitPlayer.getCompassTarget();
                         target = new Location(spawn.getWorld(), spawn.getBlockX() + 0.5, spawn.getBlockY(), spawn.getBlockZ() + 0.5, spawn.getYaw(), spawn.getPitch());
@@ -237,13 +237,11 @@ public class ItemRenderUtils {
                     }
                 }
             } else {
-                if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
-                    CompassMeta meta = (CompassMeta) item.getItemMeta();
-                    if (meta.hasLodestone()) {
-                        requiresEnchantmentGlint = true;
-                    }
-                }
                 angle = 0;
+            }
+
+            if (CompassUtils.isLodestoneCompass(item)) {
+                requiresEnchantmentGlint = true;
             }
 
             predicates.put(ModelOverrideType.ANGLE, (float) (angle - 0.015625));
@@ -384,7 +382,7 @@ public class ItemRenderUtils {
             predicates.put(ModelOverrideType.FILLED, fullness);
         }
 
-        Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction = OptifineUtils.getItemPostResolveFunction(manager, slot, item, is1_8, predicates).map(function -> {
+        Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction = CustomItemTextureUtils.getItemPostResolveFunction(manager, slot, item, is1_8, predicates).map(function -> {
             return function.andThen(result -> {
                 Map<String, TextureResource> overrideTextures = result.getSecond();
                 for (Entry<String, TextureResource> entry : overrideTextures.entrySet()) {

@@ -20,83 +20,67 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
+import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NMSUtils;
+import com.loohp.interactivechatdiscordsrvaddon.wrappers.DimensionManagerWrapper;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 
 public class WorldUtils {
 
     private static Class<?> craftWorldClass;
     private static Method getHandleMethod;
     private static Class<?> worldServerClass;
-    private static Class<?> dimensionManagerClass;
-    private static Method getDimensionManagerMethod;
-    private static Class<?> minecraftKeyClass;
+    private static Method getWorldTypeKeyMethod;
     private static Method getMinecraftKeyMethod;
-    private static Method isNaturalMethod;
 
     static {
         try {
             craftWorldClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.CraftWorld");
             getHandleMethod = craftWorldClass.getMethod("getHandle");
             worldServerClass = getHandleMethod.getReturnType();
-            dimensionManagerClass = NMSUtils.getNMSClass("net.minecraft.server.%s.DimensionManager", "net.minecraft.world.level.dimension.DimensionManager");
-            getDimensionManagerMethod = Arrays.stream(worldServerClass.getMethods()).filter(each -> each.getReturnType().equals(dimensionManagerClass)).findFirst().get();
-            minecraftKeyClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MinecraftKey", "net.minecraft.resources.MinecraftKey");
-            getMinecraftKeyMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
-                Method method = dimensionManagerClass.getMethod("a");
-                if (!method.getReturnType().equals(minecraftKeyClass)) {
-                    throw new NoSuchMethodException();
-                }
-                return method;
-            }, () -> {
-                Method method = dimensionManagerClass.getMethod("r");
-                if (!method.getReturnType().equals(minecraftKeyClass)) {
-                    throw new NoSuchMethodException();
-                }
-                return method;
-            }, () -> {
-                Method method = dimensionManagerClass.getMethod("p");
-                if (!method.getReturnType().equals(minecraftKeyClass)) {
-                    throw new NoSuchMethodException();
-                }
-                return method;
-            });
-            isNaturalMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
-                return dimensionManagerClass.getMethod("isNatural");
-            }, () -> {
-                return dimensionManagerClass.getMethod("d");
-            });
+            getWorldTypeKeyMethod = worldServerClass.getMethod("getTypeKey");
+            getMinecraftKeyMethod = getWorldTypeKeyMethod.getReturnType().getMethod("a");
         } catch (ReflectiveOperationException e) {
             e.printStackTrace();
         }
     }
 
     public static String getNamespacedKey(World world) {
-        try {
-            Object craftWorldObject = craftWorldClass.cast(world);
-            Object nmsWorldServerObject = getHandleMethod.invoke(craftWorldObject);
-            Object nmsDimensionManagerObject = getDimensionManagerMethod.invoke(nmsWorldServerObject);
-            return getMinecraftKeyMethod.invoke(nmsDimensionManagerObject).toString();
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
+            try {
+                Object craftWorldObject = craftWorldClass.cast(world);
+                Object nmsWorldServerObject = getHandleMethod.invoke(craftWorldObject);
+                Object nmsResourceKeyObject = getWorldTypeKeyMethod.invoke(nmsWorldServerObject);
+                return getMinecraftKeyMethod.invoke(nmsResourceKeyObject).toString();
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        } else {
+            if (world.getEnvironment().equals(Environment.NORMAL)) {
+                return "minecraft:overworld";
+            } else if (world.getEnvironment().equals(Environment.NETHER)) {
+                return "minecraft:the_nether";
+            } else if (world.getEnvironment().equals(Environment.THE_END)) {
+                return "minecraft:the_end";
+            } else {
+                return "minecraft:custom";
+            }
         }
         return null;
     }
 
     public static boolean isNatural(World world) {
-        try {
-            Object craftWorldObject = craftWorldClass.cast(world);
-            Object nmsWorldServerObject = getHandleMethod.invoke(craftWorldObject);
-            Object nmsDimensionManagerObject = getDimensionManagerMethod.invoke(nmsWorldServerObject);
-            return (boolean) isNaturalMethod.invoke(nmsDimensionManagerObject);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
+            return new DimensionManagerWrapper(world).natural();
+        } else {
+            return world.getEnvironment().equals(Environment.NORMAL);
         }
-        return true;
     }
 
 }
+
