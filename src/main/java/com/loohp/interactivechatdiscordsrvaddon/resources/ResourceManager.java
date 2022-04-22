@@ -32,6 +32,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimeManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.OptifineManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureManager;
 
@@ -60,11 +61,12 @@ public class ResourceManager implements AutoCloseable {
     private FontManager fontManager;
     private LanguageManager languageManager;
     private OptifineManager optifineManager;
+    private ChimeManager chimeManager;
 
     private AtomicBoolean isValid;
     private UUID uuid;
 
-    public ResourceManager(boolean optifine) {
+    public ResourceManager(boolean optifine, boolean chime) {
         this.resourcePackInfo = new LinkedList<>();
 
         this.modelManager = new ModelManager(this);
@@ -73,6 +75,9 @@ public class ResourceManager implements AutoCloseable {
         this.languageManager = new LanguageManager(this);
         if (optifine) {
             this.optifineManager = new OptifineManager(this);
+        }
+        if (chime) {
+            this.chimeManager = new ChimeManager(this);
         }
 
         this.isValid = new AtomicBoolean(true);
@@ -222,7 +227,7 @@ public class ResourceManager implements AutoCloseable {
                 }
             }
         }
-        if (optifineManager != null) {
+        if (hasOptifineManager()) {
             for (ResourcePackFile folder : folders) {
                 if (folder.isDirectory()) {
                     String namespace = folder.getName();
@@ -237,12 +242,26 @@ public class ResourceManager implements AutoCloseable {
                 }
             }
         }
+        if (hasChimeManager()) {
+            for (ResourcePackFile folder : folders) {
+                if (folder.isDirectory()) {
+                    String namespace = folder.getName();
+                    ResourcePackFile overrides = folder.getChild("overrides");
+                    if (overrides.exists() && overrides.isDirectory()) {
+                        ((AbstractManager) chimeManager).loadDirectory(namespace, overrides);
+                    }
+                }
+            }
+        }
         ((AbstractManager) modelManager).reload();
         ((AbstractManager) textureManager).reload();
         ((AbstractManager) fontManager).reload();
         ((AbstractManager) languageManager).reload();
-        if (optifineManager != null) {
+        if (hasOptifineManager()) {
             ((AbstractManager) optifineManager).reload();
+        }
+        if (hasChimeManager()) {
+            ((AbstractManager) chimeManager).reload();
         }
     }
 
@@ -274,6 +293,13 @@ public class ResourceManager implements AutoCloseable {
         return optifineManager != null;
     }
 
+    public ChimeManager getChimeManager() {
+        return chimeManager;
+    }
+
+    public boolean hasChimeManager() {
+        return chimeManager != null;
+    }
 
     public boolean isValid() {
         return isValid.get();

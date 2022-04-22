@@ -135,6 +135,7 @@ public class OptifineManager extends AbstractManager implements IOptifineManager
 
     }
 
+    @Override
     public Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> getItemPostResolveFunction(EquipmentSlot heldSlot, ItemStack itemStack, boolean is1_8, Map<ModelOverrideType, Float> predicates) {
         if (itemStack == null || itemStack.getType().equals(Material.AIR)) {
             return ModelRenderer.DEFAULT_POST_RESOLVE_FUNCTION;
@@ -212,6 +213,7 @@ public class OptifineManager extends AbstractManager implements IOptifineManager
         }
     }
 
+    @Override
     public TextureResource getElytraOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack) {
         if (itemStack == null || !itemStack.getType().equals(Material.valueOf("ELYTRA"))) {
             return null;
@@ -229,6 +231,7 @@ public class OptifineManager extends AbstractManager implements IOptifineManager
         return null;
     }
 
+    @Override
     public TextureResource getArmorOverrideTextures(String layer, EquipmentSlot heldSlot, ItemStack itemStack) {
         if (itemStack == null || itemStack.getType().equals(Material.AIR)) {
             return null;
@@ -249,6 +252,7 @@ public class OptifineManager extends AbstractManager implements IOptifineManager
         return null;
     }
 
+    @Override
     public TextureResource getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack) {
         Map<String, TextureResource> overrideTextures = new HashMap<>();
         if (itemStack == null || itemStack.getType().equals(Material.AIR)) {
@@ -301,6 +305,7 @@ public class OptifineManager extends AbstractManager implements IOptifineManager
         return citGlobalProperties;
     }
 
+    @Override
     public CITGlobalProperties getCITGlobalProperties() {
         return citGlobalProperties == null ? DEFAULT_CIT_GLOBAL_PROPERTIES : citGlobalProperties;
     }
@@ -309,6 +314,7 @@ public class OptifineManager extends AbstractManager implements IOptifineManager
         return citOverrides;
     }
 
+    @Override
     public <T extends CITProperties> ValuePairs<ResourcePackFile, T> getCITOverride(EquipmentSlot heldSlot, ItemStack itemStack, Class<T> type) {
         ValuePairs<ResourcePackFile, T> result = null;
         int weight = Integer.MIN_VALUE;

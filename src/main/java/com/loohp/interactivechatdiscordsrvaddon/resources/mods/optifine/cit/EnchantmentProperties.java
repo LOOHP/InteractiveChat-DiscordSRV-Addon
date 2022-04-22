@@ -39,7 +39,7 @@ public class EnchantmentProperties extends CITProperties {
 
     private String texture;
 
-    public EnchantmentProperties(int weight, Set<XMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, NBTValueMatcher> nbtMatch, int layer, double speed, double rotation, double duration, String blend, String texture) {
+    public EnchantmentProperties(int weight, Set<XMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, CITStringMatcher> nbtMatch, int layer, double speed, double rotation, double duration, String blend, String texture) {
         super(weight, items, stackSize, damage, damageMask, hand, enchantments, nbtMatch);
         this.layer = layer;
         this.speed = speed;

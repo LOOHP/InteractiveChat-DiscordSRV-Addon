@@ -35,7 +35,7 @@ public class ItemProperties extends CITProperties {
     private Map<String, String> models;
     private Map<String, String> textures;
 
-    public ItemProperties(int weight, Set<XMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, NBTValueMatcher> nbtMatch, Map<String, String> models, Map<String, String> textures) {
+    public ItemProperties(int weight, Set<XMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, CITStringMatcher> nbtMatch, Map<String, String> models, Map<String, String> textures) {
         super(weight, items, stackSize, damage, damageMask, hand, enchantments, nbtMatch);
         this.models = models;
         this.textures = textures;

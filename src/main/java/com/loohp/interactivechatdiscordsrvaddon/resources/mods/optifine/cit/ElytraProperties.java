@@ -33,7 +33,7 @@ public class ElytraProperties extends CITProperties {
 
     private String texture;
 
-    public ElytraProperties(int weight, Set<XMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, NBTValueMatcher> nbtMatch, String texture) {
+    public ElytraProperties(int weight, Set<XMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, CITStringMatcher> nbtMatch, String texture) {
         super(weight, items, stackSize, damage, damageMask, hand, enchantments, nbtMatch);
         this.texture = texture;
     }

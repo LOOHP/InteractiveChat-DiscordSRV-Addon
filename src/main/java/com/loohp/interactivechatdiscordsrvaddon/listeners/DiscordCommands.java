@@ -762,7 +762,11 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                             footer = ComponentStyling.splitAtLineBreaks(LegacyComponentSerializer.legacySection().deserialize(ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(firstPlayer, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandFooter.replace("{OnlinePlayers}", players.size() + "")))));
                         }
                         errorCode--;
-                        BufferedImage image = ImageGeneration.getTabListImage(header, footer, player, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandAvatar, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandPing);
+                        int playerListMaxPlayers = InteractiveChatDiscordSrvAddon.plugin.playerlistMaxPlayers;
+                        if (playerListMaxPlayers < 1) {
+                            playerListMaxPlayers = Integer.MAX_VALUE;
+                        }
+                        BufferedImage image = ImageGeneration.getTabListImage(header, footer, player, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandAvatar, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandPing, playerListMaxPlayers);
                         errorCode--;
                         byte[] data = ImageUtils.toArray(image);
                         errorCode--;
@@ -970,7 +974,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     errorCode--;
                     if (InteractiveChatDiscordSrvAddon.plugin.invShowLevel) {
                         int level = offlineICPlayer.getExperienceLevel();
-                        byte[] bottleData = ImageUtils.toArray(InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, CustomItemTextureUtils.getItemPostResolveFunction(InteractiveChatDiscordSrvAddon.plugin.resourceManager, null, XMaterial.EXPERIENCE_BOTTLE.parseItem(), InteractiveChat.version.isOld(), null).orElse(null), InteractiveChat.version.isOld(), "minecraft:item/experience_bottle", ModelDisplayPosition.GUI, false, null, null).getImage());
+                        byte[] bottleData = ImageUtils.toArray(InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, CustomItemTextureUtils.getItemPostResolveFunction(InteractiveChatDiscordSrvAddon.plugin.resourceManager, "minecraft:item/experience_bottle", null, XMaterial.EXPERIENCE_BOTTLE.parseItem(), InteractiveChat.version.isOld(), null, null, null, null).orElse(null), InteractiveChat.version.isOld(), "minecraft:item/experience_bottle", ModelDisplayPosition.GUI, false, null, null).getImage());
                         embedBuilder.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language).replaceFirst("%s|%d", level + ""), "attachment://Level.png");
                         action.addFile(bottleData, "Level.png");
                     }

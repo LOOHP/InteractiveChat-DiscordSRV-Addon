@@ -20,9 +20,33 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine;
 
+import com.loohp.interactivechat.objectholders.ValuePairs;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.IModelManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.CITGlobalProperties;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.CITProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.ITextureManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
+
+import java.util.Map;
+import java.util.function.Function;
 
 public interface IOptifineManager extends ITextureManager, IModelManager {
+
+    Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> getItemPostResolveFunction(EquipmentSlot heldSlot, ItemStack itemStack, boolean is1_8, Map<ModelOverrideType, Float> predicates);
+
+    TextureResource getElytraOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack);
+
+    TextureResource getArmorOverrideTextures(String layer, EquipmentSlot heldSlot, ItemStack itemStack);
+
+    TextureResource getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack);
+
+    CITGlobalProperties getCITGlobalProperties();
+
+    <T extends CITProperties> ValuePairs<ResourcePackFile, T> getCITOverride(EquipmentSlot heldSlot, ItemStack itemStack, Class<T> type);
 
 }

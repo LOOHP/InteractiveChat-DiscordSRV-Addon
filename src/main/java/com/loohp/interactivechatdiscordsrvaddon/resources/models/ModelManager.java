@@ -29,6 +29,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingExcepti
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.utils.TriFunction;
 
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -39,16 +40,20 @@ import java.util.Map;
 
 public class ModelManager extends AbstractManager implements IModelManager {
 
+    public static final TriFunction<IModelManager, String, JSONObject, BlockModel> DEFAULT_MODEL_PARSING_FUNCTION = (manager, key, json) -> BlockModel.fromJson(manager, key, json);
+
     public static final String CACHE_KEY = "ModelManager";
     public static final String BLOCK_ENTITY_BASE = "builtin/entity";
     public static final String ITEM_BASE = "builtin/generated";
     public static final String ITEM_BASE_LAYER = "layer";
 
     private Map<String, BlockModel> models;
+    private TriFunction<IModelManager, String, JSONObject, ? extends BlockModel> modelParsingFunction;
 
     public ModelManager(ResourceManager manager) {
         super(manager);
         this.models = new HashMap<>();
+        this.modelParsingFunction = DEFAULT_MODEL_PARSING_FUNCTION;
     }
 
     @Override
@@ -66,7 +71,7 @@ public class ModelManager extends AbstractManager implements IModelManager {
                 InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
                 JSONObject rootJson = (JSONObject) parser.parse(reader);
                 reader.close();
-                BlockModel model = BlockModel.fromJson(this, key, rootJson);
+                BlockModel model = modelParsingFunction.apply(this, key, rootJson);
                 models.put(key, model);
             } catch (Exception e) {
                 new ResourceLoadingException("Unable to load block model " + file.getAbsolutePath(), e).printStackTrace();
@@ -78,6 +83,14 @@ public class ModelManager extends AbstractManager implements IModelManager {
     @Override
     protected void reload() {
 
+    }
+
+    public TriFunction<IModelManager, String, JSONObject, ? extends BlockModel> getModelParsingFunction() {
+        return modelParsingFunction;
+    }
+
+    public void setModelParsingFunction(TriFunction<IModelManager, String, JSONObject, ? extends BlockModel> modelParsingFunction) {
+        this.modelParsingFunction = modelParsingFunction;
     }
 
     @Override

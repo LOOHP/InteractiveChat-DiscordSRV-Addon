@@ -23,7 +23,6 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import com.loohp.interactivechat.libs.net.querz.nbt.io.SNBTUtil;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.ByteTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.CompoundTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.DoubleTag;
@@ -36,6 +35,7 @@ import com.loohp.interactivechat.libs.net.querz.nbt.tag.StringTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.Tag;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.ItemNBTUtils;
+import com.loohp.interactivechat.utils.NBTParsingUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.IntegerRange;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PercentageOrIntegerRange;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
@@ -45,7 +45,6 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -59,6 +58,10 @@ public abstract class CITProperties {
 
     @SuppressWarnings("deprecation")
     public static CITProperties fromProperties(ResourcePackFile file, Properties properties) {
+        String name = file.getName();
+        if (name.contains(".")) {
+            name = name.substring(0, name.lastIndexOf("."));
+        }
         int weight = Integer.parseInt(properties.getProperty("weight", "0"));
         Set<XMaterial> items = new HashSet<>();
         String itemsStr = properties.getProperty("items");
@@ -74,7 +77,7 @@ public abstract class CITProperties {
                 if (optMaterial.isPresent()) {
                     items.add(optMaterial.get());
                 } else {
-                    XMaterial.matchXMaterial(file.getName().replace(".properties", "")).ifPresent(items::add);
+                    XMaterial.matchXMaterial(name).ifPresent(items::add);
                 }
             }
         }
@@ -124,23 +127,23 @@ public abstract class CITProperties {
             }
         }
 
-        Map<String, NBTValueMatcher> nbtMatch = new HashMap<>();
+        Map<String, CITStringMatcher> nbtMatch = new HashMap<>();
         for (Entry<Object, Object> entry : properties.entrySet()) {
             String key = (String) entry.getKey();
             if (key.startsWith("nbt")) {
                 String path = key.substring(key.length() > 3 ? 4 : 3);
                 String value = (String) entry.getValue();
-                NBTValueMatcher matcher;
+                CITStringMatcher matcher;
                 if (value.startsWith("regex:")) {
-                    matcher = new NBTValueMatcher.RegexMatcher(value.substring(6));
+                    matcher = new CITStringMatcher.RegexMatcher(value.substring(6));
                 } else if (value.startsWith("iregex:")) {
-                    matcher = new NBTValueMatcher.IRegexMatcher(value.substring(7));
+                    matcher = new CITStringMatcher.IRegexMatcher(value.substring(7));
                 } else if (value.startsWith("pattern:")) {
-                    matcher = new NBTValueMatcher.PatternMatcher(value.substring(8));
+                    matcher = new CITStringMatcher.PatternMatcher(value.substring(8));
                 } else if (value.startsWith("ipattern:")) {
-                    matcher = new NBTValueMatcher.IPatternMatcher(value.substring(9));
+                    matcher = new CITStringMatcher.IPatternMatcher(value.substring(9));
                 } else {
-                    matcher = new NBTValueMatcher.DirectMatcher(value);
+                    matcher = new CITStringMatcher.DirectMatcher(value);
                 }
                 nbtMatch.put(path, matcher);
             }
@@ -169,13 +172,13 @@ public abstract class CITProperties {
                 }
             }
             if (models.isEmpty() && textures.isEmpty()) {
-                ResourcePackFile defModel = file.getParentFile().getChild(file.getName().replace(".properties", "") + ".json");
+                ResourcePackFile defModel = file.getParentFile().getChild(name + ".json");
                 if (defModel.exists()) {
                     String defaultPath = defModel.getAbsolutePath();
                     defaultPath = defaultPath.substring(defaultPath.indexOf("assets"));
                     models.put("", defaultPath);
                 } else {
-                    ResourcePackFile defTexture = file.getParentFile().getChild(file.getName().replace(".properties", "") + ".png");
+                    ResourcePackFile defTexture = file.getParentFile().getChild(name + ".png");
                     if (defTexture.exists()) {
                         String defaultPath = defTexture.getAbsolutePath();
                         defaultPath = defaultPath.substring(defaultPath.indexOf("assets"));
@@ -201,7 +204,7 @@ public abstract class CITProperties {
         } else if (type.equalsIgnoreCase("elytra")) {
             String texture = properties.getProperty("texture");
             if (texture == null) {
-                ResourcePackFile defTexture = file.getParentFile().getChild(file.getName().replace(".properties", "") + ".png");
+                ResourcePackFile defTexture = file.getParentFile().getChild(name + ".png");
                 if (defTexture.exists()) {
                     String defaultPath = defTexture.getAbsolutePath();
                     defaultPath = defaultPath.substring(defaultPath.indexOf("assets"));
@@ -216,7 +219,7 @@ public abstract class CITProperties {
         } else if (type.equalsIgnoreCase("enchantment")) {
             String texture = properties.getProperty("texture");
             if (texture == null) {
-                ResourcePackFile defTexture = file.getParentFile().getChild(file.getName().replace(".properties", "") + ".png");
+                ResourcePackFile defTexture = file.getParentFile().getChild(name + ".png");
                 if (defTexture.exists()) {
                     String defaultPath = defTexture.getAbsolutePath();
                     defaultPath = defaultPath.substring(defaultPath.indexOf("assets"));
@@ -244,9 +247,9 @@ public abstract class CITProperties {
     protected int damageMask;
     protected EquipmentSlot hand;
     protected Map<Enchantment, IntegerRange> enchantments;
-    protected Map<String, NBTValueMatcher> nbtMatch;
+    protected Map<String, CITStringMatcher> nbtMatch;
 
-    public CITProperties(int weight, Set<XMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, NBTValueMatcher> nbtMatch) {
+    public CITProperties(int weight, Set<XMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, CITStringMatcher> nbtMatch) {
         this.weight = weight;
         this.items = items;
         this.stackSize = stackSize;
@@ -285,7 +288,7 @@ public abstract class CITProperties {
         return enchantments;
     }
 
-    public Map<String, NBTValueMatcher> getNbtMatch() {
+    public Map<String, CITStringMatcher> getNbtMatch() {
         return nbtMatch;
     }
 
@@ -320,12 +323,12 @@ public abstract class CITProperties {
         }
         try {
             String nbt = ItemNBTUtils.getNMSItemStackJson(itemStack);
-            CompoundTag tag = (CompoundTag) SNBTUtil.fromSNBT(nbt);
+            CompoundTag tag = (CompoundTag) NBTParsingUtils.fromSNBT(nbt);
             if (tag.containsKey("tag")) {
                 tag = tag.getCompoundTag("tag");
-                for (Entry<String, NBTValueMatcher> entry : nbtMatch.entrySet()) {
+                for (Entry<String, CITStringMatcher> entry : nbtMatch.entrySet()) {
                     String key = entry.getKey();
-                    NBTValueMatcher nbtValueMatcher = entry.getValue();
+                    CITStringMatcher nbtValueMatcher = entry.getValue();
                     String[] paths = key.split("\\.");
                     Tag<?> subTag = tag;
                     try {
@@ -384,8 +387,12 @@ public abstract class CITProperties {
                         return false;
                     }
                 }
+            } else {
+                if (!nbtMatch.isEmpty()) {
+                    return false;
+                }
             }
-        } catch (IOException e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             return false;
         }

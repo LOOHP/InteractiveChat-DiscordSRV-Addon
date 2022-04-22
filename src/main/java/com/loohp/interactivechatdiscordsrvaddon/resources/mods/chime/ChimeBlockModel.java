@@ -1,5 +1,5 @@
 /*
- * This file is part of InteractiveChatDiscordSrvAddon.
+ * This file is part of InteractiveChatDiscordSrvAddon2.
  *
  * Copyright (C) 2022. LoohpJames <jamesloohp@gmail.com>
  * Copyright (C) 2022. Contributors
@@ -18,15 +18,25 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.loohp.interactivechatdiscordsrvaddon.resources.models;
+package com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime;
 
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
-import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.Coordinates3D;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.IModelManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelAxis;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelElement;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelElement.ModelElementRotation;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelFace;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelFace.ModelFaceSide;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelGUILight;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.TextureUV;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimeModelOverride.ChimeModelOverrideType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,11 +44,10 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
-public class BlockModel {
+public class ChimeBlockModel extends BlockModel {
 
-    public static BlockModel fromJson(IModelManager manager, String resourceLocation, JSONObject rootJson) {
+    public static ChimeBlockModel fromJson(IModelManager manager, String resourceLocation, JSONObject rootJson) {
         String parent = (String) rootJson.getOrDefault("parent", null);
         boolean ambientocclusion = (boolean) rootJson.getOrDefault("ambientocclusion", true);
         ModelGUILight guiLight = rootJson.containsKey("gui_light") ? ModelGUILight.fromKey((String) rootJson.get("gui_light")) : null;
@@ -138,7 +147,7 @@ public class BlockModel {
                 elements.add(new ModelElement(from, to, rotation, shade, face));
             }
         }
-        List<ModelOverride> overrides = new ArrayList<>();
+        List<ChimeModelOverride> overrides = new ArrayList<>();
         JSONArray overridesArray = (JSONArray) rootJson.get("overrides");
         if (overridesArray != null) {
             for (Object obj : overridesArray) {
@@ -148,183 +157,31 @@ public class BlockModel {
                 for (Object obj1 : predicateJson.keySet()) {
                     String predicateTypeKey = obj1.toString();
                     ModelOverrideType type = ModelOverrideType.fromKey(predicateTypeKey);
-                    if (type == null) {
-                        continue;
+                    if (type != null) {
+                        Object value = predicateJson.get(predicateTypeKey);
+                        predicates.put(type, ((Number) value).floatValue());
                     }
-                    Object value = predicateJson.get(predicateTypeKey);
-                    predicates.put(type, ((Number) value).floatValue());
                 }
+                Map<ChimeModelOverrideType, Object> chimePredicates = ChimeUtils.getAllPredicates(predicateJson);
                 String model = (String) overrideJson.get("model");
-                overrides.add(new ModelOverride(predicates, model));
+                if (overrideJson.containsKey("texture")) {
+                    String armorTexture = (String) overrideJson.get("texture");
+                    overrides.add(new ChimeModelOverride(predicates, chimePredicates, model, armorTexture));
+                } else {
+                    overrides.add(new ChimeModelOverride(predicates, chimePredicates, model));
+                }
             }
         }
         Collections.reverse(overrides);
-        return new BlockModel(manager, resourceLocation, parent, ambientocclusion, guiLight, display, texture, elements, overrides);
+        return new ChimeBlockModel(manager, resourceLocation, parent, ambientocclusion, guiLight, display, texture, elements, overrides);
     }
 
-    public static BlockModel resolve(BlockModel childrenModel, boolean post1_8) {
-        boolean ambientocclusion = childrenModel.isAmbientocclusion();
-        Map<ModelDisplayPosition, ModelDisplay> display = new EnumMap<>(ModelDisplayPosition.class);
-        display.putAll(childrenModel.getRawDisplay());
-        Map<String, String> textures = new HashMap<>(childrenModel.getTextures());
-        for (Entry<String, String> entry : textures.entrySet()) {
-            String value = entry.getValue();
-            if (value.startsWith("#")) {
-                String var = value.substring(1);
-                String mapped = textures.get(var);
-                if (mapped != null) {
-                    entry.setValue(mapped);
-                }
-            }
-        }
-        List<ModelElement> elements = new ArrayList<>(childrenModel.getElements());
-        for (int i = 0; i < elements.size(); i++) {
-            ModelElement element = elements.get(i);
-            Map<ModelFaceSide, ModelFace> faces = new EnumMap<>(ModelFaceSide.class);
-            faces.putAll(element.getFaces());
-            for (Entry<ModelFaceSide, ModelFace> entry : faces.entrySet()) {
-                ModelFace face = entry.getValue();
-                String value = entry.getValue().getTexture();
-                if (value.startsWith("#")) {
-                    String var = value.substring(1);
-                    String mapped = textures.get(var);
-                    if (mapped != null) {
-                        entry.setValue(face.cloneWithNewTexture(mapped));
-                    }
-                }
-            }
-            elements.set(i, new ModelElement(element.getFrom(), element.getTo(), element.getRotation(), element.isShade(), faces));
-        }
-        BlockModel newBlockModel = new BlockModel(childrenModel.getManager(), childrenModel.getResourceLocation(), childrenModel.getRawParent(), ambientocclusion, childrenModel.getRawGUILight(), display, textures, elements, childrenModel.getOverrides());
-        if (post1_8) {
-            String newRawParent = newBlockModel.getRawParent();
-            if (newRawParent == null) {
-                return resolve(newBlockModel.getManager().getRawBlockModel(ResourceRegistry.IC_OLD_BASE_BLOCK_MODEL), newBlockModel, post1_8);
-            } else if (newRawParent.equals(ModelManager.ITEM_BASE)) {
-                return resolve(newBlockModel.getManager().getRawBlockModel(ResourceRegistry.IC_OLD_BASE_ITEM_MODEL), newBlockModel, post1_8);
-            }
-        }
-        return newBlockModel;
+    public ChimeBlockModel(IModelManager manager, String resourceLocation, String parent, boolean ambientocclusion, ModelGUILight guiLight, Map<ModelDisplayPosition, ModelDisplay> display, Map<String, String> textures, List<ModelElement> elements, List<ChimeModelOverride> overrides) {
+        super(manager, resourceLocation, parent, ambientocclusion, guiLight, display, textures, elements, (List<ModelOverride>) (List<?>) overrides);
     }
 
-    public static BlockModel resolve(BlockModel parentModel, BlockModel childrenModel, boolean post1_8) {
-        String parent = parentModel.getRawParent();
-        ModelGUILight guiLight = childrenModel.getRawGUILight();
-        if (parentModel.getRawGUILight() != null) {
-            guiLight = parentModel.getRawGUILight();
-        }
-        Map<ModelDisplayPosition, ModelDisplay> display = new EnumMap<>(ModelDisplayPosition.class);
-        display.putAll(parentModel.getRawDisplay());
-        display.putAll(childrenModel.getRawDisplay());
-        Map<String, String> textures = new HashMap<>();
-        textures.putAll(parentModel.getTextures());
-        textures.putAll(childrenModel.getTextures());
-        for (Entry<String, String> entry : textures.entrySet()) {
-            String value = entry.getValue();
-            if (value.startsWith("#")) {
-                String var = value.substring(1);
-                String mapped = textures.get(var);
-                if (mapped != null) {
-                    entry.setValue(mapped);
-                }
-            }
-        }
-        List<ModelElement> elements = new ArrayList<>(childrenModel.getElements().isEmpty() ? parentModel.getElements() : childrenModel.getElements());
-        for (int i = 0; i < elements.size(); i++) {
-            ModelElement element = elements.get(i);
-            Map<ModelFaceSide, ModelFace> faces = new EnumMap<>(ModelFaceSide.class);
-            faces.putAll(element.getFaces());
-            for (Entry<ModelFaceSide, ModelFace> entry : faces.entrySet()) {
-                ModelFace face = entry.getValue();
-                String value = entry.getValue().getTexture();
-                if (value.startsWith("#")) {
-                    String var = value.substring(1);
-                    String mapped = textures.get(var);
-                    if (mapped != null) {
-                        entry.setValue(face.cloneWithNewTexture(mapped));
-                    }
-                }
-            }
-            elements.set(i, new ModelElement(element.getFrom(), element.getTo(), element.getRotation(), element.isShade(), faces));
-        }
-        return new BlockModel(childrenModel.getManager(), childrenModel.getResourceLocation(), parent, childrenModel.isAmbientocclusion(), guiLight, display, textures, elements, parentModel.getOverrides());
-    }
-
-    private IModelManager manager;
-    private String resourceLocation;
-
-    private String parent;
-    private boolean ambientocclusion;
-    private ModelGUILight guiLight;
-    private Map<ModelDisplayPosition, ModelDisplay> display;
-    private Map<String, String> textures;
-    private List<ModelElement> elements;
-    private List<ModelOverride> overrides;
-
-    public BlockModel(IModelManager manager, String resourceLocation, String parent, boolean ambientocclusion, ModelGUILight guiLight, Map<ModelDisplayPosition, ModelDisplay> display, Map<String, String> textures, List<ModelElement> elements, List<ModelOverride> overrides) {
-        this.resourceLocation = resourceLocation;
-        this.manager = manager;
-        this.parent = parent;
-        this.ambientocclusion = ambientocclusion;
-        this.guiLight = guiLight;
-        this.display = Collections.unmodifiableMap(display);
-        this.textures = Collections.unmodifiableMap(textures);
-        this.elements = Collections.unmodifiableList(elements);
-        this.overrides = Collections.unmodifiableList(overrides);
-    }
-
-    public IModelManager getManager() {
-        return manager;
-    }
-
-    public String getResourceLocation() {
-        return resourceLocation;
-    }
-
-    public String getRawParent() {
-        return parent;
-    }
-
-    public String getParent() {
-        return parent == null ? null : (parent.contains(":") ? parent : ResourceRegistry.DEFAULT_NAMESPACE + ":" + parent);
-    }
-
-    public boolean isAmbientocclusion() {
-        return ambientocclusion;
-    }
-
-    public ModelGUILight getRawGUILight() {
-        return guiLight;
-    }
-
-    public ModelGUILight getGUILight() {
-        return guiLight == null ? ModelGUILight.SIDE : guiLight;
-    }
-
-    public Map<ModelDisplayPosition, ModelDisplay> getRawDisplay() {
-        return display;
-    }
-
-    public ModelDisplay getDisplay(ModelDisplayPosition position) {
-        ModelDisplay modelDisplay = display.get(position);
-        if (modelDisplay != null) {
-            return modelDisplay;
-        } else if (position.hasFallback()) {
-            return display.get(position.getFallback());
-        }
-        return null;
-    }
-
-    public Map<String, String> getTextures() {
-        return textures;
-    }
-
-    public List<ModelElement> getElements() {
-        return elements;
-    }
-
-    public List<ModelOverride> getOverrides() {
-        return overrides;
+    public List<ChimeModelOverride> getChimeOverrides() {
+        return (List<ChimeModelOverride>) (List<?>) getOverrides();
     }
 
 }

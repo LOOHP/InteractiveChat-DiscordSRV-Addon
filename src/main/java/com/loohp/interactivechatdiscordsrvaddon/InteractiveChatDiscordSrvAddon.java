@@ -32,6 +32,7 @@ import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
+import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.SkinUtils;
 import com.loohp.interactivechatdiscordsrvaddon.AssetsDownloader.ServerResourcePackDownloadResult;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
@@ -198,6 +199,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public String playerlistCommandEmptyServer = "";
     public Color playerlistCommandColor = new Color(153, 153, 153);
     public int playerlistCommandMinWidth = 0;
+    public int playerlistMaxPlayers = 80;
     public List<String> playerlistOrderingTypes = new ArrayList<>();
     public List<String> playerlistOrderingPlaceholders = new ArrayList<>();
     public Set<String> playerlistCommandRoles = new HashSet<>();
@@ -232,6 +234,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public String alternateResourcePackURL = "";
     public String alternateResourcePackHash = "";
     public boolean optifineCustomTextures = true;
+    public boolean chimeOverrideModels = true;
     public ResourceManager resourceManager;
     public ModelRenderer modelRenderer;
     public ExecutorService mediaReadingService;
@@ -398,6 +401,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         alternateResourcePackURL = config.getConfiguration().getString("Resources.AlternateServerResourcePack.URL");
         alternateResourcePackHash = config.getConfiguration().getString("Resources.AlternateServerResourcePack.Hash");
         optifineCustomTextures = config.getConfiguration().getBoolean("Resources.OptifineCustomTextures");
+        chimeOverrideModels = config.getConfiguration().getBoolean("Resources.ChimeOverrideModels") && InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16);
 
         itemImage = config.getConfiguration().getBoolean("InventoryImage.Item.Enabled");
         invImage = config.getConfiguration().getBoolean("InventoryImage.Inventory.Enabled");
@@ -491,6 +495,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         playerlistCommandEmptyServer = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.PlayerList.EmptyServer"));
         playerlistCommandColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordCommands.PlayerList.TablistOptions.SidebarColor"));
         playerlistCommandMinWidth = config.getConfiguration().getInt("DiscordCommands.PlayerList.TablistOptions.PlayerMinWidth");
+        playerlistMaxPlayers = config.getConfiguration().getInt("DiscordCommands.PlayerList.TablistOptions.MaxPlayersDisplayable");
         playerlistCommandRoles = new HashSet<>(config.getConfiguration().getStringList("DiscordCommands.PlayerList.Permissions.AllowedRoles"));
         playerlistOrderingTypes = config.getConfiguration().getStringList("DiscordCommands.PlayerList.TablistOptions.PlayerOrder.OrderBy");
         playerlistOrderingPlaceholders = config.getConfiguration().getStringList("DiscordCommands.PlayerList.TablistOptions.PlayerOrder.Placeholders");
@@ -605,7 +610,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                 sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Reloading ResourceManager: " + ChatColor.YELLOW + String.join(", ", resourceList), senders);
 
                 @SuppressWarnings("resource")
-                ResourceManager resourceManager = new ResourceManager(InteractiveChatDiscordSrvAddon.plugin.optifineCustomTextures);
+                ResourceManager resourceManager = new ResourceManager(optifineCustomTextures, chimeOverrideModels);
                 resourceManager.getLanguageManager().setTranslateFunction((translateKey, language) -> LanguageUtils.getTranslation(translateKey, language));
                 resourceManager.getLanguageManager().setAvailableLanguagesSupplier(() -> LanguageUtils.getLoadedLanguages());
                 resourceManager.getLanguageManager().registerReloadListener(e -> {

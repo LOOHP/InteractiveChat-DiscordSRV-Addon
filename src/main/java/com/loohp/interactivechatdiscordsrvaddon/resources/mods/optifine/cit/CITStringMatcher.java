@@ -22,11 +22,11 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit;
 
 import java.util.regex.Pattern;
 
-public abstract class NBTValueMatcher {
+public abstract class CITStringMatcher {
 
     private final String value;
 
-    public NBTValueMatcher(String value) {
+    public CITStringMatcher(String value) {
         this.value = value;
     }
 
@@ -36,7 +36,7 @@ public abstract class NBTValueMatcher {
         return value;
     }
 
-    public static class DirectMatcher extends NBTValueMatcher {
+    public static class DirectMatcher extends CITStringMatcher {
 
         protected final String pattern;
 
@@ -52,7 +52,7 @@ public abstract class NBTValueMatcher {
 
     }
 
-    public static class RegexMatcher extends NBTValueMatcher {
+    public static class RegexMatcher extends CITStringMatcher {
 
         protected final Pattern pattern;
 
@@ -72,7 +72,7 @@ public abstract class NBTValueMatcher {
 
     }
 
-    public static class PatternMatcher extends NBTValueMatcher {
+    public static class PatternMatcher extends CITStringMatcher {
 
         protected final String pattern;
 

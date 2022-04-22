@@ -141,6 +141,10 @@ DiscordCommands:
       AllowedRoles:
         - "everyone"
     TablistOptions:
+      #The Vanilla Minecraft client caps the maximum players visible
+      #on the tablist to the first 80 players
+      #Set this to 0 for unlimited
+      MaxPlayersDisplayable: 80
       #The minimum width of the player name section of the playerlist
       #This is measured in pixels
       PlayerMinWidth: 0
@@ -295,6 +299,8 @@ Resources:
   Order: []
   #Enable (Partial) Optifine Custom Textures CIT support
   OptifineCustomTextures: true
+  #Enable (Partial) Chime Custom Model Override support (1.16+)
+  ChimeOverrideModels: true
 
 Messages:
   ReloadConfig: "&aICDiscordSRVAddon config has been reloaded!"

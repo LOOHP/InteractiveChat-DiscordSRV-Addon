@@ -48,6 +48,8 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.SpawnEggTintData
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintIndexData;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -82,6 +84,13 @@ public class ItemRenderUtils {
     private static final Random RANDOM = new Random();
 
     public static ItemStackProcessResult processItemForRendering(ResourceManager manager, OfflineICPlayer player, ItemStack item, EquipmentSlot slot, boolean is1_8) throws IOException {
+        World world = null;
+        LivingEntity livingEntity = null;
+        if (player.isOnline() && player.getPlayer().isLocal()) {
+            livingEntity = player.getPlayer().getLocalPlayer();
+            world = livingEntity.getWorld();
+        }
+
         boolean requiresEnchantmentGlint = false;
         XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
         String directLocation = null;
@@ -382,7 +391,9 @@ public class ItemRenderUtils {
             predicates.put(ModelOverrideType.FILLED, fullness);
         }
 
-        Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction = CustomItemTextureUtils.getItemPostResolveFunction(manager, slot, item, is1_8, predicates).map(function -> {
+        String modelKey = directLocation == null ? ResourceRegistry.ITEM_MODEL_LOCATION + ModelUtils.getItemModelKey(xMaterial) : directLocation;
+
+        Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction = CustomItemTextureUtils.getItemPostResolveFunction(manager, modelKey, slot, item, is1_8, predicates, player, world, livingEntity).map(function -> {
             return function.andThen(result -> {
                 Map<String, TextureResource> overrideTextures = result.getSecond();
                 for (Entry<String, TextureResource> entry : overrideTextures.entrySet()) {
@@ -488,7 +499,7 @@ public class ItemRenderUtils {
             });
         }).orElse(null);
 
-        return new ItemStackProcessResult(requiresEnchantmentGlint, predicates, providedTextures, tintIndexData, directLocation, postResolveFunction, enchantmentGlintFunction, rawEnchantmentGlintFunction);
+        return new ItemStackProcessResult(requiresEnchantmentGlint, predicates, providedTextures, tintIndexData, modelKey, postResolveFunction, enchantmentGlintFunction, rawEnchantmentGlintFunction);
     }
 
     public static class ItemStackProcessResult {
@@ -497,17 +508,17 @@ public class ItemRenderUtils {
         private Map<ModelOverrideType, Float> predicates;
         private Map<String, TextureResource> providedTextures;
         private TintIndexData tintIndexData;
-        private String directLocation;
+        private String modelKey;
         private Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction;
         private Function<BufferedImage, BufferedImage> enchantmentGlintFunction;
         private Function<BufferedImage, BufferedImage> rawEnchantmentGlintFunction;
 
-        public ItemStackProcessResult(boolean requiresEnchantmentGlint, Map<ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, String directLocation, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, Function<BufferedImage, BufferedImage> enchantmentGlintFunction, Function<BufferedImage, BufferedImage> rawEnchantmentGlintFunction) {
+        public ItemStackProcessResult(boolean requiresEnchantmentGlint, Map<ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, String modelKey, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, Function<BufferedImage, BufferedImage> enchantmentGlintFunction, Function<BufferedImage, BufferedImage> rawEnchantmentGlintFunction) {
             this.requiresEnchantmentGlint = requiresEnchantmentGlint;
             this.predicates = predicates;
             this.providedTextures = providedTextures;
             this.tintIndexData = tintIndexData;
-            this.directLocation = directLocation;
+            this.modelKey = modelKey;
             this.postResolveFunction = postResolveFunction;
             this.enchantmentGlintFunction = enchantmentGlintFunction;
             this.rawEnchantmentGlintFunction = rawEnchantmentGlintFunction;
@@ -529,8 +540,8 @@ public class ItemRenderUtils {
             return tintIndexData;
         }
 
-        public String getDirectLocation() {
-            return directLocation;
+        public String getModelKey() {
+            return modelKey;
         }
 
         public Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> getPostResolveFunction() {

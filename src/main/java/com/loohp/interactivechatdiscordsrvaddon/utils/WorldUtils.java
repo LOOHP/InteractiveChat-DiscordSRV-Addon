@@ -23,7 +23,9 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NMSUtils;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.DimensionManagerWrapper;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 
@@ -37,16 +39,34 @@ public class WorldUtils {
     private static Class<?> worldServerClass;
     private static Method getWorldTypeKeyMethod;
     private static Method getMinecraftKeyMethod;
+    private static Method getBiomeAtMethod;
+    private static Method holderGetMethod;
+    private static Method getPrecipitationMethod;
 
     static {
-        try {
-            craftWorldClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.CraftWorld");
-            getHandleMethod = craftWorldClass.getMethod("getHandle");
-            worldServerClass = getHandleMethod.getReturnType();
-            getWorldTypeKeyMethod = worldServerClass.getMethod("getTypeKey");
-            getMinecraftKeyMethod = getWorldTypeKeyMethod.getReturnType().getMethod("a");
-        } catch (ReflectiveOperationException e) {
-            e.printStackTrace();
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
+            try {
+                craftWorldClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.CraftWorld");
+                getHandleMethod = craftWorldClass.getMethod("getHandle");
+                worldServerClass = getHandleMethod.getReturnType();
+                getWorldTypeKeyMethod = worldServerClass.getMethod("getTypeKey");
+                getMinecraftKeyMethod = getWorldTypeKeyMethod.getReturnType().getMethod("a");
+                getBiomeAtMethod = worldServerClass.getMethod("a", int.class, int.class, int.class);
+                Class<?> biomeBaseClass;
+                if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_18)) {
+                    holderGetMethod = getBiomeAtMethod.getReturnType().getMethod("a");
+                    biomeBaseClass = Class.forName("net.minecraft.world.level.biome.BiomeBase");
+                } else {
+                    biomeBaseClass = getBiomeAtMethod.getReturnType();
+                }
+                if (InteractiveChat.version.isOlderThan(MCVersion.V1_17)) {
+                    getPrecipitationMethod = biomeBaseClass.getMethod("d");
+                } else {
+                    getPrecipitationMethod = biomeBaseClass.getMethod("c");
+                }
+            } catch (ReflectiveOperationException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -80,6 +100,33 @@ public class WorldUtils {
         } else {
             return world.getEnvironment().equals(Environment.NORMAL);
         }
+    }
+
+    @SuppressWarnings("deprecation")
+    public static BiomePrecipitation getPrecipitation(Location location) {
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
+            try {
+                Object craftWorldObject = craftWorldClass.cast(location.getWorld());
+                Object nmsWorldServerObject = getHandleMethod.invoke(craftWorldObject);
+                Object biomeBaseObject = getBiomeAtMethod.invoke(nmsWorldServerObject, location.getBlockX(), location.getBlockY(), location.getBlockZ());
+                if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_18)) {
+                    biomeBaseObject = holderGetMethod.invoke(biomeBaseObject);
+                }
+                return BiomePrecipitation.fromName(((Enum<?>) getPrecipitationMethod.invoke(biomeBaseObject)).name());
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        } else {
+            double temperature = location.getWorld().getTemperature(location.getBlockX(), location.getBlockZ());
+            if (temperature > 0.95) {
+                return BiomePrecipitation.NONE;
+            } else if (temperature < 0.15) {
+                return BiomePrecipitation.SNOW;
+            } else {
+                return BiomePrecipitation.RAIN;
+            }
+        }
+        return null;
     }
 
 }
