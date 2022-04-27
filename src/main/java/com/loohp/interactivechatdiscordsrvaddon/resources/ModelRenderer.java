@@ -77,6 +77,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
 import java.util.function.LongSupplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -295,19 +296,19 @@ public class ModelRenderer implements AutoCloseable {
         return result;
     }
 
-    public RenderResult render(int width, int height, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, boolean enchanted, Function<BufferedImage, BufferedImage> enchantmentGlintProvider, Function<BufferedImage, BufferedImage> rawEnchantmentGlintProvider) {
+    public RenderResult render(int width, int height, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, boolean enchanted, UnaryOperator<BufferedImage> enchantmentGlintProvider, UnaryOperator<BufferedImage> rawEnchantmentGlintProvider) {
         return render(width, height, manager, postResolveFunction, post1_8, modelKey, displayPosition, Collections.emptyMap(), Collections.emptyMap(), TintIndexData.EMPTY_INSTANCE, enchanted, enchantmentGlintProvider, rawEnchantmentGlintProvider);
     }
 
-    public RenderResult render(int width, int height, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, boolean enchanted, Function<BufferedImage, BufferedImage> enchantmentGlintProvider, Function<BufferedImage, BufferedImage> rawEnchantmentGlintProvider) {
+    public RenderResult render(int width, int height, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, boolean enchanted, UnaryOperator<BufferedImage> enchantmentGlintProvider, UnaryOperator<BufferedImage> rawEnchantmentGlintProvider) {
         return render(width, height, INTERNAL_W, INTERNAL_H, manager, postResolveFunction, post1_8, modelKey, displayPosition, predicate, providedTextures, tintIndexData, enchanted, enchantmentGlintProvider, rawEnchantmentGlintProvider);
     }
 
-    public RenderResult render(int width, int height, int internalWidth, int internalHeight, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, boolean enchanted, Function<BufferedImage, BufferedImage> enchantmentGlintProvider, Function<BufferedImage, BufferedImage> rawEnchantmentGlintProvider) {
+    public RenderResult render(int width, int height, int internalWidth, int internalHeight, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, boolean enchanted, UnaryOperator<BufferedImage> enchantmentGlintProvider, UnaryOperator<BufferedImage> rawEnchantmentGlintProvider) {
         return render(width, height, internalWidth, internalHeight, manager, postResolveFunction, post1_8, modelKey, displayPosition, predicate, providedTextures, tintIndexData, enchanted, false, enchantmentGlintProvider, rawEnchantmentGlintProvider);
     }
 
-    public RenderResult render(int width, int height, int internalWidth, int internalHeight, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, boolean enchanted, boolean usePlayerModelPosition, Function<BufferedImage, BufferedImage> enchantmentGlintProvider, Function<BufferedImage, BufferedImage> rawEnchantmentGlintProvider) {
+    public RenderResult render(int width, int height, int internalWidth, int internalHeight, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, boolean enchanted, boolean usePlayerModelPosition, UnaryOperator<BufferedImage> enchantmentGlintProvider, UnaryOperator<BufferedImage> rawEnchantmentGlintProvider) {
         if (postResolveFunction == null) {
             postResolveFunction = DEFAULT_POST_RESOLVE_FUNCTION;
         }
@@ -424,7 +425,7 @@ public class ModelRenderer implements AutoCloseable {
     }
 
     @SuppressWarnings("SuspiciousNameCombination")
-    private Model generateStandardRenderModel(BlockModel blockModel, ResourceManager manager, Map<String, TextureResource> providedTextures, Map<String, TextureResource> overrideTextures, TintIndexData tintIndexData, boolean enchanted, boolean skin, Function<BufferedImage, BufferedImage> rawEnchantmentGlintProvider) {
+    private Model generateStandardRenderModel(BlockModel blockModel, ResourceManager manager, Map<String, TextureResource> providedTextures, Map<String, TextureResource> overrideTextures, TintIndexData tintIndexData, boolean enchanted, boolean skin, UnaryOperator<BufferedImage> rawEnchantmentGlintProvider) {
         Map<String, BufferedImage> cachedResize = new ConcurrentHashMap<>();
         List<ModelElement> elements = new ArrayList<>(blockModel.getElements());
         List<Hexahedron> hexahedrons = new ArrayList<>(elements.size());
@@ -731,10 +732,10 @@ public class ModelRenderer implements AutoCloseable {
         private boolean enchanted;
         private Map<String, TextureResource> providedTextures;
         private TintIndexData tintIndexData;
-        private Function<BufferedImage, BufferedImage> enchantmentGlintProvider;
-        private Function<BufferedImage, BufferedImage> rawEnchantmentGlintProvider;
+        private UnaryOperator<BufferedImage> enchantmentGlintProvider;
+        private UnaryOperator<BufferedImage> rawEnchantmentGlintProvider;
 
-        public PlayerModelItem(PlayerModelItemPosition position, String modelKey, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, Map<ModelOverrideType, Float> predicate, boolean enchanted, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, Function<BufferedImage, BufferedImage> enchantmentGlintProvider, Function<BufferedImage, BufferedImage> rawEnchantmentGlintProvider) {
+        public PlayerModelItem(PlayerModelItemPosition position, String modelKey, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, Map<ModelOverrideType, Float> predicate, boolean enchanted, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, UnaryOperator<BufferedImage> enchantmentGlintProvider, UnaryOperator<BufferedImage> rawEnchantmentGlintProvider) {
             this.position = position;
             this.modelKey = modelKey;
             if (postResolveFunction == null) {
@@ -778,11 +779,11 @@ public class ModelRenderer implements AutoCloseable {
             return tintIndexData;
         }
 
-        public Function<BufferedImage, BufferedImage> getEnchantmentGlintProvider() {
+        public UnaryOperator<BufferedImage> getEnchantmentGlintProvider() {
             return enchantmentGlintProvider;
         }
 
-        public Function<BufferedImage, BufferedImage> getRawEnchantmentGlintProvider() {
+        public UnaryOperator<BufferedImage> getRawEnchantmentGlintProvider() {
             return rawEnchantmentGlintProvider;
         }
 

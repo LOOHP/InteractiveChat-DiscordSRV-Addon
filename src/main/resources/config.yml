@@ -163,6 +163,9 @@ DiscordCommands:
       #PlaceholderAPI placeholders in the footer are parsed as THE FIRST PLAYER in the playerlist
       FooterText:
         - ""
+      #Instead of parsing color codes for each player name
+      #Parse MiniMessage Tags instead
+      ParsePlayerNamesWithMiniMessage: false
       PlayerOrder:
         #How should players be ordered in the playerlist
         #.

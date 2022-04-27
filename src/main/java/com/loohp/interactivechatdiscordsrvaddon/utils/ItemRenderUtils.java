@@ -77,6 +77,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 @SuppressWarnings("deprecation")
 public class ItemRenderUtils {
@@ -107,8 +108,8 @@ public class ItemRenderUtils {
         }
 
         TextureResource enchantmentGlintResource = CustomItemTextureUtils.getEnchantmentGlintOverrideTextures(manager, null, item).orElse(ImageGeneration.getDefaultEnchantmentTint());
-        Function<BufferedImage, BufferedImage> enchantmentGlintFunction = image -> ImageGeneration.getEnchantedImage(enchantmentGlintResource, image);
-        Function<BufferedImage, BufferedImage> rawEnchantmentGlintFunction = image -> ImageGeneration.getRawEnchantedImage(enchantmentGlintResource, image);
+        UnaryOperator<BufferedImage> enchantmentGlintFunction = image -> ImageGeneration.getEnchantedImage(enchantmentGlintResource, image);
+        UnaryOperator<BufferedImage> rawEnchantmentGlintFunction = image -> ImageGeneration.getRawEnchantedImage(enchantmentGlintResource, image);
 
         TintIndexData tintIndexData = TintUtils.getTintData(xMaterial);
         Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
@@ -510,10 +511,10 @@ public class ItemRenderUtils {
         private TintIndexData tintIndexData;
         private String modelKey;
         private Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction;
-        private Function<BufferedImage, BufferedImage> enchantmentGlintFunction;
-        private Function<BufferedImage, BufferedImage> rawEnchantmentGlintFunction;
+        private UnaryOperator<BufferedImage> enchantmentGlintFunction;
+        private UnaryOperator<BufferedImage> rawEnchantmentGlintFunction;
 
-        public ItemStackProcessResult(boolean requiresEnchantmentGlint, Map<ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, String modelKey, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, Function<BufferedImage, BufferedImage> enchantmentGlintFunction, Function<BufferedImage, BufferedImage> rawEnchantmentGlintFunction) {
+        public ItemStackProcessResult(boolean requiresEnchantmentGlint, Map<ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, String modelKey, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, UnaryOperator<BufferedImage> enchantmentGlintFunction, UnaryOperator<BufferedImage> rawEnchantmentGlintFunction) {
             this.requiresEnchantmentGlint = requiresEnchantmentGlint;
             this.predicates = predicates;
             this.providedTextures = providedTextures;
@@ -548,11 +549,11 @@ public class ItemRenderUtils {
             return postResolveFunction;
         }
 
-        public Function<BufferedImage, BufferedImage> getEnchantmentGlintFunction() {
+        public UnaryOperator<BufferedImage> getEnchantmentGlintFunction() {
             return enchantmentGlintFunction;
         }
 
-        public Function<BufferedImage, BufferedImage> getRawEnchantmentGlintFunction() {
+        public UnaryOperator<BufferedImage> getRawEnchantmentGlintFunction() {
             return rawEnchantmentGlintFunction;
         }
 

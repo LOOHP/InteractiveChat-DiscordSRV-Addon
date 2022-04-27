@@ -20,6 +20,7 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
+import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.TextComponent;
@@ -31,6 +32,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecora
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration.State;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import com.loohp.interactivechat.libs.org.apache.commons.lang3.RandomStringUtils;
+import com.loohp.interactivechat.objectholders.LegacyIdKey;
 import com.loohp.interactivechat.utils.ComponentCompacting;
 import com.loohp.interactivechat.utils.ComponentFlattening;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
@@ -44,14 +46,15 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Function;
 import java.util.function.ToIntFunction;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 public class ComponentStringUtils {
 
-    public static List<Component> applyWordWrap(Component component, Function<String, String> translateFunction, int lineLengthLimit, ToIntFunction<CharacterLengthProviderData> characterLengthProvider) {
+    public static List<Component> applyWordWrap(Component component, UnaryOperator<String> translateFunction, int lineLengthLimit, ToIntFunction<CharacterLengthProviderData> characterLengthProvider) {
         List<Component> result = new ArrayList<>();
         int x = 0;
         List<Component> child = ComponentFlattening.flatten(component).children();
@@ -189,7 +192,7 @@ public class ComponentStringUtils {
         return result;
     }
 
-    public static Component convertTranslatables(Component component, Function<String, String> translateFunction) {
+    public static Component convertTranslatables(Component component, UnaryOperator<String> translateFunction) {
         component = ComponentFlattening.flatten(component);
         List<Component> children = new ArrayList<>(component.children());
         for (int i = 0; i < children.size(); i++) {
@@ -206,7 +209,7 @@ public class ComponentStringUtils {
         return ComponentCompacting.optimize(component.children(children));
     }
 
-    public static TextComponent convertSingleTranslatable(TranslatableComponent component, Function<String, String> translateFunction) {
+    public static TextComponent convertSingleTranslatable(TranslatableComponent component, UnaryOperator<String> translateFunction) {
         TextComponent translated = Component.text(translateFunction.apply(component.key())).style(component.style());
         for (Component arg : component.args()) {
             translated = (TextComponent) translated.replaceText(TextReplacementConfig.builder().match("%+(?:[0-9]+\\$)?(?:s|d)").replacement(convertTranslatables(arg, translateFunction)).once().build());
@@ -269,17 +272,38 @@ public class ComponentStringUtils {
                 ShowItem showItem = (ShowItem) hoverEvent.value();
                 Key key = showItem.item();
                 int count = showItem.count();
-                String simpleNbt = "{id:\"" + key.asString() + "\", Count: " + count + "b}";
-                String longNbt = showItem.nbt() == null ? null : showItem.nbt().string();
                 ItemStack itemstack = null;
-                try {
-                    itemstack = ItemNBTUtils.getItemFromNBTJson(simpleNbt);
-                } catch (Throwable e) {
+                LegacyIdKey legacyId = InteractiveChatComponentSerializer.interactiveChatKeyToLegacyId(key);
+                if (legacyId == null) {
+                    String simpleNbt = "{id:\"" + key.asString() + "\", Count: " + count + "b}";
+                    try {
+                        itemstack = ItemNBTUtils.getItemFromNBTJson(simpleNbt);
+                    } catch (Throwable ignored) {
+                    }
+                } else {
+                    Optional<XMaterial> optXMaterial;
+                    if (legacyId.hasByteId()) {
+                        optXMaterial = XMaterial.matchXMaterial(legacyId.getByteId(), legacyId.isDamageDataValue() ? (byte) legacyId.getDamage() : 0);
+                        if (optXMaterial.isPresent()) {
+                            itemstack = optXMaterial.get().parseItem();
+                        }
+                    } else {
+                        String materialId = legacyId.getStringId();
+                        if (materialId.contains(":")) {
+                            materialId = materialId.substring(materialId.indexOf(":") + 1);
+                        }
+                        optXMaterial = XMaterial.matchXMaterial(materialId.toUpperCase());
+                        if (optXMaterial.isPresent()) {
+                            itemstack = optXMaterial.get().parseItem();
+                            itemstack.setDurability(legacyId.getDamage());
+                        }
+                    }
                 }
-                if (longNbt != null) {
+                String longNbt = showItem.nbt() == null ? null : showItem.nbt().string();
+                if (itemstack != null && longNbt != null) {
                     try {
                         itemstack = Bukkit.getUnsafe().modifyItemStack(itemstack, longNbt);
-                    } catch (Throwable e) {
+                    } catch (Throwable ignored) {
                     }
                 }
                 if (itemstack != null) {

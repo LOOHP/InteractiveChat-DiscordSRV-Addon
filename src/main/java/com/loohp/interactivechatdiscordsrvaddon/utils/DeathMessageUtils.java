@@ -58,8 +58,8 @@ public class DeathMessageUtils {
             Object craftPlayerObject = craftPlayerClass.cast(player);
             Object nmsEntityPlayerObject = getNmsEntityPlayerMethod.invoke(craftPlayerObject);
             Object nmsCombatTrackerObject = nmsCombatTrackerField.get(nmsEntityPlayerObject);
-            Object nsmIChatBaseComponentObject = getDeathMessageMethod.invoke(nmsCombatTrackerObject);
-            return ChatComponentType.IChatBaseComponent.convertFrom(nsmIChatBaseComponentObject);
+            Object nmsIChatBaseComponentObject = getDeathMessageMethod.invoke(nmsCombatTrackerObject);
+            return ChatComponentType.IChatBaseComponent.convertFrom(nmsIChatBaseComponentObject);
         } catch (Throwable e) {
             return Component.text("");
         }

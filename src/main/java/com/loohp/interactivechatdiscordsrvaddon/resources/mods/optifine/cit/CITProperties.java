@@ -36,6 +36,7 @@ import com.loohp.interactivechat.libs.net.querz.nbt.tag.Tag;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.ItemNBTUtils;
 import com.loohp.interactivechat.utils.NBTParsingUtils;
+import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.IntegerRange;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PercentageOrIntegerRange;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
@@ -297,7 +298,7 @@ public abstract class CITProperties {
         if (itemStack == null || itemStack.getType().equals(Material.AIR)) {
             return false;
         }
-        if (!items.contains(XMaterial.matchXMaterial(itemStack.getType()))) {
+        if (!items.contains(XMaterialUtils.matchXMaterial(itemStack))) {
             return false;
         }
         if (!stackSize.test(itemStack.getAmount())) {
