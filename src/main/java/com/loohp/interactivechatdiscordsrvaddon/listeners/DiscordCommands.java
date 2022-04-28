@@ -74,7 +74,6 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.Mo
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.CustomItemTextureUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordContentUtils;
-import com.loohp.interactivechatdiscordsrvaddon.utils.JDAUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.TitledInventoryWrapper;
 import github.scarsz.discordsrv.DiscordSRV;
@@ -86,6 +85,7 @@ import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.SlashCommandEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.exceptions.ErrorResponseException;
 import github.scarsz.discordsrv.dependencies.jda.api.hooks.ListenerAdapter;
+import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.Command;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.OptionMapping;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.OptionType;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.OptionData;
@@ -534,49 +534,29 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
             String slotLabel = InteractiveChatDiscordSrvAddon.plugin.discordSlotLabel;
             String slotDescription = InteractiveChatDiscordSrvAddon.plugin.discordSlotDescription;
 
-            guild.retrieveCommands().complete().forEach(each -> {
-                try {
-                    switch (each.getName()) {
-                        case RESOURCEPACK_LABEL:
-                            if (InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandIsMainServer) {
-                                each.delete().complete();
-                            }
-                            break;
-                        case PLAYERLIST_LABEL:
-                            if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandIsMainServer) {
-                                each.delete().complete();
-                            }
-                            break;
-                        case ITEM_LABEL:
-                        case ITEM_OTHER_LABEL:
-                            if (InteractiveChatDiscordSrvAddon.plugin.shareItemCommandIsMainServer) {
-                                each.delete().complete();
-                            }
-                            break;
-                        case INVENTORY_LABEL:
-                        case INVENTORY_OTHER_LABEL:
-                            if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandIsMainServer) {
-                                each.delete().complete();
-                            }
-                            break;
-                        case ENDERCHEST_LABEL:
-                        case ENDERCHEST_OTHER_LABEL:
-                            if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandIsMainServer) {
-                                each.delete().complete();
-                            }
-                            break;
-                    }
-                } catch (Throwable ignore) {
-                }
-            });
+            Map<String, Command> existingCommands = guild.retrieveCommands().complete().stream().collect(Collectors.toMap(each -> each.getName(), each -> each));
             if (InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandEnabled && InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandIsMainServer) {
-                guild.upsertCommand(RESOURCEPACK_LABEL, ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandDescription)).setDefaultEnabled(false).queue(command -> {
-                    command.updatePrivileges(guild, JDAUtils.toWhitelistedCommandPrivileges(guild, JDAUtils.toRoles(guild, InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandRoles))).queue();
+                if (existingCommands.containsKey(RESOURCEPACK_LABEL)) {
+                    existingCommands.get(RESOURCEPACK_LABEL).editCommand().setDescription(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandDescription)).queue();
+                } else {
+                    guild.upsertCommand(RESOURCEPACK_LABEL, ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandDescription)).queue();
+                }
+            } else {
+                existingCommands.computeIfPresent(RESOURCEPACK_LABEL, (name, command) -> {
+                    command.delete().queue();
+                    return null;
                 });
             }
             if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandEnabled && InteractiveChatDiscordSrvAddon.plugin.playerlistCommandIsMainServer) {
-                guild.upsertCommand(PLAYERLIST_LABEL, ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandDescription)).setDefaultEnabled(false).queue(command -> {
-                    command.updatePrivileges(guild, JDAUtils.toWhitelistedCommandPrivileges(guild, JDAUtils.toRoles(guild, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandRoles))).queue();
+                if (existingCommands.containsKey(PLAYERLIST_LABEL)) {
+                    existingCommands.get(PLAYERLIST_LABEL).editCommand().setDescription(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandDescription)).queue();
+                } else {
+                    guild.upsertCommand(PLAYERLIST_LABEL, ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandDescription)).queue();
+                }
+            } else {
+                existingCommands.computeIfPresent(PLAYERLIST_LABEL, (name, command) -> {
+                    command.delete().queue();
+                    return null;
                 });
             }
             Optional<ICPlaceholder> optItemPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.itemPlaceholder)).findFirst();
@@ -590,10 +570,12 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                 SubcommandData armorSubcommand = new SubcommandData("armor", itemDescription).addOptions(new OptionData(OptionType.STRING, slotLabel, slotDescription, true).addChoice("head", "head").addChoice("chest", "chest").addChoice("legs", "legs").addChoice("feet", "feet"));
                 SubcommandData enderSubcommand = new SubcommandData("ender", itemDescription).addOptions(new OptionData(OptionType.INTEGER, slotLabel, slotDescription, true).setRequiredRange(1, 27));
 
+                if (existingCommands.containsKey(ITEM_LABEL)) {
+                    existingCommands.get(ITEM_LABEL).editCommand().setDescription(ChatColorUtils.stripColor(optItemPlaceholder.get().getDescription())).addSubcommands(mainhandSubcommand).addSubcommands(offhandSubcommand).addSubcommands(hotbarSubcommand).addSubcommands(inventorySubcommand).addSubcommands(armorSubcommand).addSubcommands(enderSubcommand).queue();
+                } else {
+                    guild.upsertCommand(ITEM_LABEL, ChatColorUtils.stripColor(optItemPlaceholder.get().getDescription())).addSubcommands(mainhandSubcommand).addSubcommands(offhandSubcommand).addSubcommands(hotbarSubcommand).addSubcommands(inventorySubcommand).addSubcommands(armorSubcommand).addSubcommands(enderSubcommand).queue();
+                }
 
-                guild.upsertCommand(ITEM_LABEL, ChatColorUtils.stripColor(optItemPlaceholder.get().getDescription())).addSubcommands(mainhandSubcommand).addSubcommands(offhandSubcommand).addSubcommands(hotbarSubcommand).addSubcommands(inventorySubcommand).addSubcommands(armorSubcommand).addSubcommands(enderSubcommand).setDefaultEnabled(false).queue(command -> {
-                    command.updatePrivileges(guild, JDAUtils.toWhitelistedCommandPrivileges(guild, JDAUtils.toRoles(guild, InteractiveChatDiscordSrvAddon.plugin.shareItemCommandSelfRoles))).queue();
-                });
                 if (InteractiveChatDiscordSrvAddon.plugin.shareItemCommandAsOthers) {
                     SubcommandData mainhandOtherSubcommand = new SubcommandData("mainhand", itemDescription).addOption(OptionType.USER, memberLabel, memberDescription, true);
                     SubcommandData offhandOtherSubcommand = new SubcommandData("offhand", itemDescription).addOption(OptionType.USER, memberLabel, memberDescription, true);
@@ -602,35 +584,87 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     SubcommandData armorOtherSubcommand = new SubcommandData("armor", itemDescription).addOptions(new OptionData(OptionType.STRING, slotLabel, slotDescription, true).addChoice("head", "head").addChoice("chest", "chest").addChoice("legs", "legs").addChoice("feet", "feet")).addOption(OptionType.USER, memberLabel, memberDescription, true);
                     SubcommandData enderOtherSubcommand = new SubcommandData("ender", itemDescription).addOptions(new OptionData(OptionType.INTEGER, slotLabel, slotDescription, true).setRequiredRange(1, 27)).addOption(OptionType.USER, memberLabel, memberDescription, true);
 
-                    guild.upsertCommand(ITEM_OTHER_LABEL, ChatColorUtils.stripColor(optItemPlaceholder.get().getDescription())).addSubcommands(mainhandOtherSubcommand).addSubcommands(offhandOtherSubcommand).addSubcommands(hotbarOtherSubcommand).addSubcommands(inventoryOtherSubcommand).addSubcommands(armorOtherSubcommand).addSubcommands(enderOtherSubcommand).setDefaultEnabled(false).queue(command -> {
-                        command.updatePrivileges(guild, JDAUtils.toWhitelistedCommandPrivileges(guild, JDAUtils.toRoles(guild, InteractiveChatDiscordSrvAddon.plugin.shareItemCommandOthersRoles))).queue();
+                    if (existingCommands.containsKey(ITEM_OTHER_LABEL)) {
+                        existingCommands.get(ITEM_OTHER_LABEL).editCommand().setDescription(ChatColorUtils.stripColor(optItemPlaceholder.get().getDescription())).addSubcommands(mainhandOtherSubcommand).addSubcommands(offhandOtherSubcommand).addSubcommands(hotbarOtherSubcommand).addSubcommands(inventoryOtherSubcommand).addSubcommands(armorOtherSubcommand).addSubcommands(enderOtherSubcommand).queue();
+                    } else {
+                        guild.upsertCommand(ITEM_OTHER_LABEL, ChatColorUtils.stripColor(optItemPlaceholder.get().getDescription())).addSubcommands(mainhandOtherSubcommand).addSubcommands(offhandOtherSubcommand).addSubcommands(hotbarOtherSubcommand).addSubcommands(inventoryOtherSubcommand).addSubcommands(armorOtherSubcommand).addSubcommands(enderOtherSubcommand).queue();
+                    }
+                } else {
+                    existingCommands.computeIfPresent(ITEM_OTHER_LABEL, (name, command) -> {
+                        command.delete().queue();
+                        return null;
                     });
                 }
+            } else {
+                existingCommands.computeIfPresent(ITEM_LABEL, (name, command) -> {
+                    command.delete().queue();
+                    return null;
+                });
+                existingCommands.computeIfPresent(ITEM_OTHER_LABEL, (name, command) -> {
+                    command.delete().queue();
+                    return null;
+                });
             }
             Optional<ICPlaceholder> optInvPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.invPlaceholder)).findFirst();
             if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandEnabled && optInvPlaceholder.isPresent() && InteractiveChatDiscordSrvAddon.plugin.shareInvCommandIsMainServer) {
-                guild.upsertCommand(INVENTORY_LABEL, ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())).setDefaultEnabled(false).queue(command -> {
-                    command.updatePrivileges(guild, JDAUtils.toWhitelistedCommandPrivileges(guild, JDAUtils.toRoles(guild, InteractiveChatDiscordSrvAddon.plugin.shareInvCommandSelfRoles))).queue();
-                });
+                if (existingCommands.containsKey(INVENTORY_LABEL)) {
+                    existingCommands.get(INVENTORY_LABEL).editCommand().setDescription(ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())).queue();
+                } else {
+                    guild.upsertCommand(INVENTORY_LABEL, ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())).queue();
+                }
                 if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandAsOthers) {
-                    guild.upsertCommand(INVENTORY_OTHER_LABEL, ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())).addOption(OptionType.USER, memberLabel, memberDescription, true).setDefaultEnabled(false).queue(command -> {
-                        command.updatePrivileges(guild, JDAUtils.toWhitelistedCommandPrivileges(guild, JDAUtils.toRoles(guild, InteractiveChatDiscordSrvAddon.plugin.shareInvCommandOthersRoles))).queue();
+                    if (existingCommands.containsKey(INVENTORY_OTHER_LABEL)) {
+                        existingCommands.get(INVENTORY_OTHER_LABEL).editCommand().setDescription(ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())).clearOptions().addOption(OptionType.USER, memberLabel, memberDescription, true).queue();
+                    } else {
+                        guild.upsertCommand(INVENTORY_OTHER_LABEL, ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())).addOption(OptionType.USER, memberLabel, memberDescription, true).queue();
+                    }
+                } else {
+                    existingCommands.computeIfPresent(INVENTORY_OTHER_LABEL, (name, command) -> {
+                        command.delete().queue();
+                        return null;
                     });
                 }
+            } else {
+                existingCommands.computeIfPresent(INVENTORY_LABEL, (name, command) -> {
+                    command.delete().queue();
+                    return null;
+                });
+                existingCommands.computeIfPresent(INVENTORY_OTHER_LABEL, (name, command) -> {
+                    command.delete().queue();
+                    return null;
+                });
             }
             Optional<ICPlaceholder> optEnderPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.enderPlaceholder)).findFirst();
             if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandEnabled && optEnderPlaceholder.isPresent() && InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandIsMainServer) {
-                guild.upsertCommand(ENDERCHEST_LABEL, ChatColorUtils.stripColor(optEnderPlaceholder.get().getDescription())).setDefaultEnabled(false).queue(command -> {
-                    command.updatePrivileges(guild, JDAUtils.toWhitelistedCommandPrivileges(guild, JDAUtils.toRoles(guild, InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandSelfRoles))).queue();
-                });
+                if (existingCommands.containsKey(ENDERCHEST_LABEL)) {
+                    existingCommands.get(ENDERCHEST_LABEL).editCommand().setDescription(ChatColorUtils.stripColor(optEnderPlaceholder.get().getDescription())).queue();
+                } else {
+                    guild.upsertCommand(ENDERCHEST_LABEL, ChatColorUtils.stripColor(optEnderPlaceholder.get().getDescription())).queue();
+                }
                 if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandAsOthers) {
-                    guild.upsertCommand(ENDERCHEST_OTHER_LABEL, ChatColorUtils.stripColor(optEnderPlaceholder.get().getDescription())).addOption(OptionType.USER, memberLabel, memberDescription, true).setDefaultEnabled(false).queue(command -> {
-                        command.updatePrivileges(guild, JDAUtils.toWhitelistedCommandPrivileges(guild, JDAUtils.toRoles(guild, InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandOthersRoles))).queue();
+                    if (existingCommands.containsKey(ENDERCHEST_OTHER_LABEL)) {
+                        existingCommands.get(ENDERCHEST_OTHER_LABEL).editCommand().setDescription(ChatColorUtils.stripColor(optEnderPlaceholder.get().getDescription())).clearOptions().addOption(OptionType.USER, memberLabel, memberDescription, true).queue();
+                    } else {
+                        guild.upsertCommand(ENDERCHEST_OTHER_LABEL, ChatColorUtils.stripColor(optEnderPlaceholder.get().getDescription())).addOption(OptionType.USER, memberLabel, memberDescription, true).queue();
+                    }
+                } else {
+                    existingCommands.computeIfPresent(ENDERCHEST_OTHER_LABEL, (name, command) -> {
+                        command.delete().queue();
+                        return null;
                     });
                 }
+            } else {
+                existingCommands.computeIfPresent(ENDERCHEST_LABEL, (name, command) -> {
+                    command.delete().queue();
+                    return null;
+                });
+                existingCommands.computeIfPresent(ENDERCHEST_OTHER_LABEL, (name, command) -> {
+                    command.delete().queue();
+                    return null;
+                });
             }
         } catch (ErrorResponseException e) {
-            if (e.getResponse().code == 50001) {
+            if (e.getErrorCode() == 50001) {
                 throw new DiscordCommandRegistrationException("Scope \"applications.commands\" missing in discord bot application.\nCheck the Q&A section in https://www.spigotmc.org/resources/83917/ for more information", e);
             }
             throw new DiscordCommandRegistrationException(e);

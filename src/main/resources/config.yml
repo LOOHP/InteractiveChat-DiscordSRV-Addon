@@ -114,10 +114,6 @@ DiscordCommands:
     IsMainServer: true
     #The description of this command on discord
     Description: "Show applied resource packs on discord!"
-    Permissions:
-      #Roles allowed to use this command
-      AllowedRoles:
-        - "everyone"
   #Settings for /playerlist
   PlayerList:
     #Enable the /playerlist command to show all online players in a tablist style image
@@ -136,10 +132,6 @@ DiscordCommands:
     EmptyServer: "There are no players online."
     #Delete the tablist message after X seconds (Set to 0 to not have it automatically deleted)
     DeleteAfter: 0
-    Permissions:
-      #Roles allowed to use this command
-      AllowedRoles:
-        - "everyone"
     TablistOptions:
       #The Vanilla Minecraft client caps the maximum players visible
       #on the tablist to the first 80 players
@@ -202,13 +194,6 @@ DiscordCommands:
     InGameMessage:
       Text: "&6{Player} shared an Item: &f{ItemTag}"
     InventoryTitle: "{Player}'s Item"
-    Permissions:
-      #Roles allowed sharing inventory of self
-      SelfAllowedRoles:
-        - "everyone"
-      #Roles allowed looking up inventory of other users
-      OtherAllowedRoles:
-        - "admin"
   #Settings for /inv
   ShareInventory:
     #Enable the /inv command on discord
@@ -225,13 +210,6 @@ DiscordCommands:
         - "&bClick to view!"
     InventoryTitle: "{Player}'s Inventory"
     SkullDisplayName: "&e{Player}"
-    Permissions:
-      #Roles allowed sharing inventory of self
-      SelfAllowedRoles:
-        - "everyone"
-      #Roles allowed looking up inventory of other users
-      OtherAllowedRoles:
-        - "admin"
   #Settings for /ender
   ShareEnderChest:
     #Enable the /ender command on discord
@@ -247,13 +225,6 @@ DiscordCommands:
       Hover:
         - "&bClick to view!"
     InventoryTitle: "{Player}'s Ender Chest"
-    Permissions:
-      #Roles allowed sharing inventory of self
-      SelfAllowedRoles:
-        - "everyone"
-      #Roles allowed looking up inventory of other users
-      OtherAllowedRoles:
-        - "admin"
 
 DiscordMention:
   #Link mentions through discordsrv linked accounts
