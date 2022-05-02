@@ -1186,7 +1186,6 @@ public class ImageGeneration {
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         g.setColor(TABLIST_BACKGROUND);
         g.fillRect(0, 0, image.getWidth(), image.getHeight());
-        g.setColor(TABLIST_PLAYER_BACKGROUND);
         int baseOffsetY = -((TABLIST_INTERNAL_HEIGHT - 18) / 2 - 2);
         int startingIndex = 0;
         for (int column = 0; column < columnCount; column++) {
@@ -1195,8 +1194,6 @@ public class ImageGeneration {
                 int i = startingIndex + u;
                 if (i < playerRows.size()) {
                     g.drawImage(playerRows.get(i), 2 + ((masterOffsetX + 2) * column), offsetY, null);
-                } else {
-                    g.fillRect(2 + ((masterOffsetX + 2) * column), offsetY + ((TABLIST_INTERNAL_HEIGHT - 18) / 2), masterOffsetX, 16);
                 }
                 offsetY += 18;
             }

@@ -22,12 +22,15 @@ package com.loohp.interactivechatdiscordsrvaddon.objectholders;
 
 import club.minnced.discord.webhook.send.WebhookEmbed;
 import club.minnced.discord.webhook.send.WebhookEmbed.EmbedAuthor;
+import club.minnced.discord.webhook.send.WebhookEmbed.EmbedField;
 import club.minnced.discord.webhook.send.WebhookEmbed.EmbedFooter;
+import club.minnced.discord.webhook.send.WebhookEmbed.EmbedTitle;
 import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import github.scarsz.discordsrv.dependencies.jda.api.EmbedBuilder;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.MessageEmbed;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.MessageEmbed.Field;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.dependencies.jda.api.requests.RestAction;
 import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.MessageAction;
@@ -48,9 +51,11 @@ public class DiscordMessageContent {
 
     private String authorName;
     private String authorIconUrl;
+    private String title;
     private List<String> description;
     private List<String> imageUrl;
     private String thumbnail;
+    private List<Field> fields;
     private int color;
     private String footer;
     private String footerImageUrl;
@@ -61,6 +66,7 @@ public class DiscordMessageContent {
         this.authorIconUrl = authorIconUrl;
         this.description = description;
         this.imageUrl = imageUrl;
+        this.fields = new ArrayList<>();
         this.color = color;
         this.attachments = attachments;
         this.footer = null;
@@ -145,6 +151,14 @@ public class DiscordMessageContent {
         this.thumbnail = thumbnail;
     }
 
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     public List<String> getDescriptions() {
         return description;
     }
@@ -183,6 +197,14 @@ public class DiscordMessageContent {
 
     public void clearImageUrls() {
         imageUrl.clear();
+    }
+
+    public List<Field> getFields() {
+        return fields;
+    }
+
+    public void addFields(Field... field) {
+        fields.addAll(Arrays.asList(field));
     }
 
     public int getColor() {
@@ -230,7 +252,10 @@ public class DiscordMessageContent {
         Map<MessageAction, Set<String>> actions = new LinkedHashMap<>();
         Set<String> rootAttachments = new HashSet<>();
         rootAttachments.add(authorIconUrl);
-        EmbedBuilder embed = new EmbedBuilder().setAuthor(authorName, null, authorIconUrl).setColor(color).setThumbnail(thumbnail);
+        EmbedBuilder embed = new EmbedBuilder().setAuthor(authorName, null, authorIconUrl).setColor(color).setThumbnail(thumbnail).setTitle(title);
+        for (Field field : fields) {
+            embed.addField(field);
+        }
         if (description.size() > 0) {
             embed.setDescription(description.get(0));
         }
@@ -298,6 +323,12 @@ public class DiscordMessageContent {
 
     public WebhookMessageBuilder toWebhookMessageBuilder() {
         WebhookEmbedBuilder embed = new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(authorName, authorIconUrl, null)).setColor(color).setThumbnailUrl(thumbnail);
+        if (title != null) {
+            embed.setTitle(new EmbedTitle(title, null));
+        }
+        for (Field field : fields) {
+            embed.addField(new EmbedField(field.isInline(), field.getName(), field.getValue()));
+        }
         if (description.size() > 0) {
             embed.setDescription(description.get(0));
         }
@@ -335,7 +366,10 @@ public class DiscordMessageContent {
 
     public List<MessageEmbed> toJDAMessageEmbeds() {
         List<MessageEmbed> list = new ArrayList<>();
-        EmbedBuilder embed = new EmbedBuilder().setAuthor(authorName, null, authorIconUrl).setColor(color).setThumbnail(thumbnail);
+        EmbedBuilder embed = new EmbedBuilder().setAuthor(authorName, null, authorIconUrl).setColor(color).setThumbnail(thumbnail).setTitle(title);
+        for (Field field : fields) {
+            embed.addField(field);
+        }
         if (description.size() > 0) {
             embed.setDescription(description.get(0));
         }
@@ -383,6 +417,12 @@ public class DiscordMessageContent {
     public List<WebhookEmbed> toWebhookEmbeds() {
         List<WebhookEmbed> list = new ArrayList<>();
         WebhookEmbedBuilder embed = new WebhookEmbedBuilder().setColor(color).setThumbnailUrl(thumbnail);
+        if (title != null) {
+            embed.setTitle(new EmbedTitle(title, null));
+        }
+        for (Field field : fields) {
+            embed.addField(new EmbedField(field.isInline(), field.getName(), field.getValue()));
+        }
         if (authorName != null) {
             embed.setAuthor(new EmbedAuthor(authorName, authorIconUrl, null));
         }
