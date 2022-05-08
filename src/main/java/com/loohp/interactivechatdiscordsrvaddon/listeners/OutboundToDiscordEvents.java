@@ -667,7 +667,7 @@ public class OutboundToDiscordEvents implements Listener {
         }
         if (InteractiveChatDiscordSrvAddon.plugin.advancementName && title != null) {
             event.setAchievementName(ChatColorUtils.stripColor(title));
-            messageFormat.setAuthorName(LanguageUtils.getTranslation(advancementType.getTranslationKey(), InteractiveChatDiscordSrvAddon.plugin.language).replaceFirst("%s", event.getPlayer().getName()).replaceFirst("%s", ChatColorUtils.stripColor(title)));
+            messageFormat.setAuthorName(ComponentStringUtils.convertFormattedString(LanguageUtils.getTranslation(advancementType.getTranslationKey(), InteractiveChatDiscordSrvAddon.plugin.language), event.getPlayer().getName(), ChatColorUtils.stripColor(title)));
             Color color;
             if (isMinecraft) {
                 color = ColorUtils.getColor(advancementType.getColor());

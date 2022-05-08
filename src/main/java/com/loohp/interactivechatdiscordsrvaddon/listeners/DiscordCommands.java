@@ -1017,7 +1017,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     if (InteractiveChatDiscordSrvAddon.plugin.invShowLevel) {
                         int level = offlineICPlayer.getExperienceLevel();
                         byte[] bottleData = ImageUtils.toArray(InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, CustomItemTextureUtils.getItemPostResolveFunction(InteractiveChatDiscordSrvAddon.plugin.resourceManager, "minecraft:item/experience_bottle", null, XMaterial.EXPERIENCE_BOTTLE.parseItem(), InteractiveChat.version.isOld(), null, null, null, null).orElse(null), InteractiveChat.version.isOld(), "minecraft:item/experience_bottle", ModelDisplayPosition.GUI, false, null, null).getImage());
-                        embedBuilder.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language).replaceFirst("%s|%d", level + ""), "attachment://Level.png");
+                        embedBuilder.setFooter(ComponentStringUtils.convertFormattedString(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language), level), "attachment://Level.png");
                         action.addFile(bottleData, "Level.png");
                     }
                     errorCode--;

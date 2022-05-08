@@ -21,9 +21,11 @@
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NMSUtils;
 import net.md_5.bungee.api.ChatColor;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -34,7 +36,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class PotionUtils {
 
@@ -43,11 +49,7 @@ public class PotionUtils {
 
     private static Class<?> craftItemStackClass;
     private static Class<?> nmsItemStackClass;
-    private static Method asNMSCopyMethod;
-    private static Method nmsItemHasTagMethod;
-    private static Method nmsItemHasGetMethod;
     private static Class<?> nmsNbtTagCompoundClass;
-    private static Method nmsNbtTagGetStringMethod;
     private static Class<?> craftPotionBrewerClass;
     private static Object craftPotionBrewerInstance;
     private static Method craftPotionBrewerGetEffectsFromDamageMethod;
@@ -57,33 +59,26 @@ public class PotionUtils {
     private static Class<?> craftPotionUtilClass;
     private static Class<?> nmsMobEffectClass;
     private static Method craftPotionUtilToBukkitMethod;
+    private static Method craftPotionUtilFromBukkitMethod;
     private static Class<?> nmsMobEffectListClass;
     private static Field nmsMobEffectListByIdArrayField;
     private static Method nmsMobEffectListByIdMethod;
     private static Field nmsMobEffectListTypeField;
     private static Field nmsMobEffectInfoChatFormatField;
+    private static Method nmsMobEffectGetMobEffectListMethod;
+    private static Field nmsMobEffectListAttributeMapField;
+    private static Method nmsMobEffectGetAttributeModifierValueMethod;
+    private static Class<?> nmsAttributeBaseClass;
+    private static Method nmsAttributeBaseGetNameMethod;
+    private static Class<?> nmsAttributeModifierClass;
+    private static Class<?> craftAttributeInstanceClass;
+    private static Method craftAttributeInstanceConvertMethod;
 
     static {
         try {
             craftItemStackClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.inventory.CraftItemStack");
             nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemStack", "net.minecraft.world.item.ItemStack");
-            asNMSCopyMethod = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class);
-            nmsItemHasTagMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
-                return nmsItemStackClass.getMethod("hasTag");
-            }, () -> {
-                return nmsItemStackClass.getMethod("r");
-            });
-            nmsItemHasGetMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
-                return nmsItemStackClass.getMethod("getTag");
-            }, () -> {
-                return nmsItemStackClass.getMethod("s");
-            });
             nmsNbtTagCompoundClass = NMSUtils.getNMSClass("net.minecraft.server.%s.NBTTagCompound", "net.minecraft.nbt.NBTTagCompound");
-            nmsNbtTagGetStringMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
-                return nmsNbtTagCompoundClass.getMethod("getString", String.class);
-            }, () -> {
-                return nmsNbtTagCompoundClass.getMethod("l", String.class);
-            });
             nmsMobEffectListClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MobEffectList", "net.minecraft.world.effect.MobEffectList");
             if (InteractiveChat.version.isOld()) {
                 craftPotionBrewerClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.potion.CraftPotionBrewer");
@@ -96,6 +91,7 @@ public class PotionUtils {
                 craftPotionUtilClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.potion.CraftPotionUtil");
                 nmsMobEffectClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MobEffect", "net.minecraft.world.effect.MobEffect");
                 craftPotionUtilToBukkitMethod = craftPotionUtilClass.getMethod("toBukkit", nmsMobEffectClass);
+                craftPotionUtilFromBukkitMethod = craftPotionUtilClass.getMethod("fromBukkit", PotionEffect.class);
             }
             if (InteractiveChat.version.isOld()) {
                 nmsMobEffectListByIdArrayField = nmsMobEffectListClass.getField("byId");
@@ -111,6 +107,21 @@ public class PotionUtils {
                 }
                 nmsMobEffectListTypeField = nmsMobEffectListClass.getDeclaredField("b");
                 nmsMobEffectInfoChatFormatField = nmsMobEffectListTypeField.getType().getDeclaredField("d");
+            }
+            if (!InteractiveChat.version.isOld()) {
+                nmsAttributeBaseClass = NMSUtils.getNMSClass("net.minecraft.server.%s.AttributeBase", "net.minecraft.world.entity.ai.attributes.AttributeBase");
+                nmsAttributeModifierClass = NMSUtils.getNMSClass("net.minecraft.server.%s.AttributeModifier", "net.minecraft.world.entity.ai.attributes.AttributeModifier");
+                craftAttributeInstanceClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.attribute.CraftAttributeInstance");
+                craftAttributeInstanceConvertMethod = craftAttributeInstanceClass.getMethod("convert", nmsAttributeModifierClass);
+                nmsMobEffectGetAttributeModifierValueMethod = nmsMobEffectListClass.getMethod("a", int.class, nmsAttributeModifierClass);
+                if (InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_17)) {
+                    nmsAttributeBaseGetNameMethod = nmsAttributeBaseClass.getMethod("getName");
+                    nmsMobEffectGetMobEffectListMethod = nmsMobEffectClass.getMethod("getMobEffect");
+                } else {
+                    nmsAttributeBaseGetNameMethod = nmsAttributeBaseClass.getMethod("c");
+                    nmsMobEffectGetMobEffectListMethod = nmsMobEffectClass.getMethod("a");
+                }
+                nmsMobEffectListAttributeMapField = nmsMobEffectListClass.getDeclaredField("a");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -135,17 +146,12 @@ public class PotionUtils {
         if (InteractiveChat.version.isOld()) {
             return new ArrayList<>((Collection<PotionEffect>) craftPotionBrewerGetEffectsFromDamageMethod.invoke(craftPotionBrewerInstance, potion.getDurability()));
         } else {
-            Object nmsStack = asNMSCopyMethod.invoke(null, potion);
-            if (!(boolean) nmsItemHasTagMethod.invoke(nmsStack)) {
+            if (!NBTEditor.contains(potion, "Potion")) {
                 return null;
             }
-            String pName = (String) nmsNbtTagGetStringMethod.invoke(nmsItemHasGetMethod.invoke(nmsStack), "Potion");
-            if (pName == null) {
-                return null;
-            }
-            String[] split = pName.split(":");
-            if (split.length == 2) {
-                pName = split[1];
+            String pName = NBTEditor.getString(potion, "Potion");
+            if (pName.contains(":")) {
+                pName = pName.substring(pName.indexOf(":") + 1);
             }
             Object reg = nmsPotionRegistryGetPotionRegistryFromStringMethod.invoke(null, pName);
             if (reg == null) {
@@ -178,6 +184,24 @@ public class PotionUtils {
             nmsMobEffectInfoChatFormatField.setAccessible(true);
             Enum<?> chatFormat = (Enum<?>) nmsMobEffectInfoChatFormatField.get(mobEffectType);
             return ChatColor.getByChar(chatFormat.toString().charAt(1));
+        }
+    }
+
+    public static Map<String, AttributeModifier> getPotionAttributes(PotionEffect effect) {
+        try {
+            Map<String, AttributeModifier> attributes = new HashMap<>();
+            Object nmsMobEffect = craftPotionUtilFromBukkitMethod.invoke(null, effect);
+            Object nmsMobEffectList = nmsMobEffectGetMobEffectListMethod.invoke(nmsMobEffect);
+            nmsMobEffectListAttributeMapField.setAccessible(true);
+            for (Entry<?, ?> entry : ((Map<?, ?>) nmsMobEffectListAttributeMapField.get(nmsMobEffectList)).entrySet()) {
+                String name = (String) nmsAttributeBaseGetNameMethod.invoke(entry.getKey());
+                AttributeModifier attributeModifier = (AttributeModifier) craftAttributeInstanceConvertMethod.invoke(null, entry.getValue());
+                double leveledAmount = (double) nmsMobEffectGetAttributeModifierValueMethod.invoke(nmsMobEffectList, effect.getAmplifier(), entry.getValue());
+                attributes.put(name, new AttributeModifier(attributeModifier.getUniqueId(), attributeModifier.getName(), leveledAmount, attributeModifier.getOperation(), attributeModifier.getSlot()));
+            }
+            return attributes;
+        } catch (Throwable e) {
+            return Collections.emptyMap();
         }
     }
 

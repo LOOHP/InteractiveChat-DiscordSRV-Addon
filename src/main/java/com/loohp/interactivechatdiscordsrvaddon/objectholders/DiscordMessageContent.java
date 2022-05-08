@@ -97,6 +97,7 @@ public class DiscordMessageContent {
         this.authorName = embed.getAuthor().getName();
         this.authorIconUrl = embed.getAuthor().getIconUrl();
         this.description = new ArrayList<>();
+        this.fields = new ArrayList<>(embed.getFields());
         if (embed.getDescription() != null) {
             description.add(embed.getDescription());
         }
@@ -117,6 +118,11 @@ public class DiscordMessageContent {
         this.description = new ArrayList<>();
         if (messageFormat.getDescription() != null) {
             description.add(messageFormat.getDescription());
+        }
+        if (messageFormat.getFields() == null) {
+            this.fields = new ArrayList<>();
+        } else {
+            this.fields = new ArrayList<>(messageFormat.getFields());
         }
         this.imageUrl = new ArrayList<>();
         if (messageFormat.getImageUrl() != null) {

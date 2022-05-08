@@ -20,11 +20,11 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.languages;
 
-import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.UnaryOperator;
 
 @FunctionalInterface
-public interface TranslateFunction extends BiFunction<String, String, String> {
+public interface TranslateFunction extends BinaryOperator<String> {
 
     String apply(String translationKey, String language);
 

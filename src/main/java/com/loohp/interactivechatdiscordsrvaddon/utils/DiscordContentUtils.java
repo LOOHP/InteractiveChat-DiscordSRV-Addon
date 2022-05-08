@@ -179,7 +179,7 @@ public class DiscordContentUtils {
                             int level = iData.getPlayer().getExperienceLevel();
                             byte[] bottleData = ImageUtils.toArray(InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, CustomItemTextureUtils.getItemPostResolveFunction(InteractiveChatDiscordSrvAddon.plugin.resourceManager, "minecraft:item/experience_bottle", null, XMaterial.EXPERIENCE_BOTTLE.parseItem(), InteractiveChat.version.isOld(), null, null, null, null).orElse(null), InteractiveChat.version.isOld(), "minecraft:item/experience_bottle", ModelDisplayPosition.GUI, false, null, null).getImage());
                             content.addAttachment("Level_" + i + ".png", bottleData);
-                            content.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language).replaceFirst("%s", level + ""));
+                            content.setFooter(ComponentStringUtils.convertFormattedString(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language), level));
                             content.setFooterImageUrl("attachment://Level_" + i + ".png");
                         }
                         contents.add(content);

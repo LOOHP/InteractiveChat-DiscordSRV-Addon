@@ -24,7 +24,6 @@ import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.TextComponent;
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.TextReplacementConfig;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.TranslatableComponent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent.ShowItem;
@@ -50,9 +49,13 @@ import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.ToIntFunction;
 import java.util.function.UnaryOperator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ComponentStringUtils {
+
+    private static final Pattern ARG_FORMAT = Pattern.compile("%(?:(\\d+)\\$)?([A-Za-z%]|$)");
 
     public static List<Component> applyWordWrap(Component component, UnaryOperator<String> translateFunction, int lineLengthLimit, ToIntFunction<CharacterLengthProviderData> characterLengthProvider) {
         List<Component> result = new ArrayList<>();
@@ -199,22 +202,134 @@ public class ComponentStringUtils {
             Component current = children.get(i);
             if (current instanceof TranslatableComponent) {
                 TranslatableComponent trans = (TranslatableComponent) current;
-                Component translated = Component.text(translateFunction.apply(trans.key())).style(trans.style());
-                for (Component arg : trans.args()) {
-                    translated = translated.replaceText(TextReplacementConfig.builder().match("%+(?:[0-9]+\\$)?(?:s|d)").replacement(convertTranslatables(arg, translateFunction)).once().build());
-                }
-                children.set(i, translated);
+                children.set(i, convertSingleTranslatable(trans, translateFunction));
             }
         }
         return ComponentCompacting.optimize(component.children(children));
     }
 
     public static TextComponent convertSingleTranslatable(TranslatableComponent component, UnaryOperator<String> translateFunction) {
-        TextComponent translated = Component.text(translateFunction.apply(component.key())).style(component.style());
-        for (Component arg : component.args()) {
-            translated = (TextComponent) translated.replaceText(TextReplacementConfig.builder().match("%+(?:[0-9]+\\$)?(?:s|d)").replacement(convertTranslatables(arg, translateFunction)).once().build());
+        String translation = translateFunction.apply(component.key());
+        List<Component> args = component.args();
+
+        List<Component> parts = new ArrayList<>();
+        Matcher matcher = ARG_FORMAT.matcher(translation);
+        try {
+            int i = 0;
+            int j = 0;
+            while (matcher.find(j)) {
+                String string;
+                int k = matcher.start();
+                int l = matcher.end();
+                if (k > j) {
+                    string = translation.substring(j, k);
+                    if (string.indexOf(37) != -1) {
+                        throw new IllegalArgumentException();
+                    }
+                    parts.add(Component.text(string));
+                }
+                string = matcher.group(2);
+                String string2 = translation.substring(k, l);
+                if ("%".equals(string) && "%%".equals(string2)) {
+                    parts.add(Component.text("%"));
+                } else if ("s".equals(string) || "d".equals(string)) {
+                    int m;
+                    String string3 = matcher.group(1);
+                    int n = m = string3 != null ? Integer.parseInt(string3) - 1 : i++;
+                    if (m < args.size()) {
+                        parts.add(convertTranslatables(args.get(m), translateFunction));
+                    }
+                } else {
+                    throw new RuntimeException("Unsupported format: '" + string2 + "'");
+                }
+                j = l;
+            }
+            if (j < translation.length()) {
+                String string4 = translation.substring(j);
+                if (string4.indexOf(37) != -1) {
+                    throw new IllegalArgumentException();
+                }
+                parts.add(Component.text(string4));
+            }
+        } catch (IllegalArgumentException illegalArgumentException) {
+            throw new RuntimeException(illegalArgumentException);
         }
-        return translated;
+
+        return Component.empty().style(component.style()).children(parts);
+    }
+
+    public static String convertFormattedString(String translation, Object... args) {
+        List<String> parts = new ArrayList<>();
+        Matcher matcher = ARG_FORMAT.matcher(translation);
+        try {
+            int i = 0;
+            int j = 0;
+            while (matcher.find(j)) {
+                String string;
+                int k = matcher.start();
+                int l = matcher.end();
+                if (k > j) {
+                    string = translation.substring(j, k);
+                    if (string.indexOf(37) != -1) {
+                        throw new IllegalArgumentException();
+                    }
+                    parts.add(string);
+                }
+                string = matcher.group(2);
+                String string2 = translation.substring(k, l);
+                if ("%".equals(string) && "%%".equals(string2)) {
+                    parts.add("%");
+                } else if ("s".equals(string) || "d".equals(string)) {
+                    int m;
+                    String string3 = matcher.group(1);
+                    int n = m = string3 != null ? Integer.parseInt(string3) - 1 : i++;
+                    if (m < args.length) {
+                        parts.add(args[m].toString());
+                    }
+                } else {
+                    throw new RuntimeException("Unsupported format: '" + string2 + "'");
+                }
+                j = l;
+            }
+            if (j < translation.length()) {
+                String string4 = translation.substring(j);
+                if (string4.indexOf(37) != -1) {
+                    throw new IllegalArgumentException();
+                }
+                parts.add(string4);
+            }
+        } catch (IllegalArgumentException illegalArgumentException) {
+            throw new RuntimeException(illegalArgumentException);
+        }
+        return String.join("", parts);
+    }
+
+    public static Component join(Component deliminator, Component... components) {
+        return join(Component.empty(), deliminator, components);
+    }
+
+    public static Component join(Component deliminator, List<? extends Component> components) {
+        return join(Component.empty(), deliminator, components);
+    }
+
+    public static Component join(Component parent, Component deliminator, Component... components) {
+        return join(parent, deliminator, Arrays.asList(components));
+    }
+
+    public static Component join(Component parent, Component deliminator, List<? extends Component> components) {
+        if (components.size() <= 0) {
+            return parent;
+        }
+        if (components.size() == 1) {
+            return parent.append(components.get(0));
+        }
+        List<Component> children = new ArrayList<>(parent.children());
+        for (int i = 0; i < components.size() - 1; i++) {
+            children.add(components.get(i));
+            children.add(deliminator);
+        }
+        children.add(components.get(components.size() - 1));
+        return parent.children(children);
     }
 
     public static String toMagic(String str) {

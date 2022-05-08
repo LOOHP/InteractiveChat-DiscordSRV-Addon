@@ -240,6 +240,18 @@ public class TranslationKeyUtils {
         return "potion.potency." + level;
     }
 
+    public static String getPotionWhenDrunk() {
+        return "potion.whenDrank";
+    }
+
+    public static String getPotionWithAmplifier() {
+        return "potion.withAmplifier";
+    }
+
+    public static String getPotionWithDuration() {
+        return "potion.withDuration";
+    }
+
     public static String getEnchantment(Enchantment enchantment) {
         if (!InteractiveChat.version.isLegacy()) {
             NamespacedKey namespacedKey = enchantment.getKey();
