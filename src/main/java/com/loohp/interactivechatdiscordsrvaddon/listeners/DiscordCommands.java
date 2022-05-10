@@ -37,7 +37,6 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecora
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.minimessage.MiniMessage;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import com.loohp.interactivechat.libs.org.apache.commons.lang3.ArrayUtils;
 import com.loohp.interactivechat.modules.InventoryDisplay;
 import com.loohp.interactivechat.modules.ItemDisplay;
 import com.loohp.interactivechat.objectholders.ICPlaceholder;
@@ -92,7 +91,6 @@ import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.SubcommandData;
 import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.WebhookMessageUpdateAction;
 import net.md_5.bungee.api.ChatColor;
-import net.milkbowl.vault.chat.Chat;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -130,6 +128,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DiscordCommands extends ListenerAdapter implements Listener {
 
@@ -166,8 +165,11 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                             StringBuilder text = new StringBuilder(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandPlayerFormat +
                                                                        " " + InteractiveChatDiscordSrvAddon.plugin.playerlistCommandHeader +
                                                                        " " + InteractiveChatDiscordSrvAddon.plugin.playerlistCommandFooter);
-                            for (String placeholder : InteractiveChatDiscordSrvAddon.plugin.playerlistOrderingPlaceholders) {
-                                text.append(" ").append(placeholder);
+                            for (String type : InteractiveChatDiscordSrvAddon.plugin.playerlistOrderingTypes) {
+                                if (type.startsWith("PLACEHOLDER") && type.contains(":")) {
+                                    String placeholder = type.split(":")[1];
+                                    text.append(" ").append(placeholder);
+                                }
                             }
                             try {
                                 BungeeMessageSender.requestParsedPlaceholders(System.currentTimeMillis(), player.getUniqueId(), text.toString());
@@ -385,78 +387,35 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
         return null;
     }
 
-    private static int getPlayerGroupOrder(String[] groups, OfflinePlayer offlinePlayer) {
-        String[] pGroups = getPlayerGroups(offlinePlayer);
-        if (pGroups == null || pGroups.length < 1) {
-            return Integer.MIN_VALUE + 1;
-        }
-        int index = ArrayUtils.indexOf(groups, pGroups[0]);
-        if (index < 0) {
-            return Integer.MIN_VALUE + 2;
-        }
-        return index;
-    }
-
-    private static String[] getPlayerGroups(OfflinePlayer player) {
+    private static List<String> getPlayerGroups(OfflinePlayer player) {
         RegisteredServiceProvider<Permission> rsp = Bukkit.getServicesManager().getRegistration(Permission.class);
-        return rsp.getProvider().getPlayerGroups(Bukkit.getWorlds().get(0).getName(), player);
-    }
-
-    private static String[] getGroups() {
-        RegisteredServiceProvider<Permission> rspPerm = Bukkit.getServicesManager().getRegistration(Permission.class);
-        Permission permission = rspPerm.getProvider();
-        String[] groups = permission.getGroups();
-        if (groups == null) {
-            return new String[0];
-        }
-        if (groups.length == 0) {
-            return groups;
-        }
-        Arrays.sort(groups, Comparator.comparing(each -> getGroupWeight((String) each)).reversed());
-        return groups;
-    }
-
-    private static int getGroupWeight(String group) {
-        RegisteredServiceProvider<Chat> rspChat = Bukkit.getServicesManager().getRegistration(Chat.class);
-        if (rspChat == null) {
-            return 0;
-        }
-        Chat chat = rspChat.getProvider();
-        if (!chat.isEnabled()) {
-            return 0;
-        }
-        return chat.getGroupInfoInteger(Bukkit.getWorlds().get(0).getName(), group, "weight", Integer.MIN_VALUE);
+        return Arrays.asList(rsp.getProvider().getPlayerGroups(Bukkit.getWorlds().get(0).getName(), player));
     }
 
     @SuppressWarnings("deprecation")
-    private static List<ValueTrios<UUID, Component, Integer>> sortPlayers(List<String> orderTypes, List<String> placeholders, List<ValueTrios<UUID, Component, Integer>> players, Map<UUID, ValuePairs<Integer, String>> playerInfo) {
+    private static List<ValueTrios<UUID, Component, Integer>> sortPlayers(List<String> orderTypes, List<ValueTrios<UUID, Component, Integer>> players, Map<UUID, ValuePairs<List<String>, String>> playerInfo) {
         if (players.size() <= 1) {
             return players;
         }
         Comparator<ValueTrios<UUID, Component, Integer>> comparator = Comparator.comparing(each -> 0);
-        for (String orderType : orderTypes) {
-            switch (orderType.toUpperCase()) {
+        for (String str : orderTypes) {
+            String[] sections = str.split(":", 2);
+            switch (sections[0].toUpperCase()) {
                 case "GROUP":
-                    comparator = comparator.thenComparing(each -> {
-                        ValuePairs<Integer, String> info = playerInfo.get(each.getFirst());
-                        if (info == null) {
-                            return Integer.MIN_VALUE;
-                        }
-                        return info.getFirst();
-                    });
-                    break;
-                case "GROUP_REVERSE":
-                    comparator = comparator.thenComparing(Comparator.comparing(each -> {
-                        ValuePairs<Integer, String> info = playerInfo.get(((ValueTrios<UUID, Component, Integer>) each).getFirst());
-                        if (info == null) {
-                            return Integer.MIN_VALUE;
-                        }
-                        return info.getFirst();
-                    }).reversed());
+                    if (sections.length > 1) {
+                        List<String> groupOrder = Arrays.stream(sections[1].split(",")).map(each -> each.trim()).collect(Collectors.toList());
+                        comparator = comparator.thenComparing(each -> {
+                            ValuePairs<List<String>, String> info = playerInfo.get(each.getFirst());
+                            if (info == null) {
+                                return Integer.MAX_VALUE;
+                            }
+                            return info.getFirst().stream().mapToInt(e -> groupOrder.indexOf(e)).max().orElse(Integer.MAX_VALUE - 1);
+                        });
+                    }
                     break;
                 case "PLAYERNAME":
                     comparator = comparator.thenComparing(each -> {
-                        ValuePairs<Integer, String> info = playerInfo.get(each.getFirst());
+                        ValuePairs<List<String>, String> info = playerInfo.get(each.getFirst());
                         if (info == null) {
                             return "";
                         }
@@ -465,15 +424,16 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     break;
                 case "PLAYERNAME_REVERSE":
                     comparator = comparator.thenComparing(Comparator.comparing(each -> {
-                        ValuePairs<Integer, String> info = playerInfo.get(((ValueTrios<UUID, Component, Integer>) each).getFirst());
+                        ValuePairs<List<String>, String> info = playerInfo.get(((ValueTrios<UUID, Component, Integer>) each).getFirst());
                         if (info == null) {
                             return "";
                         }
                         return info.getSecond();
                     }).reversed());
                     break;
-                case "PLACEHOLDERS":
-                    for (String placeholder : placeholders) {
+                case "PLACEHOLDER":
+                    if (sections.length > 1) {
+                        String placeholder = sections[1];
                         comparator = comparator.thenComparing(Comparator.comparing(each -> {
                             String parsedString = PlaceholderParser.parse(ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(((ValueTrios<UUID, Component, Integer>) each).getFirst()), placeholder);
                             double value = Double.MAX_VALUE;
@@ -487,8 +447,9 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                         }));
                     }
                     break;
-                case "PLACEHOLDERS_REVERSE":
-                    for (String placeholder : placeholders) {
+                case "PLACEHOLDER_REVERSE":
+                    if (sections.length > 1) {
+                        String placeholder = sections[1];
                         comparator = comparator.thenComparing(Comparator.comparing(each -> {
                             String parsedString = PlaceholderParser.parse(ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(((ValueTrios<UUID, Component, Integer>) each).getFirst()), placeholder);
                             double value = Double.MAX_VALUE;
@@ -503,7 +464,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     }
                     break;
                 default:
-                    throw new IllegalArgumentException("Unknown player ordering type " + orderType);
+                    break;
             }
         }
         comparator = comparator.thenComparing(each -> PlainTextComponentSerializer.plainText().serialize(each.getSecond())).thenComparing(each -> each.getFirst());
@@ -772,14 +733,13 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                 } else {
                     int errorCode = -2;
                     try {
-                        String[] groups = getGroups();
                         List<ValueTrios<UUID, Component, Integer>> player = new ArrayList<>();
-                        Map<UUID, ValuePairs<Integer, String>> playerInfo = new HashMap<>();
+                        Map<UUID, ValuePairs<List<String>, String>> playerInfo = new HashMap<>();
                         for (Entry<OfflinePlayer, Integer> entry : players.entrySet()) {
                             OfflinePlayer bukkitOfflinePlayer = entry.getKey();
                             @SuppressWarnings("deprecation")
                             OfflineICPlayer offlinePlayer = ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(bukkitOfflinePlayer.getUniqueId());
-                            playerInfo.put(offlinePlayer.getUniqueId(), new ValuePairs<>(getPlayerGroupOrder(groups, bukkitOfflinePlayer), offlinePlayer.getName()));
+                            playerInfo.put(offlinePlayer.getUniqueId(), new ValuePairs<>(getPlayerGroups(bukkitOfflinePlayer), offlinePlayer.getName()));
                             String name = ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(offlinePlayer, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandPlayerFormat));
                             Component nameComponent;
                             if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandParsePlayerNamesWithMiniMessage) {
@@ -790,7 +750,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                             player.add(new ValueTrios<>(offlinePlayer.getUniqueId(), nameComponent, entry.getValue()));
                         }
                         errorCode--;
-                        sortPlayers(InteractiveChatDiscordSrvAddon.plugin.playerlistOrderingTypes, InteractiveChatDiscordSrvAddon.plugin.playerlistOrderingPlaceholders, player, playerInfo);
+                        sortPlayers(InteractiveChatDiscordSrvAddon.plugin.playerlistOrderingTypes, player, playerInfo);
                         errorCode--;
                         @SuppressWarnings("deprecation")
                         OfflineICPlayer firstPlayer = ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(players.keySet().iterator().next().getUniqueId());

@@ -201,7 +201,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public int playerlistCommandMinWidth = 0;
     public int playerlistMaxPlayers = 80;
     public List<String> playerlistOrderingTypes = new ArrayList<>();
-    public List<String> playerlistOrderingPlaceholders = new ArrayList<>();
     public boolean shareItemCommandEnabled = true;
     public boolean shareItemCommandAsOthers = true;
     public boolean shareItemCommandIsMainServer = true;
@@ -490,7 +489,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         playerlistCommandMinWidth = config.getConfiguration().getInt("DiscordCommands.PlayerList.TablistOptions.PlayerMinWidth");
         playerlistMaxPlayers = config.getConfiguration().getInt("DiscordCommands.PlayerList.TablistOptions.MaxPlayersDisplayable");
         playerlistOrderingTypes = config.getConfiguration().getStringList("DiscordCommands.PlayerList.TablistOptions.PlayerOrder.OrderBy");
-        playerlistOrderingPlaceholders = config.getConfiguration().getStringList("DiscordCommands.PlayerList.TablistOptions.PlayerOrder.Placeholders");
 
         shareItemCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.ShareItem.Enabled");
         shareItemCommandAsOthers = config.getConfiguration().getBoolean("DiscordCommands.ShareItem.AllowAsOthers");

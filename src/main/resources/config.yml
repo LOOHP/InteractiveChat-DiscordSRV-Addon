@@ -168,19 +168,15 @@ DiscordCommands:
         #The player's full tablist text component and (then) UUID string will be used to ensure consistent ordering
         #.
         #Avalible Ordering Types:
-        #GROUP (Permission group weight from the highest to the lowest)
-        #GROUP_REVERSE (Permission group weight from the lowest to the highest)
+        #GROUP:<group,group...> (Permission group ordered by the provided ordering)
         #PLAYERNAME (Player Name ordering from 0 to 9 then A to Z)
         #PLAYERNAME_REVERSE (Player Name ordering from Z to A then 9 to 0)
-        #PLACEHOLDERS (Placeholder ordering from small to large numbers then A to Z)
-        #PLACEHOLDERS_REVERSE (Placeholder ordering from Z to A then large to small numbers)
+        #PLACEHOLDER:<placeholder> (Placeholder ordering from small to large numbers then A to Z)
+        #PLACEHOLDER_REVERSE:<placeholder> (Placeholder ordering from Z to A then large to small numbers)
         OrderBy:
-          - GROUP
-          - PLAYERNAME
-          - PLACEHOLDERS
-        #Placeholder ordering is applied from top to bottom
-        Placeholders:
-          - "%vault_eco_balance%"
+          - "GROUP:owner,admin,member,default"
+          - "PLACEHOLDER_REVERSE:%luckperms_meta_weight%"
+          - "PLAYERNAME"
   #Settings for /item
   ShareItem:
     #Enable the /item command on discord
