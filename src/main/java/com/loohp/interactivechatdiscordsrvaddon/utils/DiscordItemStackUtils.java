@@ -989,7 +989,7 @@ public class DiscordItemStackUtils {
             ItemMeta meta = item.getItemMeta();
             if (meta.hasLore()) {
                 for (String lore : meta.getLore()) {
-                    prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(lore).color(NamedTextColor.DARK_PURPLE).decorate(TextDecoration.ITALIC)));
+                    prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_PURPLE + "" + ChatColor.ITALIC + lore)));
                 }
             }
         }
