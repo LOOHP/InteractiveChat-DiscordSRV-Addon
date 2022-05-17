@@ -24,6 +24,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream;
+import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
@@ -51,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 
 public class ResourceManager implements AutoCloseable {
 
@@ -63,10 +65,13 @@ public class ResourceManager implements AutoCloseable {
     private OptifineManager optifineManager;
     private ChimeManager chimeManager;
 
+    private boolean flattenLegacy;
+    private boolean fontLegacy;
+
     private AtomicBoolean isValid;
     private UUID uuid;
 
-    public ResourceManager(boolean optifine, boolean chime) {
+    public ResourceManager(boolean flattenLegacy, boolean fontLegacy, boolean optifine, boolean chime) {
         this.resourcePackInfo = new LinkedList<>();
 
         this.modelManager = new ModelManager(this);
@@ -79,6 +84,9 @@ public class ResourceManager implements AutoCloseable {
         if (chime) {
             this.chimeManager = new ChimeManager(this);
         }
+
+        this.flattenLegacy = flattenLegacy;
+        this.fontLegacy = fontLegacy;
 
         this.isValid = new AtomicBoolean(true);
         this.uuid = UUID.randomUUID();
@@ -126,6 +134,7 @@ public class ResourceManager implements AutoCloseable {
         int format;
         Component description = null;
         Map<String, LanguageMeta> languageMeta = new HashMap<>();
+        List<ResourceFilterBlock> resourceFilterBlocks;
         try {
             JSONObject packJson = (JSONObject) json.get("pack");
             format = ((Number) packJson.get("pack_format")).intValue();
@@ -155,6 +164,14 @@ public class ResourceManager implements AutoCloseable {
                     languageMeta.put(language, new LanguageMeta(language, region, name, bidirectional));
                 }
             }
+
+            JSONObject filterJson = (JSONObject) json.get("filter");
+            JSONArray filterBlockArray;
+            if (filterJson != null && (filterBlockArray = (JSONArray) filterJson.get("block")) != null) {
+                resourceFilterBlocks = ResourceFilterBlock.fromJson(filterBlockArray);
+            } else {
+                resourceFilterBlocks = Collections.emptyList();
+            }
         } catch (Exception e) {
             new ResourceLoadingException("Invalid pack.mcmeta for " + resourcePackName, e).printStackTrace();
             ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, "Invalid pack.mcmeta");
@@ -173,17 +190,47 @@ public class ResourceManager implements AutoCloseable {
 
         ResourcePackFile assetsFolder = resourcePack.getChild("assets");
         try {
+            filterResources(resourceFilterBlocks);
             loadAssets(assetsFolder, languageMeta);
         } catch (Exception e) {
             new ResourceLoadingException("Unable to load assets for " + resourcePackName, e).printStackTrace();
-            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, false, "Unable to load assets", format, description, languageMeta, icon);
+            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, false, "Unable to load assets", format, description, languageMeta, icon, resourceFilterBlocks);
             resourcePackInfo.add(0, info);
             return info;
         }
 
-        ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, true, null, format, description, languageMeta, icon);
+        ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, true, null, format, description, languageMeta, icon, resourceFilterBlocks);
         resourcePackInfo.add(0, info);
         return info;
+    }
+
+    private void filterResources(List<ResourceFilterBlock> resourceFilterBlocks) {
+        for (ResourceFilterBlock resourceFilterBlock : resourceFilterBlocks) {
+            Pattern namespace = resourceFilterBlock.getNamespace();
+            Pattern path = resourceFilterBlock.getPath();
+
+            ((AbstractManager) modelManager).filterResources(namespace, path);
+            ((AbstractManager) textureManager).filterResources(namespace, path);
+            ((AbstractManager) fontManager).filterResources(namespace, path);
+            ((AbstractManager) languageManager).filterResources(namespace, path);
+            if (hasOptifineManager()) {
+                ((AbstractManager) optifineManager).filterResources(namespace, path);
+            }
+            if (hasChimeManager()) {
+                ((AbstractManager) chimeManager).filterResources(namespace, path);
+            }
+        }
+
+        ((AbstractManager) modelManager).reload();
+        ((AbstractManager) textureManager).reload();
+        ((AbstractManager) fontManager).reload();
+        ((AbstractManager) languageManager).reload();
+        if (hasOptifineManager()) {
+            ((AbstractManager) optifineManager).reload();
+        }
+        if (hasChimeManager()) {
+            ((AbstractManager) chimeManager).reload();
+        }
     }
 
     private void loadAssets(ResourcePackFile assetsFolder, Map<String, LanguageMeta> languageMeta) {
@@ -299,6 +346,14 @@ public class ResourceManager implements AutoCloseable {
 
     public boolean hasChimeManager() {
         return chimeManager != null;
+    }
+
+    public boolean isFlattenLegacy() {
+        return flattenLegacy;
+    }
+
+    public boolean isFontLegacy() {
+        return fontLegacy;
     }
 
     public boolean isValid() {

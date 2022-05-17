@@ -89,12 +89,13 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -549,7 +550,7 @@ public class BlockModelRenderer extends JFrame {
         List<String> resourceOrder;
         int valuePerPack;
         try {
-            YamlConfiguration yaml = new YamlConfiguration(new FileInputStream("InteractiveChatDiscordSrvAddon/config.yml"));
+            YamlConfiguration yaml = new YamlConfiguration(Files.newInputStream(Paths.get("InteractiveChatDiscordSrvAddon/config.yml")));
             resourceOrder = yaml.getStringList("Resources.Order");
             Collections.reverse(resourceOrder);
             valuePerPack = (int) ((1.0 / (double) (resourceOrder.size() + 1)) * 10000);
@@ -565,7 +566,7 @@ public class BlockModelRenderer extends JFrame {
 
         PrintStream original = System.err;
         try {
-            resourceManager = new ResourceManager(false, false);
+            resourceManager = new ResourceManager(false, false, false, false);
             resourceManager.loadResources(new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN);
             resourceBar.setValue(valuePerPack);
             for (String resourceName : resourceOrder) {

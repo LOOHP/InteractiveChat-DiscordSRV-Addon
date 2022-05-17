@@ -55,11 +55,13 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 public class OptifineManager extends AbstractManager implements IOptifineManager {
 
@@ -69,7 +71,7 @@ public class OptifineManager extends AbstractManager implements IOptifineManager
     private Map<String, ValuePairs<ResourcePackFile, ?>> assets;
 
     private CITGlobalProperties citGlobalProperties;
-    private Map<ResourcePackFile, CITProperties> citOverrides;
+    private Map<String, ValuePairs<ResourcePackFile, CITProperties>> citOverrides;
 
     public OptifineManager(ResourceManager manager) {
         super(manager);
@@ -118,7 +120,7 @@ public class OptifineManager extends AbstractManager implements IOptifineManager
                             properties.load(reader);
                             reader.close();
                             CITProperties citProperties = CITProperties.fromProperties(file, properties);
-                            citOverrides.put(file, citProperties);
+                            citOverrides.put(key, new ValuePairs<>(file, citProperties));
                         }
                     } else {
                         assets.put(key, new ValuePairs<>(file, null));
@@ -126,6 +128,29 @@ public class OptifineManager extends AbstractManager implements IOptifineManager
                 }
             } catch (Exception e) {
                 new ResourceLoadingException("Unable to load optifine asset " + file.getAbsolutePath(), e).printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    protected void filterResources(Pattern namespace, Pattern path) {
+        Iterator<String> itr = assets.keySet().iterator();
+        while (itr.hasNext()) {
+            String namespacedKey = itr.next();
+            String assetNamespace = namespacedKey.substring(0, namespacedKey.indexOf(":"));
+            String assetKey = namespacedKey.substring(namespacedKey.indexOf(":") + 1);
+            if (namespace.matcher(assetNamespace).matches() && path.matcher(assetKey).matches()) {
+                itr.remove();
+            }
+        }
+
+        Iterator<String> itr2 = citOverrides.keySet().iterator();
+        while (itr2.hasNext()) {
+            String namespacedKey = itr2.next();
+            String assetNamespace = namespacedKey.substring(0, namespacedKey.indexOf(":"));
+            String assetKey = namespacedKey.substring(namespacedKey.indexOf(":") + 1);
+            if (namespace.matcher(assetNamespace).matches() && path.matcher(assetKey).matches()) {
+                itr2.remove();
             }
         }
     }
@@ -310,7 +335,7 @@ public class OptifineManager extends AbstractManager implements IOptifineManager
         return citGlobalProperties == null ? DEFAULT_CIT_GLOBAL_PROPERTIES : citGlobalProperties;
     }
 
-    public Map<ResourcePackFile, CITProperties> getCITOverrides() {
+    public Map<String, ValuePairs<ResourcePackFile, CITProperties>> getCITOverrides() {
         return citOverrides;
     }
 
@@ -318,10 +343,10 @@ public class OptifineManager extends AbstractManager implements IOptifineManager
     public <T extends CITProperties> ValuePairs<ResourcePackFile, T> getCITOverride(EquipmentSlot heldSlot, ItemStack itemStack, Class<T> type) {
         ValuePairs<ResourcePackFile, T> result = null;
         int weight = Integer.MIN_VALUE;
-        for (Entry<ResourcePackFile, CITProperties> entry : citOverrides.entrySet()) {
-            CITProperties citProperties = entry.getValue();
+        for (ValuePairs<ResourcePackFile, CITProperties> pair : citOverrides.values()) {
+            CITProperties citProperties = pair.getSecond();
             if (type.isInstance(citProperties) && citProperties.getWeight() > weight && citProperties.test(heldSlot, itemStack)) {
-                result = new ValuePairs<>(entry.getKey(), (T) citProperties);
+                result = new ValuePairs<>(pair.getFirst(), (T) citProperties);
             }
         }
         return result;

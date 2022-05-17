@@ -309,7 +309,7 @@ public class OutboundToDiscordEvents implements Listener {
                     ItemStack item = PlayerUtils.getHeldItem(icSender);
                     boolean isAir = item.getType().equals(Material.AIR);
                     XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
-                    String itemStr = PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.convertTranslatables(ComponentModernizing.modernize(ItemStackUtils.getDisplayName(item)), InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)));
+                    String itemStr = PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(ComponentModernizing.modernize(ItemStackUtils.getDisplayName(item)), InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)));
                     itemStr = ComponentStringUtils.stripColorAndConvertMagic(itemStr);
 
                     int amount = item.getAmount();

@@ -46,6 +46,8 @@ import java.util.Optional;
 
 public class TrueTypeFont extends MinecraftFont {
 
+    public static final String TYPE_KEY = "ttf";
+
     private static final BufferedImage INTERNAL_IMAGE = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 
     private String resourceLocation;
@@ -72,7 +74,6 @@ public class TrueTypeFont extends MinecraftFont {
         } catch (Throwable e) {
             throw new ResourceLoadingException("No fonts provided by the JVM or the Operating System!\nCheck the Q&A section in https://www.spigotmc.org/resources/83917/ for more information", e);
         }
-        reloadFonts();
     }
 
     @Override
@@ -144,9 +145,6 @@ public class TrueTypeFont extends MinecraftFont {
     @SuppressWarnings("rawtypes")
     @Override
     public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations) {
-        if (character.equals(" ")) {
-            return printSpace(image, x, y, fontSize, lastItalicExtraWidth, color, decorations);
-        }
         float scale = fontSize / 16;
         fontSize = fontSize - (13 - this.size);
         decorations = sortDecorations(decorations);
@@ -218,9 +216,6 @@ public class TrueTypeFont extends MinecraftFont {
 
     @Override
     public Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color) {
-        if (character.equals(" ")) {
-            return Optional.of(getSpaceImage(fontSize));
-        }
         BufferedImage image = new BufferedImage((int) (10 * fontSize), (int) (10 * fontSize), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
         Font fontToPrint = font.deriveFont(fontSize);
@@ -231,6 +226,11 @@ public class TrueTypeFont extends MinecraftFont {
         image = ImageUtils.copyAndGetSubImage(image, 0, 0, g.getFontMetrics().stringWidth(character), height);
         g.dispose();
         return Optional.of(image);
+    }
+
+    @Override
+    public int getCharacterWidth(String character) {
+        return internalGraphics.getFontMetrics().stringWidth(character);
     }
 
 }

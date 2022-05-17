@@ -32,6 +32,8 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.LegacyUnicodeFont.GlyphSize;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 import java.awt.geom.AffineTransform;
@@ -43,8 +45,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class FontManager extends AbstractManager implements IFontManager {
@@ -90,14 +95,24 @@ public class FontManager extends AbstractManager implements IFontManager {
                         JSONObject fontJson = (JSONObject) obj;
                         try {
                             switch (fontJson.get("type").toString()) {
-                                case "bitmap":
+                                case SpaceFont.TYPE_KEY:
+                                    Int2IntMap charAdvances = new Int2IntOpenHashMap();
+                                    JSONObject advancesJson = (JSONObject) fontJson.get("advances");
+                                    for (Object obj1 : advancesJson.keySet()) {
+                                        String character = (String) obj1;
+                                        int advance = ((Number) advancesJson.get(character)).intValue();
+                                        charAdvances.put(character.codePointAt(0), advance);
+                                    }
+                                    providedFonts.add(new SpaceFont(manager, null, charAdvances));
+                                    break;
+                                case BitmapFont.TYPE_KEY:
                                     String resourceLocation = fontJson.get("file").toString();
                                     int height = ((Number) fontJson.getOrDefault("height", 8)).intValue();
                                     int ascent = ((Number) fontJson.get("ascent")).intValue();
                                     List<String> chars = (List<String>) ((JSONArray) fontJson.get("chars")).stream().map(each -> each.toString()).collect(Collectors.toList());
                                     providedFonts.add(new BitmapFont(manager, null, resourceLocation, height, ascent, chars));
                                     break;
-                                case "legacy_unicode":
+                                case LegacyUnicodeFont.TYPE_KEY:
                                     String template = fontJson.get("template").toString();
                                     DataInputStream sizesInput = new DataInputStream(new BufferedInputStream(getFontResource(fontJson.get("sizes").toString()).getFile().getInputStream()));
                                     Int2ObjectOpenHashMap<GlyphSize> sizes = new Int2ObjectOpenHashMap<>();
@@ -114,7 +129,7 @@ public class FontManager extends AbstractManager implements IFontManager {
                                     sizesInput.close();
                                     providedFonts.add(new LegacyUnicodeFont(manager, null, sizes, template));
                                     break;
-                                case "ttf":
+                                case TrueTypeFont.TYPE_KEY:
                                     resourceLocation = fontJson.get("file").toString();
                                     JSONArray shiftArray = (JSONArray) fontJson.get("shift");
                                     float leftShift = ((Number) shiftArray.get(0)).floatValue();
@@ -132,6 +147,9 @@ public class FontManager extends AbstractManager implements IFontManager {
                     }
                     FontProvider existingProvider = fonts.get(key);
                     if (existingProvider == null) {
+                        if (manager.isFontLegacy()) {
+                            providedFonts.add(0, SpaceFont.generateLegacyHardcodedInstance(manager, null));
+                        }
                         providedFonts.add(new BackingEmptyFont(manager, null));
                         FontProvider provider = new FontProvider(key, providedFonts);
                         for (MinecraftFont mcFont : provider.getProviders()) {
@@ -151,6 +169,36 @@ public class FontManager extends AbstractManager implements IFontManager {
         }
         this.fonts.clear();
         this.fonts.putAll(fonts);
+    }
+
+    @Override
+    protected void filterResources(Pattern namespace, Pattern path) {
+        Iterator<String> itr = fonts.keySet().iterator();
+        while (itr.hasNext()) {
+            String namespacedKey = itr.next();
+            String assetNamespace = namespacedKey.substring(0, namespacedKey.indexOf(":"));
+            String assetKey = namespacedKey.substring(namespacedKey.indexOf(":") + 1);
+            if (!assetKey.contains(".")) {
+                assetKey = assetKey + ".json";
+            }
+            if (namespace.matcher(assetNamespace).matches() && path.matcher(assetKey).matches()) {
+                itr.remove();
+            }
+        }
+
+        for (Entry<String, Map<String, ResourcePackFile>> entry : files.entrySet()) {
+            String assetNamespace = entry.getKey();
+            Iterator<String> itr2 = entry.getValue().keySet().iterator();
+            while (itr2.hasNext()) {
+                String assetKey = itr2.next();
+                if (!assetKey.contains(".")) {
+                    assetKey = assetKey + ".json";
+                }
+                if (namespace.matcher(assetNamespace).matches() && path.matcher(assetKey).matches()) {
+                    itr2.remove();
+                }
+            }
+        }
     }
 
     @Override

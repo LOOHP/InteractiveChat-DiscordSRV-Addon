@@ -34,12 +34,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class LanguageManager extends AbstractManager implements ILanguageManager {
@@ -81,7 +83,7 @@ public class LanguageManager extends AbstractManager implements ILanguageManager
         Map<String, Map<String, String>> translations = new HashMap<>();
         for (ResourcePackFile file : root.listFilesRecursively()) {
             String name = file.getName();
-            if (name.endsWith(".json")) {
+            if (!manager.isFlattenLegacy() && name.endsWith(".json")) {
                 try {
                     InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
                     JSONObject json = (JSONObject) parser.parse(reader);
@@ -98,7 +100,7 @@ public class LanguageManager extends AbstractManager implements ILanguageManager
                 } catch (Exception e) {
                     new ResourceLoadingException("Unable to load language " + file.getAbsolutePath(), e).printStackTrace();
                 }
-            } else if (name.endsWith(".lang")) {
+            } else if (manager.isFlattenLegacy() && name.endsWith(".lang")) {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8))) {
                     Map<String, String> mapping = new HashMap<>();
                     String line;
@@ -121,6 +123,22 @@ public class LanguageManager extends AbstractManager implements ILanguageManager
                 this.translations.put(key, entry.getValue());
             } else {
                 mapping.putAll(entry.getValue());
+            }
+        }
+    }
+
+    @Override
+    protected void filterResources(Pattern namespace, Pattern path) {
+        Iterator<String> itr = translations.keySet().iterator();
+        while (itr.hasNext()) {
+            String namespacedKey = itr.next();
+            String assetNamespace = namespacedKey.substring(0, namespacedKey.indexOf(":"));
+            String assetKey = namespacedKey.substring(namespacedKey.indexOf(":") + 1);
+            if (!assetKey.contains(".")) {
+                assetKey = assetKey + (manager.isFlattenLegacy() ? ".lang" : ".json");
+            }
+            if (namespace.matcher(assetNamespace).matches() && path.matcher(assetKey).matches()) {
+                itr.remove();
             }
         }
     }

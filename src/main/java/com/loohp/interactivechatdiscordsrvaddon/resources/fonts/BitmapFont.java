@@ -28,6 +28,8 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingExcepti
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -43,8 +45,11 @@ import java.util.Optional;
 
 public class BitmapFont extends MinecraftFont {
 
+    public static final String TYPE_KEY = "bitmap";
     public static final double ITALIC_SHEAR_X = -4.0 / 14.0;
-    protected Int2ObjectMap<FontTextureResource> charImages;
+
+    private Int2ObjectMap<FontTextureResource> charImages;
+    private Int2IntMap charWidth;
     private String resourceLocation;
     private int height;
     private int ascent;
@@ -57,12 +62,12 @@ public class BitmapFont extends MinecraftFont {
         this.height = height;
         this.ascent = ascent;
         this.chars = chars;
-        reloadFonts();
     }
 
     @Override
     public void reloadFonts() {
         this.charImages = new Int2ObjectOpenHashMap<>();
+        this.charWidth = new Int2IntOpenHashMap();
         if (chars.isEmpty()) {
             return;
         }
@@ -99,6 +104,7 @@ public class BitmapFont extends MinecraftFont {
                         }
                         if (lastX > 0) {
                             charImages.put(character, new FontTextureResource(resource, x, y, lastX, yIncrement));
+                            charWidth.put(character, lastX);
                         }
                     }
                     x += xIncrement;
@@ -135,9 +141,6 @@ public class BitmapFont extends MinecraftFont {
 
     @Override
     public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations) {
-        if (character.equals(" ")) {
-            return printSpace(image, x, y, fontSize, lastItalicExtraWidth, color, decorations);
-        }
         decorations = sortDecorations(decorations);
         Color awtColor = new Color(color.value());
         BufferedImage charImage = charImages.get(character.codePointAt(0)).getFontImage();
@@ -232,15 +235,17 @@ public class BitmapFont extends MinecraftFont {
 
     @Override
     public Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color) {
-        if (character.equals(" ")) {
-            return Optional.of(getSpaceImage(fontSize));
-        }
         Color awtColor = new Color(color.value());
         BufferedImage charImage = charImages.get(character.codePointAt(0)).getFontImage();
         float descent = height - this.ascent - 1;
         charImage = ImageUtils.resizeImageFillHeight(charImage, Math.abs(Math.round(fontSize + (ascent + descent) * scale)));
         charImage = ImageUtils.multiply(charImage, ImageUtils.changeColorTo(ImageUtils.copyImage(charImage), awtColor));
         return Optional.of(charImage);
+    }
+
+    @Override
+    public int getCharacterWidth(String character) {
+        return charWidth.get(character.codePointAt(0));
     }
 
     @Override

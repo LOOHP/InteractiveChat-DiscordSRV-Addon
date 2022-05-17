@@ -38,7 +38,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class TextureManager extends AbstractManager implements ITextureManager {
 
@@ -98,6 +100,22 @@ public class TextureManager extends AbstractManager implements ITextureManager {
             }
         }
         this.textures.putAll(textures);
+    }
+
+    @Override
+    protected void filterResources(Pattern namespace, Pattern path) {
+        Iterator<String> itr = textures.keySet().iterator();
+        while (itr.hasNext()) {
+            String namespacedKey = itr.next();
+            String assetNamespace = namespacedKey.substring(0, namespacedKey.indexOf(":"));
+            String assetKey = namespacedKey.substring(namespacedKey.indexOf(":") + 1);
+            if (!assetKey.contains(".")) {
+                assetKey = assetKey + ".png";
+            }
+            if (namespace.matcher(assetNamespace).matches() && path.matcher(assetKey).matches()) {
+                itr.remove();
+            }
+        }
     }
 
     @Override

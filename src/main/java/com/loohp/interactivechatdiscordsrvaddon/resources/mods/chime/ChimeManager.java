@@ -45,8 +45,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class ChimeManager extends AbstractManager implements IChimeManager {
 
@@ -101,6 +103,35 @@ public class ChimeManager extends AbstractManager implements IChimeManager {
         }
         this.models.putAll(models);
         this.textures.putAll(textures);
+    }
+
+    @Override
+    protected void filterResources(Pattern namespace, Pattern path) {
+        Iterator<String> itr = textures.keySet().iterator();
+        while (itr.hasNext()) {
+            String namespacedKey = itr.next();
+            String assetNamespace = namespacedKey.substring(0, namespacedKey.indexOf(":"));
+            String assetKey = namespacedKey.substring(namespacedKey.indexOf(":") + 1);
+            if (!assetKey.contains(".")) {
+                assetKey = assetKey + ".png";
+            }
+            if (namespace.matcher(assetNamespace).matches() && path.matcher(assetKey).matches()) {
+                itr.remove();
+            }
+        }
+
+        Iterator<String> itr2 = models.keySet().iterator();
+        while (itr2.hasNext()) {
+            String namespacedKey = itr2.next();
+            String assetNamespace = namespacedKey.substring(0, namespacedKey.indexOf(":"));
+            String assetKey = namespacedKey.substring(namespacedKey.indexOf(":") + 1);
+            if (!assetKey.contains(".")) {
+                assetKey = assetKey + ".json";
+            }
+            if (namespace.matcher(assetNamespace).matches() && path.matcher(assetKey).matches()) {
+                itr2.remove();
+            }
+        }
     }
 
     @Override

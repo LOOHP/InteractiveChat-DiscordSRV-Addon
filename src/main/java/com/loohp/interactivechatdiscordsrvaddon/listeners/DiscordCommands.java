@@ -651,7 +651,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                 for (ResourcePackInfo packInfo : InteractiveChatDiscordSrvAddon.plugin.resourceManager.getResourcePackInfo()) {
                     i++;
                     String packName = packInfo.getName();
-                    Component description = ComponentStringUtils.convertTranslatables(ComponentModernizing.modernize(packInfo.getDescription()), InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language));
+                    Component description = ComponentStringUtils.resolve(ComponentModernizing.modernize(packInfo.getDescription()), InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language));
                     EmbedBuilder builder = new EmbedBuilder().setAuthor(packName).setThumbnail("attachment://" + i + ".png");
                     if (packInfo.getStatus()) {
                         builder.setDescription(PlainTextComponentSerializer.plainText().serialize(description));
@@ -848,7 +848,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                 String title = ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.shareItemCommandTitle.replace("{Player}", offlineICPlayer.getName()));
                 errorCode--;
                 Component itemTag = ItemDisplay.createItemDisplay(offlineICPlayer, itemStack, title, true, null);
-                Component resolvedItemTag = ComponentStringUtils.convertTranslatables(ComponentModernizing.modernize(itemTag), InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language));
+                Component resolvedItemTag = ComponentStringUtils.resolve(ComponentModernizing.modernize(itemTag), InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language));
                 Component component = LegacyComponentSerializer.legacySection().deserialize(InteractiveChatDiscordSrvAddon.plugin.shareItemCommandInGameMessageText.replace("{Player}", offlineICPlayer.getName())).replaceText(TextReplacementConfig.builder().matchLiteral("{ItemTag}").replacement(itemTag).build());
                 Component resolvedComponent = LegacyComponentSerializer.legacySection().deserialize(InteractiveChatDiscordSrvAddon.plugin.shareItemCommandInGameMessageText.replace("{Player}", offlineICPlayer.getName())).replaceText(TextReplacementConfig.builder().matchLiteral("{ItemTag}").replacement(resolvedItemTag).build());
                 errorCode--;
@@ -887,7 +887,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     List<DiscordMessageContent> contents = DiscordContentUtils.createContents(Collections.singletonList(data), offlineICPlayer);
                     errorCode--;
 
-                    WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(PlainTextComponentSerializer.plainText().serialize(resolvedComponent));
+                    WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(ComponentStringUtils.stripColorAndConvertMagic(LegacyComponentSerializer.legacySection().serialize(resolvedComponent)));
                     List<MessageEmbed> embeds = new ArrayList<>();
                     for (DiscordMessageContent content : contents) {
                         embeds.addAll(content.toJDAMessageEmbeds());
@@ -968,7 +968,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                 if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandIsMainServer) {
                     errorCode--;
                     EmbedBuilder embedBuilder = new EmbedBuilder().setAuthor(title).setImage("attachment://Inventory.png").setColor(InteractiveChatDiscordSrvAddon.plugin.invColor);
-                    WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(PlainTextComponentSerializer.plainText().serialize(component));
+                    WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(ComponentStringUtils.stripColorAndConvertMagic(LegacyComponentSerializer.legacySection().serialize(component)));
                     errorCode--;
                     byte[] data = ImageUtils.toArray(image);
                     action.addFile(data, "Inventory.png");
@@ -1052,7 +1052,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     errorCode--;
                     byte[] data = ImageUtils.toArray(image);
                     errorCode--;
-                    event.getHook().editOriginal(PlainTextComponentSerializer.plainText().serialize(component)).setEmbeds(new EmbedBuilder().setAuthor(title).setImage("attachment://Inventory.png").setColor(InteractiveChatDiscordSrvAddon.plugin.enderColor).build()).addFile(data, "Inventory.png").queue();
+                    event.getHook().editOriginal(ComponentStringUtils.stripColorAndConvertMagic(LegacyComponentSerializer.legacySection().serialize(component))).setEmbeds(new EmbedBuilder().setAuthor(title).setImage("attachment://Inventory.png").setColor(InteractiveChatDiscordSrvAddon.plugin.enderColor).build()).addFile(data, "Inventory.png").queue();
                 }
             } catch (Exception e) {
                 e.printStackTrace();

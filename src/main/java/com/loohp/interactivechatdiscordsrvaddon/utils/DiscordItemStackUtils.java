@@ -26,10 +26,10 @@ import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.Style;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import com.loohp.interactivechat.libs.net.querz.nbt.io.SNBTDeserializer;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.CompoundTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.ListTag;
@@ -165,7 +165,7 @@ public class DiscordItemStackUtils {
             item = new ItemStack(Material.AIR);
         }
         XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
-        String name = PlainTextComponentSerializer.plainText().serialize(LegacyComponentSerializer.legacySection().deserialize(InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(ItemStackUtils.getDisplayName(item), language)));
+        String name = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(ItemStackUtils.getDisplayName(item), language);
         if (item.getAmount() == 1 || item == null || item.getType().equals(Material.AIR)) {
             name = InteractiveChatDiscordSrvAddon.plugin.itemDisplaySingle.replace("{Item}", ComponentStringUtils.stripColorAndConvertMagic(name)).replace("{Amount}", String.valueOf(item.getAmount()));
         } else {
@@ -986,10 +986,11 @@ public class DiscordItemStackUtils {
         }
 
         if (hasMeta) {
-            ItemMeta meta = item.getItemMeta();
-            if (meta.hasLore()) {
-                for (String lore : meta.getLore()) {
-                    prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_PURPLE + "" + ChatColor.ITALIC + lore)));
+            List<Component> loreLines = ItemStackUtils.getLore(item);
+            if (loreLines != null) {
+                for (Component lore : loreLines) {
+                    Component component = lore.applyFallbackStyle(Style.style(NamedTextColor.DARK_PURPLE, TextDecoration.ITALIC));
+                    prints.add(ToolTipComponent.text(component));
                 }
             }
         }

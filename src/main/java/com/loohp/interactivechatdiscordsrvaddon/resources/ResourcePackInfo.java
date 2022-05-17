@@ -31,6 +31,7 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 
 import java.awt.image.BufferedImage;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class ResourcePackInfo {
@@ -46,8 +47,9 @@ public class ResourcePackInfo {
     private Component description;
     private Map<String, LanguageMeta> languageMeta;
     private BufferedImage icon;
+    private List<ResourceFilterBlock> resourceFilterBlocks;
 
-    private ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, String name, boolean status, boolean exist, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon) {
+    private ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, String name, boolean status, boolean exist, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon, List<ResourceFilterBlock> resourceFilterBlocks) {
         this.manager = manager;
         this.file = file;
         this.type = type;
@@ -59,14 +61,15 @@ public class ResourcePackInfo {
         this.description = description;
         this.languageMeta = Collections.unmodifiableMap(languageMeta);
         this.icon = icon;
+        this.resourceFilterBlocks = resourceFilterBlocks;
     }
 
-    public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, String name, boolean status, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon) {
-        this(manager, file, type, name, status, true, rejectedReason, packFormat, description, languageMeta, icon);
+    public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, String name, boolean status, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon, List<ResourceFilterBlock> resourceFilterBlocks) {
+        this(manager, file, type, name, status, true, rejectedReason, packFormat, description, languageMeta, icon, resourceFilterBlocks);
     }
 
     public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, String name, String rejectedReason) {
-        this(manager, file, type, name, false, false, rejectedReason, -1, null, Collections.emptyMap(), null);
+        this(manager, file, type, name, false, false, rejectedReason, -1, null, Collections.emptyMap(), null, Collections.emptyList());
     }
 
     public ResourceManager getManager() {
@@ -152,6 +155,10 @@ public class ResourcePackInfo {
 
     public BufferedImage getIcon() {
         return icon == null ? manager.getTextureManager().getTexture(ResourceRegistry.UNKNOWN_PACK_ICON_LOCATION).getTexture() : icon;
+    }
+
+    public List<ResourceFilterBlock> getResourceFilterBlocks() {
+        return resourceFilterBlocks;
     }
 
 }

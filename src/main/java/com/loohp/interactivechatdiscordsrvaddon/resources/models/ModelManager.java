@@ -36,7 +36,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class ModelManager extends AbstractManager implements IModelManager {
 
@@ -78,6 +80,22 @@ public class ModelManager extends AbstractManager implements IModelManager {
             }
         }
         this.models.putAll(models);
+    }
+
+    @Override
+    protected void filterResources(Pattern namespace, Pattern path) {
+        Iterator<String> itr = models.keySet().iterator();
+        while (itr.hasNext()) {
+            String namespacedKey = itr.next();
+            String assetNamespace = namespacedKey.substring(0, namespacedKey.indexOf(":"));
+            String assetKey = namespacedKey.substring(namespacedKey.indexOf(":") + 1);
+            if (!assetKey.contains(".")) {
+                assetKey = assetKey + ".json";
+            }
+            if (namespace.matcher(assetNamespace).matches() && path.matcher(assetKey).matches()) {
+                itr.remove();
+            }
+        }
     }
 
     @Override

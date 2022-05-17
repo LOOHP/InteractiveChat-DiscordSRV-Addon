@@ -20,6 +20,8 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources;
 
+import java.util.regex.Pattern;
+
 public abstract class AbstractManager {
 
     protected ResourceManager manager;
@@ -37,6 +39,8 @@ public abstract class AbstractManager {
     }
 
     protected abstract void loadDirectory(String namespace, ResourcePackFile root, Object... meta);
+
+    protected abstract void filterResources(Pattern namespace, Pattern path);
 
     protected abstract void reload();
 

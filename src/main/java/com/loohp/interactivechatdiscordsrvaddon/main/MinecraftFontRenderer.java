@@ -26,6 +26,8 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextC
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
+import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ComponentStyling;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
@@ -82,14 +84,17 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -402,7 +407,7 @@ public class MinecraftFontRenderer extends JFrame {
         List<String> resourceOrder;
         int valuePerPack;
         try {
-            YamlConfiguration yaml = new YamlConfiguration(new FileInputStream("InteractiveChatDiscordSrvAddon/config.yml"));
+            YamlConfiguration yaml = new YamlConfiguration(Files.newInputStream(Paths.get("InteractiveChatDiscordSrvAddon/config.yml")));
             resourceOrder = yaml.getStringList("Resources.Order");
             Collections.reverse(resourceOrder);
             valuePerPack = (int) ((1.0 / (double) (resourceOrder.size() + 1)) * 10000);
@@ -418,8 +423,15 @@ public class MinecraftFontRenderer extends JFrame {
 
         PrintStream original = System.err;
         try {
-            resourceManager = new ResourceManager(false, false);
-            resourceManager.loadResources(new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN);
+            File defaultPack = new File("InteractiveChatDiscordSrvAddon/built-in", "Default");
+            File defaultPackMeta = new File(defaultPack, "pack.mcmeta");
+            BufferedReader reader = Files.newBufferedReader(defaultPackMeta.toPath(), StandardCharsets.UTF_8);
+            JSONObject json = (JSONObject) new JSONParser().parse(reader);
+            reader.close();
+            int packFormat = ((Number) ((JSONObject) json.get("pack")).get("pack_format")).intValue();
+
+            resourceManager = new ResourceManager(false, packFormat < 9, false, false);
+            resourceManager.loadResources(defaultPack, ResourcePackType.BUILT_IN);
             resourceBar.setValue(valuePerPack);
             for (String resourceName : resourceOrder) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();

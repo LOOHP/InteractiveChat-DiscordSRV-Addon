@@ -22,9 +22,15 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
 import com.loohp.interactivechat.libs.org.apache.commons.lang3.StringEscapeUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap.Entry;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntLists;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,25 +40,15 @@ public class FontProvider {
 
     private String key;
     private List<MinecraftFont> providers;
-    private IntList displayableCharacters;
+    private Int2ObjectMap<IntList> displayableCharactersByWidth;
 
     public FontProvider(String key, List<MinecraftFont> providers) {
         this.key = key;
         this.providers = new ArrayList<>(providers);
-        reload();
     }
 
     public void prependProviders(List<MinecraftFont> newProviders) {
         providers.addAll(0, newProviders);
-        reload();
-    }
-
-    private void reload() {
-        IntList displayableCharacters = new IntArrayList();
-        for (MinecraftFont font : this.providers) {
-            displayableCharacters.addAll(font.getDisplayableCharacters());
-        }
-        this.displayableCharacters = displayableCharacters;
     }
 
     public String getNamespacedKey() {
@@ -63,14 +59,34 @@ public class FontProvider {
         return Collections.unmodifiableList(providers);
     }
 
-    public IntList getDisplayableCharacters() {
-        return IntLists.unmodifiable(displayableCharacters);
+    public Int2ObjectMap<IntList> getDisplayableCharactersByWidth() {
+        return Int2ObjectMaps.unmodifiable(displayableCharactersByWidth);
     }
 
     public void reloadFonts() {
         for (MinecraftFont fonts : providers) {
             fonts.reloadFonts();
         }
+        IntSet set = new IntOpenHashSet();
+        Int2ObjectMap<IntList> displayableCharactersByWidth = new Int2ObjectOpenHashMap<>();
+        for (MinecraftFont font : this.providers) {
+            for (int codePoint : font.getDisplayableCharacters()) {
+                if (set.contains(codePoint)) {
+                    continue;
+                }
+                int width = font.getCharacterWidth(new String(Character.toChars(codePoint)));
+                IntList list = displayableCharactersByWidth.get(width);
+                if (list == null) {
+                    displayableCharactersByWidth.put(width, list = new IntArrayList());
+                }
+                list.add(codePoint);
+                set.add(codePoint);
+            }
+        }
+        for (Entry<IntList> entry : displayableCharactersByWidth.int2ObjectEntrySet()) {
+            entry.setValue(IntLists.unmodifiable(entry.getValue()));
+        }
+        this.displayableCharactersByWidth = displayableCharactersByWidth;
     }
 
     public MinecraftFont forCharacterOrNull(String character) {

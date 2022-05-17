@@ -21,6 +21,7 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
 import com.loohp.blockmodelrenderer.utils.ColorUtils;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
@@ -43,8 +44,10 @@ import java.util.Optional;
 
 public class LegacyUnicodeFont extends MinecraftFont {
 
+    public static final String TYPE_KEY = "legacy_unicode";
     public static final double ITALIC_SHEAR_X = -4.0 / 14.0;
-    private static final Optional<FontTextureResource> MISSING_CHARACTER;
+
+    protected static final Optional<FontTextureResource> MISSING_CHARACTER;
 
     static {
         BufferedImage missingCharacter = new BufferedImage(5, 8, BufferedImage.TYPE_INT_ARGB);
@@ -69,7 +72,6 @@ public class LegacyUnicodeFont extends MinecraftFont {
         super(manager, provider);
         this.sizes = sizes;
         this.template = template;
-        reloadFonts();
     }
 
     @Override
@@ -127,9 +129,6 @@ public class LegacyUnicodeFont extends MinecraftFont {
 
     @Override
     public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations) {
-        if (character.equals(" ")) {
-            return printSpace(image, x, y, fontSize, lastItalicExtraWidth, color, decorations);
-        }
         decorations = sortDecorations(decorations);
         Color awtColor = new Color(color.value());
         Optional<FontTextureResource> optCharImage = charImages.get(character.codePointAt(0));
@@ -223,9 +222,6 @@ public class LegacyUnicodeFont extends MinecraftFont {
 
     @Override
     public Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color) {
-        if (character.equals(" ")) {
-            return Optional.of(getSpaceImage(fontSize));
-        }
         Color awtColor = new Color(color.value());
         Optional<FontTextureResource> optCharImage = charImages.get(character.codePointAt(0));
         if (optCharImage == null) {
@@ -239,6 +235,12 @@ public class LegacyUnicodeFont extends MinecraftFont {
         } else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public int getCharacterWidth(String character) {
+        GlyphSize size = sizes.get(character.codePointAt(0));
+        return size.getEnd() - size.getStart() + 1;
     }
 
     @Override

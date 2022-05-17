@@ -594,7 +594,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                 sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Reloading ResourceManager: " + ChatColor.YELLOW + String.join(", ", resourceList), senders);
 
                 @SuppressWarnings("resource")
-                ResourceManager resourceManager = new ResourceManager(optifineCustomTextures, chimeOverrideModels);
+                ResourceManager resourceManager = new ResourceManager(InteractiveChat.version.isLegacy(), InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_18_2), optifineCustomTextures, chimeOverrideModels);
                 resourceManager.getLanguageManager().setTranslateFunction((translateKey, language) -> LanguageUtils.getTranslation(translateKey, language));
                 resourceManager.getLanguageManager().setAvailableLanguagesSupplier(() -> LanguageUtils.getLoadedLanguages());
                 resourceManager.getLanguageManager().registerReloadListener(e -> {

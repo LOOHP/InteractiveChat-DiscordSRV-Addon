@@ -492,7 +492,7 @@ public class ImageUtils {
     }
 
     public static BufferedImage printComponentShadowlessDynamicSize(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int centerX, int topY, float fontSize, boolean dynamicFontSize) {
-        Component text = ComponentFlattening.flatten(ComponentStringUtils.convertTranslatables(ComponentModernizing.modernize(component), manager.getLanguageManager().getTranslateFunction().ofLanguage(language)));
+        Component text = ComponentFlattening.flatten(ComponentStringUtils.resolve(ComponentModernizing.modernize(component), manager.getLanguageManager().getTranslateFunction().ofLanguage(language)));
         String striped = ChatColorUtils.stripColor(ChatColorUtils.filterIllegalColorCodes(PlainTextComponentSerializer.plainText().serialize(text)));
 
         if (dynamicFontSize) {
@@ -635,7 +635,7 @@ public class ImageUtils {
     }
 
     private static BufferedImage printComponent0(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize, double factor) {
-        Component text = ComponentFlattening.flatten(ComponentStringUtils.convertTranslatables(ComponentModernizing.modernize(component), manager.getLanguageManager().getTranslateFunction().ofLanguage(language)));
+        Component text = ComponentFlattening.flatten(ComponentStringUtils.resolve(ComponentModernizing.modernize(component), manager.getLanguageManager().getTranslateFunction().ofLanguage(language)));
         BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
         CharacterDataArray characterDataArray = CharacterDataArray.fromComponent(text, legacyRGB);
         char[] chars = characterDataArray.getChars();

@@ -22,7 +22,12 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.BlockNBTComponent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.EntityNBTComponent;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.KeybindComponent;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.ScoreComponent;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.StorageNBTComponent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.TextComponent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.TranslatableComponent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent;
@@ -195,15 +200,31 @@ public class ComponentStringUtils {
         return result;
     }
 
-    public static Component convertTranslatables(Component component, UnaryOperator<String> translateFunction) {
+    public static Component resolve(Component component, UnaryOperator<String> translateFunction) {
         component = ComponentFlattening.flatten(component);
         List<Component> children = new ArrayList<>(component.children());
         for (int i = 0; i < children.size(); i++) {
             Component current = children.get(i);
             if (current instanceof TranslatableComponent) {
-                TranslatableComponent trans = (TranslatableComponent) current;
-                children.set(i, convertSingleTranslatable(trans, translateFunction));
+                TranslatableComponent translatable = (TranslatableComponent) current;
+                current = convertSingleTranslatable(translatable, translateFunction);
+            } else if (current instanceof KeybindComponent) {
+                KeybindComponent keybinding = (KeybindComponent) current;
+                current = convertSingleTranslatable(Component.translatable(keybinding.keybind()), translateFunction);
+            } else if (current instanceof ScoreComponent) {
+                ScoreComponent score = (ScoreComponent) current;
+                current = Component.text("{" + score.name() + ": " + score.objective() + "}");
+            } else if (current instanceof BlockNBTComponent) {
+                BlockNBTComponent nbt = (BlockNBTComponent) current;
+                current = Component.text(nbt.nbtPath() + "@[" + nbt.pos().asString() + "]");
+            } else if (current instanceof EntityNBTComponent) {
+                EntityNBTComponent nbt = (EntityNBTComponent) current;
+                current = Component.text(nbt.nbtPath() + "@[" + nbt.selector() + "]");
+            } else if (current instanceof StorageNBTComponent) {
+                StorageNBTComponent nbt = (StorageNBTComponent) current;
+                current = Component.text(nbt.nbtPath() + "@[" + nbt.storage().asString() + "]");
             }
+            children.set(i, current);
         }
         return ComponentCompacting.optimize(component.children(children));
     }
@@ -237,7 +258,7 @@ public class ComponentStringUtils {
                     String string3 = matcher.group(1);
                     int n = m = string3 != null ? Integer.parseInt(string3) - 1 : i++;
                     if (m < args.size()) {
-                        parts.add(convertTranslatables(args.get(m), translateFunction));
+                        parts.add(resolve(args.get(m), translateFunction));
                     }
                 } else {
                     throw new RuntimeException("Unsupported format: '" + string2 + "'");
@@ -340,9 +361,10 @@ public class ComponentStringUtils {
         if (provider == null) {
             return RandomStringUtils.random(str.length());
         }
-        IntList list = provider.getDisplayableCharacters();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < str.length(); i++) {
+            String currentChar = str.substring(i, i + 1);
+            IntList list = provider.getDisplayableCharactersByWidth().get(provider.forCharacter(currentChar).getCharacterWidth(currentChar));
             sb.append(Character.toChars(list.getInt(ThreadLocalRandom.current().nextInt(list.size()))));
         }
         return sb.toString();
