@@ -74,7 +74,11 @@ public class BitmapFont extends MinecraftFont {
 
         TextureResource resource = manager.getFontManager().getFontResource(resourceLocation);
         if (resource == null || !resource.isTexture()) {
-            throw new ResourceLoadingException(resourceLocation + " is not a valid font resource");
+            if (provider == null) {
+                throw new ResourceLoadingException(resourceLocation + " is not a valid font resource");
+            } else {
+                throw new ResourceLoadingException(resourceLocation + " is not a valid font resource (Defined in " + provider.getNamespacedKey() + ")");
+            }
         }
         BufferedImage fontBaseImage = resource.getTexture();
 

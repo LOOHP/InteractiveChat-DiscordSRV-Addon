@@ -147,11 +147,7 @@ public class FontManager extends AbstractManager implements IFontManager {
                     }
                     FontProvider existingProvider = fonts.get(key);
                     if (existingProvider == null) {
-                        if (manager.isFontLegacy()) {
-                            providedFonts.add(0, SpaceFont.generateLegacyHardcodedInstance(manager, null));
-                        }
-                        providedFonts.add(new BackingEmptyFont(manager, null));
-                        FontProvider provider = new FontProvider(key, providedFonts);
+                        FontProvider provider = new FontProvider(manager, key, providedFonts);
                         for (MinecraftFont mcFont : provider.getProviders()) {
                             mcFont.setProvider(provider);
                         }

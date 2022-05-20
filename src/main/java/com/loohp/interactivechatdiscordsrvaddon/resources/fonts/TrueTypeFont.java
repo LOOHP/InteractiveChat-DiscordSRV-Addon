@@ -98,7 +98,11 @@ public class TrueTypeFont extends MinecraftFont {
             }
             this.displayableCharacters = IntSets.unmodifiable(displayableCharacters);
         } catch (FontFormatException | IOException e) {
-            e.printStackTrace();
+            if (provider == null) {
+                throw new ResourceLoadingException("Unable to load TrueTypeFont provider at " + resourceLocation, e);
+            } else {
+                throw new ResourceLoadingException("Unable to load TrueTypeFont provider at " + resourceLocation + " (Defined in " + provider.getNamespacedKey() + ")", e);
+            }
         }
     }
 

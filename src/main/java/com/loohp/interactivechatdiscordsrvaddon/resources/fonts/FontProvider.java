@@ -22,6 +22,7 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
 import com.loohp.interactivechat.libs.org.apache.commons.lang3.StringEscapeUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap.Entry;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
@@ -34,15 +35,18 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 public class FontProvider {
 
+    private ResourceManager manager;
     private String key;
     private List<MinecraftFont> providers;
     private Int2ObjectMap<IntList> displayableCharactersByWidth;
 
-    public FontProvider(String key, List<MinecraftFont> providers) {
+    public FontProvider(ResourceManager manager, String key, List<MinecraftFont> providers) {
+        this.manager = manager;
         this.key = key;
         this.providers = new ArrayList<>(providers);
     }
@@ -64,9 +68,27 @@ public class FontProvider {
     }
 
     public void reloadFonts() {
-        for (MinecraftFont fonts : providers) {
-            fonts.reloadFonts();
+        int i = 0;
+        if (manager.isFontLegacy() && (providers.isEmpty() || !(providers.get(0) instanceof SpaceFont))) {
+            providers.add(0, SpaceFont.generateLegacyHardcodedInstance(manager, this));
+            i--;
         }
+        if (providers.isEmpty() || !(providers.get(providers.size() - 1) instanceof BackingEmptyFont)) {
+            providers.add(new BackingEmptyFont(manager, this));
+        }
+
+        Iterator<MinecraftFont> itr = providers.iterator();
+        while (itr.hasNext()) {
+            MinecraftFont font = itr.next();
+            try {
+                font.reloadFonts();
+            } catch (Exception e) {
+                new ResourceLoadingException("Unable to load " + font.getClass().getSimpleName() + " provider " + i + " in " + key).printStackTrace();
+                itr.remove();
+            }
+            i++;
+        }
+
         IntSet set = new IntOpenHashSet();
         Int2ObjectMap<IntList> displayableCharactersByWidth = new Int2ObjectOpenHashMap<>();
         for (MinecraftFont font : this.providers) {
