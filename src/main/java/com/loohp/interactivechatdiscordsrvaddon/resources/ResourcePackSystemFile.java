@@ -23,15 +23,15 @@ package com.loohp.interactivechatdiscordsrvaddon.resources;
 import com.loohp.interactivechat.libs.org.apache.commons.io.FileUtils;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ResourcePackSystemFile implements ResourcePackFile {
 
@@ -106,7 +106,7 @@ public class ResourcePackSystemFile implements ResourcePackFile {
 
     @Override
     public Collection<ResourcePackFile> listFilesAndFolders() {
-        return Stream.of(file.listFiles()).map(each -> new ResourcePackSystemFile(root, each)).collect(Collectors.toSet());
+        return Arrays.stream(file.listFiles()).map(each -> new ResourcePackSystemFile(root, each)).collect(Collectors.toSet());
     }
 
     @Override
@@ -147,7 +147,7 @@ public class ResourcePackSystemFile implements ResourcePackFile {
 
     @Override
     public InputStream getInputStream() throws IOException {
-        InputStream stream = new FileInputStream(file);
+        InputStream stream = Files.newInputStream(file.toPath());
         root.streams.add(stream);
         return stream;
     }

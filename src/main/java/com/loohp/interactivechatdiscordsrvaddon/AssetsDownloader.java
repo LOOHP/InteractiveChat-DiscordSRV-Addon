@@ -39,12 +39,11 @@ import org.bukkit.command.CommandSender;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,7 +69,7 @@ public class AssetsDownloader {
         try {
             File hashes = new File(rootFolder, "hashes.json");
             if (!hashes.exists()) {
-                try (PrintWriter pw = new PrintWriter(new OutputStreamWriter(new FileOutputStream(hashes), StandardCharsets.UTF_8))) {
+                try (PrintWriter pw = new PrintWriter(new OutputStreamWriter(Files.newOutputStream(hashes.toPath()), StandardCharsets.UTF_8))) {
                     pw.println("{}");
                     pw.flush();
                 } catch (Exception e) {
@@ -79,7 +78,7 @@ public class AssetsDownloader {
             }
 
             JSONObject json;
-            try (InputStreamReader hashReader = new InputStreamReader(new FileInputStream(hashes), StandardCharsets.UTF_8)) {
+            try (InputStreamReader hashReader = new InputStreamReader(Files.newInputStream(hashes.toPath()), StandardCharsets.UTF_8)) {
                 json = (JSONObject) new JSONParser().parse(hashReader);
             } catch (Throwable e) {
                 new RuntimeException("Invalid hashes.json! It will be reset.", e).printStackTrace();
@@ -144,7 +143,7 @@ public class AssetsDownloader {
             json.put("Default", hash);
             json.put("version", InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion());
 
-            try (PrintWriter pw = new PrintWriter(new OutputStreamWriter(new FileOutputStream(hashes), StandardCharsets.UTF_8))) {
+            try (PrintWriter pw = new PrintWriter(new OutputStreamWriter(Files.newOutputStream(hashes.toPath()), StandardCharsets.UTF_8))) {
                 Gson g = new GsonBuilder().setPrettyPrinting().create();
                 pw.println(g.toJson(new JsonParser().parse(json.toString())));
                 pw.flush();
@@ -220,7 +219,7 @@ public class AssetsDownloader {
         try {
             File hashes = new File(rootFolder, "hashes.json");
             if (!hashes.exists()) {
-                try (PrintWriter pw = new PrintWriter(new OutputStreamWriter(new FileOutputStream(hashes), StandardCharsets.UTF_8))) {
+                try (PrintWriter pw = new PrintWriter(new OutputStreamWriter(Files.newOutputStream(hashes.toPath()), StandardCharsets.UTF_8))) {
                     pw.println("{}");
                     pw.flush();
                 } catch (Exception e) {
@@ -229,7 +228,7 @@ public class AssetsDownloader {
             }
 
             JSONObject json;
-            try (InputStreamReader hashReader = new InputStreamReader(new FileInputStream(hashes), StandardCharsets.UTF_8)) {
+            try (InputStreamReader hashReader = new InputStreamReader(Files.newInputStream(hashes.toPath()), StandardCharsets.UTF_8)) {
                 json = (JSONObject) new JSONParser().parse(hashReader);
             } catch (Throwable e) {
                 new RuntimeException("Invalid hashes.json! It will be reset.", e).printStackTrace();
@@ -268,7 +267,7 @@ public class AssetsDownloader {
             json.put("libs", hash);
             json.put("version", InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion());
 
-            try (PrintWriter pw = new PrintWriter(new OutputStreamWriter(new FileOutputStream(hashes), StandardCharsets.UTF_8))) {
+            try (PrintWriter pw = new PrintWriter(new OutputStreamWriter(Files.newOutputStream(hashes.toPath()), StandardCharsets.UTF_8))) {
                 Gson g = new GsonBuilder().setPrettyPrinting().create();
                 pw.println(g.toJson(new JsonParser().parse(json.toString())));
                 pw.flush();

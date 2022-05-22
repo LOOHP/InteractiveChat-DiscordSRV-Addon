@@ -44,25 +44,25 @@ public class FontTextureResource {
     private char resourceHeight;
     private char x;
     private char y;
-    private char w;
-    private char h;
+    private char width;
+    private char height;
 
-    public FontTextureResource(TextureResource resource, char resourceWidth, char resourceHeight, char x, char y, char w, char h) {
+    public FontTextureResource(TextureResource resource, char resourceWidth, char resourceHeight, char x, char y, char width, char height) {
         this.resource = resource;
         this.resourceWidth = resourceWidth;
         this.resourceHeight = resourceHeight;
         this.x = x;
         this.y = y;
-        this.w = w;
-        this.h = h;
+        this.width = width;
+        this.height = height;
     }
 
-    public FontTextureResource(TextureResource resource, int resourceWidth, int resourceHeight, int x, int y, int w, int h) {
-        this(resource, (char) resourceWidth, (char) resourceHeight, (char) x, (char) y, (char) w, (char) h);
+    public FontTextureResource(TextureResource resource, int resourceWidth, int resourceHeight, int x, int y, int width, int height) {
+        this(resource, (char) resourceWidth, (char) resourceHeight, (char) x, (char) y, (char) width, (char) height);
     }
 
-    public FontTextureResource(TextureResource resource, int x, int y, int w, int h) {
-        this(resource, 0, 0, x, y, w, h);
+    public FontTextureResource(TextureResource resource, int x, int y, int width, int height) {
+        this(resource, 0, 0, x, y, width, height);
     }
 
     public FontTextureResource(TextureResource resource) {
@@ -87,10 +87,10 @@ public class FontTextureResource {
                 }
             }
         }
-        if (w < 1 || h < 1) {
+        if (width < 1 || height < 1) {
             return image;
         }
-        return image.getSubimage(x, y, w, h);
+        return image.getSubimage(x, y, width, height);
     }
 
     public TextureResource getResource() {
@@ -105,12 +105,12 @@ public class FontTextureResource {
         return y;
     }
 
-    public int getW() {
-        return w;
+    public int getWidth() {
+        return width;
     }
 
-    public int getH() {
-        return h;
+    public int getHeight() {
+        return height;
     }
 
 }

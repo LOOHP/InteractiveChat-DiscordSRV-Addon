@@ -24,13 +24,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -139,7 +139,7 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
             if (!entry.isDirectory()) {
                 String entryPath = entry.getName();
                 if (!entryPath.equals(zipPath) && entryPath.startsWith(zipPath)) {
-                    String relativePath = entryPath.replace(zipPath, "");
+                    String relativePath = entryPath.substring(zipPath.length());
                     if (relativePath.startsWith("/")) {
                         relativePath = relativePath.substring(1);
                     }
@@ -197,7 +197,7 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
             if (!entry.isDirectory()) {
                 String entryPath = entry.getName();
                 if ((this.zipEntry == null || !entry.getName().equals(this.zipEntry.getName())) && entryPath.startsWith(zipPath)) {
-                    if (extensions == null || Stream.of(extensions).anyMatch(each -> entryPath.endsWith("." + each))) {
+                    if (extensions == null || Arrays.stream(extensions).anyMatch(each -> entryPath.endsWith("." + each))) {
                         list.add(new ResourcePackZipEntryFile(absoluteRootPath, zipRootFile, zipRoot, entryPath, false, entry));
                     }
                 }
