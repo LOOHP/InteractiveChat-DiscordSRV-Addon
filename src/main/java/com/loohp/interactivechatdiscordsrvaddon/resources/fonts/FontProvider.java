@@ -83,7 +83,7 @@ public class FontProvider {
             try {
                 font.reloadFonts();
             } catch (Exception e) {
-                new ResourceLoadingException("Unable to load " + font.getClass().getSimpleName() + " provider " + i + " in " + key).printStackTrace();
+                new ResourceLoadingException("Unable to load " + font.getClass().getSimpleName() + " provider " + i + " in " + key, e).printStackTrace();
                 itr.remove();
             }
             i++;
