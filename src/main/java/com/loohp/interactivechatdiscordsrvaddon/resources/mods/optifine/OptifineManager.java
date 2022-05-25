@@ -26,7 +26,7 @@ import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
-import com.loohp.interactivechatdiscordsrvaddon.resources.AbstractManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
@@ -35,6 +35,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.ModManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.ArmorProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.CITGlobalProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.CITProperties;
@@ -54,17 +55,21 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
-public class OptifineManager extends AbstractManager implements IOptifineManager {
+public class OptifineManager extends ModManager implements IOptifineManager {
 
+    public static final String MOD_NAME = "Optifine";
+    public static final List<String> ASSETS_FOLDERS = Collections.unmodifiableList(Arrays.asList("optifine", "mcpatcher"));
     public static final CITGlobalProperties DEFAULT_CIT_GLOBAL_PROPERTIES = new CITGlobalProperties(true, Integer.MAX_VALUE, "average", 0.5);
     private static final BufferedImage BLANK_ENCHANTMENT = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
 
@@ -74,10 +79,13 @@ public class OptifineManager extends AbstractManager implements IOptifineManager
     private Map<String, ValuePairs<ResourcePackFile, CITProperties>> citOverrides;
 
     public OptifineManager(ResourceManager manager) {
-        super(manager);
+        super(manager, MOD_NAME, ASSETS_FOLDERS);
         this.assets = new HashMap<>();
         this.citGlobalProperties = null;
         this.citOverrides = new LinkedHashMap<>();
+        if (manager.hasResourceRegistry(CustomItemTextureRegistry.IDENTIFIER)) {
+            manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).appendResolver(new OptifineItemTextureResolver(this));
+        }
     }
 
     @Override

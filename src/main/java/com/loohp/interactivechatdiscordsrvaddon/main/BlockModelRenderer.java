@@ -566,7 +566,7 @@ public class BlockModelRenderer extends JFrame {
 
         PrintStream original = System.err;
         try {
-            resourceManager = new ResourceManager(false, false, false, false);
+            resourceManager = new ResourceManager(false, false);
             resourceManager.loadResources(new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN);
             resourceBar.setValue(valuePerPack);
             for (String resourceName : resourceOrder) {

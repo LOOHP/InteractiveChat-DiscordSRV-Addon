@@ -20,16 +20,27 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
+import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
+import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.LegacyUnicodeFont.GlyphSize;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntSet;
 
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.EOFException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public abstract class MinecraftFont {
 
@@ -54,6 +65,55 @@ public abstract class MinecraftFont {
             }
         }
         return list;
+    }
+
+    public static MinecraftFont fromJson(ResourceManager manager, IFontManager fontManager, FontProvider provider, JSONObject fontJson) throws Exception {
+        String typeStr = fontJson.get("type").toString();
+        switch (typeStr) {
+            case SpaceFont.TYPE_KEY:
+                Int2IntMap charAdvances = new Int2IntOpenHashMap();
+                JSONObject advancesJson = (JSONObject) fontJson.get("advances");
+                for (Object obj1 : advancesJson.keySet()) {
+                    String character = (String) obj1;
+                    int advance = ((Number) advancesJson.get(character)).intValue();
+                    charAdvances.put(character.codePointAt(0), advance);
+                }
+                return new SpaceFont(manager, provider, charAdvances);
+            case BitmapFont.TYPE_KEY:
+                String resourceLocation = fontJson.get("file").toString();
+                int height = ((Number) fontJson.getOrDefault("height", 8)).intValue();
+                int ascent = ((Number) fontJson.get("ascent")).intValue();
+                List<String> chars = (List<String>) ((JSONArray) fontJson.get("chars")).stream().map(each -> each.toString()).collect(Collectors.toList());
+                return new BitmapFont(manager, provider, resourceLocation, height, ascent, chars);
+            case LegacyUnicodeFont.TYPE_KEY:
+                String template = fontJson.get("template").toString();
+                DataInputStream sizesInput = new DataInputStream(new BufferedInputStream(fontManager.getFontResource(fontJson.get("sizes").toString()).getFile().getInputStream()));
+                Int2ObjectOpenHashMap<GlyphSize> sizes = new Int2ObjectOpenHashMap<>();
+                for (int i = 0; ; i++) {
+                    try {
+                        byte b = sizesInput.readByte();
+                        byte start = (byte) ((b >> 4) & 15);
+                        byte end = (byte) (b & 15);
+                        sizes.put(i, new GlyphSize(start, end));
+                    } catch (EOFException e) {
+                        break;
+                    }
+                }
+                sizesInput.close();
+                return new LegacyUnicodeFont(manager, provider, sizes, template);
+            case TrueTypeFont.TYPE_KEY:
+                resourceLocation = fontJson.get("file").toString();
+                JSONArray shiftArray = (JSONArray) fontJson.get("shift");
+                float leftShift = ((Number) shiftArray.get(0)).floatValue();
+                float downShift = ((Number) shiftArray.get(1)).floatValue();
+                AffineTransform shift = AffineTransform.getTranslateInstance(-leftShift, downShift);
+                float size = ((Number) fontJson.get("size")).floatValue();
+                float oversample = ((Number) fontJson.get("oversample")).floatValue();
+                String skip = fontJson.getOrDefault("skip", "").toString();
+                return new TrueTypeFont(manager, provider, resourceLocation, shift, size, oversample, skip);
+            default:
+                throw new ResourceLoadingException("Unknown font type \"" + typeStr + "\"");
+        }
     }
 
     protected ResourceManager manager;

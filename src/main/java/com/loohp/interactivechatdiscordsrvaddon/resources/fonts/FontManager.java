@@ -29,17 +29,9 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.AbstractManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
-import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.LegacyUnicodeFont.GlyphSize;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
-import java.awt.geom.AffineTransform;
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.EOFException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -50,7 +42,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class FontManager extends AbstractManager implements IFontManager {
 
@@ -94,53 +85,8 @@ public class FontManager extends AbstractManager implements IFontManager {
                         index++;
                         JSONObject fontJson = (JSONObject) obj;
                         try {
-                            switch (fontJson.get("type").toString()) {
-                                case SpaceFont.TYPE_KEY:
-                                    Int2IntMap charAdvances = new Int2IntOpenHashMap();
-                                    JSONObject advancesJson = (JSONObject) fontJson.get("advances");
-                                    for (Object obj1 : advancesJson.keySet()) {
-                                        String character = (String) obj1;
-                                        int advance = ((Number) advancesJson.get(character)).intValue();
-                                        charAdvances.put(character.codePointAt(0), advance);
-                                    }
-                                    providedFonts.add(new SpaceFont(manager, null, charAdvances));
-                                    break;
-                                case BitmapFont.TYPE_KEY:
-                                    String resourceLocation = fontJson.get("file").toString();
-                                    int height = ((Number) fontJson.getOrDefault("height", 8)).intValue();
-                                    int ascent = ((Number) fontJson.get("ascent")).intValue();
-                                    List<String> chars = (List<String>) ((JSONArray) fontJson.get("chars")).stream().map(each -> each.toString()).collect(Collectors.toList());
-                                    providedFonts.add(new BitmapFont(manager, null, resourceLocation, height, ascent, chars));
-                                    break;
-                                case LegacyUnicodeFont.TYPE_KEY:
-                                    String template = fontJson.get("template").toString();
-                                    DataInputStream sizesInput = new DataInputStream(new BufferedInputStream(getFontResource(fontJson.get("sizes").toString()).getFile().getInputStream()));
-                                    Int2ObjectOpenHashMap<GlyphSize> sizes = new Int2ObjectOpenHashMap<>();
-                                    for (int i = 0; ; i++) {
-                                        try {
-                                            byte b = sizesInput.readByte();
-                                            byte start = (byte) ((b >> 4) & 15);
-                                            byte end = (byte) (b & 15);
-                                            sizes.put(i, new GlyphSize(start, end));
-                                        } catch (EOFException e) {
-                                            break;
-                                        }
-                                    }
-                                    sizesInput.close();
-                                    providedFonts.add(new LegacyUnicodeFont(manager, null, sizes, template));
-                                    break;
-                                case TrueTypeFont.TYPE_KEY:
-                                    resourceLocation = fontJson.get("file").toString();
-                                    JSONArray shiftArray = (JSONArray) fontJson.get("shift");
-                                    float leftShift = ((Number) shiftArray.get(0)).floatValue();
-                                    float downShift = ((Number) shiftArray.get(1)).floatValue();
-                                    AffineTransform shift = AffineTransform.getTranslateInstance(-leftShift, downShift);
-                                    float size = ((Number) fontJson.get("size")).floatValue();
-                                    float oversample = ((Number) fontJson.get("oversample")).floatValue();
-                                    String skip = fontJson.getOrDefault("skip", "").toString();
-                                    providedFonts.add(new TrueTypeFont(manager, null, resourceLocation, shift, size, oversample, skip));
-                                    break;
-                            }
+                            MinecraftFont minecraftFont = MinecraftFont.fromJson(manager, this, null, fontJson);
+                            providedFonts.add(minecraftFont);
                         } catch (Exception e) {
                             new ResourceLoadingException("Unable to load font provider " + index + " in " + file.getAbsolutePath(), e).printStackTrace();
                         }

@@ -430,7 +430,7 @@ public class MinecraftFontRenderer extends JFrame {
             reader.close();
             int packFormat = ((Number) ((JSONObject) json.get("pack")).get("pack_format")).intValue();
 
-            resourceManager = new ResourceManager(false, packFormat < 9, false, false);
+            resourceManager = new ResourceManager(false, packFormat < 9);
             resourceManager.loadResources(defaultPack, ResourcePackType.BUILT_IN);
             resourceBar.setValue(valuePerPack);
             for (String resourceName : resourceOrder) {

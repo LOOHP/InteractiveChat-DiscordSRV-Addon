@@ -39,6 +39,7 @@ import com.loohp.interactivechatdiscordsrvaddon.graphics.BannerGraphics.BannerAs
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
@@ -107,7 +108,7 @@ public class ItemRenderUtils {
             requiresEnchantmentGlint = true;
         }
 
-        TextureResource enchantmentGlintResource = CustomItemTextureUtils.getEnchantmentGlintOverrideTextures(manager, null, item).orElse(ImageGeneration.getDefaultEnchantmentTint());
+        TextureResource enchantmentGlintResource = manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(null, item).orElse(ImageGeneration.getDefaultEnchantmentTint());
         UnaryOperator<BufferedImage> enchantmentGlintFunction = image -> ImageGeneration.getEnchantedImage(enchantmentGlintResource, image);
         UnaryOperator<BufferedImage> rawEnchantmentGlintFunction = image -> ImageGeneration.getRawEnchantedImage(enchantmentGlintResource, image);
 
@@ -394,7 +395,7 @@ public class ItemRenderUtils {
 
         String modelKey = directLocation == null ? ResourceRegistry.ITEM_MODEL_LOCATION + ModelUtils.getItemModelKey(xMaterial) : directLocation;
 
-        Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction = CustomItemTextureUtils.getItemPostResolveFunction(manager, modelKey, slot, item, is1_8, predicates, player, world, livingEntity).map(function -> {
+        Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction = manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, slot, item, is1_8, predicates, player, world, livingEntity).map(function -> {
             return function.andThen(result -> {
                 Map<String, TextureResource> overrideTextures = result.getSecond();
                 for (Entry<String, TextureResource> entry : overrideTextures.entrySet()) {

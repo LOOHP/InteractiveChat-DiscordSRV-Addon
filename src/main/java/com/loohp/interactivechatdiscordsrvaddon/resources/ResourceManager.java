@@ -33,8 +33,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelManager;
-import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimeManager;
-import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.OptifineManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.ModManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureManager;
 
 import javax.imageio.ImageIO;
@@ -52,18 +51,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 public class ResourceManager implements AutoCloseable {
 
     private List<ResourcePackInfo> resourcePackInfo;
 
+    private Map<String, IResourceRegistry> resourceRegistries;
+
     private ModelManager modelManager;
     private TextureManager textureManager;
     private FontManager fontManager;
     private LanguageManager languageManager;
-    private OptifineManager optifineManager;
-    private ChimeManager chimeManager;
+
+    private Map<String, ModManager> modManagers;
 
     private boolean flattenLegacy;
     private boolean fontLegacy;
@@ -71,18 +73,24 @@ public class ResourceManager implements AutoCloseable {
     private AtomicBoolean isValid;
     private UUID uuid;
 
-    public ResourceManager(boolean flattenLegacy, boolean fontLegacy, boolean optifine, boolean chime) {
+    public ResourceManager(boolean flattenLegacy, boolean fontLegacy, Collection<ModManagerSupplier> modManagerProviders, Collection<ResourceRegistrySupplier> resourceManagerUtilsProviders) {
         this.resourcePackInfo = new LinkedList<>();
+
+        this.resourceRegistries = new HashMap<>();
+        for (ResourceRegistrySupplier resourceRegistrySupplier : resourceManagerUtilsProviders) {
+            IResourceRegistry resourceRegistry = resourceRegistrySupplier.apply(this);
+            this.resourceRegistries.put(resourceRegistry.getRegistryIdentifier(), resourceRegistry);
+        }
 
         this.modelManager = new ModelManager(this);
         this.textureManager = new TextureManager(this);
         this.fontManager = new FontManager(this);
         this.languageManager = new LanguageManager(this);
-        if (optifine) {
-            this.optifineManager = new OptifineManager(this);
-        }
-        if (chime) {
-            this.chimeManager = new ChimeManager(this);
+
+        this.modManagers = new HashMap<>();
+        for (ModManagerSupplier modManagerProvider : modManagerProviders) {
+            ModManager modManager = modManagerProvider.apply(this);
+            this.modManagers.put(modManager.getModName(), modManager);
         }
 
         this.flattenLegacy = flattenLegacy;
@@ -90,6 +98,10 @@ public class ResourceManager implements AutoCloseable {
 
         this.isValid = new AtomicBoolean(true);
         this.uuid = UUID.randomUUID();
+    }
+
+    public ResourceManager(boolean flattenLegacy, boolean fontLegacy) {
+        this(flattenLegacy, fontLegacy, Collections.emptyList(), Collections.emptyList());
     }
 
     public synchronized ResourcePackInfo loadResources(File resourcePackFile, ResourcePackType type) {
@@ -213,11 +225,8 @@ public class ResourceManager implements AutoCloseable {
             ((AbstractManager) textureManager).filterResources(namespace, path);
             ((AbstractManager) fontManager).filterResources(namespace, path);
             ((AbstractManager) languageManager).filterResources(namespace, path);
-            if (hasOptifineManager()) {
-                ((AbstractManager) optifineManager).filterResources(namespace, path);
-            }
-            if (hasChimeManager()) {
-                ((AbstractManager) chimeManager).filterResources(namespace, path);
+            for (ModManager modManager : modManagers.values()) {
+                modManager.filterResources(namespace, path);
             }
         }
 
@@ -225,11 +234,8 @@ public class ResourceManager implements AutoCloseable {
         ((AbstractManager) textureManager).reload();
         ((AbstractManager) fontManager).reload();
         ((AbstractManager) languageManager).reload();
-        if (hasOptifineManager()) {
-            ((AbstractManager) optifineManager).reload();
-        }
-        if (hasChimeManager()) {
-            ((AbstractManager) chimeManager).reload();
+        for (ModManager modManager : modManagers.values()) {
+            modManager.reload();
         }
     }
 
@@ -274,41 +280,26 @@ public class ResourceManager implements AutoCloseable {
                 }
             }
         }
-        if (hasOptifineManager()) {
-            for (ResourcePackFile folder : folders) {
-                if (folder.isDirectory()) {
-                    String namespace = folder.getName();
-                    ResourcePackFile optifine = folder.getChild("optifine");
-                    if (optifine.exists() && optifine.isDirectory()) {
-                        ((AbstractManager) optifineManager).loadDirectory(namespace, optifine);
-                    }
-                    ResourcePackFile mcpatcher = folder.getChild("mcpatcher");
-                    if (mcpatcher.exists() && mcpatcher.isDirectory()) {
-                        ((AbstractManager) optifineManager).loadDirectory(namespace, mcpatcher);
+        for (ModManager modManager : modManagers.values()) {
+            for (String folderName : modManager.getModAssetsFolderNames()) {
+                for (ResourcePackFile folder : folders) {
+                    if (folder.isDirectory()) {
+                        String namespace = folder.getName();
+                        ResourcePackFile modFolder = folder.getChild(folderName);
+                        if (modFolder.exists() && modFolder.isDirectory()) {
+                            modManager.loadDirectory(namespace, modFolder);
+                        }
                     }
                 }
             }
         }
-        if (hasChimeManager()) {
-            for (ResourcePackFile folder : folders) {
-                if (folder.isDirectory()) {
-                    String namespace = folder.getName();
-                    ResourcePackFile overrides = folder.getChild("overrides");
-                    if (overrides.exists() && overrides.isDirectory()) {
-                        ((AbstractManager) chimeManager).loadDirectory(namespace, overrides);
-                    }
-                }
-            }
-        }
+
         ((AbstractManager) modelManager).reload();
         ((AbstractManager) textureManager).reload();
         ((AbstractManager) fontManager).reload();
         ((AbstractManager) languageManager).reload();
-        if (hasOptifineManager()) {
-            ((AbstractManager) optifineManager).reload();
-        }
-        if (hasChimeManager()) {
-            ((AbstractManager) chimeManager).reload();
+        for (ModManager modManager : modManagers.values()) {
+            modManager.reload();
         }
     }
 
@@ -332,20 +323,44 @@ public class ResourceManager implements AutoCloseable {
         return languageManager;
     }
 
-    public OptifineManager getOptifineManager() {
-        return optifineManager;
+    public ModManager getModManager(String modName) {
+        return modManagers.get(modName);
     }
 
-    public boolean hasOptifineManager() {
-        return optifineManager != null;
+    public boolean hasModManager(String modName) {
+        return modManagers.containsKey(modName);
     }
 
-    public ChimeManager getChimeManager() {
-        return chimeManager;
+    public <T extends ModManager> T getModManager(String modName, Class<T> managerClass) {
+        return (T) getModManager(modName);
     }
 
-    public boolean hasChimeManager() {
-        return chimeManager != null;
+    public <T extends ModManager> boolean hasModManager(String modName, Class<T> managerClass) {
+        return managerClass.isInstance(getModManager(modName));
+    }
+
+    public Map<String, ModManager> getModManagers() {
+        return Collections.unmodifiableMap(modManagers);
+    }
+
+    public IResourceRegistry getResourceRegistry(String identifier) {
+        return resourceRegistries.get(identifier);
+    }
+
+    public boolean hasResourceRegistry(String identifier) {
+        return resourceRegistries.containsKey(identifier);
+    }
+
+    public <T extends IResourceRegistry> T getResourceRegistry(String identifier, Class<T> registryClass) {
+        return (T) getResourceRegistry(identifier);
+    }
+
+    public <T extends IResourceRegistry> boolean hasResourceRegistry(String identifier, Class<T> registryClass) {
+        return registryClass.isInstance(getResourceRegistry(identifier));
+    }
+
+    public Map<String, IResourceRegistry> getResourceRegistries() {
+        return Collections.unmodifiableMap(resourceRegistries);
     }
 
     public boolean isFlattenLegacy() {
@@ -373,6 +388,20 @@ public class ResourceManager implements AutoCloseable {
                 }
             }
         }
+    }
+
+    public interface ModManagerSupplier extends Function<ResourceManager, ModManager> {
+
+        @Override
+        ModManager apply(ResourceManager resourceManager);
+
+    }
+
+    public interface ResourceRegistrySupplier extends Function<ResourceManager, IResourceRegistry> {
+
+        @Override
+        IResourceRegistry apply(ResourceManager resourceManager);
+
     }
 
 }

@@ -35,6 +35,7 @@ import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.SkinUtils;
 import com.loohp.interactivechatdiscordsrvaddon.AssetsDownloader.ServerResourcePackDownloadResult;
+import com.loohp.interactivechatdiscordsrvaddon.api.events.ResourceManagerInitializeEvent;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
@@ -45,11 +46,16 @@ import com.loohp.interactivechatdiscordsrvaddon.listeners.OutboundToDiscordEvent
 import com.loohp.interactivechatdiscordsrvaddon.metrics.Charts;
 import com.loohp.interactivechatdiscordsrvaddon.metrics.Metrics;
 import com.loohp.interactivechatdiscordsrvaddon.registry.InteractiveChatRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager.ModManagerSupplier;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontTextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.ModManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimeManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.OptifineManager;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.dependencies.jda.api.Permission;
@@ -593,8 +599,23 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
                 sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Reloading ResourceManager: " + ChatColor.YELLOW + String.join(", ", resourceList), senders);
 
+                List<ModManagerSupplier> mods = new ArrayList<>();
+                if (optifineCustomTextures) {
+                    mods.add(manager -> new OptifineManager(manager));
+                }
+                if (chimeOverrideModels) {
+                    mods.add(manager -> new ChimeManager(manager));
+                }
+
+                Bukkit.getPluginManager().callEvent(new ResourceManagerInitializeEvent(mods));
+
                 @SuppressWarnings("resource")
-                ResourceManager resourceManager = new ResourceManager(InteractiveChat.version.isLegacy(), InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_18_2), optifineCustomTextures, chimeOverrideModels);
+                ResourceManager resourceManager = new ResourceManager(InteractiveChat.version.isLegacy(), InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_18_2), mods, Collections.singletonList(manager -> new CustomItemTextureRegistry()));
+
+                for (Entry<String, ModManager> entry : resourceManager.getModManagers().entrySet()) {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Registered ModManager \"" + entry.getKey() + "\" of class \"" + entry.getValue().getClass().getName() + "\"");
+                }
+
                 resourceManager.getLanguageManager().setTranslateFunction((translateKey, language) -> LanguageUtils.getTranslation(translateKey, language));
                 resourceManager.getLanguageManager().setAvailableLanguagesSupplier(() -> LanguageUtils.getLoadedLanguages());
                 resourceManager.getLanguageManager().registerReloadListener(e -> {

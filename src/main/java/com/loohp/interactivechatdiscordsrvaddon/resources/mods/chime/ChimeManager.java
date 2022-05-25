@@ -25,7 +25,7 @@ import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
-import com.loohp.interactivechatdiscordsrvaddon.resources.AbstractManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
@@ -34,6 +34,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.IModelManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.ModManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TriFunction;
 import org.bukkit.World;
@@ -44,14 +45,17 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-public class ChimeManager extends AbstractManager implements IChimeManager {
+public class ChimeManager extends ModManager implements IChimeManager {
 
+    public static final String MOD_NAME = "Chime";
+    public static final List<String> ASSETS_FOLDERS = Collections.singletonList("overrides");
     public static final TriFunction<IModelManager, String, JSONObject, ChimeBlockModel> CHIME_MODEL_PARSING_FUNCTION = (manager, key, json) -> ChimeBlockModel.fromJson(manager, key, json);
 
     private List<String> overrideLocations;
@@ -59,11 +63,14 @@ public class ChimeManager extends AbstractManager implements IChimeManager {
     private Map<String, ChimeBlockModel> models;
 
     public ChimeManager(ResourceManager manager) {
-        super(manager);
+        super(manager, MOD_NAME, ASSETS_FOLDERS);
         this.overrideLocations = new ArrayList<>();
         this.textures = new HashMap<>();
         this.models = new HashMap<>();
         manager.getModelManager().setModelParsingFunction(CHIME_MODEL_PARSING_FUNCTION);
+        if (manager.hasResourceRegistry(CustomItemTextureRegistry.IDENTIFIER)) {
+            manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).appendResolver(new ChimeItemTextureResolver(this));
+        }
     }
 
     @Override
