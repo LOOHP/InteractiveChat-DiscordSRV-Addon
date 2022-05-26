@@ -112,7 +112,7 @@ public class PotionUtils {
                 nmsAttributeBaseClass = NMSUtils.getNMSClass("net.minecraft.server.%s.AttributeBase", "net.minecraft.world.entity.ai.attributes.AttributeBase");
                 nmsAttributeModifierClass = NMSUtils.getNMSClass("net.minecraft.server.%s.AttributeModifier", "net.minecraft.world.entity.ai.attributes.AttributeModifier");
                 craftAttributeInstanceClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.attribute.CraftAttributeInstance");
-                craftAttributeInstanceConvertMethod = craftAttributeInstanceClass.getMethod("convert", nmsAttributeModifierClass);
+                craftAttributeInstanceConvertMethod = craftAttributeInstanceClass.getDeclaredMethod("convert", nmsAttributeModifierClass);
                 nmsMobEffectGetAttributeModifierValueMethod = nmsMobEffectListClass.getMethod("a", int.class, nmsAttributeModifierClass);
                 if (InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_17)) {
                     nmsAttributeBaseGetNameMethod = nmsAttributeBaseClass.getMethod("getName");
@@ -195,6 +195,7 @@ public class PotionUtils {
             nmsMobEffectListAttributeMapField.setAccessible(true);
             for (Entry<?, ?> entry : ((Map<?, ?>) nmsMobEffectListAttributeMapField.get(nmsMobEffectList)).entrySet()) {
                 String name = (String) nmsAttributeBaseGetNameMethod.invoke(entry.getKey());
+                craftAttributeInstanceConvertMethod.setAccessible(true);
                 AttributeModifier attributeModifier = (AttributeModifier) craftAttributeInstanceConvertMethod.invoke(null, entry.getValue());
                 double leveledAmount = (double) nmsMobEffectGetAttributeModifierValueMethod.invoke(nmsMobEffectList, effect.getAmplifier(), entry.getValue());
                 attributes.put(name, new AttributeModifier(attributeModifier.getUniqueId(), attributeModifier.getName(), leveledAmount, attributeModifier.getOperation(), attributeModifier.getSlot()));
