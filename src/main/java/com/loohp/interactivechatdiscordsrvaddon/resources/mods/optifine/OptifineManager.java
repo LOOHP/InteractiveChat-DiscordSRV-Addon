@@ -289,11 +289,11 @@ public class OptifineManager extends ModManager implements IOptifineManager {
     public TextureResource getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack) {
         Map<String, TextureResource> overrideTextures = new HashMap<>();
         if (itemStack == null || itemStack.getType().equals(Material.AIR)) {
-            return getCITGlobalProperties().isUseGlint() ? null : new GeneratedTextureResource(BLANK_ENCHANTMENT);
+            return getCITGlobalProperties().isUseGlint() ? null : new GeneratedTextureResource(manager, BLANK_ENCHANTMENT);
         }
         ValuePairs<ResourcePackFile, EnchantmentProperties> citOverride = getCITOverride(heldSlot, itemStack, EnchantmentProperties.class);
         if (citOverride == null) {
-            return getCITGlobalProperties().isUseGlint() ? null : new GeneratedTextureResource(BLANK_ENCHANTMENT);
+            return getCITGlobalProperties().isUseGlint() ? null : new GeneratedTextureResource(manager, BLANK_ENCHANTMENT);
         }
         String path = citOverride.getSecond().getOverrideAsset("", "png");
         if (path != null) {
@@ -301,9 +301,9 @@ public class OptifineManager extends ModManager implements IOptifineManager {
             String resourceLocation = resolveAsset(citOverride.getFirst(), path, "png");
             BufferedImage texture = getTexture(resourceLocation).getTexture();
             texture = ImageUtils.rotateImageByDegrees(texture, citOverride.getSecond().getRotation());
-            return new GeneratedTextureResource(texture);
+            return new GeneratedTextureResource(manager, texture);
         }
-        return getCITGlobalProperties().isUseGlint() ? null : new GeneratedTextureResource(BLANK_ENCHANTMENT);
+        return getCITGlobalProperties().isUseGlint() ? null : new GeneratedTextureResource(manager, BLANK_ENCHANTMENT);
     }
 
     public static String resolveAsset(ResourcePackFile currentFile, String path, String extension) {
@@ -371,7 +371,7 @@ public class OptifineManager extends ModManager implements IOptifineManager {
             return (TextureResource) asset.getSecond();
         }
         if (returnMissingTexture) {
-            return TextureManager.MISSING_TEXTURE;
+            return TextureManager.getMissingTexture(manager);
         } else {
             return null;
         }

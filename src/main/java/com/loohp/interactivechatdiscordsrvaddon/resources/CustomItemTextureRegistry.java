@@ -22,6 +22,7 @@ package com.loohp.interactivechatdiscordsrvaddon.resources;
 
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 import com.loohp.interactivechat.objectholders.ValuePairs;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager.ResourceRegistrySupplier;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
@@ -40,6 +41,10 @@ import java.util.function.Function;
 public class CustomItemTextureRegistry implements IResourceRegistry {
 
     public static final String IDENTIFIER = "CustomItemTextureRegistry";
+
+    public static ResourceRegistrySupplier getDefaultSupplier() {
+        return manager -> new CustomItemTextureRegistry();
+    }
 
     private List<CustomItemTextureResolver> resolvers;
 

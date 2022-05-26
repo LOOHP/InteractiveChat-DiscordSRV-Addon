@@ -24,6 +24,7 @@ import com.loohp.interactivechat.libs.com.loohp.yamlconfiguration.YamlConfigurat
 import com.loohp.interactivechat.objectholders.ValueTrios;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ICacheManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RenderResult;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
@@ -566,7 +567,7 @@ public class BlockModelRenderer extends JFrame {
 
         PrintStream original = System.err;
         try {
-            resourceManager = new ResourceManager(false, false);
+            resourceManager = new ResourceManager(false, false, Collections.emptyList(), Collections.singletonList(ICacheManager.getDummySupplier()));
             resourceManager.loadResources(new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN);
             resourceBar.setValue(valuePerPack);
             for (String resourceName : resourceOrder) {
@@ -645,8 +646,8 @@ public class BlockModelRenderer extends JFrame {
             baseImage = ImageUtils.multiply(baseImage, colorBase);
             overlayImage = ImageUtils.multiply(overlayImage, colorOverlay);
 
-            providedTextures.put(ResourceRegistry.SPAWN_EGG_PLACEHOLDER, new GeneratedTextureResource(baseImage));
-            providedTextures.put(ResourceRegistry.SPAWN_EGG_OVERLAY_PLACEHOLDER, new GeneratedTextureResource(overlayImage));
+            providedTextures.put(ResourceRegistry.SPAWN_EGG_PLACEHOLDER, new GeneratedTextureResource(resourceManager, baseImage));
+            providedTextures.put(ResourceRegistry.SPAWN_EGG_OVERLAY_PLACEHOLDER, new GeneratedTextureResource(resourceManager, overlayImage));
         }
 
         TintIndexData tintIndexData = TintUtils.getTintData(trimmedKey);
@@ -668,7 +669,7 @@ public class BlockModelRenderer extends JFrame {
                     } else {
                         image = ImageIO.read(file);
                     }
-                    providedTextures.put(texturePlaceholder, new GeneratedTextureResource(image));
+                    providedTextures.put(texturePlaceholder, new GeneratedTextureResource(resourceManager, image));
                 } catch (Throwable e) {
                     e.printStackTrace();
                 }

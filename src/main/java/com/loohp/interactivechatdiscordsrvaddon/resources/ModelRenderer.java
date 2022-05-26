@@ -27,7 +27,6 @@ import com.loohp.blockmodelrenderer.utils.ColorUtils;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechat.utils.CustomArrayUtils;
-import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
@@ -158,7 +157,7 @@ public class ModelRenderer implements AutoCloseable {
     public RenderResult renderPlayer(int width, int height, ResourceManager manager, boolean post1_8, boolean slim, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, Map<PlayerModelItemPosition, PlayerModelItem> modelItems) {
         BlockModel playerModel = manager.getModelManager().resolveBlockModel(slim ? PLAYER_MODEL_SLIM_RESOURCELOCATION : PLAYER_MODEL_RESOURCELOCATION, InteractiveChat.version.isOld(), Collections.emptyMap());
         if (playerModel == null) {
-            return new RenderResult(MODEL_NOT_FOUND, null);
+            return new RenderResult(MODEL_NOT_FOUND);
         }
         Model playerRenderModel = generateStandardRenderModel(playerModel, manager, providedTextures, Collections.emptyMap(), tintIndexData, false, true, null);
 
@@ -172,11 +171,13 @@ public class ModelRenderer implements AutoCloseable {
         }
 
         String cacheKey = cacheKey(width, height, manager.getUuid(), slim, cacheKeyResolvedItems(resolvedItems), cacheKeyProvidedTextures(providedTextures));
-        Cache<?> cachedRender = Cache.getCache(cacheKey);
-        if (cachedRender != null) {
-            RenderResult cachedResult = (RenderResult) cachedRender.getObject();
-            if (cachedResult.isSuccessful()) {
-                return cachedResult;
+        if (manager.hasResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class)) {
+            CacheObject<?> cachedRender = manager.getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).getCache(cacheKey);
+            if (cachedRender != null) {
+                RenderResult cachedResult = (RenderResult) cachedRender.getObject();
+                if (cachedResult.isSuccessful()) {
+                    return cachedResult;
+                }
             }
         }
 
@@ -291,8 +292,8 @@ public class ModelRenderer implements AutoCloseable {
 
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         renderPlayerModel(playerRenderModel, image, playerModel.getGUILight());
-        RenderResult result = new RenderResult(image, null);
-        Cache.putCache(cacheKey, result, cacheTimeoutSupplier.getAsLong());
+        RenderResult result = new RenderResult(image);
+        manager.getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).putCache(cacheKey, result);
         return result;
     }
 
@@ -319,11 +320,11 @@ public class ModelRenderer implements AutoCloseable {
         blockModel = resolveFunctionResult.getFirst();
         Map<String, TextureResource> overrideTextures = resolveFunctionResult.getSecond();
         if (blockModel == null) {
-            return new RenderResult(MODEL_NOT_FOUND, null);
+            return new RenderResult(MODEL_NOT_FOUND);
         }
 
         String cacheKey = cacheKey(width, height, manager.getUuid(), postResolveFunction.hashCode(), modelKey, displayPosition, predicate, cacheKeyProvidedTextures(providedTextures), cacheKeyProvidedTextures(overrideTextures), enchanted);
-        Cache<?> cachedRender = Cache.getCache(cacheKey);
+        CacheObject<?> cachedRender = manager.getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).getCache(cacheKey);
         if (cachedRender != null) {
             RenderResult cachedResult = (RenderResult) cachedRender.getObject();
             if (cachedResult.isSuccessful()) {
@@ -383,11 +384,11 @@ public class ModelRenderer implements AutoCloseable {
         }
         RenderResult result;
         if (rejectedReason == null) {
-            result = new RenderResult(ImageUtils.resizeImageQuality(image, width, height), blockModel);
+            result = new RenderResult(ImageUtils.resizeImageQuality(image, width, height));
         } else {
-            result = new RenderResult(rejectedReason == null ? "null" : rejectedReason, blockModel);
+            result = new RenderResult(rejectedReason == null ? "null" : rejectedReason);
         }
-        Cache.putCache(cacheKey, result, cacheTimeoutSupplier.getAsLong());
+        manager.getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).putCache(cacheKey, result);
         return result;
     }
 
@@ -793,18 +794,15 @@ public class ModelRenderer implements AutoCloseable {
 
         private BufferedImage image;
         private String rejectedReason;
-        private BlockModel model;
 
-        public RenderResult(BufferedImage image, BlockModel model) {
+        public RenderResult(BufferedImage image) {
             this.image = image;
             this.rejectedReason = null;
-            this.model = model;
         }
 
-        public RenderResult(String rejectedReason, BlockModel model) {
+        public RenderResult(String rejectedReason) {
             this.image = null;
             this.rejectedReason = rejectedReason;
-            this.model = model;
         }
 
         public boolean isSuccessful() {
@@ -817,14 +815,6 @@ public class ModelRenderer implements AutoCloseable {
 
         public String getRejectedReason() {
             return rejectedReason;
-        }
-
-        public BlockModel getModel() {
-            return model;
-        }
-
-        public boolean hasModel() {
-            return model != null;
         }
 
     }

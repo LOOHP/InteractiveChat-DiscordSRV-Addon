@@ -20,9 +20,10 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
+import com.loohp.interactivechatdiscordsrvaddon.resources.IAbstractManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 
-public interface IFontManager {
+public interface IFontManager extends IAbstractManager {
 
     TextureResource getFontResource(String resourceLocation);
 

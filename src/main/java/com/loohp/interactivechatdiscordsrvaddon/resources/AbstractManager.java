@@ -22,7 +22,7 @@ package com.loohp.interactivechatdiscordsrvaddon.resources;
 
 import java.util.regex.Pattern;
 
-public abstract class AbstractManager {
+public abstract class AbstractManager implements IAbstractManager {
 
     protected ResourceManager manager;
 
@@ -30,6 +30,7 @@ public abstract class AbstractManager {
         this.manager = manager;
     }
 
+    @Override
     public ResourceManager getManager() {
         return manager;
     }

@@ -18,16 +18,10 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.loohp.interactivechatdiscordsrvaddon.resources.textures;
+package com.loohp.interactivechatdiscordsrvaddon.resources;
 
-import com.loohp.interactivechatdiscordsrvaddon.resources.IAbstractManager;
+public interface IAbstractManager {
 
-public interface ITextureManager extends IAbstractManager {
-
-    default TextureResource getTexture(String resourceLocation) {
-        return getTexture(resourceLocation, true);
-    }
-
-    TextureResource getTexture(String resourceLocation, boolean returnMissingTexture);
+    ResourceManager getManager();
 
 }

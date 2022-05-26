@@ -20,9 +20,11 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.languages;
 
+import com.loohp.interactivechatdiscordsrvaddon.resources.IAbstractManager;
+
 import java.util.List;
 
-public interface ILanguageManager {
+public interface ILanguageManager extends IAbstractManager {
 
     String applyTranslations(String str, String language);
 

@@ -42,6 +42,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
@@ -98,10 +99,6 @@ public class ResourceManager implements AutoCloseable {
 
         this.isValid = new AtomicBoolean(true);
         this.uuid = UUID.randomUUID();
-    }
-
-    public ResourceManager(boolean flattenLegacy, boolean fontLegacy) {
-        this(flattenLegacy, fontLegacy, Collections.emptyList(), Collections.emptyList());
     }
 
     public synchronized ResourcePackInfo loadResources(File resourcePackFile, ResourcePackType type) {
@@ -385,6 +382,18 @@ public class ResourceManager implements AutoCloseable {
             for (ResourcePackInfo info : resourcePackInfo) {
                 if (info.getResourcePackFile() != null) {
                     info.getResourcePackFile().close();
+                }
+            }
+            for (IResourceRegistry resourceRegistry : resourceRegistries.values()) {
+                try {
+                    resourceRegistry.getClass().getMethod("close").invoke(resourceRegistry);
+                } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignore) {
+                }
+            }
+            for (ModManager modManager : modManagers.values()) {
+                try {
+                    modManager.getClass().getMethod("close").invoke(modManager);
+                } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignore) {
                 }
             }
         }

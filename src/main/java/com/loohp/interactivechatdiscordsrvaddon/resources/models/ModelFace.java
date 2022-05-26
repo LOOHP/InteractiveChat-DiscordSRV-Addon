@@ -25,6 +25,7 @@ import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class ModelFace {
@@ -78,6 +79,23 @@ public class ModelFace {
 
     public int getTintindex() {
         return tintindex;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ModelFace modelFace = (ModelFace) o;
+        return rotation == modelFace.rotation && tintindex == modelFace.tintindex && side == modelFace.side && Objects.equals(uv, modelFace.uv) && Objects.equals(texture, modelFace.texture) && cullface == modelFace.cullface;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(side, uv, texture, cullface, rotation, tintindex);
     }
 
     public enum ModelFaceSide {

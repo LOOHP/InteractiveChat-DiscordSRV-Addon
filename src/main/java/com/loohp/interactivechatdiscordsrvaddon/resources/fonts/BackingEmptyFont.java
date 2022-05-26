@@ -29,7 +29,7 @@ public class BackingEmptyFont extends LegacyUnicodeFont {
 
     public BackingEmptyFont(ResourceManager manager, FontProvider provider) {
         super(manager, provider, Int2ObjectMaps.emptyMap(), null);
-        this.emptyFontWidth = MISSING_CHARACTER.get().getFontImage().getWidth() * 2;
+        this.emptyFontWidth = missingCharacter.get().getFontImage().getWidth() * 2;
     }
 
     @Override

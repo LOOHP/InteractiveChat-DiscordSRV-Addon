@@ -23,6 +23,7 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.models;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class ModelDisplay {
@@ -53,6 +54,23 @@ public class ModelDisplay {
 
     public Coordinates3D getScale() {
         return scale;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ModelDisplay that = (ModelDisplay) o;
+        return position == that.position && Objects.equals(rotation, that.rotation) && Objects.equals(translation, that.translation) && Objects.equals(scale, that.scale);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(position, rotation, translation, scale);
     }
 
     public enum ModelDisplayPosition {

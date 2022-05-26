@@ -46,23 +46,11 @@ public class LegacyUnicodeFont extends MinecraftFont {
     public static final String TYPE_KEY = "legacy_unicode";
     public static final double ITALIC_SHEAR_X = -4.0 / 14.0;
 
-    protected static final Optional<FontTextureResource> MISSING_CHARACTER;
-
-    static {
-        BufferedImage missingCharacter = new BufferedImage(5, 8, BufferedImage.TYPE_INT_ARGB);
-        for (int i = 0; i < 8; ++i) {
-            for (int j = 0; j < 5; ++j) {
-                boolean flag = j == 0 || j + 1 == 5 || i == 0 || i + 1 == 8;
-                missingCharacter.setRGB(j, i, flag ? 0xFFFFFFFF : 0);
-            }
-        }
-        MISSING_CHARACTER = Optional.of(new FontTextureResource(new GeneratedTextureResource(missingCharacter)));
-    }
-
     public static String getSectionSubstring(int i) {
         return String.format("%04x", i).substring(0, 2);
     }
 
+    protected Optional<FontTextureResource> missingCharacter;
     protected Int2ObjectMap<Optional<FontTextureResource>> charImages;
     private Int2ObjectMap<GlyphSize> sizes;
     private String template;
@@ -71,6 +59,15 @@ public class LegacyUnicodeFont extends MinecraftFont {
         super(manager, provider);
         this.sizes = sizes;
         this.template = template;
+
+        BufferedImage missingCharacter = new BufferedImage(5, 8, BufferedImage.TYPE_INT_ARGB);
+        for (int i = 0; i < 8; ++i) {
+            for (int j = 0; j < 5; ++j) {
+                boolean flag = j == 0 || j + 1 == 5 || i == 0 || i + 1 == 8;
+                missingCharacter.setRGB(j, i, flag ? 0xFFFFFFFF : 0);
+            }
+        }
+        this.missingCharacter = Optional.of(new FontTextureResource(new GeneratedTextureResource(manager, missingCharacter)));
     }
 
     @Override
@@ -132,7 +129,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
         Color awtColor = new Color(color.value());
         Optional<FontTextureResource> optCharImage = charImages.get(character.codePointAt(0));
         if (optCharImage == null) {
-            optCharImage = MISSING_CHARACTER;
+            optCharImage = missingCharacter;
         }
         if (optCharImage.isPresent()) {
             BufferedImage charImage = optCharImage.get().getFontImage();
@@ -224,7 +221,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
         Color awtColor = new Color(color.value());
         Optional<FontTextureResource> optCharImage = charImages.get(character.codePointAt(0));
         if (optCharImage == null) {
-            optCharImage = MISSING_CHARACTER;
+            optCharImage = missingCharacter;
         }
         if (optCharImage.isPresent()) {
             BufferedImage charImage = optCharImage.get().getFontImage();

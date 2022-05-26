@@ -25,6 +25,7 @@ import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 public class ModelOverride {
 
@@ -60,6 +61,23 @@ public class ModelOverride {
             }
         }
         return true;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ModelOverride that = (ModelOverride) o;
+        return Objects.equals(predicates, that.predicates) && Objects.equals(model, that.model);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(predicates, model);
     }
 
     public enum ModelOverrideType {

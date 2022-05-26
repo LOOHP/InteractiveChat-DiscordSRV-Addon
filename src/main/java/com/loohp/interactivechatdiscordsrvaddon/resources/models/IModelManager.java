@@ -20,11 +20,12 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.models;
 
+import com.loohp.interactivechatdiscordsrvaddon.resources.IAbstractManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
 
 import java.util.Map;
 
-public interface IModelManager {
+public interface IModelManager extends IAbstractManager {
 
     BlockModel getRawBlockModel(String resourceLocation);
 

@@ -74,6 +74,14 @@ public class ImageUtils {
         return toOutputStream(image).toByteArray();
     }
 
+    public static BufferedImage fromInputStream(InputStream inputStream) throws IOException {
+        return ImageIO.read(inputStream);
+    }
+
+    public static BufferedImage fromArray(byte[] data) throws IOException {
+        return fromInputStream(new ByteArrayInputStream(data));
+    }
+
     public static String hash(BufferedImage image) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         int[] colors = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());

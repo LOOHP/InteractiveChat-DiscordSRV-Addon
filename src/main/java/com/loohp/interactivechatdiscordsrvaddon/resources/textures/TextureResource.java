@@ -66,6 +66,14 @@ public class TextureResource {
         this(manager, resourceKey, file, false);
     }
 
+    public ITextureManager getManager() {
+        return manager;
+    }
+
+    public String getResourceKey() {
+        return resourceKey;
+    }
+
     private synchronized BufferedImage loadImage() {
         if (!isTexture) {
             throw new IllegalStateException(resourceKey + " is not a texture!");

@@ -20,21 +20,52 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.textures;
 
+import com.loohp.interactivechatdiscordsrvaddon.resources.AbstractManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
 
 import java.awt.image.BufferedImage;
+import java.util.regex.Pattern;
 
 public class GeneratedTextureResource extends TextureResource {
 
     private BufferedImage image;
 
-    public GeneratedTextureResource(BufferedImage image) {
-        super(null, null, null, image);
+    public GeneratedTextureResource(ResourceManager manager, BufferedImage image) {
+        super(new GeneratedTextureManager(manager), null, null, image);
         this.image = image;
     }
 
-    public GeneratedTextureResource(ResourcePackFile file) {
-        super(null, null, file, false);
+    public GeneratedTextureResource(ResourceManager manager, ResourcePackFile file) {
+        super(new GeneratedTextureManager(manager), null, file, false);
+    }
+
+    public static class GeneratedTextureManager extends AbstractManager implements ITextureManager {
+
+        private GeneratedTextureManager(ResourceManager manager) {
+            super(manager);
+        }
+
+        @Override
+        protected void loadDirectory(String namespace, ResourcePackFile root, Object... meta) {
+            throw new UnsupportedOperationException("Cannot operate on Generated Texture Managers");
+        }
+
+        @Override
+        protected void filterResources(Pattern namespace, Pattern path) {
+            throw new UnsupportedOperationException("Cannot operate on Generated Texture Managers");
+        }
+
+        @Override
+        protected void reload() {
+            throw new UnsupportedOperationException("Cannot operate on Generated Texture Managers");
+        }
+
+        @Override
+        public TextureResource getTexture(String resourceLocation, boolean returnMissingTexture) {
+            throw new UnsupportedOperationException("Cannot operate on Generated Texture Managers");
+        }
+
     }
 
 }

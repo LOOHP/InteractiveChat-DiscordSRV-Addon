@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 public class BlockModel {
 
@@ -325,6 +326,23 @@ public class BlockModel {
 
     public List<ModelOverride> getOverrides() {
         return overrides;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        BlockModel model = (BlockModel) o;
+        return ambientocclusion == model.ambientocclusion && Objects.equals(manager, model.manager) && Objects.equals(resourceLocation, model.resourceLocation) && Objects.equals(parent, model.parent) && guiLight == model.guiLight && Objects.equals(display, model.display) && Objects.equals(textures, model.textures) && Objects.equals(elements, model.elements) && Objects.equals(overrides, model.overrides);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(manager, resourceLocation, parent, ambientocclusion, guiLight, display, textures, elements, overrides);
     }
 
 }

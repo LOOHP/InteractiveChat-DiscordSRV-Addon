@@ -20,8 +20,8 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
-import com.loohp.interactivechatdiscordsrvaddon.Cache;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ICacheManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 
 import java.awt.image.BufferedImage;
@@ -82,8 +82,8 @@ public class FontTextureResource {
             BufferedImage internal;
             if ((internal = internalReference.get()) != null) {
                 String hash = ImageUtils.hash(internal);
-                if (Cache.getCache(hash) == null) {
-                    Cache.putCache(hash, internal, CACHE_TIME);
+                if (resource.getManager().getManager().getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).getCache(hash) == null) {
+                    resource.getManager().getManager().getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).putCache(hash, internal);
                 }
             }
         }

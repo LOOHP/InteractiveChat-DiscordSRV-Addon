@@ -171,11 +171,11 @@ public class FontManager extends AbstractManager implements IFontManager {
             }
             ResourcePackFile current0 = fileList.get(key);
             if (current0 != null && current0.exists()) {
-                return new GeneratedTextureResource(current0);
+                return new GeneratedTextureResource(manager, current0);
             }
             ResourcePackFile current1 = fileList.get(key.replace("font/", ""));
             if (current1 != null && current1.exists()) {
-                return new GeneratedTextureResource(current1);
+                return new GeneratedTextureResource(manager, current1);
             }
         }
         return null;

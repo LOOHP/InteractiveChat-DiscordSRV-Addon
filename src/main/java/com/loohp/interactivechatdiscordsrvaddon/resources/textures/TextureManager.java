@@ -47,7 +47,6 @@ public class TextureManager extends AbstractManager implements ITextureManager {
     public static final String SKIN_REQUIRED = "interactivechatdiscordsrvaddon/skin";
     private static final Color MISSING_TEXTURE_0 = new Color(0, 0, 0);
     private static final Color MISSING_TEXTURE_1 = new Color(248, 0, 248);
-    public static final TextureResource MISSING_TEXTURE = new GeneratedTextureResource(getMissingImage(16, 16));
 
     public static BufferedImage getMissingImage(int width, int length) {
         BufferedImage image = new BufferedImage(width, length, BufferedImage.TYPE_INT_ARGB);
@@ -59,6 +58,10 @@ public class TextureManager extends AbstractManager implements ITextureManager {
         g.fillRect(width / 2, length / 2, width / 2, length / 2);
         g.dispose();
         return image;
+    }
+
+    public static TextureResource getMissingTexture(ResourceManager resourceManager) {
+        return new GeneratedTextureResource(resourceManager, getMissingImage(16, 16));
     }
 
     private Map<String, TextureResource> textures;
@@ -150,7 +153,7 @@ public class TextureManager extends AbstractManager implements ITextureManager {
             resourceLocation = resourceLocation.substring(0, resourceLocation.length() - 4);
         }
         if (returnMissingTexture) {
-            return textures.getOrDefault(resourceLocation, MISSING_TEXTURE);
+            return textures.getOrDefault(resourceLocation, getMissingTexture(manager));
         } else {
             return textures.get(resourceLocation);
         }

@@ -33,6 +33,7 @@ import com.loohp.interactivechat.utils.ComponentStyling;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.libs.URLClassLoaderAccess;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ICacheManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceDownloadManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
@@ -430,7 +431,7 @@ public class MinecraftFontRenderer extends JFrame {
             reader.close();
             int packFormat = ((Number) ((JSONObject) json.get("pack")).get("pack_format")).intValue();
 
-            resourceManager = new ResourceManager(false, packFormat < 9);
+            resourceManager = new ResourceManager(false, packFormat < 9, Collections.emptyList(), Collections.singletonList(ICacheManager.getDummySupplier()));
             resourceManager.loadResources(defaultPack, ResourcePackType.BUILT_IN);
             resourceBar.setValue(valuePerPack);
             for (String resourceName : resourceOrder) {

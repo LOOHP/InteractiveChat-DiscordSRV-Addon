@@ -139,12 +139,12 @@ public class ItemRenderUtils {
             }
         } else if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:banner")) && !xMaterial.isOneOf(Collections.singletonList("CONTAINS:banner_pattern"))) {
             BannerAssetResult bannerAsset = BannerGraphics.generateBannerAssets(item);
-            providedTextures.put(ResourceRegistry.BANNER_BASE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(bannerAsset.getBase()));
-            providedTextures.put(ResourceRegistry.BANNER_PATTERNS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(bannerAsset.getPatterns()));
+            providedTextures.put(ResourceRegistry.BANNER_BASE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, bannerAsset.getBase()));
+            providedTextures.put(ResourceRegistry.BANNER_PATTERNS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, bannerAsset.getPatterns()));
         } else if (xMaterial.equals(XMaterial.SHIELD)) {
             BannerAssetResult shieldAsset = BannerGraphics.generateShieldAssets(item);
-            providedTextures.put(ResourceRegistry.SHIELD_BASE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(shieldAsset.getBase()));
-            providedTextures.put(ResourceRegistry.SHIELD_PATTERNS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(shieldAsset.getPatterns()));
+            providedTextures.put(ResourceRegistry.SHIELD_BASE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, shieldAsset.getBase()));
+            providedTextures.put(ResourceRegistry.SHIELD_PATTERNS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, shieldAsset.getPatterns()));
             predicates.put(ModelOverrideType.BLOCKING, 0F);
             ICPlayer icplayer = player.getPlayer();
             if (icplayer != null && icplayer.isLocal()) {
@@ -163,7 +163,7 @@ public class ItemRenderUtils {
             } catch (ParseException e) {
                 e.printStackTrace();
             }
-            providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(ModelUtils.convertToModernSkinTexture(skinImage)));
+            providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, ModelUtils.convertToModernSkinTexture(skinImage)));
         } else if (xMaterial.equals(XMaterial.ELYTRA)) {
             int durability = item.getType().getMaxDurability() - (InteractiveChat.version.isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
             if (durability <= 1) {
@@ -276,19 +276,19 @@ public class ItemRenderUtils {
                 BufferedImage itemImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + xMaterial.name().toLowerCase()).getTexture(32, 32);
                 BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
                 itemImage = ImageUtils.multiply(itemImage, colorOverlay);
-                providedTextures.put(ResourceRegistry.LEATHER_HORSE_ARMOR_PLACEHOLDER, new GeneratedTextureResource(itemImage));
+                providedTextures.put(ResourceRegistry.LEATHER_HORSE_ARMOR_PLACEHOLDER, new GeneratedTextureResource(manager, itemImage));
             } else {
                 BufferedImage itemImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + xMaterial.name().toLowerCase()).getTexture(32, 32);
                 BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
                 itemImage = ImageUtils.multiply(itemImage, colorOverlay);
                 if (xMaterial.name().contains("HELMET")) {
-                    providedTextures.put(ResourceRegistry.LEATHER_HELMET_PLACEHOLDER, new GeneratedTextureResource(itemImage));
+                    providedTextures.put(ResourceRegistry.LEATHER_HELMET_PLACEHOLDER, new GeneratedTextureResource(manager, itemImage));
                 } else if (xMaterial.name().contains("CHESTPLATE")) {
-                    providedTextures.put(ResourceRegistry.LEATHER_CHESTPLATE_PLACEHOLDER, new GeneratedTextureResource(itemImage));
+                    providedTextures.put(ResourceRegistry.LEATHER_CHESTPLATE_PLACEHOLDER, new GeneratedTextureResource(manager, itemImage));
                 } else if (xMaterial.name().contains("LEGGINGS")) {
-                    providedTextures.put(ResourceRegistry.LEATHER_LEGGINGS_PLACEHOLDER, new GeneratedTextureResource(itemImage));
+                    providedTextures.put(ResourceRegistry.LEATHER_LEGGINGS_PLACEHOLDER, new GeneratedTextureResource(manager, itemImage));
                 } else if (xMaterial.name().contains("BOOTS")) {
-                    providedTextures.put(ResourceRegistry.LEATHER_BOOTS_PLACEHOLDER, new GeneratedTextureResource(itemImage));
+                    providedTextures.put(ResourceRegistry.LEATHER_BOOTS_PLACEHOLDER, new GeneratedTextureResource(manager, itemImage));
                 }
             }
         } else if (item.getItemMeta() instanceof PotionMeta) {
@@ -311,7 +311,7 @@ public class ItemRenderUtils {
                 BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(tippedArrowHead), color);
                 tippedArrowHead = ImageUtils.multiply(tippedArrowHead, colorOverlay);
 
-                providedTextures.put(ResourceRegistry.TIPPED_ARROW_HEAD_PLACEHOLDER, new GeneratedTextureResource(tippedArrowHead));
+                providedTextures.put(ResourceRegistry.TIPPED_ARROW_HEAD_PLACEHOLDER, new GeneratedTextureResource(manager, tippedArrowHead));
             } else {
                 PotionMeta meta = (PotionMeta) item.getItemMeta();
                 PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
@@ -331,7 +331,7 @@ public class ItemRenderUtils {
                 BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(potionOverlay), color);
                 potionOverlay = ImageUtils.multiply(potionOverlay, colorOverlay);
 
-                providedTextures.put(ResourceRegistry.POTION_OVERLAY_PLACEHOLDER, new GeneratedTextureResource(potionOverlay));
+                providedTextures.put(ResourceRegistry.POTION_OVERLAY_PLACEHOLDER, new GeneratedTextureResource(manager, potionOverlay));
                 if (potiontype != null) {
                     if (!(potiontype.name().equals("WATER") || potiontype.name().equals("AWKWARD") || potiontype.name().equals("MUNDANE") || potiontype.name().equals("THICK") || potiontype.name().equals("UNCRAFTABLE"))) {
                         requiresEnchantmentGlint = true;
@@ -350,13 +350,13 @@ public class ItemRenderUtils {
                 baseImage = ImageUtils.multiply(baseImage, colorBase);
                 overlayImage = ImageUtils.multiply(overlayImage, colorOverlay);
 
-                providedTextures.put(ResourceRegistry.SPAWN_EGG_PLACEHOLDER, new GeneratedTextureResource(baseImage));
-                providedTextures.put(ResourceRegistry.SPAWN_EGG_OVERLAY_PLACEHOLDER, new GeneratedTextureResource(overlayImage));
+                providedTextures.put(ResourceRegistry.SPAWN_EGG_PLACEHOLDER, new GeneratedTextureResource(manager, baseImage));
+                providedTextures.put(ResourceRegistry.SPAWN_EGG_OVERLAY_PLACEHOLDER, new GeneratedTextureResource(manager, overlayImage));
             }
         } else if (InteractiveChat.version.isLegacy() && xMaterial.isOneOf(Collections.singletonList("CONTAINS:bed"))) {
             String colorName = xMaterial.name().replace("_BED", "").toLowerCase();
             BufferedImage bedTexture = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "bed/" + colorName).getTexture();
-            providedTextures.put(ResourceRegistry.LEGACY_BED_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(bedTexture));
+            providedTextures.put(ResourceRegistry.LEGACY_BED_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, bedTexture));
         } else if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_9) && xMaterial.equals(XMaterial.ENDER_PEARL)) {
             ICPlayer icplayer = player.getPlayer();
             if (icplayer != null && icplayer.isLocal()) {
@@ -433,7 +433,7 @@ public class ItemRenderUtils {
                                 BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(tippedArrowHead), color);
                                 tippedArrowHead = ImageUtils.multiply(tippedArrowHead, colorOverlay);
 
-                                entry.setValue(new GeneratedTextureResource(tippedArrowHead));
+                                entry.setValue(new GeneratedTextureResource(manager, tippedArrowHead));
                             }
                         } else {
                             if (overriddenResource.equalsIgnoreCase(ResourceRegistry.POTION_OVERLAY_PLACEHOLDER)) {
@@ -455,7 +455,7 @@ public class ItemRenderUtils {
                                 BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(potionOverlay), color);
                                 potionOverlay = ImageUtils.multiply(potionOverlay, colorOverlay);
 
-                                entry.setValue(new GeneratedTextureResource(potionOverlay));
+                                entry.setValue(new GeneratedTextureResource(manager, potionOverlay));
                             }
                         }
                     } else if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:spawn_egg"))) {
@@ -465,7 +465,7 @@ public class ItemRenderUtils {
                                 BufferedImage baseImage = entry.getValue().getTexture();
                                 BufferedImage colorBase = ImageUtils.changeColorTo(ImageUtils.copyImage(baseImage), tintData.getBase());
                                 baseImage = ImageUtils.multiply(baseImage, colorBase);
-                                entry.setValue(new GeneratedTextureResource(baseImage));
+                                entry.setValue(new GeneratedTextureResource(manager, baseImage));
                             }
                         } else if (overriddenResource.equalsIgnoreCase(ResourceRegistry.SPAWN_EGG_OVERLAY_PLACEHOLDER)) {
                             SpawnEggTintData tintData = TintUtils.getSpawnEggTint(xMaterial);
@@ -473,7 +473,7 @@ public class ItemRenderUtils {
                                 BufferedImage overlayImage = entry.getValue().getTexture();
                                 BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(overlayImage), tintData.getOverlay());
                                 overlayImage = ImageUtils.multiply(overlayImage, colorOverlay);
-                                entry.setValue(new GeneratedTextureResource(overlayImage));
+                                entry.setValue(new GeneratedTextureResource(manager, overlayImage));
                             }
                         }
                     } else if (item.getItemMeta() instanceof LeatherArmorMeta) {
@@ -484,14 +484,14 @@ public class ItemRenderUtils {
                                 BufferedImage itemImage = entry.getValue().getTexture(32, 32);
                                 BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
                                 itemImage = ImageUtils.multiply(itemImage, colorOverlay);
-                                entry.setValue(new GeneratedTextureResource(itemImage));
+                                entry.setValue(new GeneratedTextureResource(manager, itemImage));
                             }
                         } else {
                             if (overriddenResource.equalsIgnoreCase(ResourceRegistry.LEATHER_HELMET_PLACEHOLDER) || overriddenResource.equalsIgnoreCase(ResourceRegistry.LEATHER_CHESTPLATE_PLACEHOLDER) || overriddenResource.equalsIgnoreCase(ResourceRegistry.LEATHER_LEGGINGS_PLACEHOLDER) || overriddenResource.equalsIgnoreCase(ResourceRegistry.LEATHER_BOOTS_PLACEHOLDER)) {
                                 BufferedImage itemImage = entry.getValue().getTexture(32, 32);
                                 BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
                                 itemImage = ImageUtils.multiply(itemImage, colorOverlay);
-                                entry.setValue(new GeneratedTextureResource(itemImage));
+                                entry.setValue(new GeneratedTextureResource(manager, itemImage));
                             }
                         }
                     }

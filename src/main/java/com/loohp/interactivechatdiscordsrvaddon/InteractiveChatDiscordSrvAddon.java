@@ -46,6 +46,7 @@ import com.loohp.interactivechatdiscordsrvaddon.listeners.OutboundToDiscordEvent
 import com.loohp.interactivechatdiscordsrvaddon.metrics.Charts;
 import com.loohp.interactivechatdiscordsrvaddon.metrics.Metrics;
 import com.loohp.interactivechatdiscordsrvaddon.registry.InteractiveChatRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ICacheManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
@@ -333,7 +334,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                 JSONObject json = (JSONObject) new JSONParser().parse(SkinUtils.getSkinJsonFromProfile(player.getLocalPlayer()));
                 String value = (String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url");
                 BufferedImage skin = ImageUtils.downloadImage(value);
-                Cache.putCache(uuid + value + ImageGeneration.PLAYER_SKIN_CACHE_KEY, skin, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+                resourceManager.getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).putCache(uuid + value + ImageGeneration.PLAYER_SKIN_CACHE_KEY, skin);
             } catch (Exception e) {
             }
         } else {
@@ -341,7 +342,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                 UUID uuid = player.getUniqueId();
                 String value = SkinUtils.getSkinURLFromUUID(uuid);
                 BufferedImage skin = ImageUtils.downloadImage(value);
-                Cache.putCache(uuid + "null" + ImageGeneration.PLAYER_SKIN_CACHE_KEY, skin, InteractiveChatDiscordSrvAddon.plugin.cacheTimeout);
+                resourceManager.getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).putCache(uuid + "null" + ImageGeneration.PLAYER_SKIN_CACHE_KEY, skin);
             } catch (Exception e) {
             }
         }
@@ -610,7 +611,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                 Bukkit.getPluginManager().callEvent(new ResourceManagerInitializeEvent(mods));
 
                 @SuppressWarnings("resource")
-                ResourceManager resourceManager = new ResourceManager(InteractiveChat.version.isLegacy(), InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_18_2), mods, Collections.singletonList(manager -> new CustomItemTextureRegistry()));
+                ResourceManager resourceManager = new ResourceManager(InteractiveChat.version.isLegacy(), InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_18_2), mods, Arrays.asList(CustomItemTextureRegistry.getDefaultSupplier(), ICacheManager.getDefaultSupplier(new File(getDataFolder(), "cache"))));
 
                 for (Entry<String, ModManager> entry : resourceManager.getModManagers().entrySet()) {
                     Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Registered ModManager \"" + entry.getKey() + "\" of class \"" + entry.getValue().getClass().getName() + "\"");
@@ -676,8 +677,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
                 Bukkit.getScheduler().callSyncMethod(plugin, () -> {
                     InteractiveChatDiscordSrvAddon.plugin.resourceManager = resourceManager;
-
-                    Cache.clearAllCache();
 
                     if (resourceManager.getResourcePackInfo().stream().allMatch(each -> each.getStatus())) {
                         sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loaded all resources!", senders);
