@@ -73,8 +73,8 @@ public class FontProvider {
             providers.add(0, SpaceFont.generateLegacyHardcodedInstance(manager, this));
             i--;
         }
-        if (providers.isEmpty() || !(providers.get(providers.size() - 1) instanceof BackingEmptyFont)) {
-            providers.add(new BackingEmptyFont(manager, this));
+        if (providers.isEmpty() || !(providers.get(providers.size() - 1) instanceof MissingFont)) {
+            providers.add(new MissingFont(manager, this));
         }
 
         Iterator<MinecraftFont> itr = providers.iterator();
