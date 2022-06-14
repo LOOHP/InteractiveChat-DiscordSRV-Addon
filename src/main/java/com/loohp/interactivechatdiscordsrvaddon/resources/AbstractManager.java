@@ -35,6 +35,7 @@ public abstract class AbstractManager implements IAbstractManager {
         return manager;
     }
 
+    @Override
     public boolean isValid() {
         return manager.isValid();
     }

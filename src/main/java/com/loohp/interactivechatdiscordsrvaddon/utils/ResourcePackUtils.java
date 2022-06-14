@@ -44,18 +44,20 @@ public class ResourcePackUtils {
 
     static {
         try {
-            craftServerClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.CraftServer");
-            craftServerGetServerMethod = craftServerClass.getMethod("getServer");
-            nmsGetResourcePackMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
-                return craftServerGetServerMethod.getReturnType().getMethod("getResourcePack");
-            }, () -> {
-                return craftServerGetServerMethod.getReturnType().getMethod("S");
-            });
-            nmsGetResourcePackHashMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
-                return craftServerGetServerMethod.getReturnType().getMethod("getResourcePackHash");
-            }, () -> {
-                return craftServerGetServerMethod.getReturnType().getMethod("T");
-            });
+            if (InteractiveChat.version.isOlderThan(MCVersion.V1_19)) {
+                craftServerClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.CraftServer");
+                craftServerGetServerMethod = craftServerClass.getMethod("getServer");
+                nmsGetResourcePackMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
+                    return craftServerGetServerMethod.getReturnType().getMethod("getResourcePack");
+                }, () -> {
+                    return craftServerGetServerMethod.getReturnType().getMethod("S");
+                });
+                nmsGetResourcePackHashMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
+                    return craftServerGetServerMethod.getReturnType().getMethod("getResourcePackHash");
+                }, () -> {
+                    return craftServerGetServerMethod.getReturnType().getMethod("T");
+                });
+            }
             try {
                 nmsMinecraftVersionClass = NMSUtils.getNMSClass("net.minecraft.server.%s.MinecraftVersion", "net.minecraft.MinecraftVersion");
                 nmsMinecraftVersionConstructor = nmsMinecraftVersionClass.getDeclaredConstructor();
@@ -75,27 +77,35 @@ public class ResourcePackUtils {
     }
 
     public static String getServerResourcePack() {
-        try {
-            Object craftServerObject = craftServerClass.cast(Bukkit.getServer());
-            Object nmsMinecraftServerObject = craftServerGetServerMethod.invoke(craftServerObject);
-            Object resourcePackStringObject = nmsGetResourcePackMethod.invoke(nmsMinecraftServerObject);
-            return resourcePackStringObject == null ? "" : resourcePackStringObject.toString();
-        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            e.printStackTrace();
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19)) {
+            return Bukkit.getResourcePack();
+        } else {
+            try {
+                Object craftServerObject = craftServerClass.cast(Bukkit.getServer());
+                Object nmsMinecraftServerObject = craftServerGetServerMethod.invoke(craftServerObject);
+                Object resourcePackStringObject = nmsGetResourcePackMethod.invoke(nmsMinecraftServerObject);
+                return resourcePackStringObject == null ? "" : resourcePackStringObject.toString();
+            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+            return "";
         }
-        return "";
     }
 
     public static String getServerResourcePackHash() {
-        try {
-            Object craftServerObject = craftServerClass.cast(Bukkit.getServer());
-            Object nmsMinecraftServerObject = craftServerGetServerMethod.invoke(craftServerObject);
-            Object resourcePackStringObject = nmsGetResourcePackHashMethod.invoke(nmsMinecraftServerObject);
-            return resourcePackStringObject == null ? "" : resourcePackStringObject.toString();
-        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            e.printStackTrace();
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19)) {
+            return Bukkit.getResourcePackHash();
+        } else {
+            try {
+                Object craftServerObject = craftServerClass.cast(Bukkit.getServer());
+                Object nmsMinecraftServerObject = craftServerGetServerMethod.invoke(craftServerObject);
+                Object resourcePackStringObject = nmsGetResourcePackHashMethod.invoke(nmsMinecraftServerObject);
+                return resourcePackStringObject == null ? "" : resourcePackStringObject.toString();
+            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+            return "";
         }
-        return "";
     }
 
     public static int getServerResourcePackVersion() {

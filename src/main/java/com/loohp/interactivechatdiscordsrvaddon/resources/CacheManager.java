@@ -32,6 +32,7 @@ import java.time.Duration;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CacheManager implements ICacheManager {
 
@@ -39,6 +40,7 @@ public class CacheManager implements ICacheManager {
     private DB db;
     private HTreeMap<String, byte[]> cacheObjectMap;
     private ScheduledExecutorService service;
+    private AtomicBoolean isValid;
 
     public CacheManager(File folder, Duration timeout) {
         this.folder = folder;
@@ -47,9 +49,10 @@ public class CacheManager implements ICacheManager {
         }
         folder.mkdirs();
         this.db = DBMaker.fileDB(new File(folder, "data.dat")).fileMmapEnableIfSupported().fileDeleteAfterClose().make();
-        this.cacheObjectMap = db.hashMap("cache", Serializer.STRING, Serializer.BYTE_ARRAY).expireAfterUpdate(timeout.toMillis(), TimeUnit.MILLISECONDS).createOrOpen();
+        this.cacheObjectMap = db.hashMap("cache", Serializer.STRING, Serializer.BYTE_ARRAY).createOrOpen();
         this.service = Executors.newSingleThreadScheduledExecutor();
         service.scheduleAtFixedRate(() -> cacheObjectMap.expireEvict(), 5, 5, TimeUnit.MINUTES);
+        this.isValid = new AtomicBoolean(true);
     }
 
     @Override
@@ -59,6 +62,9 @@ public class CacheManager implements ICacheManager {
 
     @Override
     public CacheObject<?> getCache(String key) {
+        if (!isValid.get()) {
+            return null;
+        }
         byte[] data = cacheObjectMap.get(key);
         if (data == null) {
             return null;
@@ -73,6 +79,9 @@ public class CacheManager implements ICacheManager {
 
     @Override
     public <T> void putCache(String key, T value) {
+        if (!isValid.get()) {
+            return;
+        }
         try {
             cacheObjectMap.put(key, new CacheObject<>(System.currentTimeMillis(), value).serialize());
         } catch (IOException e) {
@@ -81,17 +90,39 @@ public class CacheManager implements ICacheManager {
     }
 
     @Override
+    public CacheObject<?> removeCache(String key) {
+        if (!isValid.get()) {
+            return null;
+        }
+        byte[] data = cacheObjectMap.remove(key);
+        if (data == null) {
+            return null;
+        }
+        try {
+            return CacheObject.deserialize(data);
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
     public void clearAllCache() {
+        if (!isValid.get()) {
+            return;
+        }
         cacheObjectMap.clear();
     }
 
     @Override
-    public void close() {
-        service.shutdown();
-        cacheObjectMap.close();
-        db.close();
-        if (folder.exists()) {
-            FileUtils.removeFolderRecursively(folder);
+    public synchronized void close() {
+        if (isValid.getAndSet(false)) {
+            service.shutdown();
+            cacheObjectMap.close();
+            db.close();
+            if (folder.exists()) {
+                FileUtils.removeFolderRecursively(folder);
+            }
         }
     }
 

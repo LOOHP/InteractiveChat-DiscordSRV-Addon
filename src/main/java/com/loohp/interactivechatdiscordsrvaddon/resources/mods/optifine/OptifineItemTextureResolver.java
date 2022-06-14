@@ -25,12 +25,14 @@ import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry.CustomItemTextureResolver;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -60,8 +62,8 @@ public class OptifineItemTextureResolver implements CustomItemTextureResolver {
     }
 
     @Override
-    public Optional<TextureResource> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack) {
-        return Optional.ofNullable(optifineManager.getEnchantmentGlintOverrideTextures(heldSlot, itemStack));
+    public List<ValuePairs<TextureResource, OpenGLBlending>> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack) {
+        return optifineManager.getEnchantmentGlintOverrideTextures(heldSlot, itemStack);
     }
 
     @Override

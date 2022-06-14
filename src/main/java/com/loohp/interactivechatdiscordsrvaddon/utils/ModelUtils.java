@@ -20,15 +20,20 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
+import com.loohp.blockmodelrenderer.render.Face;
+import com.loohp.blockmodelrenderer.render.Point3D;
+import com.loohp.blockmodelrenderer.utils.MathUtils;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelFace.ModelFaceSide;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -311,6 +316,25 @@ public class ModelUtils {
 
     public static boolean isRenderedUpsideDown(String name, boolean hasCape) {
         return ("Dinnerbone".equals(name) || "Grumm".equals(name)) && hasCape;
+    }
+
+    public static boolean shouldTriggerCullface(Face face, ModelFaceSide side) {
+        Point3D[] points = face.getPoints();
+        switch (side) {
+            case UP:
+                return Arrays.stream(points).allMatch(p -> MathUtils.equals(p.y, 16.0));
+            case DOWN:
+                return Arrays.stream(points).allMatch(p -> MathUtils.equals(p.y, 0.0));
+            case NORTH:
+                return Arrays.stream(points).allMatch(p -> MathUtils.equals(p.z, 0.0));
+            case EAST:
+                return Arrays.stream(points).allMatch(p -> MathUtils.equals(p.x, 16.0));
+            case SOUTH:
+                return Arrays.stream(points).allMatch(p -> MathUtils.equals(p.z, 16.0));
+            case WEST:
+                return Arrays.stream(points).allMatch(p -> MathUtils.equals(p.x, 0.0));
+        }
+        throw new IllegalArgumentException("Unknown ModelFaceSide \"" + side.name() + "\"");
     }
 
 }

@@ -25,18 +25,23 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager.Resour
 import java.io.File;
 import java.time.Duration;
 
-public interface ICacheManager extends IResourceRegistry, AutoCloseable {
+public interface ICacheManager extends IResourceRegistry {
 
     String IDENTIFIER = "CacheManager";
 
-    static ResourceRegistrySupplier getDefaultSupplier(File folder) {
+    static ResourceRegistrySupplier<ICacheManager> getDefaultSupplier(File folder) {
         return manager -> new CacheManager(folder, Duration.ofMinutes(10));
     }
 
-    static ResourceRegistrySupplier getDummySupplier() {
+    static ResourceRegistrySupplier<ICacheManager> getDummySupplier() {
         return manager -> new ICacheManager() {
             @Override
             public CacheObject<?> getCache(String key) {
+                return null;
+            }
+
+            @Override
+            public CacheObject<?> removeCache(String key) {
                 return null;
             }
 
@@ -51,11 +56,6 @@ public interface ICacheManager extends IResourceRegistry, AutoCloseable {
             }
 
             @Override
-            public void close() {
-                //do nothing
-            }
-
-            @Override
             public String getRegistryIdentifier() {
                 return IDENTIFIER;
             }
@@ -64,11 +64,10 @@ public interface ICacheManager extends IResourceRegistry, AutoCloseable {
 
     CacheObject<?> getCache(String key);
 
+    CacheObject<?> removeCache(String key);
+
     <T> void putCache(String key, T value);
 
     void clearAllCache();
-
-    @Override
-    void close();
 
 }

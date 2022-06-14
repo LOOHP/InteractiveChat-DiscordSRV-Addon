@@ -18,17 +18,19 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.loohp.interactivechatdiscordsrvaddon.resources;
+package com.loohp.interactivechatdiscordsrvaddon.graphics;
 
-public interface IAbstractManager extends AutoCloseable {
+import com.loohp.blockmodelrenderer.blending.BlendingMode;
+import com.loohp.blockmodelrenderer.blending.BlendingModes;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
 
-    ResourceManager getManager();
+public class BlendingUtils {
 
-    boolean isValid();
-
-    @Override
-    default void close() {
-        //do nothing
+    public static BlendingModes convert(OpenGLBlending openGLBlending) {
+        return BlendingModes.of(BlendingMode.fromOpenGL(openGLBlending.getSrcColor().getOpenGLValue()),
+                                BlendingMode.fromOpenGL(openGLBlending.getDesColor().getOpenGLValue()),
+                                BlendingMode.fromOpenGL(openGLBlending.getSrcAlpha().getOpenGLValue()),
+                                BlendingMode.fromOpenGL(openGLBlending.getDesAlpha().getOpenGLValue()));
     }
 
 }

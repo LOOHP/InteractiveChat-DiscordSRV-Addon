@@ -215,7 +215,7 @@ public class ResourceDownloadManager {
         return name;
     }
 
-    public static enum TaskType {
+    public enum TaskType {
 
         CLIENT_DOWNLOAD,
         EXTRACT,

@@ -26,18 +26,21 @@ import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ICacheManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RawEnchantmentGlintData;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RenderResult;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimation;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ModelUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackInfoUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.SpawnEggTintData;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintIndexData;
@@ -509,17 +512,24 @@ public class BlockModelRenderer extends JFrame {
             if (meta.hasAnimation()) {
                 TextureAnimation animation = meta.getAnimation();
                 if (animation.hasWidth() && animation.hasHeight()) {
-                    tintOriginal = ImageUtils.copyAndGetSubImage(tintOriginal, 0, 0, animation.getWidth(), animation.getHeight());
+                    tintOriginal = tintOriginal.getSubimage(0, 0, animation.getWidth(), animation.getHeight());
                 } else {
-                    tintOriginal = ImageUtils.copyAndGetSubImage(tintOriginal, 0, 0, tintOriginal.getWidth(), tintOriginal.getWidth());
+                    tintOriginal = tintOriginal.getSubimage(0, 0, tintOriginal.getWidth(), tintOriginal.getWidth());
                 }
             }
         }
+
         BufferedImage tintImage = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g3 = tintImage.createGraphics();
         g3.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        g3.drawImage(tintOriginal, 0, 0, tintImage.getWidth() * 4, tintImage.getHeight() * 4, null);
+        if (tintImage.getHeight() < tintImage.getWidth()) {
+            tintOriginal = ImageUtils.resizeImageFillWidth(tintOriginal, tintImage.getWidth() * 4);
+        } else {
+            tintOriginal = ImageUtils.resizeImageFillHeight(tintOriginal, tintImage.getHeight() * 4);
+        }
+        g3.drawImage(tintOriginal, 0, 0, null);
         g3.dispose();
+
         return tintImage;
     }
 
@@ -596,7 +606,7 @@ public class BlockModelRenderer extends JFrame {
 
         textAreaResources.setText("Loaded Resources:\n");
         for (ResourcePackInfo info : resourceManager.getResourcePackInfo()) {
-            textAreaResources.append(" - " + info.getName());
+            textAreaResources.append(" - " + ResourcePackInfoUtils.resolveName(info));
             if (!info.getStatus()) {
                 textAreaResources.append(" (Failed)");
             }
@@ -678,7 +688,7 @@ public class BlockModelRenderer extends JFrame {
         modelRenderer.reloadPoolSize();
         long start = System.currentTimeMillis();
         try {
-            RenderResult result = modelRenderer.render((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), (int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), resourceManager, null, false, key, ModelDisplayPosition.GUI, predicates, providedTextures, tintIndexData, enchantedCheckBox.isSelected(), altPosBox.isSelected(), source -> getEnchantedImage(source), source -> getRawEnchantedImage(source));
+            RenderResult result = modelRenderer.render((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), (int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), resourceManager, null, false, key, ModelDisplayPosition.GUI, predicates, providedTextures, tintIndexData, enchantedCheckBox.isSelected(), altPosBox.isSelected(), source -> getEnchantedImage(source), source -> new RawEnchantmentGlintData(Collections.singletonList(getRawEnchantedImage(source)), Collections.singletonList(OpenGLBlending.GLINT)));
             long end = System.currentTimeMillis();
             if (result.isSuccessful()) {
                 renderedImage = result.getImage();

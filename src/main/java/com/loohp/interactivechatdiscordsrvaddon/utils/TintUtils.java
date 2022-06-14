@@ -36,8 +36,12 @@ public class TintUtils {
     public static final float DEFAULT_TEMPERATURE = 0.8F;
     public static final float DEFAULT_DOWNFALL = 0.4F;
 
-    public static final int FOLIAGE_EVERGREEN_COLOR = 6396257;
+    public static final float DEFAULT2_TEMPERATURE = 0.5F;
+    public static final float DEFAULT2_DOWNFALL = 1.0F;
+
+    public static final int FOLIAGE_SPRUCE_COLOR = 6396257;
     public static final int FOLIAGE_BIRCH_COLOR = 8431445;
+    public static final int FOLIAGE_MANGROVE_COLOR = 9619016;
     public static final int FOLIAGE_DEFAULT_COLOR = 4764952;
 
     public static final int LILY_PAD_COLOR = 2129968;
@@ -52,11 +56,13 @@ public class TintUtils {
         TintIndexData grassTint = new TintIndexData(Collections.singletonList(() -> getGrassTintColor(DEFAULT_TEMPERATURE, DEFAULT_DOWNFALL)));
         TINT_DATA.put("GRASS_BLOCK", grassTint);
         TINT_DATA.put("GRASS", grassTint);
-        TINT_DATA.put("TALL_GRASS", grassTint);
-        TINT_DATA.put("FERN", grassTint);
         TINT_DATA.put("LARGE_FERN", grassTint);
         TINT_DATA.put("POTTED_FERN", grassTint);
         TINT_DATA.put("SUGAR_CANE", grassTint);
+
+        TintIndexData grassTint2 = new TintIndexData(Collections.singletonList(() -> getGrassTintColor(DEFAULT2_TEMPERATURE, DEFAULT2_DOWNFALL)));
+        TINT_DATA.put("TALL_GRASS", grassTint2);
+        TINT_DATA.put("FERN", grassTint2);
 
         TintIndexData foliageTint = new TintIndexData(Collections.singletonList(() -> getFoliageTintColor(DEFAULT_TEMPERATURE, DEFAULT_DOWNFALL)));
         TINT_DATA.put("OAK_LEAVES", foliageTint);
@@ -66,9 +72,11 @@ public class TintUtils {
         TINT_DATA.put("VINE", foliageTint);
 
         TINT_DATA.put("BIRCH_LEAVES", new TintIndexData(Collections.singletonList(() -> FOLIAGE_BIRCH_COLOR)));
-        TINT_DATA.put("SPRUCE_LEAVES", new TintIndexData(Collections.singletonList(() -> FOLIAGE_EVERGREEN_COLOR)));
+        TINT_DATA.put("SPRUCE_LEAVES", new TintIndexData(Collections.singletonList(() -> FOLIAGE_SPRUCE_COLOR)));
+        TINT_DATA.put("MANGROVE_LEAVES", new TintIndexData(Collections.singletonList(() -> FOLIAGE_MANGROVE_COLOR)));
         TINT_DATA.put("LILY_PAD", new TintIndexData(Collections.singletonList(() -> LILY_PAD_COLOR)));
 
+        SPAWN_EGG_TINT_DATA.put("ALLAY_SPAWN_EGG", new SpawnEggTintData(56063, 44543));
         SPAWN_EGG_TINT_DATA.put("AXOLOTL_SPAWN_EGG", new SpawnEggTintData(16499171, 10890612));
         SPAWN_EGG_TINT_DATA.put("BAT_SPAWN_EGG", new SpawnEggTintData(4996656, 986895));
         SPAWN_EGG_TINT_DATA.put("BEE_SPAWN_EGG", new SpawnEggTintData(15582019, 4400155));
@@ -87,6 +95,7 @@ public class TintUtils {
         SPAWN_EGG_TINT_DATA.put("ENDERMITE_SPAWN_EGG", new SpawnEggTintData(1447446, 7237230));
         SPAWN_EGG_TINT_DATA.put("EVOKER_SPAWN_EGG", new SpawnEggTintData(9804699, 1973274));
         SPAWN_EGG_TINT_DATA.put("FOX_SPAWN_EGG", new SpawnEggTintData(14005919, 13396256));
+        SPAWN_EGG_TINT_DATA.put("FROG_SPAWN_EGG", new SpawnEggTintData(13661252, 16762748));
         SPAWN_EGG_TINT_DATA.put("GHAST_SPAWN_EGG", new SpawnEggTintData(16382457, 12369084));
         SPAWN_EGG_TINT_DATA.put("GLOW_SQUID_SPAWN_EGG", new SpawnEggTintData(611926, 8778172));
         SPAWN_EGG_TINT_DATA.put("GOAT_SPAWN_EGG", new SpawnEggTintData(10851452, 5589310));
@@ -121,6 +130,7 @@ public class TintUtils {
         SPAWN_EGG_TINT_DATA.put("SQUID_SPAWN_EGG", new SpawnEggTintData(2243405, 7375001));
         SPAWN_EGG_TINT_DATA.put("STRAY_SPAWN_EGG", new SpawnEggTintData(6387319, 14543594));
         SPAWN_EGG_TINT_DATA.put("STRIDER_SPAWN_EGG", new SpawnEggTintData(10236982, 5065037));
+        SPAWN_EGG_TINT_DATA.put("TADPOLE_SPAWN_EGG", new SpawnEggTintData(7164733, 1444352));
         SPAWN_EGG_TINT_DATA.put("TRADER_LLAMA_SPAWN_EGG", new SpawnEggTintData(15377456, 4547222));
         SPAWN_EGG_TINT_DATA.put("TROPICAL_FISH_SPAWN_EGG", new SpawnEggTintData(15690005, 16775663));
         SPAWN_EGG_TINT_DATA.put("TURTLE_SPAWN_EGG", new SpawnEggTintData(15198183, 44975));
@@ -128,6 +138,7 @@ public class TintUtils {
         SPAWN_EGG_TINT_DATA.put("VILLAGER_SPAWN_EGG", new SpawnEggTintData(5651507, 12422002));
         SPAWN_EGG_TINT_DATA.put("VINDICATOR_SPAWN_EGG", new SpawnEggTintData(9804699, 2580065));
         SPAWN_EGG_TINT_DATA.put("WANDERING_TRADER_SPAWN_EGG", new SpawnEggTintData(4547222, 15377456));
+        SPAWN_EGG_TINT_DATA.put("WARDEN_SPAWN_EGG", new SpawnEggTintData(1001033, 3790560));
         SPAWN_EGG_TINT_DATA.put("WITCH_SPAWN_EGG", new SpawnEggTintData(3407872, 5349438));
         SPAWN_EGG_TINT_DATA.put("WITHER_SKELETON_SPAWN_EGG", new SpawnEggTintData(1315860, 4672845));
         SPAWN_EGG_TINT_DATA.put("WOLF_SPAWN_EGG", new SpawnEggTintData(14144467, 13545366));

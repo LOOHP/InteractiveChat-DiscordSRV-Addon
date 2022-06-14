@@ -20,6 +20,7 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
+import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
@@ -44,6 +45,7 @@ import java.util.stream.Collectors;
 
 public abstract class MinecraftFont {
 
+    public static final Key DEFAULT_FONT_KEY = Key.key("minecraft:default");
     public static final double ITALIC_SHEAR_X = -4.0 / 14.0;
     public static final int OBFUSCATE_OVERLAP_COUNT = 3;
 

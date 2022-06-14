@@ -20,8 +20,13 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources;
 
-public interface IResourceRegistry {
+public interface IResourceRegistry extends AutoCloseable {
 
     String getRegistryIdentifier();
+
+    @Override
+    default void close() {
+        //do nothing
+    }
 
 }

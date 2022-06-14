@@ -31,13 +31,21 @@ public class GeneratedTextureResource extends TextureResource {
 
     private BufferedImage image;
 
-    public GeneratedTextureResource(ResourceManager manager, BufferedImage image) {
-        super(new GeneratedTextureManager(manager), null, null, image);
+    public GeneratedTextureResource(ResourceManager manager, String resourceKey, BufferedImage image) {
+        super(new GeneratedTextureManager(manager), resourceKey, null, image);
         this.image = image;
     }
 
+    public GeneratedTextureResource(ResourceManager manager, BufferedImage image) {
+        this(manager, null, image);
+    }
+
+    public GeneratedTextureResource(ResourceManager manager, String resourceKey, ResourcePackFile file) {
+        super(new GeneratedTextureManager(manager), resourceKey, file, false);
+    }
+
     public GeneratedTextureResource(ResourceManager manager, ResourcePackFile file) {
-        super(new GeneratedTextureManager(manager), null, file, false);
+        this(manager, null, file);
     }
 
     public static class GeneratedTextureManager extends AbstractManager implements ITextureManager {

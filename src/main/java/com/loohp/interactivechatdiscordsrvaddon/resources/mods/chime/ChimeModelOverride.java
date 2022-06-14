@@ -34,7 +34,6 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimePredicateEnums.ItemInHand;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimePredicateEnums.TargetType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimeUtils.HashPredicate;
-import com.loohp.interactivechatdiscordsrvaddon.utils.ThrowingPentaPredicate;
 import com.loohp.interactivechatdiscordsrvaddon.utils.WorldUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.DimensionManagerWrapper;
 import org.bukkit.Bukkit;
@@ -411,13 +410,13 @@ public class ChimeModelOverride extends ModelOverride {
         private String key;
         private String[] sectionedKeys;
         private Class<?> valueType;
-        private ThrowingPentaPredicate<Object, OfflineICPlayer, World, LivingEntity, ItemStack> predicate;
+        private ChimeOverridePredicate<Object> predicate;
 
-        <T> ChimeModelOverrideType(String key, Class<T> valueType, ThrowingPentaPredicate<T, OfflineICPlayer, World, LivingEntity, ItemStack> predicate) {
+        <T> ChimeModelOverrideType(String key, Class<T> valueType, ChimeOverridePredicate<T> predicate) {
             this.key = key;
             this.sectionedKeys = key.split("/");
             this.valueType = valueType;
-            this.predicate = (ThrowingPentaPredicate<Object, OfflineICPlayer, World, LivingEntity, ItemStack>) predicate;
+            this.predicate = (ChimeOverridePredicate<Object>) predicate;
         }
 
         public String getKey() {
@@ -428,7 +427,7 @@ public class ChimeModelOverride extends ModelOverride {
             return valueType;
         }
 
-        public ThrowingPentaPredicate<Object, OfflineICPlayer, World, LivingEntity, ItemStack> getPredicate() {
+        public ChimeOverridePredicate<Object> getPredicate() {
             return predicate;
         }
 
@@ -465,6 +464,13 @@ public class ChimeModelOverride extends ModelOverride {
             String[] sections = key.split("/");
             return fromKeys(sections);
         }
+
+    }
+
+    @FunctionalInterface
+    public interface ChimeOverridePredicate<T> {
+
+        boolean test(T t, OfflineICPlayer player, World world, LivingEntity entity, ItemStack itemStack) throws Throwable;
 
     }
 

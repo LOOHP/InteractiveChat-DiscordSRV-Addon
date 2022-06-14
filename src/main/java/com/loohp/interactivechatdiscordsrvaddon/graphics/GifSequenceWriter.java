@@ -20,7 +20,7 @@ import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class GifSequenceWriter {
+public class GifSequenceWriter implements AutoCloseable {
 
     /**
      * Returns the first available GIF ImageWriter using
@@ -86,7 +86,7 @@ public class GifSequenceWriter {
 
         IIOMetadataNode graphicsControlExtensionNode = getNode(root, "GraphicControlExtension");
 
-        graphicsControlExtensionNode.setAttribute("disposalMethod", "none");
+        graphicsControlExtensionNode.setAttribute("disposalMethod", "restoreToBackgroundColor");
         graphicsControlExtensionNode.setAttribute("userInputFlag", "FALSE");
         graphicsControlExtensionNode.setAttribute("transparentColorFlag", "FALSE");
         graphicsControlExtensionNode.setAttribute("delayTime", Integer.toString(timeBetweenFramesMS / 10));
@@ -122,6 +122,7 @@ public class GifSequenceWriter {
      * Close this GifSequenceWriter object. This does not close the underlying
      * stream, just finishes off the GIF.
      */
+    @Override
     public void close() throws IOException {
         gifWriter.endWriteSequence();
     }

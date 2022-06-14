@@ -257,6 +257,14 @@ public class AssetsDownloader {
             LibraryLoader.loadLibraries(libsFolder, (file, e) -> {
                 String jarName = file.getName();
                 if (e == null) {
+                    Bukkit.getConsoleSender().sendMessage("[ICDiscordSrvAddon] Remapped library \"" + jarName + "\"");
+                } else {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to remap library \"" + jarName + "\"");
+                    e.printStackTrace();
+                }
+            }, (file, e) -> {
+                String jarName = file.getName();
+                if (e == null) {
                     Bukkit.getConsoleSender().sendMessage("[ICDiscordSrvAddon] Loaded library \"" + jarName + "\"");
                 } else {
                     Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to load library \"" + jarName + "\"");

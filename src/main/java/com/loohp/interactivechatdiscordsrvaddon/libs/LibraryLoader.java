@@ -20,8 +20,14 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.libs;
 
+import me.lucko.jarrelocator.JarRelocator;
+import me.lucko.jarrelocator.Relocation;
+
 import java.io.File;
+import java.io.IOException;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiConsumer;
 
 public class LibraryLoader {
@@ -29,21 +35,62 @@ public class LibraryLoader {
     private static final URLClassLoaderAccess LOADER_ACCESS = URLClassLoaderAccess.create((URLClassLoader) LibraryLoader.class.getClassLoader());
     private static final BiConsumer<File, Throwable> NOOP_LISTENER = (file, e) -> {
     };
+    private static final List<Relocation> RELOCATION_RULES = new ArrayList<>();
 
-    public static void loadLibraries(File libsFolder) {
-        loadLibraries(libsFolder, NOOP_LISTENER);
+    static {
+        RELOCATION_RULES.add(new Relocation(dot("com{}ibm{}icu"), "com.ibm.icu"));
+        RELOCATION_RULES.add(new Relocation(dot("darwin{}"), "darwin."));
+        RELOCATION_RULES.add(new Relocation(dot("kotlin{}"), "kotlin."));
+        RELOCATION_RULES.add(new Relocation(dot("linux{}"), "linux."));
+        RELOCATION_RULES.add(new Relocation(dot("win32{}"), "win32."));
+        RELOCATION_RULES.add(new Relocation(dot("net{}jpountz"), "net.jpountz"));
+        RELOCATION_RULES.add(new Relocation(dot("org{}checkerframework"), "org.checkerframework"));
+        RELOCATION_RULES.add(new Relocation(dot("org{}eclipse"), "org.eclipse"));
+        RELOCATION_RULES.add(new Relocation(dot("org{}json"), "org.json"));
+        RELOCATION_RULES.add(new Relocation(dot("org{}mapdb"), "org.mapdb"));
+        RELOCATION_RULES.add(new Relocation(dot("org{}objectweb"), "org.objectweb"));
     }
 
-    public static void loadLibraries(File libsFolder, BiConsumer<File, Throwable> loadListener) {
+    private static String dot(String str) {
+        return str.replace("{}", ".");
+    }
+
+    public static void loadLibraries(File libsFolder) {
+        loadLibraries(libsFolder, NOOP_LISTENER, NOOP_LISTENER);
+    }
+
+    public static void loadLibraries(File libsFolder, BiConsumer<File, Throwable> remapListener, BiConsumer<File, Throwable> loadListener) {
         libsFolder.mkdirs();
         for (File jarFile : libsFolder.listFiles()) {
             String jarName = jarFile.getName();
             if (jarName.endsWith(".jar")) {
-                try {
-                    LOADER_ACCESS.addURL(jarFile.toURI().toURL());
-                    loadListener.accept(jarFile, null);
-                } catch (Throwable e) {
-                    loadListener.accept(jarFile, e);
+                String rawName = jarName.substring(0, jarName.length() - 4);
+                if (!rawName.endsWith("-remapped")) {
+                    File remappedFile = new File(libsFolder, rawName + "-remapped.jar");
+                    if (remappedFile.exists()) {
+                        continue;
+                    }
+                    JarRelocator relocator = new JarRelocator(jarFile, remappedFile, RELOCATION_RULES);
+                    try {
+                        relocator.run();
+                        remapListener.accept(jarFile, null);
+                    } catch (IOException e) {
+                        remapListener.accept(jarFile, e);
+                    }
+                }
+            }
+        }
+        for (File jarFile : libsFolder.listFiles()) {
+            String jarName = jarFile.getName();
+            if (jarName.endsWith(".jar")) {
+                String rawName = jarName.substring(0, jarName.length() - 4);
+                if (rawName.endsWith("-remapped")) {
+                    try {
+                        LOADER_ACCESS.addURL(jarFile.toURI().toURL());
+                        loadListener.accept(jarFile, null);
+                    } catch (Throwable e) {
+                        loadListener.accept(jarFile, e);
+                    }
                 }
             }
         }

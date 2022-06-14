@@ -25,7 +25,9 @@ import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NMSUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.FieldAccessor;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -67,7 +69,55 @@ public class DimensionManagerWrapper {
                 worldServerClass = getHandleMethod.getReturnType();
                 dimensionManagerClass = NMSUtils.getNMSClass("net.minecraft.server.%s.DimensionManager", "net.minecraft.world.level.dimension.DimensionManager");
                 getDimensionManagerMethod = Arrays.stream(worldServerClass.getMethods()).filter(each -> each.getReturnType().equals(dimensionManagerClass)).findFirst().get();
-                if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_18)) {
+
+                if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19)) {
+                    fixedTimeField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("k"));
+                    hasSkylightField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("l"));
+                    hasCeilingField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("m"));
+                    ultraWarmField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("n"));
+                    naturalField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("o"));
+                    coordinateScaleField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("p"));
+                    bedWorksField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("q"));
+                    respawnAnchorWorksField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("r"));
+                    minYField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("s"));
+                    heightField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("t"));
+                    logicalHeightField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("u"));
+                    if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_18_2)) {
+                        infiniburnField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("v"), obj -> {
+                            try {
+                                return tagKeyGetMinecraftKeyMethod.invoke(obj).toString();
+                            } catch (IllegalAccessException | InvocationTargetException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+                    }
+                    effectsLocationField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("w"), obj -> obj.toString());
+                    ambientLightField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("x"));
+
+                    tagKeyGetMinecraftKeyMethod = infiniburnField.getField().getType().getMethod("b");
+
+                    Class<?> monstersSettingClass = dimensionManagerClass.getDeclaredField("y").getType();
+                    Field piglinSafeSubField = monstersSettingClass.getDeclaredField("b");
+                    Field hasRaidsSubField = monstersSettingClass.getDeclaredField("c");
+
+                    createDragonFightField = null;
+                    piglinSafeField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("y"), obj -> {
+                        piglinSafeSubField.setAccessible(true);
+                        try {
+                            return (boolean) piglinSafeSubField.get(obj);
+                        } catch (IllegalAccessException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                    hasRaidsField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("y"), obj -> {
+                        hasRaidsSubField.setAccessible(true);
+                        try {
+                            return (boolean) hasRaidsSubField.get(obj);
+                        } catch (IllegalAccessException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                } else if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_18)) {
                     fixedTimeField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("w"));
                     hasSkylightField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("x"));
                     hasCeilingField = FieldAccessor.fromField(dimensionManagerClass.getDeclaredField("y"));
@@ -145,13 +195,7 @@ public class DimensionManagerWrapper {
     }
 
     private Object nmsDimensionManager;
-
-    public DimensionManagerWrapper(Object nmsDimensionManager) {
-        if (!dimensionManagerClass.isInstance(nmsDimensionManager)) {
-            throw new IllegalArgumentException("Object is not of class " + dimensionManagerClass.getName());
-        }
-        this.nmsDimensionManager = nmsDimensionManager;
-    }
+    private Environment environment;
 
     public DimensionManagerWrapper(World world) {
         if (InteractiveChat.version.isOlderThan(MCVersion.V1_16)) {
@@ -164,6 +208,7 @@ public class DimensionManagerWrapper {
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
+        this.environment = world.getEnvironment();
     }
 
     public boolean hasFixedTime() {
@@ -204,6 +249,9 @@ public class DimensionManagerWrapper {
     }
 
     public boolean createDragonFight() {
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19)) {
+            return environment.equals(Environment.THE_END);
+        }
         return createDragonFightField.getOrDefault(nmsDimensionManager);
     }
 

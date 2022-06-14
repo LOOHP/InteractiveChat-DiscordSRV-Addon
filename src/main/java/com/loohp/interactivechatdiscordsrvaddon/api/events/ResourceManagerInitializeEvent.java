@@ -35,14 +35,14 @@ public class ResourceManagerInitializeEvent extends Event {
         return HANDLERS;
     }
 
-    private List<ModManagerSupplier> modManagerSuppliers;
+    private List<ModManagerSupplier<?>> modManagerSuppliers;
 
-    public ResourceManagerInitializeEvent(List<ModManagerSupplier> modManagerSuppliers) {
+    public ResourceManagerInitializeEvent(List<ModManagerSupplier<?>> modManagerSuppliers) {
         super(!Bukkit.isPrimaryThread());
         this.modManagerSuppliers = modManagerSuppliers;
     }
 
-    public List<ModManagerSupplier> getModManagerSuppliers() {
+    public List<ModManagerSupplier<?>> getModManagerSuppliers() {
         return modManagerSuppliers;
     }
 

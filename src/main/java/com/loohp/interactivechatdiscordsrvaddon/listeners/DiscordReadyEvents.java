@@ -57,11 +57,11 @@ public class DiscordReadyEvents {
     public void ready() {
         Debug.debug("Triggering discord ready...");
         DiscordSRV discordsrv = InteractiveChatDiscordSrvAddon.discordsrv;
-
         JDA jda = discordsrv.getJda();
         jda.addEventListener(new OutboundToDiscordEvents.JDAEvents());
         DiscordCommands discordCommands = new DiscordCommands(discordsrv);
         jda.addEventListener(discordCommands);
+        jda.addEventListener(new DiscordReactionEvents());
         Bukkit.getPluginManager().registerEvents(discordCommands, InteractiveChatDiscordSrvAddon.plugin);
 
         for (String channelId : discordsrv.getChannels().values()) {

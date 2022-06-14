@@ -337,6 +337,11 @@ public class TranslationKeyUtils {
         }
     }
 
+    public static String getDiscFragmentName(ItemStack fragment) {
+        NamespacedKey namespacedKey = fragment.getType().getKey();
+        return "item." + namespacedKey.getNamespace() + "." + namespacedKey.getKey() + ".desc";
+    }
+
     public static String getBannerPatternItemName(XMaterial material) {
         return "item.minecraft." + material.name().toLowerCase() + ".desc";
     }
@@ -521,6 +526,10 @@ public class TranslationKeyUtils {
                 return "item.minecraft.firework_star." + dyeColor.name().toLowerCase();
             }
         }
+    }
+
+    public static String getGoatHornInstrument(NamespacedKey instrument) {
+        return "instrument." + instrument.getNamespace() + "." + instrument.getKey();
     }
 
 }

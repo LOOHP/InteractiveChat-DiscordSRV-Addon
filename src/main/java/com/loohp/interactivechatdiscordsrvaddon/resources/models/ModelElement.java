@@ -28,18 +28,24 @@ import java.util.Objects;
 
 public class ModelElement {
 
+    private String name;
     private Coordinates3D from;
     private Coordinates3D to;
     private ModelElementRotation rotation;
     private boolean shade;
     private Map<ModelFaceSide, ModelFace> face;
 
-    public ModelElement(Coordinates3D from, Coordinates3D to, ModelElementRotation rotation, boolean shade, Map<ModelFaceSide, ModelFace> face) {
+    public ModelElement(String name, Coordinates3D from, Coordinates3D to, ModelElementRotation rotation, boolean shade, Map<ModelFaceSide, ModelFace> face) {
+        this.name = name;
         this.from = from;
         this.to = to;
         this.rotation = rotation;
         this.shade = shade;
         this.face = Collections.unmodifiableMap(face);
+    }
+
+    public String getName() {
+        return name;
     }
 
     public Coordinates3D getFrom() {

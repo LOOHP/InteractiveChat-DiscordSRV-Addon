@@ -20,18 +20,20 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
+import club.minnced.discord.webhook.WebhookClient;
+import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
+import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechat.utils.BookUtils;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
-import com.loohp.interactivechatdiscordsrvaddon.graphics.GifSequenceWriter;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordDisplayData;
@@ -39,28 +41,42 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordMessageCont
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.HoverClickDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayType;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ReactionsHandler;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
-import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordDescription;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordToolTip;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.TitledInventoryWrapper;
+import github.scarsz.discordsrv.DiscordSRV;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.MessageEmbed;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.User;
+import github.scarsz.discordsrv.dependencies.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
+import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.MessageAction;
+import github.scarsz.discordsrv.util.WebhookUtil;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.map.MapView;
 
-import javax.imageio.ImageIO;
-import javax.imageio.stream.ImageOutputStream;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 public class DiscordContentUtils {
 
-    public static List<DiscordMessageContent> createContents(List<DiscordDisplayData> dataList, OfflineICPlayer player) {
+    public static final String LEFT_EMOJI = "\u2B05\uFE0F";
+    public static final String RIGHT_EMOJI = "\u27A1\uFE0F";
+
+    public static ValuePairs<List<DiscordMessageContent>, ReactionsHandler> createContents(List<DiscordDisplayData> dataList, OfflineICPlayer player) {
         List<DiscordMessageContent> contents = new ArrayList<>();
+        List<String> reactions = new ArrayList<>();
+        BiConsumer<GuildMessageReactionAddEvent, List<DiscordMessageContent>> reactionConsumer = (event, discordMessageContents) -> {};
         int i = -1;
         for (DiscordDisplayData data : dataList) {
             i++;
@@ -79,31 +95,21 @@ public class DiscordContentUtils {
                         BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer(), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
                         byte[] imageData = ImageUtils.toArray(image);
 
-                        DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item, player);
-
-                        DiscordMessageContent content = new DiscordMessageContent(description.getName(), "attachment://Item_" + i + ".png", color);
+                        DiscordMessageContent content = new DiscordMessageContent(DiscordItemStackUtils.getItemNameForDiscord(item, player), "attachment://Item_" + i + ".png", color);
                         content.addAttachment("Item_" + i + ".png", imageData);
                         contents.add(content);
 
-                        if (InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImage) {
-                            DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, player);
-                            if (!discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
-                                BufferedImage tooltip = ImageGeneration.getToolTipImage(discordToolTip.getComponents());
-                                byte[] tooltipData = ImageUtils.toArray(tooltip);
-                                content.addAttachment("ToolTip_" + i + ".png", tooltipData);
-                                content.addImageUrl("attachment://ToolTip_" + i + ".png");
-                            } else {
-                                content.addDescription(description.getDescription().orElse(null));
-                            }
-                        } else {
-                            content.addDescription(description.getDescription().orElse(null));
+                        DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, player);
+                        if (!discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
+                            BufferedImage tooltip = ImageGeneration.getToolTipImage(discordToolTip.getComponents());
+                            byte[] tooltipData = ImageUtils.toArray(tooltip);
+                            content.addAttachment("ToolTip_" + i + ".png", tooltipData);
+                            content.addImageUrl("attachment://ToolTip_" + i + ".png");
                         }
 
                         if (type.equals(ImageDisplayType.ITEM_CONTAINER)) {
-                            if (!description.getDescription().isPresent()) {
-                                content.getImageUrls().remove("attachment://ToolTip_" + i + ".png");
-                                content.getAttachments().remove("ToolTip_" + i + ".png");
-                            }
+                            content.getImageUrls().remove("attachment://ToolTip_" + i + ".png");
+                            content.getAttachments().remove("ToolTip_" + i + ".png");
                             TitledInventoryWrapper inv = iData.getInventory().get();
                             BufferedImage container = ImageGeneration.getInventoryImage(inv.getInventory(), inv.getTitle(), data.getPlayer());
                             byte[] containerData = ImageUtils.toArray(container);
@@ -116,10 +122,8 @@ public class DiscordContentUtils {
                                 ICPlayer icPlayer = iData.getPlayer().getPlayer();
                                 boolean isPlayerLocal = icPlayer != null && icPlayer.isLocal();
                                 if (!isContextual || isPlayerLocal) {
-                                    if (!description.getDescription().isPresent()) {
-                                        content.getImageUrls().remove("attachment://ToolTip_" + i + ".png");
-                                        content.getAttachments().remove("ToolTip_" + i + ".png");
-                                    }
+                                    content.getImageUrls().remove("attachment://ToolTip_" + i + ".png");
+                                    content.getAttachments().remove("ToolTip_" + i + ".png");
                                     BufferedImage map = ImageGeneration.getMapImage(item, isPlayerLocal ? icPlayer.getLocalPlayer() : null);
                                     byte[] mapData = ImageUtils.toArray(map);
                                     content.addAttachment("Map_" + i + ".png", mapData);
@@ -127,19 +131,16 @@ public class DiscordContentUtils {
                                 }
                             } else if (iData.isBook()) {
                                 List<Component> pages = BookUtils.getPages((BookMeta) item.getItemMeta());
-                                List<BufferedImage> images = ImageGeneration.getBookInterface(pages);
+                                List<Supplier<BufferedImage>> images = ImageGeneration.getBookInterfaceSuppliers(pages);
+                                byte[][] cachedImages = new byte[images.size()][];
+                                cachedImages[0] = ImageUtils.toArray(images.get(0).get());
                                 if (!images.isEmpty()) {
-                                    ByteArrayOutputStream output = new ByteArrayOutputStream();
-                                    ImageOutputStream imageOutputStream = ImageIO.createImageOutputStream(output);
-                                    GifSequenceWriter writer = new GifSequenceWriter(imageOutputStream, images.get(0).getType(), 5000, true);
-                                    for (BufferedImage page : images) {
-                                        writer.writeToSequence(page);
-                                    }
-                                    writer.close();
-                                    imageOutputStream.close();
-
-                                    DiscordMessageContent bookContent = new DiscordMessageContent(null, null, null, "attachment://Pages.gif", color);
-                                    bookContent.addAttachment("Pages.gif", output.toByteArray());
+                                    reactions.add(LEFT_EMOJI);
+                                    reactions.add(RIGHT_EMOJI);
+                                    AtomicInteger currentPage = new AtomicInteger(0);
+                                    reactionConsumer = reactionConsumer.andThen(getBookHandler(images, cachedImages));
+                                    DiscordMessageContent bookContent = new DiscordMessageContent(null, null, null, "attachment://Page.png", color);
+                                    bookContent.addAttachment("Page.png", cachedImages[0]);
                                     contents.add(bookContent);
                                 }
                             }
@@ -249,7 +250,133 @@ public class DiscordContentUtils {
                 }
             }
         }
-        return contents;
+        return new ValuePairs<>(contents, new ReactionsHandler(reactions, InteractiveChat.itemDisplayTimeout, reactionConsumer));
+    }
+
+    private static BiConsumer<GuildMessageReactionAddEvent, List<DiscordMessageContent>> getBookHandler(List<Supplier<BufferedImage>> imageSuppliers, byte[][] cachedImages) {
+        AtomicInteger currentPage = new AtomicInteger(0);
+        return (event, discordMessageContents) -> {
+            if (!event.getReactionEmote().isEmoji()) {
+                return;
+            }
+            User self = DiscordSRV.getPlugin().getJda().getSelfUser();
+            User user = event.getUser();
+            if (self.equals(user)) {
+                return;
+            }
+            String reaction = event.getReactionEmote().getEmoji();
+            event.retrieveMessage().queue(message -> {
+                synchronized (currentPage) {
+                    if (reaction.equals(LEFT_EMOJI)) {
+                        if (currentPage.get() > 0) {
+                            int pageNumber = currentPage.decrementAndGet();
+                            byte[] pageFile = cachedImages[pageNumber];
+                            if (pageFile == null) {
+                                try {
+                                    cachedImages[pageNumber] = pageFile = ImageUtils.toArray(imageSuppliers.get(pageNumber).get());
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                            if (message.getAuthor().equals(self)) {
+                                MessageAction action = message.editMessage(message.getContentRaw()).retainFilesById(Collections.emptyList());
+                                List<MessageEmbed> embeds = new ArrayList<>();
+                                int u = 0;
+                                for (DiscordMessageContent discordMessageContent : discordMessageContents) {
+                                    u += discordMessageContent.getAttachments().size();
+                                    if (u <= 10) {
+                                        embeds.addAll(discordMessageContent.toJDAMessageEmbeds());
+                                        for (Entry<String, byte[]> attachment : discordMessageContent.getAttachments().entrySet()) {
+                                            if (attachment.getKey().equals("Page.png")) {
+                                                action = action.addFile(pageFile, "Page.png");
+                                            } else {
+                                                action = action.addFile(attachment.getValue(), attachment.getKey());
+                                            }
+                                        }
+                                    }
+                                }
+                                action.setEmbeds(embeds).queue();
+                            } else if (message.isWebhookMessage()) {
+                                String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(message.getTextChannel());
+                                WebhookClient client = WebhookClient.withUrl(webHookUrl);
+                                WebhookMessageBuilder builder = new WebhookMessageBuilder().setContent(message.getContentRaw());
+                                int u = 0;
+                                for (DiscordMessageContent discordMessageContent : discordMessageContents) {
+                                    u += discordMessageContent.getAttachments().size();
+                                    if (u <= 10) {
+                                        builder.addEmbeds(discordMessageContent.toWebhookEmbeds());
+                                        for (Entry<String, byte[]> attachment : discordMessageContent.getAttachments().entrySet()) {
+                                            if (attachment.getKey().equals("Page.png")) {
+                                                builder.addFile("Page.png", pageFile);
+                                            } else {
+                                                builder.addFile(attachment.getKey(), attachment.getValue());
+                                            }
+                                        }
+                                    }
+                                }
+                                WebhookMessageUtils.retainAttachments(client, message.getId(), Collections.emptyList());
+                                client.edit(message.getId(), builder.build());
+                                client.close();
+                            }
+                        }
+                        message.removeReaction(reaction, user).queue();
+                    } else if (reaction.equals(RIGHT_EMOJI)) {
+                        if (currentPage.get() < cachedImages.length - 1) {
+                            int pageNumber = currentPage.incrementAndGet();
+                            byte[] pageFile = cachedImages[pageNumber];
+                            if (pageFile == null) {
+                                try {
+                                    cachedImages[pageNumber] = pageFile = ImageUtils.toArray(imageSuppliers.get(pageNumber).get());
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                            if (message.getAuthor().equals(self)) {
+                                MessageAction action = message.editMessage(message.getContentRaw()).retainFilesById(Collections.emptyList());
+                                List<MessageEmbed> embeds = new ArrayList<>();
+                                int u = 0;
+                                for (DiscordMessageContent discordMessageContent : discordMessageContents) {
+                                    u += discordMessageContent.getAttachments().size();
+                                    if (u <= 10) {
+                                        embeds.addAll(discordMessageContent.toJDAMessageEmbeds());
+                                        for (Entry<String, byte[]> attachment : discordMessageContent.getAttachments().entrySet()) {
+                                            if (attachment.getKey().equals("Page.png")) {
+                                                action = action.addFile(pageFile, "Page.png");
+                                            } else {
+                                                action = action.addFile(attachment.getValue(), attachment.getKey());
+                                            }
+                                        }
+                                    }
+                                }
+                                action.setEmbeds(embeds).queue();
+                            } else {
+                                String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(message.getTextChannel());
+                                WebhookClient client = WebhookClient.withUrl(webHookUrl);
+                                WebhookMessageBuilder builder = new WebhookMessageBuilder().setContent(message.getContentRaw());
+                                int u = 0;
+                                for (DiscordMessageContent discordMessageContent : discordMessageContents) {
+                                    u += discordMessageContent.getAttachments().size();
+                                    if (u <= 10) {
+                                        builder.addEmbeds(discordMessageContent.toWebhookEmbeds());
+                                        for (Entry<String, byte[]> attachment : discordMessageContent.getAttachments().entrySet()) {
+                                            if (attachment.getKey().equals("Page.png")) {
+                                                builder.addFile("Page.png", pageFile);
+                                            } else {
+                                                builder.addFile(attachment.getKey(), attachment.getValue());
+                                            }
+                                        }
+                                    }
+                                }
+                                WebhookMessageUtils.retainAttachments(client, message.getId(), Collections.emptyList());
+                                client.edit(message.getId(), builder.build());
+                                client.close();
+                            }
+                        }
+                        message.removeReaction(reaction, user).queue();
+                    }
+                }
+            });
+        };
     }
 
 }

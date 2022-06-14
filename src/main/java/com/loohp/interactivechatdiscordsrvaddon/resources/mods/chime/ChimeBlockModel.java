@@ -39,10 +39,10 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.TextureUV;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimeModelOverride.ChimeModelOverrideType;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 public class ChimeBlockModel extends BlockModel {
@@ -94,6 +94,7 @@ public class ChimeBlockModel extends BlockModel {
         if (elementsArray != null) {
             for (Object obj : elementsArray) {
                 JSONObject elementJson = (JSONObject) obj;
+                String name = (String) elementJson.get("name");
                 JSONArray fromArray = (JSONArray) elementJson.get("from");
                 JSONArray toArray = (JSONArray) elementJson.get("to");
                 Coordinates3D from = new Coordinates3D(((Number) fromArray.get(0)).doubleValue(), ((Number) fromArray.get(1)).doubleValue(), ((Number) fromArray.get(2)).doubleValue());
@@ -132,11 +133,10 @@ public class ChimeBlockModel extends BlockModel {
                         }
                         String faceTexture = (String) faceJson.get("texture");
                         Object cullfaceObj = faceJson.get("cullface");
-                        ModelFaceSide cullface = null;
+                        ModelFaceSide cullface;
                         if (cullfaceObj != null && cullfaceObj instanceof String) {
                             cullface = ModelFaceSide.fromKey((String) cullfaceObj);
-                        }
-                        if (cullface == null) {
+                        } else {
                             cullface = side;
                         }
                         int faceRotation = ((Number) faceJson.getOrDefault("rotation", 0)).intValue();
@@ -144,14 +144,15 @@ public class ChimeBlockModel extends BlockModel {
                         face.put(side, new ModelFace(side, uv, faceTexture, cullface, faceRotation, faceTintindex));
                     }
                 }
-                elements.add(new ModelElement(from, to, rotation, shade, face));
+                elements.add(new ModelElement(name, from, to, rotation, shade, face));
             }
         }
         List<ChimeModelOverride> overrides = new ArrayList<>();
         JSONArray overridesArray = (JSONArray) rootJson.get("overrides");
         if (overridesArray != null) {
-            for (Object obj : overridesArray) {
-                JSONObject overrideJson = (JSONObject) obj;
+            ListIterator<Object> itr = overridesArray.listIterator(overridesArray.size());
+            while (itr.hasPrevious()) {
+                JSONObject overrideJson = (JSONObject) itr.previous();
                 JSONObject predicateJson = (JSONObject) overrideJson.get("predicate");
                 Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
                 for (Object obj1 : predicateJson.keySet()) {
@@ -172,7 +173,6 @@ public class ChimeBlockModel extends BlockModel {
                 }
             }
         }
-        Collections.reverse(overrides);
         return new ChimeBlockModel(manager, resourceLocation, parent, ambientocclusion, guiLight, display, texture, elements, overrides);
     }
 

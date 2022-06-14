@@ -25,7 +25,7 @@
     <groupId>com.loohp</groupId>
     <artifactId>InteractiveChatDiscordSrvAddon</artifactId>
     <name>InteractiveChatDiscordSrvAddon</name>
-    <version>4.1.4.20</version>
+    <version>4.2.0.0</version>
 
     <description>Have InteractiveChat Placeholders translated on DiscordSRV discord messages.</description>
     <url>https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon</url>
@@ -78,8 +78,7 @@
                             <relocations>
                                 <relocation>
                                     <pattern>club.minnced.discord</pattern>
-                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.club.minnced.discord
-                                    </shadedPattern>
+                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.club.minnced.discord</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>okhttp3</pattern>
@@ -87,14 +86,59 @@
                                 </relocation>
                                 <relocation>
                                     <pattern>com.madgag.gif</pattern>
-                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.com.madgag.gif
-                                    </shadedPattern>
+                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.com.madgag.gif</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>com.loohp.blockmodelrenderer</pattern>
-                                    <shadedPattern>
-                                        com.loohp.interactivechatdiscordsrvaddon.libs.com.loohp.blockmodelrenderer
-                                    </shadedPattern>
+                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.com.loohp.blockmodelrenderer</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>me.lucko.jarrelocator</pattern>
+                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.me.lucko.jarrelocator</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.ibm.icu</pattern>
+                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.com.ibm.icu</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>darwin.</pattern>
+                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.darwin.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>kotlin.</pattern>
+                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.kotlin.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>linux.</pattern>
+                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.linux.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>win32.</pattern>
+                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.win32.</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>net.jpountz</pattern>
+                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.net.jpountz</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.checkerframework</pattern>
+                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.org.checkerframework</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.eclipse</pattern>
+                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.org.eclipse</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.json</pattern>
+                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.org.json</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.mapdb</pattern>
+                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.org.mapdb</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.objectweb</pattern>
+                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.org.objectweb</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
@@ -290,19 +334,19 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>1.18.2-R0.1-SNAPSHOT</version>
+            <version>1.19-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>craftbukkit</artifactId>
-            <version>1.18.2-R0.1-SNAPSHOT</version>
+            <version>1.19-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.discordsrv</groupId>
             <artifactId>discordsrv</artifactId>
-            <version>1.25.0</version>
+            <version>1.25.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -314,7 +358,7 @@
         <dependency>
             <groupId>com.comphenix.protocol</groupId>
             <artifactId>ProtocolLib</artifactId>
-            <version>4.8.0</version>
+            <version>5.0.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -332,13 +376,19 @@
         <dependency>
             <groupId>com.loohp</groupId>
             <artifactId>InteractiveChat</artifactId>
-            <version>4.1.4.17</version>
+            <version>4.2.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.loohp</groupId>
             <artifactId>BlockModelRenderer</artifactId>
-            <version>1.0.5.6</version>
+            <version>1.1.1.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.lucko</groupId>
+            <artifactId>jar-relocator</artifactId>
+            <version>1.5</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

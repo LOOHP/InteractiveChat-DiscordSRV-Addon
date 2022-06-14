@@ -20,6 +20,7 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.graphics;
 
+import com.loohp.blockmodelrenderer.blending.BlendingModes;
 import com.loohp.blockmodelrenderer.utils.MathUtils;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -28,14 +29,13 @@ import com.loohp.interactivechat.utils.ComponentFlattening;
 import com.loohp.interactivechat.utils.ComponentModernizing;
 import com.loohp.interactivechat.utils.HashUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CharacterData;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.CharacterDataArray;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.MinecraftFont;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.MinecraftFont.FontRenderResult;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageMeta;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
-import com.loohp.interactivechatdiscordsrvaddon.utils.ICU4JUtils;
-import com.loohp.interactivechatdiscordsrvaddon.utils.IntToIntFunction;
+import com.loohp.interactivechatdiscordsrvaddon.utils.I18nUtils;
+import it.unimi.dsi.fastutil.chars.CharObjectPair;
 
 import javax.imageio.ImageIO;
 import java.awt.Color;
@@ -50,6 +50,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.BitSet;
+import java.util.List;
 
 import static com.loohp.blockmodelrenderer.utils.ColorUtils.composite;
 import static com.loohp.blockmodelrenderer.utils.ColorUtils.getAlpha;
@@ -126,15 +127,24 @@ public class ImageUtils {
         return image;
     }
 
-    public static BufferedImage transformRGB(BufferedImage image, IntToIntFunction function) {
-        for (int y = 0; y < image.getHeight(); y++) {
-            for (int x = 0; x < image.getWidth(); x++) {
-                int colorValue = image.getRGB(x, y);
-                int newValue = function.apply(colorValue);
-                image.setRGB(x, y, newValue);
-            }
+    public static BufferedImage transformRGB(BufferedImage image, PixelTransformFunction function) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        int[] colors = image.getRGB(0, 0, width, height, null, 0, width);
+        int i = 0;
+        for (int colorValue : colors) {
+            colors[i] = function.apply(i % width, i / width, colorValue);
+            i++;
         }
+        image.setRGB(0, 0, width, height, colors, 0, width);
         return image;
+    }
+
+    @FunctionalInterface
+    public interface PixelTransformFunction {
+
+        int apply(int x, int y, int colorValue);
+
     }
 
     public static BufferedImage combineWithBinMask(BufferedImage background, BufferedImage foreground, byte[] foregroundMask) {
@@ -150,7 +160,7 @@ public class ImageUtils {
                     if (alpha >= 255) {
                         background.setRGB(x, y, colorValue);
                     } else if (alpha > 0) {
-                        background.setRGB(x, y, composite(colorValue, background.getRGB(x, y)));
+                        background.setRGB(x, y, composite(colorValue, background.getRGB(x, y), BlendingModes.NORMAL));
                     }
                 }
             }
@@ -508,38 +518,28 @@ public class ImageUtils {
         }
 
         BufferedImage textImage = new BufferedImage(image.getWidth() + centerX, image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
-        CharacterDataArray characterDataArray = CharacterDataArray.fromComponent(text, legacyRGB);
-        char[] chars = characterDataArray.getChars();
-        CharacterData[] data = characterDataArray.getData();
 
         LanguageMeta languageMeta = manager.getLanguageManager().getLanguageMeta(language);
-        if (languageMeta != null && languageMeta.isBidirectional() && ICU4JUtils.icu4JAvailable()) {
-            String shaped = ICU4JUtils.shaping(new String(chars));
-            if (shaped.length() == chars.length) {
-                chars = shaped.toCharArray();
-            }
-            byte[] levels = ICU4JUtils.getBidirectionalLevels(chars);
-            ICU4JUtils.bidirectionalReorderVisually(levels, data);
-            ICU4JUtils.bidirectionalReorderVisually(levels, chars);
-        }
+        List<CharObjectPair<CharacterData>> data = I18nUtils.bidirectionalReorder(text, languageMeta.isBidirectional());
 
         int x = centerX;
         int lastItalicExtraWidth = 0;
         int height = 0;
         String character = null;
-        for (int i = 0; i < chars.length; i++) {
-            char c = chars[i];
+        for (int i = 0; i < data.size(); i++) {
+            CharObjectPair<CharacterData> pair = data.get(i);
+            char c = pair.firstChar();
             if (character == null) {
                 character = String.valueOf(c);
                 if (Character.isHighSurrogate(c)) {
                     continue;
-                } else if (Character.isLowSurrogate(c) && i + 1 < chars.length) {
-                    character = String.valueOf(chars[++i]) + character;
+                } else if (Character.isLowSurrogate(c) && i + 1 < data.size()) {
+                    character = String.valueOf(data.get(++i).firstChar()) + character;
                 }
             } else {
                 character += String.valueOf(c);
             }
-            CharacterData characterData = data[i];
+            CharacterData characterData = pair.right();
             MinecraftFont fontProvider = manager.getFontManager().getFontProviders(characterData.getFont().asString()).forCharacter(character);
             FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, characterData.getColor(), characterData.getDecorations());
             textImage = result.getImage();
@@ -596,7 +596,7 @@ public class ImageUtils {
         BufferedImage temp = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
         temp = printComponent0(manager, temp, component, language, legacyRGB, topX, topY, fontSize, 1);
         Graphics2D g = image.createGraphics();
-        BufferedImage shadow = transformRGB(copyImage(temp), color -> {
+        BufferedImage shadow = transformRGB(copyImage(temp), (x, y, color) -> {
             int alpha = getAlpha(color);
             if (alpha <= 0) {
                 return color;
@@ -644,38 +644,28 @@ public class ImageUtils {
 
     private static BufferedImage printComponent0(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize, double factor) {
         Component text = ComponentFlattening.flatten(ComponentStringUtils.resolve(ComponentModernizing.modernize(component), manager.getLanguageManager().getTranslateFunction().ofLanguage(language)));
-        BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
-        CharacterDataArray characterDataArray = CharacterDataArray.fromComponent(text, legacyRGB);
-        char[] chars = characterDataArray.getChars();
-        CharacterData[] data = characterDataArray.getData();
 
+        BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
         LanguageMeta languageMeta = manager.getLanguageManager().getLanguageMeta(language);
-        if (languageMeta != null && languageMeta.isBidirectional() && ICU4JUtils.icu4JAvailable()) {
-            String shaped = ICU4JUtils.shaping(new String(chars));
-            if (shaped.length() == chars.length) {
-                chars = shaped.toCharArray();
-            }
-            byte[] levels = ICU4JUtils.getBidirectionalLevels(chars);
-            ICU4JUtils.bidirectionalReorderVisually(levels, data);
-            ICU4JUtils.bidirectionalReorderVisually(levels, chars);
-        }
+        List<CharObjectPair<CharacterData>> data = I18nUtils.bidirectionalReorder(text, languageMeta.isBidirectional());
 
         int x = topX;
         int lastItalicExtraWidth = 0;
         String character = null;
-        for (int i = 0; i < chars.length; i++) {
-            char c = chars[i];
+        for (int i = 0; i < data.size(); i++) {
+            CharObjectPair<CharacterData> pair = data.get(i);
+            char c = pair.firstChar();
             if (character == null) {
                 character = String.valueOf(c);
                 if (Character.isHighSurrogate(c)) {
                     continue;
-                } else if (Character.isLowSurrogate(c) && i + 1 < chars.length) {
-                    character = String.valueOf(chars[++i]) + character;
+                } else if (Character.isLowSurrogate(c) && i + 1 < data.size()) {
+                    character = String.valueOf(data.get(++i).firstChar()) + character;
                 }
             } else {
                 character += String.valueOf(c);
             }
-            CharacterData characterData = data[i];
+            CharacterData characterData = pair.right();
             MinecraftFont fontProvider = manager.getFontManager().getFontProviders(characterData.getFont().asString()).forCharacter(character);
             FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, characterData.getColor(), characterData.getDecorations());
             textImage = result.getImage();

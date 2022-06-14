@@ -117,9 +117,12 @@ public class PotionUtils {
                 if (InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_17)) {
                     nmsAttributeBaseGetNameMethod = nmsAttributeBaseClass.getMethod("getName");
                     nmsMobEffectGetMobEffectListMethod = nmsMobEffectClass.getMethod("getMobEffect");
-                } else {
+                } else if (InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_18_2)) {
                     nmsAttributeBaseGetNameMethod = nmsAttributeBaseClass.getMethod("c");
                     nmsMobEffectGetMobEffectListMethod = nmsMobEffectClass.getMethod("a");
+                } else {
+                    nmsAttributeBaseGetNameMethod = nmsAttributeBaseClass.getMethod("c");
+                    nmsMobEffectGetMobEffectListMethod = nmsMobEffectClass.getMethod("b");
                 }
                 nmsMobEffectListAttributeMapField = nmsMobEffectListClass.getDeclaredField("a");
             }

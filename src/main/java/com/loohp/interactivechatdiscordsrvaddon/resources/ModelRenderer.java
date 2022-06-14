@@ -20,6 +20,8 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources;
 
+import com.loohp.blockmodelrenderer.blending.BlendingModes;
+import com.loohp.blockmodelrenderer.render.Face;
 import com.loohp.blockmodelrenderer.render.Hexahedron;
 import com.loohp.blockmodelrenderer.render.Model;
 import com.loohp.blockmodelrenderer.render.Point3D;
@@ -28,6 +30,7 @@ import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechat.utils.CustomArrayUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.BlendingUtils;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
@@ -42,10 +45,13 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelGUILight;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.TextureUV;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimation;
+import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ModelUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintIndexData;
 
 import java.awt.Graphics2D;
@@ -64,7 +70,6 @@ import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -78,7 +83,6 @@ import java.util.function.IntSupplier;
 import java.util.function.LongSupplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ModelRenderer implements AutoCloseable {
 
@@ -86,6 +90,9 @@ public class ModelRenderer implements AutoCloseable {
 
     public static final int INTERNAL_W = 64;
     public static final int INTERNAL_H = 64;
+
+    public static final float RESCALE_22_5 = 1.0F / (float) Math.cos(((float) Math.PI / 8F)) - 1.0F;
+    public static final float RESCALE_45 = 1.0F / (float) Math.cos(((float) Math.PI / 4F)) - 1.0F;
 
     public static final int QUALITY_THRESHOLD = 70;
 
@@ -224,11 +231,7 @@ public class ModelRenderer implements AutoCloseable {
                                 }
                             }
                         }
-                        if (resourceLocation.equals(ResourceRegistry.MAP_MARKINGS_LOCATION)) {
-                            ImageUtils.xor(image, ImageUtils.resizeImageAbs(texture, image.getWidth(), image.getHeight()), 200);
-                        } else {
-                            g.drawImage(texture, 0, 0, image.getWidth(), image.getHeight(), null);
-                        }
+                        g.drawImage(texture, 0, 0, image.getWidth(), image.getHeight(), null);
                     }
                     g.dispose();
                     image = tintIndexData.applyTint(image, 0);
@@ -297,19 +300,19 @@ public class ModelRenderer implements AutoCloseable {
         return result;
     }
 
-    public RenderResult render(int width, int height, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, boolean enchanted, UnaryOperator<BufferedImage> enchantmentGlintProvider, UnaryOperator<BufferedImage> rawEnchantmentGlintProvider) {
+    public RenderResult render(int width, int height, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, boolean enchanted, UnaryOperator<BufferedImage> enchantmentGlintProvider, Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
         return render(width, height, manager, postResolveFunction, post1_8, modelKey, displayPosition, Collections.emptyMap(), Collections.emptyMap(), TintIndexData.EMPTY_INSTANCE, enchanted, enchantmentGlintProvider, rawEnchantmentGlintProvider);
     }
 
-    public RenderResult render(int width, int height, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, boolean enchanted, UnaryOperator<BufferedImage> enchantmentGlintProvider, UnaryOperator<BufferedImage> rawEnchantmentGlintProvider) {
+    public RenderResult render(int width, int height, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, boolean enchanted, UnaryOperator<BufferedImage> enchantmentGlintProvider, Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
         return render(width, height, INTERNAL_W, INTERNAL_H, manager, postResolveFunction, post1_8, modelKey, displayPosition, predicate, providedTextures, tintIndexData, enchanted, enchantmentGlintProvider, rawEnchantmentGlintProvider);
     }
 
-    public RenderResult render(int width, int height, int internalWidth, int internalHeight, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, boolean enchanted, UnaryOperator<BufferedImage> enchantmentGlintProvider, UnaryOperator<BufferedImage> rawEnchantmentGlintProvider) {
+    public RenderResult render(int width, int height, int internalWidth, int internalHeight, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, boolean enchanted, UnaryOperator<BufferedImage> enchantmentGlintProvider, Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
         return render(width, height, internalWidth, internalHeight, manager, postResolveFunction, post1_8, modelKey, displayPosition, predicate, providedTextures, tintIndexData, enchanted, false, enchantmentGlintProvider, rawEnchantmentGlintProvider);
     }
 
-    public RenderResult render(int width, int height, int internalWidth, int internalHeight, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, boolean enchanted, boolean usePlayerModelPosition, UnaryOperator<BufferedImage> enchantmentGlintProvider, UnaryOperator<BufferedImage> rawEnchantmentGlintProvider) {
+    public RenderResult render(int width, int height, int internalWidth, int internalHeight, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, boolean enchanted, boolean usePlayerModelPosition, UnaryOperator<BufferedImage> enchantmentGlintProvider, Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
         if (postResolveFunction == null) {
             postResolveFunction = DEFAULT_POST_RESOLVE_FUNCTION;
         }
@@ -368,11 +371,7 @@ public class ModelRenderer implements AutoCloseable {
                         }
                     }
                 }
-                if (resourceLocation.equals(ResourceRegistry.MAP_MARKINGS_LOCATION)) {
-                    ImageUtils.xor(image, ImageUtils.resizeImageAbs(texture, image.getWidth(), image.getHeight()), 200);
-                } else {
-                    g.drawImage(texture, 0, 0, image.getWidth(), image.getHeight(), null);
-                }
+                g.drawImage(texture, 0, 0, image.getWidth(), image.getHeight(), null);
             }
             g.dispose();
             image = tintIndexData.applyTint(image, 0);
@@ -400,7 +399,7 @@ public class ModelRenderer implements AutoCloseable {
         double z = depth / 2 - 0.5;
         List<Hexahedron> hexahedrons = new ArrayList<>();
         int[] colors = image.getRGB(0, 0, w, h, null, 0, w);
-        hexahedrons.add(Hexahedron.fromCorners(new Point3D(0, 0, z), new Point3D(width, height, z + 1), false, new BufferedImage[] {null, null, ImageUtils.copyImage(image), null, ImageUtils.copyImage(image), null}));
+        hexahedrons.add(Hexahedron.fromCorners(new Point3D(0, 0, z), new Point3D(width, height, z + 1), new BufferedImage[] {null, null, ImageUtils.copyImage(image), null, ImageUtils.copyImage(image), null}));
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
                 int color = colors[y * w + x];
@@ -417,7 +416,7 @@ public class ModelRenderer implements AutoCloseable {
                     if (!CustomArrayUtils.allNull(imageArray)) {
                         double scaledX = (double) x * intervalX;
                         double scaledY = height - (double) y * intervalY;
-                        hexahedrons.add(Hexahedron.fromCorners(new Point3D(scaledX, scaledY, z), new Point3D(scaledX + intervalX, scaledY - intervalY, z + 1), false, imageArray));
+                        hexahedrons.add(Hexahedron.fromCorners(new Point3D(scaledX, scaledY, z), new Point3D(scaledX + intervalX, scaledY - intervalY, z + 1), imageArray));
                     }
                 }
             }
@@ -426,7 +425,7 @@ public class ModelRenderer implements AutoCloseable {
     }
 
     @SuppressWarnings("SuspiciousNameCombination")
-    private Model generateStandardRenderModel(BlockModel blockModel, ResourceManager manager, Map<String, TextureResource> providedTextures, Map<String, TextureResource> overrideTextures, TintIndexData tintIndexData, boolean enchanted, boolean skin, UnaryOperator<BufferedImage> rawEnchantmentGlintProvider) {
+    private Model generateStandardRenderModel(BlockModel blockModel, ResourceManager manager, Map<String, TextureResource> providedTextures, Map<String, TextureResource> overrideTextures, TintIndexData tintIndexData, boolean enchanted, boolean skin, Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
         Map<String, BufferedImage> cachedResize = new ConcurrentHashMap<>();
         List<ModelElement> elements = new ArrayList<>(blockModel.getElements());
         List<Hexahedron> hexahedrons = new ArrayList<>(elements.size());
@@ -436,19 +435,42 @@ public class ModelRenderer implements AutoCloseable {
             ModelElement element = itr.next();
             tasks.add(modelResolvingService.submit(() -> {
                 ModelElementRotation rotation = element.getRotation();
-                boolean ignoreZFight = false;
-                if (rotation != null) {
-                    ignoreZFight = rotation.isRescale();
-                }
-                Hexahedron hexahedron = Hexahedron.fromCorners(new Point3D(element.getFrom().getX(), element.getFrom().getY(), element.getFrom().getZ()), new Point3D(element.getTo().getX(), element.getTo().getY(), element.getTo().getZ()), ignoreZFight, new BufferedImage[6]);
                 BufferedImage[] images = new BufferedImage[6];
-                BufferedImage[] overlayImages = new BufferedImage[6];
+                Hexahedron hexahedron = Hexahedron.fromCorners(new Point3D(element.getFrom().getX(), element.getFrom().getY(), element.getFrom().getZ()), new Point3D(element.getTo().getX(), element.getTo().getY(), element.getTo().getZ()), images);
+                BufferedImage[][] overlayImages = new BufferedImage[6][];
+                BlendingModes[][] overlayBlendMode = new BlendingModes[6][];
                 int i = 0;
                 for (ModelFaceSide side : ModelFaceSide.values()) {
                     ModelFace faceData = element.getFace(side);
                     if (faceData == null) {
                         images[i] = null;
                     } else {
+                        ModelFaceSide cullface = faceData.getCullface();
+                        if (cullface != null) {
+                            Face face = hexahedron.getByDirectionOrder().get(i);
+                            if (ModelUtils.shouldTriggerCullface(face, cullface)) {
+                                switch (cullface) {
+                                    case UP:
+                                        face.setCullface(hexahedron.getDownFace());
+                                        break;
+                                    case DOWN:
+                                        face.setCullface(hexahedron.getUpFace());
+                                        break;
+                                    case NORTH:
+                                        face.setCullface(hexahedron.getSouthFace());
+                                        break;
+                                    case EAST:
+                                        face.setCullface(hexahedron.getWestFace());
+                                        break;
+                                    case SOUTH:
+                                        face.setCullface(hexahedron.getNorthFace());
+                                        break;
+                                    case WEST:
+                                        face.setCullface(hexahedron.getEastFace());
+                                        break;
+                                }
+                            }
+                        }
                         TextureUV uv = faceData.getUV();
                         TextureResource resource = providedTextures.get(faceData.getTexture());
                         if (resource == null) {
@@ -498,9 +520,9 @@ public class ModelRenderer implements AutoCloseable {
                                     case DOWN:
                                         points = hexahedron.getDownFace().getPoints();
                                         x1 = points[2].z;
-                                        y1 = points[0].x;
+                                        y1 = points[2].x;
                                         x2 = points[0].z;
-                                        y2 = points[2].x;
+                                        y2 = points[0].x;
                                         break;
                                     case EAST:
                                         points = hexahedron.getEastFace().getPoints();
@@ -525,10 +547,10 @@ public class ModelRenderer implements AutoCloseable {
                                         break;
                                     case UP:
                                         points = hexahedron.getUpFace().getPoints();
-                                        x1 = points[0].z;
-                                        y1 = points[0].x;
-                                        x2 = points[2].z;
-                                        y2 = points[2].x;
+                                        x1 = points[0].x;
+                                        y1 = points[0].z;
+                                        x2 = points[2].x;
+                                        y2 = points[2].z;
                                         break;
                                     case WEST:
                                     default:
@@ -562,7 +584,9 @@ public class ModelRenderer implements AutoCloseable {
                             }
                             images[i] = tintIndexData.applyTint(images[i], faceData.getTintindex());
                             if (enchanted) {
-                                overlayImages[i] = rawEnchantmentGlintProvider.apply(images[i]);
+                                RawEnchantmentGlintData overlayResult = rawEnchantmentGlintProvider.apply(images[i]);
+                                overlayImages[i] = overlayResult.getOverlay().toArray(new BufferedImage[0]);
+                                overlayBlendMode[i] = overlayResult.getBlending().stream().map(each -> BlendingUtils.convert(each)).toArray(BlendingModes[]::new);
                             }
                         }
                     }
@@ -570,9 +594,22 @@ public class ModelRenderer implements AutoCloseable {
                 }
                 hexahedron.setImage(images);
                 hexahedron.setOverlay(overlayImages);
+                hexahedron.setOverlayBlendingMode(overlayBlendMode);
                 hexahedron.setOverlayAdditionFactor(OVERLAY_ADDITION_FACTORS);
                 if (rotation != null) {
                     hexahedron.translate(-rotation.getOrigin().getX(), -rotation.getOrigin().getY(), -rotation.getOrigin().getZ());
+                    if (rotation.isRescale()) {
+                        double absAngle = Math.abs(rotation.getAngle());
+                        if (absAngle != 0F) {
+                            if (absAngle == 22.5F) {
+                                hexahedron.scale(RESCALE_22_5, RESCALE_22_5, RESCALE_22_5);
+                            } else if (absAngle == 45F) {
+                                hexahedron.scale(RESCALE_45, RESCALE_45, RESCALE_45);
+                            } else {
+                                throw new IllegalArgumentException("Element rotation can only be between angles 45 and -45 with 22.5 degrees increments");
+                            }
+                        }
+                    }
                     switch (rotation.getAxis()) {
                         case X:
                             hexahedron.rotate(rotation.getAngle(), 0, 0, false);
@@ -601,8 +638,19 @@ public class ModelRenderer implements AutoCloseable {
             } else {
                 try {
                     hexahedrons.add(task.get());
-                } catch (InterruptedException | ExecutionException e) {
-                    e.printStackTrace();
+                } catch (Throwable e) {
+                    new RuntimeException("Unable to generate model: " + blockModel.getResourceLocation(), e).printStackTrace();
+                    hexahedrons = null;
+                    for (Future<Hexahedron> t : tasks) {
+                        t.cancel(true);
+                    }
+                    tasks = null;
+                    if (e instanceof OutOfMemoryError) {
+                        System.gc();
+                    }
+                    BufferedImage[] missingTextures = new BufferedImage[6];
+                    Arrays.fill(missingTextures, TextureManager.getMissingImage(16, 16));
+                    return new Model(Hexahedron.fromCorners(new Point3D(0, 0, 0), new Point3D(16, 16, 16), missingTextures));
                 }
             }
         }
@@ -615,7 +663,7 @@ public class ModelRenderer implements AutoCloseable {
         renderModel.translate(-16 / 2.0, -16 / 2.0, -16 / 2.0);
         renderModel.updateLighting(lightData.getLightVector(), lightData.getAmbientLevel(), lightData.getMaxLevel());
         long start = System.currentTimeMillis();
-        renderModel.render(image, true, baseTransform, renderingService).join();
+        renderModel.render(image, true, baseTransform, BlendingModes.NORMAL, renderingService).join();
         InteractiveChatDiscordSrvAddon.plugin.playerModelRenderingTimes.add((int) Math.min(System.currentTimeMillis() - start, Integer.MAX_VALUE));
     }
 
@@ -641,11 +689,11 @@ public class ModelRenderer implements AutoCloseable {
             renderModel.translate(transform.getX(), transform.getY(), transform.getZ());
         }
         renderModel.updateLighting(lightData.getLightVector(), lightData.getAmbientLevel(), lightData.getMaxLevel());
-        renderModel.render(image, renderModel.getComponents().size() <= QUALITY_THRESHOLD, baseTransform, renderingService).join();
+        renderModel.render(image, renderModel.getComponents().size() <= QUALITY_THRESHOLD, baseTransform, BlendingModes.NORMAL, renderingService).join();
     }
 
     private String cacheKey(Object... obj) {
-        return Stream.of(obj).map(each -> {
+        return Arrays.stream(obj).map(each -> {
             if (each == null) {
                 return "null";
             } else if (each instanceof Map) {
@@ -734,9 +782,9 @@ public class ModelRenderer implements AutoCloseable {
         private Map<String, TextureResource> providedTextures;
         private TintIndexData tintIndexData;
         private UnaryOperator<BufferedImage> enchantmentGlintProvider;
-        private UnaryOperator<BufferedImage> rawEnchantmentGlintProvider;
+        private Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintProvider;
 
-        public PlayerModelItem(PlayerModelItemPosition position, String modelKey, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, Map<ModelOverrideType, Float> predicate, boolean enchanted, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, UnaryOperator<BufferedImage> enchantmentGlintProvider, UnaryOperator<BufferedImage> rawEnchantmentGlintProvider) {
+        public PlayerModelItem(PlayerModelItemPosition position, String modelKey, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, Map<ModelOverrideType, Float> predicate, boolean enchanted, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, UnaryOperator<BufferedImage> enchantmentGlintProvider, Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
             this.position = position;
             this.modelKey = modelKey;
             if (postResolveFunction == null) {
@@ -784,8 +832,28 @@ public class ModelRenderer implements AutoCloseable {
             return enchantmentGlintProvider;
         }
 
-        public UnaryOperator<BufferedImage> getRawEnchantmentGlintProvider() {
+        public Function<BufferedImage, RawEnchantmentGlintData> getRawEnchantmentGlintProvider() {
             return rawEnchantmentGlintProvider;
+        }
+
+    }
+    
+    public static class RawEnchantmentGlintData {
+
+        private List<BufferedImage> overlay;
+        private List<OpenGLBlending> blending;
+
+        public RawEnchantmentGlintData(List<BufferedImage> overlay, List<OpenGLBlending> blending) {
+            this.overlay = overlay;
+            this.blending = blending;
+        }
+
+        public List<BufferedImage> getOverlay() {
+            return overlay;
+        }
+
+        public List<OpenGLBlending> getBlending() {
+            return blending;
         }
 
     }

@@ -25,12 +25,15 @@ import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry.CustomItemTextureResolver;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -58,8 +61,8 @@ public class ChimeItemTextureResolver implements CustomItemTextureResolver {
     }
 
     @Override
-    public Optional<TextureResource> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack) {
-        return Optional.empty();
+    public List<ValuePairs<TextureResource, OpenGLBlending>> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack) {
+        return Collections.emptyList();
     }
 
     @Override

@@ -95,7 +95,9 @@ public class WorldUtils {
     }
 
     public static boolean isNatural(World world) {
-        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19)) {
+            return world.isNatural();
+        } else if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
             return new DimensionManagerWrapper(world).natural();
         } else {
             return world.getEnvironment().equals(Environment.NORMAL);

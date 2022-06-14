@@ -48,9 +48,9 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
 
 @SuppressWarnings("deprecation")
 public class GraphicsToPacketMapWrapper {
@@ -69,7 +69,7 @@ public class GraphicsToPacketMapWrapper {
 
             if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_17)) {
                 //noinspection OptionalGetWithoutIsPresent
-                nmsWorldMapBClass = Stream.of(nmsWorldMapClass.getClasses()).filter(each -> each.getName().endsWith("$b")).findFirst().get();
+                nmsWorldMapBClass = Arrays.stream(nmsWorldMapClass.getClasses()).filter(each -> each.getName().endsWith("$b")).findFirst().get();
                 nmsWorldMapBClassConstructor = nmsWorldMapBClass.getConstructor(int.class, int.class, int.class, int.class, byte[].class);
             }
         } catch (Exception e) {
@@ -237,11 +237,7 @@ public class GraphicsToPacketMapWrapper {
             packet2.getIntegers().write(4, 128);
         }
 
-        try {
-            protocollib.sendServerPacket(player, packet1);
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }
+        protocollib.sendServerPacket(player, packet1);
 
         GraphicsToPacketMapWrapper ref = this;
         new BukkitRunnable() {

@@ -30,7 +30,6 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.Style;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import com.loohp.interactivechat.libs.net.querz.nbt.io.SNBTDeserializer;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.CompoundTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.ListTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.StringTag;
@@ -42,20 +41,19 @@ import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.ItemStackUtils;
 import com.loohp.interactivechat.utils.MCVersion;
+import com.loohp.interactivechat.utils.NBTParsingUtils;
 import com.loohp.interactivechat.utils.RarityUtils;
 import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent.ToolTipType;
-import com.loohp.interactivechatdiscordsrvaddon.registry.DiscordDataRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.PatternTypeWrapper;
-import github.scarsz.discordsrv.DiscordSRV;
-import github.scarsz.discordsrv.dependencies.mcdiscordreserializer.discord.DiscordSerializer;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Banner;
 import org.bukkit.block.banner.Pattern;
@@ -87,20 +85,18 @@ import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.loohp.interactivechat.utils.LanguageUtils.getTranslation;
 import static com.loohp.interactivechat.utils.LanguageUtils.getTranslationKey;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils.convertFormattedString;
 
 @SuppressWarnings("deprecation")
 public class DiscordItemStackUtils {
@@ -126,8 +122,8 @@ public class DiscordItemStackUtils {
                 bukkitMapViewClassGetIdMethod = MapView.class.getMethod("getId");
             } catch (NoSuchMethodException e1) {
             }
-            chatColorHasGetColor = Stream.of(ChatColor.class.getMethods()).anyMatch(each -> each.getName().equalsIgnoreCase("getColor") && each.getReturnType().equals(Color.class));
-            itemMetaHasUnbreakable = Stream.of(ItemMeta.class.getMethods()).anyMatch(each -> each.getName().equalsIgnoreCase("isUnbreakable") && each.getReturnType().equals(boolean.class));
+            chatColorHasGetColor = Arrays.stream(ChatColor.class.getMethods()).anyMatch(each -> each.getName().equalsIgnoreCase("getColor") && each.getReturnType().equals(Color.class));
+            itemMetaHasUnbreakable = Arrays.stream(ItemMeta.class.getMethods()).anyMatch(each -> each.getName().equalsIgnoreCase("isUnbreakable") && each.getReturnType().equals(boolean.class));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -149,7 +145,7 @@ public class DiscordItemStackUtils {
         return chatColorHasGetColor ? RarityUtils.getRarityColor(item).getColor() : ColorUtils.getColor(RarityUtils.getRarityColor(item));
     }
 
-    public static DiscordDescription getDiscordDescription(ItemStack item, OfflineICPlayer player) throws Exception {
+    public static String getItemNameForDiscord(ItemStack item, OfflineICPlayer player) {
         String language = InteractiveChatDiscordSrvAddon.plugin.language;
         UnaryOperator<String> translationFunction = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(language);
 
@@ -172,497 +168,7 @@ public class DiscordItemStackUtils {
             name = InteractiveChatDiscordSrvAddon.plugin.itemDisplayMultiple.replace("{Item}", ComponentStringUtils.stripColorAndConvertMagic(name)).replace("{Amount}", String.valueOf(item.getAmount()));
         }
 
-        boolean hasMeta = item.hasItemMeta();
-        StringBuilder description = new StringBuilder();
-
-        if (xMaterial.equals(XMaterial.BUNDLE) && hasMeta && item.getItemMeta() instanceof BundleMeta) {
-            BundleMeta meta = (BundleMeta) item.getItemMeta();
-            List<ItemStack> items = meta.getItems();
-            int fullness = BundleUtils.getFullness(items);
-            description.append(convertFormattedString(getTranslation(TranslationKeyUtils.getBundleFullness(), language), fullness, 64)).append("\n");
-            description.append("\n");
-        }
-
-        if (xMaterial.equals(XMaterial.WRITTEN_BOOK) && hasMeta && item.getItemMeta() instanceof BookMeta) {
-            BookMeta meta = (BookMeta) item.getItemMeta();
-            String author = meta.getAuthor();
-            if (author != null) {
-                description.append(convertFormattedString(getTranslation(TranslationKeyUtils.getBookAuthor(), language), ChatColorUtils.stripColor(author))).append("\n");
-            }
-            Generation generation = meta.getGeneration();
-            if (generation == null) {
-                generation = Generation.ORIGINAL;
-            }
-            description.append(convertFormattedString(TranslationKeyUtils.getBookGeneration(generation), translationFunction)).append("\n");
-            description.append("\n");
-        }
-
-        if (xMaterial.equals(XMaterial.SHIELD) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
-            if (NBTEditor.contains(item, "BlockEntityTag")) {
-                List<Pattern> patterns = Collections.emptyList();
-                if (!(item.getItemMeta() instanceof BannerMeta)) {
-                    if (item.getItemMeta() instanceof BlockStateMeta) {
-                        BlockStateMeta bmeta = (BlockStateMeta) item.getItemMeta();
-                        if (bmeta.hasBlockState()) {
-                            Banner bannerBlockMeta = (Banner) bmeta.getBlockState();
-                            patterns = bannerBlockMeta.getPatterns();
-                        }
-                    }
-                } else {
-                    BannerMeta meta = (BannerMeta) item.getItemMeta();
-                    patterns = meta.getPatterns();
-                }
-
-                for (Pattern pattern : patterns) {
-                    PatternTypeWrapper type = PatternTypeWrapper.fromPatternType(pattern.getPattern());
-                    description.append(convertFormattedString(TranslationKeyUtils.getBannerPatternName(type, pattern.getColor()), translationFunction)).append("\n");
-                }
-            }
-        }
-
-        if ((xMaterial.isOneOf(Collections.singletonList("CONTAINS:banner")) && !xMaterial.isOneOf(Collections.singletonList("CONTAINS:banner_pattern"))) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
-            List<Pattern> patterns = Collections.emptyList();
-            if (!(item.getItemMeta() instanceof BannerMeta)) {
-                if (item.getItemMeta() instanceof BlockStateMeta) {
-                    BlockStateMeta bmeta = (BlockStateMeta) item.getItemMeta();
-                    Banner bannerBlockMeta = (Banner) bmeta.getBlockState();
-                    patterns = bannerBlockMeta.getPatterns();
-                }
-            } else {
-                BannerMeta meta = (BannerMeta) item.getItemMeta();
-                patterns = meta.getPatterns();
-            }
-
-            for (Pattern pattern : patterns) {
-                PatternTypeWrapper type = PatternTypeWrapper.fromPatternType(pattern.getPattern());
-                description.append(convertFormattedString(TranslationKeyUtils.getBannerPatternName(type, pattern.getColor()), translationFunction)).append("\n");
-            }
-        }
-
-        if (xMaterial.equals(XMaterial.TROPICAL_FISH_BUCKET)) {
-            List<String> translations = TranslationKeyUtils.getTropicalFishBucketName(item);
-            if (translations.size() > 0) {
-                description.append(convertFormattedString(translations.get(0), translationFunction)).append("\n");
-                if (translations.size() > 1) {
-                    description.append(translations.stream().skip(1).map(each -> convertFormattedString(each, translationFunction)).collect(Collectors.joining(", "))).append("\n");
-                }
-                description.append("\n");
-            }
-        }
-
-        if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:Music_Disc"))) {
-            description.append(convertFormattedString(TranslationKeyUtils.getMusicDiscName(item), translationFunction)).append("\n");
-        }
-
-        if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:banner_pattern"))) {
-            description.append(convertFormattedString(TranslationKeyUtils.getBannerPatternItemName(xMaterial), translationFunction)).append("\n");
-        }
-
-        if (xMaterial.equals(XMaterial.FIREWORK_ROCKET)) {
-            if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && NBTEditor.contains(item, "Fireworks", "Flight")) {
-                int flight = NBTEditor.getByte(item, "Fireworks", "Flight");
-                description.append(convertFormattedString(TranslationKeyUtils.getRocketFlightDuration(), translationFunction)).append(" ").append(flight).append("\n");
-            }
-            if (hasMeta && item.getItemMeta() instanceof FireworkMeta) {
-                FireworkMeta fireworkMeta = (FireworkMeta) item.getItemMeta();
-                for (FireworkEffect fireworkEffect : fireworkMeta.getEffects()) {
-                    description.append(convertFormattedString(TranslationKeyUtils.getFireworkType(fireworkEffect.getType()), translationFunction)).append("\n");
-                    if (!fireworkEffect.getColors().isEmpty()) {
-                        description.append("  ").append(fireworkEffect.getColors().stream().map(each -> {
-                            return convertFormattedString(TranslationKeyUtils.getFireworkColor(each), translationFunction);
-                        }).collect(Collectors.joining(", "))).append("\n");
-                    }
-                    if (!fireworkEffect.getFadeColors().isEmpty()) {
-                        description.append("  ").append(convertFormattedString(TranslationKeyUtils.getFireworkFade(), translationFunction)).append(" ").append(fireworkEffect.getFadeColors().stream().map(each -> {
-                            return convertFormattedString(TranslationKeyUtils.getFireworkColor(each), translationFunction);
-                        }).collect(Collectors.joining(", "))).append("\n");
-                    }
-                    if (fireworkEffect.hasTrail()) {
-                        description.append("  ").append(convertFormattedString(TranslationKeyUtils.getFireworkTrail(), translationFunction)).append("\n");
-                    }
-                    if (fireworkEffect.hasFlicker()) {
-                        description.append("  ").append(convertFormattedString(TranslationKeyUtils.getFireworkFlicker(), translationFunction)).append("\n");
-                    }
-                }
-            }
-        }
-
-        if (xMaterial.equals(XMaterial.FIREWORK_STAR) && hasMeta && item.getItemMeta() instanceof FireworkEffectMeta) {
-            FireworkEffectMeta fireworkEffectMeta = (FireworkEffectMeta) item.getItemMeta();
-            FireworkEffect fireworkEffect = fireworkEffectMeta.getEffect();
-            description.append(convertFormattedString(TranslationKeyUtils.getFireworkType(fireworkEffect.getType()), translationFunction)).append("\n");
-            if (!fireworkEffect.getColors().isEmpty()) {
-                description.append("  ").append(fireworkEffect.getColors().stream().map(each -> {
-                    return convertFormattedString(TranslationKeyUtils.getFireworkColor(each), translationFunction);
-                }).collect(Collectors.joining(", "))).append("\n");
-            }
-            if (!fireworkEffect.getFadeColors().isEmpty()) {
-                description.append("  ").append(convertFormattedString(TranslationKeyUtils.getFireworkFade(), translationFunction)).append(" ").append(fireworkEffect.getFadeColors().stream().map(each -> {
-                    return convertFormattedString(TranslationKeyUtils.getFireworkColor(each), translationFunction);
-                }).collect(Collectors.joining(", "))).append("\n");
-            }
-            if (fireworkEffect.hasTrail()) {
-                description.append("  ").append(convertFormattedString(TranslationKeyUtils.getFireworkTrail(), translationFunction)).append("\n");
-            }
-            if (fireworkEffect.hasFlicker()) {
-                description.append("  ").append(convertFormattedString(TranslationKeyUtils.getFireworkFlicker(), translationFunction)).append("\n");
-            }
-        }
-
-        if (xMaterial.equals(XMaterial.CROSSBOW)) {
-            CrossbowMeta meta = (CrossbowMeta) item.getItemMeta();
-            List<ItemStack> charged = meta.getChargedProjectiles();
-            if (charged != null && !charged.isEmpty()) {
-                ItemStack charge = charged.get(0);
-                DiscordDescription chargeItemInfo = getDiscordDescription(charge, player);
-                String chargeItemName = chargeItemInfo.getName();
-                description.append(convertFormattedString(TranslationKeyUtils.getCrossbowProjectile(), translationFunction)).append(" [**").append(chargeItemName).append("**]\n\n");
-                if (XMaterialUtils.matchXMaterial(charge).equals(XMaterial.FIREWORK_ROCKET) && chargeItemInfo.getDescription().isPresent()) {
-                    description.append("  ").append(chargeItemInfo.getDescription().get().replace("\n", "\n  "));
-                }
-            }
-        }
-
-        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && FilledMapUtils.isFilledMap(item)) {
-            MapMeta map = (MapMeta) item.getItemMeta();
-            MapView mapView = FilledMapUtils.getMapView(item);
-            int id = FilledMapUtils.getMapId(item);
-            int scale = mapView == null ? 0 : mapView.getScale().getValue();
-            if (!InteractiveChat.version.isLegacy()) {
-                description.append(convertFormattedString(getTranslation(TranslationKeyUtils.getFilledMapId(), language), id)).append("\n");
-            } else {
-                name += " (#" + id + ")";
-            }
-            description.append(convertFormattedString(getTranslation(TranslationKeyUtils.getFilledMapScale(), language), (int) Math.pow(2, scale))).append("\n");
-            description.append(convertFormattedString(getTranslation(TranslationKeyUtils.getFilledMapLevel(), language), scale, 4)).append("\n");
-            description.append("\n");
-        }
-
-        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && !hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS))) {
-            if (item.getItemMeta() instanceof PotionMeta) {
-                PotionMeta meta = (PotionMeta) item.getItemMeta();
-                List<PotionEffect> effects = new ArrayList<>();
-                List<PotionEffect> base = PotionUtils.getBasePotionEffect(item);
-                if (base != null) {
-                    effects.addAll(base);
-                }
-                effects.addAll(meta.getCustomEffects());
-
-                if (effects.isEmpty()) {
-                    description.append("**").append(convertFormattedString(TranslationKeyUtils.getNoEffect(), translationFunction)).append("**\n");
-                } else {
-                    Map<String, AttributeModifier> attributes = new HashMap<>();
-                    for (PotionEffect effect : effects) {
-                        if (InteractiveChat.version.isLegacy()) {
-                            String key = TranslationKeyUtils.getEffect(effect.getType());
-                            String translation = convertFormattedString(key, translationFunction);
-                            if (key.equals(translation)) {
-                                description.append("**").append(WordUtils.capitalize(effect.getType().getName().toLowerCase().replace("_", " ")));
-                            } else {
-                                description.append("**").append(translation);
-                            }
-                            int amplifier = effect.getAmplifier();
-                            String effectLevelTranslation = convertFormattedString(TranslationKeyUtils.getEffectLevel(amplifier), translationFunction);
-                            if (effectLevelTranslation.length() > 0) {
-                                description.append(" ").append(effectLevelTranslation);
-                            }
-                            if (!effect.getType().isInstant()) {
-                                if (xMaterial.equals(XMaterial.LINGERING_POTION)) {
-                                    description.append(" (").append(TimeUtils.getReadableTimeBetween(0, effect.getDuration() / 4 * 50L, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true)).append(")");
-                                } else {
-                                    description.append(" (").append(TimeUtils.getReadableTimeBetween(0, effect.getDuration() * 50L, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true)).append(")");
-                                }
-                            }
-                            description.append("**\n");
-                        } else {
-                            String key = TranslationKeyUtils.getEffect(effect.getType());
-                            String potionName;
-                            if (key.equals(getTranslation(key, language))) {
-                                potionName = WordUtils.capitalize(effect.getType().getName().toLowerCase().replace("_", " "));
-                            } else {
-                                potionName = key;
-                            }
-                            int amplifier = effect.getAmplifier();
-                            int duration;
-                            if (effect.getType().isInstant()) {
-                                duration = 0;
-                            } else {
-                                duration = effect.getDuration() * 50;
-                                if (xMaterial.equals(XMaterial.LINGERING_POTION)) {
-                                    duration /= 4;
-                                }
-                            }
-                            String component = getTranslation(potionName, language);
-                            if (amplifier > 0) {
-                                component = convertFormattedString(getTranslation(TranslationKeyUtils.getPotionWithAmplifier(), language), component, getTranslation(TranslationKeyUtils.getEffectLevel(amplifier), language));
-                            }
-                            if (duration > 20) {
-                                String time = TimeUtils.getReadableTimeBetween(0, duration, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true);
-                                component = convertFormattedString(getTranslation(TranslationKeyUtils.getPotionWithDuration(), language), component, time);
-                            }
-                            description.append(component);
-                            description.append("**\n");
-                        }
-                        attributes.putAll(PotionUtils.getPotionAttributes(effect));
-                    }
-                    if (!attributes.isEmpty()) {
-                        description.append("\n");
-                        description.append(getTranslation(TranslationKeyUtils.getPotionWhenDrunk(), language)).append("\n");
-                        for (Entry<String, AttributeModifier> entry : attributes.entrySet()) {
-                            String attributeName = entry.getKey();
-                            if (attributeName.startsWith("attribute.name.")) {
-                                attributeName = attributeName.substring(15);
-                            }
-                            AttributeModifier attributeModifier = entry.getValue();
-                            double amount = attributeModifier.getAmount();
-                            int operation = attributeModifier.getOperation().ordinal();
-                            if (!(operation != 1 && operation != 2)) {
-                                amount *= 100;
-                            }
-                            description.append(convertFormattedString(getTranslation(TranslationKeyUtils.getAttributeModifierKey(amount, operation), language), ATTRIBUTE_FORMAT.format(Math.abs(amount)), getTranslation(TranslationKeyUtils.getAttributeKey(attributeName), language))).append("\n");
-                        }
-                        description.append("\n");
-                    }
-                }
-
-                if (!description.toString().equals("")) {
-                    description.append("\n");
-                }
-            }
-        }
-
-        if (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ENCHANTS))) {
-            Map<Enchantment, Integer> enchantments;
-            if (hasMeta && item.getItemMeta() instanceof EnchantmentStorageMeta) {
-                enchantments = ((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants();
-            } else {
-                enchantments = item.getEnchantments();
-            }
-            for (Entry<Enchantment, Integer> entry : CustomMapUtils.sortMapByValue(enchantments).entrySet()) {
-                Enchantment ench = entry.getKey();
-                int level = entry.getValue();
-                String key = TranslationKeyUtils.getEnchantment(ench);
-                String translation = convertFormattedString(key, translationFunction);
-                String enchName;
-                if (key.equals(translation)) {
-                    enchName = WordUtils.capitalize(ench.getName().toLowerCase().replace("_", " "));
-                } else {
-                    enchName = translation;
-                }
-                if (enchName != null) {
-                    description.append("**").append(enchName).append(ench.getMaxLevel() == 1 && level == 1 ? "" : " " + convertFormattedString(TranslationKeyUtils.getEnchantmentLevel(level), translationFunction)).append("**\n");
-                }
-            }
-        }
-
-        if (hasMeta && item.getItemMeta() instanceof LeatherArmorMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_DYE)) {
-            LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
-            if (NBTEditor.contains(item, "display", "color")) {
-                if (!description.toString().equals("")) {
-                    description.append("\n");
-                }
-                Color color = new Color(meta.getColor().asRGB());
-                String hex = ColorUtils.rgb2Hex(color).toUpperCase();
-                description.append(convertFormattedString(getTranslation(TranslationKeyUtils.getDyeColor(), language), hex)).append("\n");
-            }
-        }
-
-        if (hasMeta) {
-            ItemMeta meta = item.getItemMeta();
-            if (meta.hasLore()) {
-                if (!description.toString().equals("")) {
-                    description.append("\n");
-                }
-                String lore = String.join("\n", meta.getLore());
-                if (DiscordSRV.config().getBoolean("Experiment_MCDiscordReserializer_ToDiscord")) {
-                    if (InteractiveChatDiscordSrvAddon.plugin.escapeDiscordMarkdownInItems) {
-                        lore = lore.replaceAll(DiscordDataRegistry.getMarkdownSpecialPattern(), "\\\\$1");
-                    }
-                    lore = DiscordSerializer.INSTANCE.serialize(ComponentStringUtils.toDiscordSRVComponent(LEGACY_SERIALIZER.deserialize(lore)));
-                } else {
-                    lore = ComponentStringUtils.stripColorAndConvertMagic(String.join("\n", meta.getLore()));
-                    if (InteractiveChatDiscordSrvAddon.plugin.escapeDiscordMarkdownInItems) {
-                        lore = lore.replaceAll(DiscordDataRegistry.getMarkdownSpecialPattern(), "\\\\$1");
-                    }
-                }
-                description.append(lore).append("\n");
-            }
-        }
-
-        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && NBTEditor.contains(item, "AttributeModifiers") && NBTEditor.getSize(item, "AttributeModifiers") > 0 && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
-            boolean useMainHand = false;
-            List<String> mainHand = new LinkedList<>();
-            boolean useOffhand = false;
-            List<String> offHand = new LinkedList<>();
-            boolean useFeet = false;
-            List<String> feet = new LinkedList<>();
-            boolean useLegs = false;
-            List<String> legs = new LinkedList<>();
-            boolean useChest = false;
-            List<String> chest = new LinkedList<>();
-            boolean useHead = false;
-            List<String> head = new LinkedList<>();
-            ListTag<CompoundTag> attributeList = (ListTag<CompoundTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "AttributeModifiers").toJson());
-            for (CompoundTag attributeTag : attributeList) {
-                String attributeName = attributeTag.getString("AttributeName").replace("minecraft:", "");
-                double amount = attributeTag.getDouble("Amount");
-                int operation = attributeTag.containsKey("Operation") ? attributeTag.getInt("Operation") : 0;
-                if (!(operation != 1 && operation != 2)) {
-                    amount *= 100;
-                }
-                String attributeComponent = convertFormattedString(getTranslation(TranslationKeyUtils.getAttributeModifierKey(amount, operation), language), ATTRIBUTE_FORMAT.format(Math.abs(amount)), getTranslation(TranslationKeyUtils.getAttributeKey(attributeName), language));
-                if (attributeTag.containsKey("Slot")) {
-                    String slot = attributeTag.getString("Slot");
-                    switch (slot) {
-                        case "mainhand":
-                            if (amount != 0) {
-                                mainHand.add(attributeComponent);
-                            }
-                            useMainHand = true;
-                            break;
-                        case "offhand":
-                            if (amount != 0) {
-                                offHand.add(attributeComponent);
-                            }
-                            useOffhand = true;
-                            break;
-                        case "feet":
-                            if (amount != 0) {
-                                feet.add(attributeComponent);
-                            }
-                            useFeet = true;
-                            break;
-                        case "legs":
-                            if (amount != 0) {
-                                legs.add(attributeComponent);
-                            }
-                            useLegs = true;
-                            break;
-                        case "chest":
-                            if (amount != 0) {
-                                chest.add(attributeComponent);
-                            }
-                            useChest = true;
-                            break;
-                        case "head":
-                            if (amount != 0) {
-                                head.add(attributeComponent);
-                            }
-                            useHead = true;
-                            break;
-                    }
-                } else {
-                    if (amount != 0) {
-                        mainHand.add(attributeComponent);
-                        offHand.add(attributeComponent);
-                        feet.add(attributeComponent);
-                        legs.add(attributeComponent);
-                        chest.add(attributeComponent);
-                        head.add(attributeComponent);
-                    }
-                    useMainHand = true;
-                    useOffhand = true;
-                    useFeet = true;
-                    useLegs = true;
-                    useChest = true;
-                    useHead = true;
-                }
-            }
-            if (useMainHand) {
-                description.append("\n");
-                description.append(convertFormattedString(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HAND), translationFunction)).append("\n");
-                for (String each : mainHand) {
-                    description.append(each).append("\n");
-                }
-            }
-            if (useOffhand) {
-                description.append("\n");
-                description.append(convertFormattedString(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.OFF_HAND), translationFunction)).append("\n");
-                for (String each : offHand) {
-                    description.append(each).append("\n");
-                }
-            }
-            if (useFeet) {
-                description.append("\n");
-                description.append(convertFormattedString(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.FEET), translationFunction)).append("\n");
-                for (String each : feet) {
-                    description.append(each).append("\n");
-                }
-            }
-            if (useLegs) {
-                description.append("\n");
-                description.append(convertFormattedString(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.LEGS), translationFunction)).append("\n");
-                for (String each : legs) {
-                    description.append(each).append("\n");
-                }
-            }
-            if (useChest) {
-                description.append("\n");
-                description.append(convertFormattedString(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.CHEST), translationFunction)).append("\n");
-                for (String each : chest) {
-                    description.append(each).append("\n");
-                }
-            }
-            if (useHead) {
-                description.append("\n");
-                description.append(convertFormattedString(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HEAD), translationFunction)).append("\n");
-                for (String each : head) {
-                    description.append(each).append("\n");
-                }
-            }
-        }
-
-        if (hasMeta && isUnbreakable(item) && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_UNBREAKABLE)) {
-            if (!description.toString().equals("")) {
-                description.append("\n");
-            }
-            description.append("**").append(convertFormattedString(TranslationKeyUtils.getUnbreakable(), translationFunction)).append("**\n");
-        }
-
-        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_DESTROYS)) {
-            if (NBTEditor.contains(item, "CanDestroy") && NBTEditor.getSize(item, "CanDestroy") > 0) {
-                description.append("\n");
-                description.append(convertFormattedString(TranslationKeyUtils.getCanDestroy(), translationFunction)).append("\n");
-                ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "CanDestroy").toJson());
-                for (StringTag materialTag : materialList) {
-                    XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
-                    if (parsedXMaterial == null) {
-                        description.append(WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase())).append("\n");
-                    } else {
-                        description.append(convertFormattedString(getTranslationKey(parsedXMaterial.parseItem()), translationFunction)).append("\n");
-                    }
-                }
-            }
-        }
-
-        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_PLACED_ON)) {
-            if (NBTEditor.contains(item, "CanPlaceOn") && NBTEditor.getSize(item, "CanPlaceOn") > 0) {
-                description.append("\n");
-                description.append(convertFormattedString(TranslationKeyUtils.getCanPlace(), translationFunction)).append("\n");
-                ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "CanPlaceOn").toJson());
-                for (StringTag materialTag : materialList) {
-                    XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
-                    if (parsedXMaterial == null) {
-                        description.append(WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase())).append("\n");
-                    } else {
-                        description.append(convertFormattedString(getTranslationKey(parsedXMaterial.parseItem()), translationFunction)).append("\n");
-                    }
-                }
-            }
-        }
-
-        if (item.getType().getMaxDurability() > 0) {
-            int durability = item.getType().getMaxDurability() - (InteractiveChat.version.isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
-            int maxDur = item.getType().getMaxDurability();
-            if (durability < maxDur) {
-                if (!description.toString().equals("")) {
-                    description.append("\n");
-                }
-                description.append("**").append(convertFormattedString(getTranslation(TranslationKeyUtils.getDurability(), language), durability, maxDur)).append("**\n");
-            }
-        }
-
-        return new DiscordDescription(name, description.toString().trim().isEmpty() ? null : description.toString());
+        return name;
     }
 
     public static DiscordToolTip getToolTip(ItemStack item, OfflineICPlayer player) throws Exception {
@@ -689,6 +195,13 @@ public class DiscordItemStackUtils {
         prints.add(ToolTipComponent.text(itemDisplayNameComponent));
 
         boolean hasMeta = item.hasItemMeta();
+
+        if (xMaterial.equals(XMaterial.GOAT_HORN)) {
+            String instrument = NBTEditor.getString(item, "instrument");
+            if (instrument != null) {
+                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getGoatHornInstrument(NamespacedKey.fromString(instrument))).color(NamedTextColor.GRAY)));
+            }
+        }
 
         if (xMaterial.equals(XMaterial.BUNDLE) && hasMeta && item.getItemMeta() instanceof BundleMeta) {
             BundleMeta meta = (BundleMeta) item.getItemMeta();
@@ -764,8 +277,12 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:Music_Disc"))) {
+        if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:music_disc"))) {
             prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getMusicDiscName(item)).color(NamedTextColor.GRAY)));
+        }
+
+        if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:disc_fragment"))) {
+            prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getDiscFragmentName(item)).color(NamedTextColor.GRAY)));
         }
 
         if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:banner_pattern"))) {
@@ -1008,11 +525,11 @@ public class DiscordItemStackUtils {
             List<ToolTipComponent<?>> chest = new LinkedList<>();
             boolean useHead = false;
             List<ToolTipComponent<?>> head = new LinkedList<>();
-            ListTag<CompoundTag> attributeList = (ListTag<CompoundTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "AttributeModifiers").toJson());
+            ListTag<CompoundTag> attributeList = (ListTag<CompoundTag>) NBTParsingUtils.fromSNBT(NBTEditor.getNBTCompound(item, "tag", "AttributeModifiers").toJson());
             for (CompoundTag attributeTag : attributeList) {
                 String attributeName = attributeTag.getString("AttributeName").replace("minecraft:", "");
-                double amount = attributeTag.getDouble("Amount");
-                int operation = attributeTag.containsKey("Operation") ? attributeTag.getInt("Operation") : 0;
+                double amount = attributeTag.getNumber("Amount").doubleValue();
+                int operation = attributeTag.containsKey("Operation") ? attributeTag.getNumber("Operation").intValue() : 0;
                 if (!(operation != 1 && operation != 2)) {
                     amount *= 100;
                 }
@@ -1114,7 +631,7 @@ public class DiscordItemStackUtils {
             if (NBTEditor.contains(item, "CanDestroy") && NBTEditor.getSize(item, "CanDestroy") > 0) {
                 prints.add(ToolTipComponent.text(Component.empty()));
                 prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getCanDestroy()).color(NamedTextColor.GRAY)));
-                ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "CanDestroy").toJson());
+                ListTag<StringTag> materialList = (ListTag<StringTag>) NBTParsingUtils.fromSNBT(NBTEditor.getNBTCompound(item, "tag", "CanDestroy").toJson());
                 for (StringTag materialTag : materialList) {
                     XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
                     if (parsedXMaterial == null) {
@@ -1130,7 +647,7 @@ public class DiscordItemStackUtils {
             if (NBTEditor.contains(item, "CanPlaceOn") && NBTEditor.getSize(item, "CanPlaceOn") > 0) {
                 prints.add(ToolTipComponent.text(Component.empty()));
                 prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getCanPlace()).color(NamedTextColor.GRAY)));
-                ListTag<StringTag> materialList = (ListTag<StringTag>) new SNBTDeserializer().fromString(NBTEditor.getNBTCompound(item, "tag", "CanPlaceOn").toJson());
+                ListTag<StringTag> materialList = (ListTag<StringTag>) NBTParsingUtils.fromSNBT(NBTEditor.getNBTCompound(item, "tag", "CanPlaceOn").toJson());
                 for (StringTag materialTag : materialList) {
                     XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
                     if (parsedXMaterial == null) {
@@ -1165,26 +682,6 @@ public class DiscordItemStackUtils {
         } else {
             return NBTEditor.getByte(item, "Unbreakable") > 0;
         }
-    }
-
-    public static class DiscordDescription {
-
-        private String name;
-        private Optional<String> description;
-
-        public DiscordDescription(String name, String description) {
-            this.name = name.trim().isEmpty() ? DISCORD_EMPTY : name;
-            this.description = Optional.ofNullable(description);
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public Optional<String> getDescription() {
-            return description;
-        }
-
     }
 
     public static class DiscordToolTip {

@@ -68,11 +68,14 @@ import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordMessageContent;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayType;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ReactionsHandler;
+import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordContentUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackInfoUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.TitledInventoryWrapper;
 import github.scarsz.discordsrv.DiscordSRV;
@@ -660,8 +663,8 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                 int i = 0;
                 for (ResourcePackInfo packInfo : InteractiveChatDiscordSrvAddon.plugin.resourceManager.getResourcePackInfo()) {
                     i++;
-                    String packName = packInfo.getName();
-                    Component description = ComponentStringUtils.resolve(ComponentModernizing.modernize(packInfo.getDescription()), InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language));
+                    String packName = ResourcePackInfoUtils.resolveName(packInfo);
+                    Component description = ComponentStringUtils.resolve(ComponentModernizing.modernize(ResourcePackInfoUtils.resolveDescription(packInfo)), InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language));
                     EmbedBuilder builder = new EmbedBuilder().setAuthor(packName).setThumbnail("attachment://" + i + ".png");
                     if (packInfo.getStatus()) {
                         builder.setDescription(PlainTextComponentSerializer.plainText().serialize(description));
@@ -676,9 +679,9 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                             color = new Color(0xFFFFFE);
                         }
                         builder.setColor(color);
-                        if (packInfo.compareServerPackFormat() > 0) {
+                        if (packInfo.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) > 0) {
                             builder.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getNewIncompatiblePack(), InteractiveChatDiscordSrvAddon.plugin.language));
-                        } else if (packInfo.compareServerPackFormat() < 0) {
+                        } else if (packInfo.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) < 0) {
                             builder.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getOldIncompatiblePack(), InteractiveChatDiscordSrvAddon.plugin.language));
                         }
                     } else {
@@ -857,7 +860,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                 errorCode--;
                 String title = ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.shareItemCommandTitle.replace("{Player}", offlineICPlayer.getName()));
                 errorCode--;
-                Component itemTag = ItemDisplay.createItemDisplay(offlineICPlayer, itemStack, title, true, null);
+                Component itemTag = ItemDisplay.createItemDisplay(offlineICPlayer, itemStack, title, true, null, false);
                 Component resolvedItemTag = ComponentStringUtils.resolve(ComponentModernizing.modernize(itemTag), InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language));
                 Component component = LegacyComponentSerializer.legacySection().deserialize(InteractiveChatDiscordSrvAddon.plugin.shareItemCommandInGameMessageText.replace("{Player}", offlineICPlayer.getName())).replaceText(TextReplacementConfig.builder().matchLiteral("{ItemTag}").replacement(itemTag).build());
                 Component resolvedComponent = LegacyComponentSerializer.legacySection().deserialize(InteractiveChatDiscordSrvAddon.plugin.shareItemCommandInGameMessageText.replace("{Player}", offlineICPlayer.getName())).replaceText(TextReplacementConfig.builder().matchLiteral("{ItemTag}").replacement(resolvedItemTag).build());
@@ -894,18 +897,27 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     } else {
                         data = new ImageDisplayData(offlineICPlayer, 0, title, ImageDisplayType.ITEM, itemStack.clone());
                     }
-                    List<DiscordMessageContent> contents = DiscordContentUtils.createContents(Collections.singletonList(data), offlineICPlayer);
+                    ValuePairs<List<DiscordMessageContent>, ReactionsHandler> pair = DiscordContentUtils.createContents(Collections.singletonList(data), offlineICPlayer);
+                    List<DiscordMessageContent> contents = pair.getFirst();
+                    ReactionsHandler reactionsHandler = pair.getSecond();
                     errorCode--;
 
                     WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(ComponentStringUtils.stripColorAndConvertMagic(LegacyComponentSerializer.legacySection().serialize(resolvedComponent)));
                     List<MessageEmbed> embeds = new ArrayList<>();
+                    int i = 0;
                     for (DiscordMessageContent content : contents) {
-                        embeds.addAll(content.toJDAMessageEmbeds());
-                        for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
-                            action = action.addFile(attachment.getValue(), attachment.getKey());
+                        i += content.getAttachments().size();
+                        if (i <= 10) {
+                            embeds.addAll(content.toJDAMessageEmbeds());
+                            for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
+                                action = action.addFile(attachment.getValue(), attachment.getKey());
+                            }
                         }
                     }
                     action.setEmbeds(embeds).queue();
+                    if (!reactionsHandler.getEmojis().isEmpty()) {
+                        event.getHook().retrieveOriginal().queue(message -> DiscordReactionEvents.register(message, reactionsHandler, contents));
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();

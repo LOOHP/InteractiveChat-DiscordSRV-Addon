@@ -21,13 +21,7 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources;
 
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import com.loohp.interactivechat.utils.LanguageUtils;
-import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageMeta;
-import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 
 import java.awt.image.BufferedImage;
 import java.util.Collections;
@@ -35,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ResourcePackInfo {
+
+    public static final String UNKNOWN_PACK_ICON_LOCATION = "minecraft:misc/unknown_pack";
 
     private ResourceManager manager;
     private ResourcePackFile file;
@@ -104,19 +100,7 @@ public class ResourcePackInfo {
         return exist;
     }
 
-    public String getRawName() {
-        return name;
-    }
-
     public String getName() {
-        switch (type) {
-            case BUILT_IN:
-            case LOCAL:
-                return name;
-            case WORLD:
-            case SERVER:
-                return LanguageUtils.getTranslation(TranslationKeyUtils.getWorldSpecificResources(), InteractiveChatDiscordSrvAddon.plugin.language);
-        }
         return name;
     }
 
@@ -124,25 +108,12 @@ public class ResourcePackInfo {
         return packFormat;
     }
 
-    public int compareServerPackFormat() {
-        return Integer.compare(packFormat, ResourceRegistry.RESOURCE_PACK_VERSION);
-    }
-
-    public Component getRawDescription() {
-        return description;
+    public int compareServerPackFormat(int localFormat) {
+        return Integer.compare(packFormat, localFormat);
     }
 
     public Component getDescription() {
-        Component component = description;
-        String space = PlainTextComponentSerializer.plainText().serialize(description).isEmpty() ? "" : " ";
-        switch (type) {
-            case BUILT_IN:
-            case WORLD:
-            case SERVER:
-                component = component.append(Component.empty().append(Component.text(space + "(").append(Component.translatable(TranslationKeyUtils.getServerResourcePackType(type))).append(Component.text(")"))).color(NamedTextColor.GRAY));
-                break;
-        }
-        return component;
+        return description;
     }
 
     public Map<String, LanguageMeta> getLanguageMeta() {
@@ -154,7 +125,7 @@ public class ResourcePackInfo {
     }
 
     public BufferedImage getIcon() {
-        return icon == null ? manager.getTextureManager().getTexture(ResourceRegistry.UNKNOWN_PACK_ICON_LOCATION).getTexture() : icon;
+        return icon == null ? manager.getTextureManager().getTexture(UNKNOWN_PACK_ICON_LOCATION).getTexture() : icon;
     }
 
     public List<ResourceFilterBlock> getResourceFilterBlocks() {

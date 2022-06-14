@@ -62,42 +62,46 @@ public class SpaceFont extends MinecraftFont {
     @Override
     public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations) {
         decorations = sortDecorations(decorations);
-        int advance = charAdvances.get(character.codePointAt(0)) - 1;
-        int sign = advance < 0 ? -1 : 1;
-        advance = Math.abs(advance);
-        int originalW = advance;
-        int w = (int) Math.round(originalW * ((double) Math.round(fontSize) / (double) DEFAULT_HEIGHT));
-        int h = Math.round(fontSize);
-        int beforeTransformW = w;
-        int pixelSize = Math.round((float) beforeTransformW / (float) originalW);
-        int strikeSize = (int) (fontSize / 8);
-        int boldSize = (int) (fontSize / 16.0 * 2);
-        int italicExtraWidth = 0;
-        boolean italic = false;
-        for (TextDecoration decoration : decorations) {
-            switch (decoration) {
-                case BOLD:
-                    w += boldSize - 1;
-                    break;
-                case ITALIC:
-                    italicExtraWidth = (int) Math.round(-ITALIC_SHEAR_X * h);
-                    italic = true;
-                    break;
-                default:
-                    break;
+        int advance = (int) Math.round(charAdvances.get(character.codePointAt(0)) * 0.75);
+        if (advance != 0) {
+            int sign = advance < 0 ? -1 : 1;
+            advance = Math.abs(advance);
+            int originalW = advance;
+            int w = (int) Math.round(originalW * ((double) Math.round(fontSize) / (double) DEFAULT_HEIGHT));
+            int h = Math.round(fontSize);
+            int beforeTransformW = w;
+            int pixelSize = Math.round((float) beforeTransformW / (float) originalW);
+            int strikeSize = (int) (fontSize / 8);
+            int boldSize = (int) (fontSize / 16.0 * 2);
+            int italicExtraWidth = 0;
+            boolean italic = false;
+            for (TextDecoration decoration : decorations) {
+                switch (decoration) {
+                    case BOLD:
+                        w += boldSize - 1;
+                        break;
+                    case ITALIC:
+                        italicExtraWidth = (int) Math.round(-ITALIC_SHEAR_X * h);
+                        italic = true;
+                        break;
+                    default:
+                        break;
+                }
             }
+            int extraWidth = italic ? 0 : lastItalicExtraWidth;
+            return new FontRenderResult(image, w * sign + extraWidth, h, pixelSize, italicExtraWidth);
+        } else {
+            return new FontRenderResult(image, 0, 0, 0, lastItalicExtraWidth);
         }
-        int extraWidth = italic ? 0 : lastItalicExtraWidth;
-        return new FontRenderResult(image, w * sign + extraWidth, h, pixelSize, italicExtraWidth);
     }
 
     @Override
     public Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color) {
-        int advance = charAdvances.get(character.codePointAt(0));
-        if (advance <= 1) {
+        int advance = (int) Math.round(charAdvances.get(character.codePointAt(0)) * 0.75);
+        if (advance == 0) {
             return Optional.empty();
         }
-        BufferedImage charImage = new BufferedImage(advance - 1, DEFAULT_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage charImage = new BufferedImage(Math.abs(advance), DEFAULT_HEIGHT, BufferedImage.TYPE_INT_ARGB);
         charImage = ImageUtils.resizeImageFillHeight(charImage, Math.round(fontSize));
         return Optional.of(charImage);
     }

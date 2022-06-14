@@ -20,6 +20,8 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.graphics;
 
+import com.loohp.blockmodelrenderer.blending.BlendingModes;
+import com.loohp.blockmodelrenderer.utils.ColorUtils;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
@@ -56,11 +58,13 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegis
 import com.loohp.interactivechatdiscordsrvaddon.resources.ICacheManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.PlayerModelItem;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.PlayerModelItemPosition;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RawEnchantmentGlintData;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RenderResult;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.MinecraftFont.FontRenderResult;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimation;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureManager;
@@ -93,12 +97,14 @@ import org.bukkit.map.MapCursor;
 import org.bukkit.map.MapPalette;
 
 import java.awt.Color;
+import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
@@ -106,9 +112,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @SuppressWarnings("deprecation")
@@ -130,8 +138,11 @@ public class ImageGeneration {
     public static final Color BUNDLE_FULLNESS_BAR_COLOR = new Color(6711039);
     public static final TextColor INVENTORY_DEFAULT_FONT_COLOR = TextColor.color(4210752);
     public static final int BOOK_LINE_LIMIT = 230;
-    private static final String OPTIFINE_CAPE_URL = "https://optifine.net/capes/%s.png";
-    private static final String PLAYER_INFO_URL = "https://sessionserver.mojang.com/session/minecraft/profile/%s";
+    public static final Color TOOLTIP_BACKGROUND_COLOR = new Color(-267386864, true);
+    public static final Color TOOLTIP_OUTLINE_TOP_COLOR = new Color(1347420415, true);
+    public static final Color TOOLTIP_OUTLINE_BOTTOM_COLOR = new Color(1344798847, true);
+    public static final String OPTIFINE_CAPE_URL = "https://optifine.net/capes/%s.png";
+    public static final String PLAYER_INFO_URL = "https://sessionserver.mojang.com/session/minecraft/profile/%s";
 
     private static Supplier<ResourceManager> resourceManager = () -> InteractiveChatDiscordSrvAddon.plugin.resourceManager;
     private static Supplier<MCVersion> version = () -> InteractiveChat.version;
@@ -157,27 +168,43 @@ public class ImageGeneration {
             if (meta.hasAnimation()) {
                 TextureAnimation animation = meta.getAnimation();
                 if (animation.hasWidth() && animation.hasHeight()) {
-                    tintOriginal = ImageUtils.copyAndGetSubImage(tintOriginal, 0, 0, animation.getWidth(), animation.getHeight());
+                    tintOriginal = tintOriginal.getSubimage(0, 0, animation.getWidth(), animation.getHeight());
                 } else {
-                    tintOriginal = ImageUtils.copyAndGetSubImage(tintOriginal, 0, 0, tintOriginal.getWidth(), tintOriginal.getWidth());
+                    tintOriginal = tintOriginal.getSubimage(0, 0, tintOriginal.getWidth(), tintOriginal.getWidth());
                 }
             }
         }
+
         BufferedImage tintImage = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g3 = tintImage.createGraphics();
         g3.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        g3.drawImage(tintOriginal, 0, 0, tintImage.getWidth() * 4, tintImage.getHeight() * 4, null);
+        if (tintImage.getHeight() < tintImage.getWidth()) {
+            tintOriginal = ImageUtils.resizeImageFillWidth(tintOriginal, tintImage.getWidth() * 4);
+        } else {
+            tintOriginal = ImageUtils.resizeImageFillHeight(tintOriginal, tintImage.getHeight() * 4);
+        }
+        g3.drawImage(tintOriginal, 0, 0, null);
         g3.dispose();
 
         return tintImage;
     }
 
-    public static BufferedImage getEnchantedImage(TextureResource tintResource, BufferedImage source) {
-        return ImageUtils.additionNonTransparent(source, getRawEnchantedImage(tintResource, source), ResourceRegistry.ENCHANTMENT_GLINT_FACTOR);
+    public static BufferedImage getEnchantedImage(List<ValuePairs<TextureResource, OpenGLBlending>> tintResources, BufferedImage source) {
+        for (ValuePairs<TextureResource, OpenGLBlending> tintResource : tintResources) {
+            source = getEnchantedImage(tintResource.getFirst(), source, BlendingUtils.convert(tintResource.getSecond()));
+        }
+        return source;
     }
 
-    public static TextureResource getDefaultEnchantmentTint() {
-        return resourceManager.get().getTextureManager().getTexture(ResourceRegistry.MISC_TEXTURE_LOCATION + "enchanted_item_glint");
+    public static BufferedImage getEnchantedImage(TextureResource tintResource, BufferedImage source, BlendingModes blendingModes) {
+        BufferedImage overlay = getRawEnchantedImage(tintResource, source);
+        return ImageUtils.transformRGB(source, (x, y, colorValue) -> {
+            return ColorUtils.composite(overlay.getRGB(x, y), colorValue, blendingModes);
+        });
+    }
+
+    public static List<ValuePairs<TextureResource, OpenGLBlending>> getDefaultEnchantmentTint() {
+        return Collections.singletonList(new ValuePairs<>(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.MISC_TEXTURE_LOCATION + "enchanted_item_glint"), OpenGLBlending.GLINT));
     }
 
     public static BufferedImage getAdvancementIcon(ItemStack item, AdvancementType advancementType, boolean completed, OfflineICPlayer player) throws IOException {
@@ -231,7 +258,7 @@ public class ImageGeneration {
         Debug.debug("ImageGeneration creating inventory image of " + player.getName());
 
         String key = INVENTORY_CACHE_KEY + HashUtils.createSha1("Inventory", inventory);
-        if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial()) && Stream.of(inventory.getContents()).anyMatch(each -> each != null && NBTEditor.contains(each, "CustomModelData"))) {
+        if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial()) && Arrays.stream(inventory.getContents()).anyMatch(each -> each != null && NBTEditor.contains(each, "CustomModelData"))) {
             CacheObject<?> cache = resourceManager.get().getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).getCache(key);
             if (cache != null) {
                 return ImageUtils.copyImage((BufferedImage) cache.getObject());
@@ -288,7 +315,7 @@ public class ImageGeneration {
         }
 
         String key = PLAYER_INVENTORY_CACHE_KEY + HashUtils.createSha1(player.getUniqueId().toString(), inventory) + ImageUtils.hash(background);
-        if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial()) && Stream.of(inventory.getContents()).anyMatch(each -> each != null && NBTEditor.contains(each, "CustomModelData"))) {
+        if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial()) && Arrays.stream(inventory.getContents()).anyMatch(each -> each != null && NBTEditor.contains(each, "CustomModelData"))) {
             CacheObject<?> cache = resourceManager.get().getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).getCache(key);
             if (cache != null) {
                 return ImageUtils.copyImage((BufferedImage) cache.getObject());
@@ -527,7 +554,7 @@ public class ImageGeneration {
             }
             if (leggingsImage != null) {
                 if (leggings.getEnchantments().size() > 0) {
-                    leggingsImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.LEGS, leggings).orElse(getDefaultEnchantmentTint()), leggingsImage);
+                    leggingsImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.LEGS, leggings, () -> getDefaultEnchantmentTint()), leggingsImage);
                 }
                 providedTextures.put(ResourceRegistry.LEGGINGS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(resourceManager.get(), leggingsImage));
             }
@@ -571,7 +598,7 @@ public class ImageGeneration {
             }
             if (bootsImage != null) {
                 if (boots.getEnchantments().size() > 0) {
-                    bootsImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.FEET, boots).orElse(getDefaultEnchantmentTint()), bootsImage);
+                    bootsImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.FEET, boots, () -> getDefaultEnchantmentTint()), bootsImage);
                 }
 
                 providedTextures.put(ResourceRegistry.BOOTS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(resourceManager.get(), bootsImage));
@@ -641,7 +668,7 @@ public class ImageGeneration {
                     g3.dispose();
 
                     if (chestplate.getEnchantments().size() > 0) {
-                        chestplateImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.CHEST, chestplate).orElse(getDefaultEnchantmentTint()), chestplateImage);
+                        chestplateImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.CHEST, chestplate, () -> getDefaultEnchantmentTint()), chestplateImage);
                     }
                     elytraImage = chestplateImage;
                 default:
@@ -649,7 +676,7 @@ public class ImageGeneration {
             }
             if (isArmor && chestplateImage != null) {
                 if (chestplate.getEnchantments().size() > 0) {
-                    chestplateImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.CHEST, chestplate).orElse(getDefaultEnchantmentTint()), chestplateImage);
+                    chestplateImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.CHEST, chestplate, () -> getDefaultEnchantmentTint()), chestplateImage);
                 }
 
                 providedTextures.put(ResourceRegistry.CHESTPLATE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(resourceManager.get(), chestplateImage));
@@ -701,15 +728,15 @@ public class ImageGeneration {
                     String modelKey = itemProcessResult.getModelKey();
                     Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
                     TintIndexData tintIndexData = itemProcessResult.getTintIndexData();
-                    TextureResource enchantmentGlintResource = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.HEAD, helmet).orElse(getDefaultEnchantmentTint());
+                    List<ValuePairs<TextureResource, OpenGLBlending>> enchantmentGlintResource = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.HEAD, helmet, () -> getDefaultEnchantmentTint());
                     UnaryOperator<BufferedImage> enchantmentGlintFunction = img -> getEnchantedImage(enchantmentGlintResource, img);
-                    UnaryOperator<BufferedImage> rawEnchantmentGlintFunction = img -> getRawEnchantedImage(enchantmentGlintResource, img);
+                    Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintFunction = img -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> getRawEnchantedImage(each.getFirst(), img)).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
                     modelItems.put(PlayerModelItemPosition.HELMET, new PlayerModelItem(PlayerModelItemPosition.HELMET, modelKey, resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, EquipmentSlot.HEAD, helmet, version.get().isOld(), predicate, player, world, livingEntity).orElse(null), predicate, enchanted, itemProvidedTextures, tintIndexData, enchantmentGlintFunction, rawEnchantmentGlintFunction));
                     break;
             }
             if (isArmor) {
                 if (helmet.getEnchantments().size() > 0) {
-                    helmetImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.HEAD, helmet).orElse(getDefaultEnchantmentTint()), helmetImage);
+                    helmetImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.HEAD, helmet, () -> getDefaultEnchantmentTint()), helmetImage);
                 }
                 providedTextures.put(ResourceRegistry.HELMET_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(resourceManager.get(), helmetImage));
             }
@@ -725,9 +752,9 @@ public class ImageGeneration {
                 String modelKey = itemProcessResult.getModelKey();
                 Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
                 TintIndexData tintIndexData = itemProcessResult.getTintIndexData();
-                TextureResource enchantmentGlintResource = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(slot, rightHand).orElse(getDefaultEnchantmentTint());
+                List<ValuePairs<TextureResource, OpenGLBlending>> enchantmentGlintResource = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(slot, rightHand, () -> getDefaultEnchantmentTint());
                 UnaryOperator<BufferedImage> enchantmentGlintFunction = img -> getEnchantedImage(enchantmentGlintResource, img);
-                UnaryOperator<BufferedImage> rawEnchantmentGlintFunction = img -> getRawEnchantedImage(enchantmentGlintResource, img);
+                Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintFunction = img -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> getRawEnchantedImage(each.getFirst(), img)).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
                 modelItems.put(PlayerModelItemPosition.RIGHT_HAND, new PlayerModelItem(PlayerModelItemPosition.RIGHT_HAND, modelKey, resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, slot, rightHand, version.get().isOld(), predicate, player, world, livingEntity).orElse(null), predicate, enchanted, itemProvidedTextures, tintIndexData, enchantmentGlintFunction, rawEnchantmentGlintFunction));
             }
             ItemStack leftHand = player.isRightHanded() ? player.getOffHandItem() : player.getMainHandItem();
@@ -739,9 +766,9 @@ public class ImageGeneration {
                 String modelKey = itemProcessResult.getModelKey();
                 Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
                 TintIndexData tintIndexData = itemProcessResult.getTintIndexData();
-                TextureResource enchantmentGlintResource = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(slot, leftHand).orElse(getDefaultEnchantmentTint());
+                List<ValuePairs<TextureResource, OpenGLBlending>> enchantmentGlintResource = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(slot, leftHand, () -> getDefaultEnchantmentTint());
                 UnaryOperator<BufferedImage> enchantmentGlintFunction = img -> getEnchantedImage(enchantmentGlintResource, img);
-                UnaryOperator<BufferedImage> rawEnchantmentGlintFunction = img -> getRawEnchantedImage(enchantmentGlintResource, img);
+                Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintFunction = img -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> getRawEnchantedImage(each.getFirst(), img)).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
                 modelItems.put(PlayerModelItemPosition.LEFT_HAND, new PlayerModelItem(PlayerModelItemPosition.LEFT_HAND, modelKey, resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, slot, leftHand, version.get().isOld(), predicate, player, world, livingEntity).orElse(null), predicate, enchanted, itemProvidedTextures, tintIndexData, enchantmentGlintFunction, rawEnchantmentGlintFunction));
             }
         }
@@ -1017,14 +1044,18 @@ public class ImageGeneration {
         BufferedImage background = new BufferedImage(lastX - topX + 9, image.getHeight(), BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D g2 = background.createGraphics();
-        g2.setColor(new Color(36, 1, 92));
-        g2.fillRect(2, 2, background.getWidth() - 4, background.getHeight() - 4);
-        g2.setColor(new Color(16, 1, 16));
-        g2.fillRect(4, 4, background.getWidth() - 8, background.getHeight() - 8);
+        g2.setColor(TOOLTIP_BACKGROUND_COLOR);
+        g2.fillRect(2, 0, background.getWidth() - 4, background.getHeight());
         g2.fillRect(0, 2, 2, background.getHeight() - 4);
         g2.fillRect(background.getWidth() - 2, 2, 2, background.getHeight() - 4);
-        g2.fillRect(2, 0, background.getWidth() - 4, 2);
-        g2.fillRect(2, background.getHeight() - 2, background.getWidth() - 4, 2);
+        g2.setColor(TOOLTIP_OUTLINE_TOP_COLOR);
+        g2.fillRect(4, 2, background.getWidth() - 8, 2);
+        GradientPaint gradientPaint = new GradientPaint(0, 0, TOOLTIP_OUTLINE_TOP_COLOR, 0, background.getHeight() - 4, TOOLTIP_OUTLINE_BOTTOM_COLOR);
+        g2.setPaint(gradientPaint);
+        g2.fillRect(2, 2, 2, background.getHeight() - 4);
+        g2.fillRect(background.getWidth() - 4, 2, 2, background.getHeight() - 4);
+        g2.setColor(TOOLTIP_OUTLINE_BOTTOM_COLOR);
+        g2.fillRect(4, background.getHeight() - 4, background.getWidth() - 8, 2);
         g2.dispose();
 
         int offsetX = Math.max(topX - firstX, 0);
@@ -1387,54 +1418,60 @@ public class ImageGeneration {
         return image;
     }
 
-    public static List<BufferedImage> getBookInterface(List<Component> pages) {
+    public static List<Supplier<BufferedImage>> getBookInterfaceSuppliers(List<Component> pages) {
         BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "book").getTexture(512, 512);
         BufferedImage background = ImageUtils.copyAndGetSubImage(icons, 38, 0, 296, 364);
         BufferedImage nextPage = ImageUtils.copyAndGetSubImage(icons, 6, 388, 36, 20);
         BufferedImage previousPage = ImageUtils.copyAndGetSubImage(icons, 6, 414, 36, 20);
         int totalPages = pages.size();
-        List<BufferedImage> result = new ArrayList<>(totalPages);
+        List<Supplier<BufferedImage>> result = new ArrayList<>(totalPages);
         int i = 0;
         for (Component component : pages) {
-            i++;
-            BufferedImage page = ImageUtils.copyImage(background);
-            Graphics2D g = page.createGraphics();
-            if (i < totalPages) {
-                g.drawImage(nextPage, 201, 317, null);
-            }
-            if (i > 1) {
-                g.drawImage(previousPage, 54, 317, null);
-            }
-            Component pageHeader = Component.translatable(TranslationKeyUtils.getBookPageIndicator()).args(Component.text(i), Component.text(totalPages)).color(NamedTextColor.BLACK);
-            ImageUtils.printComponentRightAligned(resourceManager.get(), page, pageHeader, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), 255, 30, 16, 0);
-
-            BufferedImage temp = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB);
-
-            List<Component> lines = new ArrayList<>();
-            lines.addAll(ComponentStringUtils.applyWordWrap(component, resourceManager.get().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language), BOOK_LINE_LIMIT, new ToIntFunction<CharacterLengthProviderData>() {
-                int lastItalicExtraWidth = 0;
-
-                @Override
-                public int applyAsInt(CharacterLengthProviderData data) {
-                    String character = data.getCharacter();
-                    FontRenderResult renderResult = resourceManager.get().getFontManager().getFontProviders(data.getFont().asString()).forCharacter(character).printCharacter(temp, character, 0, 0, 16, lastItalicExtraWidth, NamedTextColor.BLACK, data.getDecorations());
-                    lastItalicExtraWidth = renderResult.getItalicExtraWidth();
-                    return renderResult.getWidth() + renderResult.getSpaceWidth();
+            int pageNumber = ++i;
+            result.add(() -> {
+                BufferedImage page = ImageUtils.copyImage(background);
+                Graphics2D g = page.createGraphics();
+                if (pageNumber < totalPages) {
+                    g.drawImage(nextPage, 201, 317, null);
                 }
-            }));
+                if (pageNumber > 1) {
+                    g.drawImage(previousPage, 54, 317, null);
+                }
+                Component pageHeader = Component.translatable(TranslationKeyUtils.getBookPageIndicator()).args(Component.text(pageNumber), Component.text(totalPages)).color(NamedTextColor.BLACK);
+                ImageUtils.printComponentRightAligned(resourceManager.get(), page, pageHeader, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), 255, 30, 16, 0);
 
-            int y = 58;
-            for (Component each : lines) {
-                each = each.colorIfAbsent(NamedTextColor.BLACK);
-                ImageUtils.printComponent(resourceManager.get(), page, each, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), 34, y, 16, 0);
-                y += 18;
-            }
+                BufferedImage temp = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB);
 
-            result.add(page);
-            g.dispose();
+                List<Component> lines = new ArrayList<>();
+                lines.addAll(ComponentStringUtils.applyWordWrap(component, resourceManager.get().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language), BOOK_LINE_LIMIT, new ToIntFunction<CharacterLengthProviderData>() {
+                    int lastItalicExtraWidth = 0;
+
+                    @Override
+                    public int applyAsInt(CharacterLengthProviderData data) {
+                        String character = data.getCharacter();
+                        FontRenderResult renderResult = resourceManager.get().getFontManager().getFontProviders(data.getFont().asString()).forCharacter(character).printCharacter(temp, character, 0, 0, 16, lastItalicExtraWidth, NamedTextColor.BLACK, data.getDecorations());
+                        lastItalicExtraWidth = renderResult.getItalicExtraWidth();
+                        return renderResult.getWidth() + renderResult.getSpaceWidth();
+                    }
+                }));
+
+                int y = 58;
+                for (Component each : lines) {
+                    each = each.colorIfAbsent(NamedTextColor.BLACK);
+                    ImageUtils.printComponent(resourceManager.get(), page, each, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), 34, y, 16, 0);
+                    y += 18;
+                }
+
+                g.dispose();
+                return page;
+            });
         }
 
         return result;
+    }
+
+    public static List<BufferedImage> getBookInterface(List<Component> pages) {
+        return getBookInterfaceSuppliers(pages).stream().map(each -> each.get()).collect(Collectors.toList());
     }
 
     public static class GenericContainerBackgroundResult {

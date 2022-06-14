@@ -30,19 +30,21 @@ import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechat.utils.CompassUtils;
+import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.SkinUtils;
 import com.loohp.interactivechat.utils.XMaterialUtils;
-import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.BannerGraphics;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.BannerGraphics.BannerAssetResult;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RawEnchantmentGlintData;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.SpawnEggTintData;
@@ -79,6 +81,7 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("deprecation")
 public class ItemRenderUtils {
@@ -108,9 +111,9 @@ public class ItemRenderUtils {
             requiresEnchantmentGlint = true;
         }
 
-        TextureResource enchantmentGlintResource = manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(null, item).orElse(ImageGeneration.getDefaultEnchantmentTint());
+        List<ValuePairs<TextureResource, OpenGLBlending>> enchantmentGlintResource = manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(null, item, () -> ImageGeneration.getDefaultEnchantmentTint());
         UnaryOperator<BufferedImage> enchantmentGlintFunction = image -> ImageGeneration.getEnchantedImage(enchantmentGlintResource, image);
-        UnaryOperator<BufferedImage> rawEnchantmentGlintFunction = image -> ImageGeneration.getRawEnchantedImage(enchantmentGlintResource, image);
+        Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintFunction = image -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> ImageGeneration.getRawEnchantedImage(each.getFirst(), image)).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
 
         TintIndexData tintIndexData = TintUtils.getTintData(xMaterial);
         Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
@@ -152,7 +155,7 @@ public class ItemRenderUtils {
                 predicates.put(ModelOverrideType.COOLDOWN, (float) cooldown / (float) ResourceRegistry.SHIELD_COOLDOWN);
             }
         } else if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
-            BufferedImage skinImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "steve").getTexture();
+            BufferedImage skinImage = manager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "steve").getTexture();
             try {
                 String base64 = SkinUtils.getSkinValue(item.getItemMeta());
                 if (base64 != null) {
@@ -256,6 +259,31 @@ public class ItemRenderUtils {
             }
 
             predicates.put(ModelOverrideType.ANGLE, (float) (angle - 0.015625));
+        } else if (xMaterial.equals(XMaterial.RECOVERY_COMPASS)) {
+            double angle;
+            ICPlayer icplayer = player.getPlayer();
+            if (icplayer != null && icplayer.isLocal()) {
+                Player bukkitPlayer = icplayer.getLocalPlayer();
+                Location target = bukkitPlayer.getLastDeathLocation();
+                if (target != null && target.getWorld().equals(bukkitPlayer.getWorld())) {
+                    Location playerLocation = bukkitPlayer.getEyeLocation();
+                    playerLocation.setPitch(0);
+                    Vector looking = playerLocation.getDirection();
+                    Vector pointing = target.toVector().subtract(playerLocation.toVector());
+                    pointing.setY(0);
+                    double degree = VectorUtils.getBearing(looking, pointing);
+                    if (degree < 0) {
+                        degree += 360;
+                    }
+                    angle = degree / 360;
+                } else {
+                    angle = RANDOM.nextDouble();
+                }
+            } else {
+                angle = 0;
+            }
+
+            predicates.put(ModelOverrideType.ANGLE, (float) (angle - 0.015625));
         } else if (xMaterial.equals(XMaterial.LIGHT)) {
             int level = 16;
             Object blockStateObj = item.getItemMeta().serialize().get("BlockStateTag");
@@ -273,12 +301,12 @@ public class ItemRenderUtils {
             LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
             Color color = new Color(meta.getColor().asRGB());
             if (xMaterial.equals(XMaterial.LEATHER_HORSE_ARMOR)) {
-                BufferedImage itemImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + xMaterial.name().toLowerCase()).getTexture(32, 32);
+                BufferedImage itemImage = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + xMaterial.name().toLowerCase()).getTexture(32, 32);
                 BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
                 itemImage = ImageUtils.multiply(itemImage, colorOverlay);
                 providedTextures.put(ResourceRegistry.LEATHER_HORSE_ARMOR_PLACEHOLDER, new GeneratedTextureResource(manager, itemImage));
             } else {
-                BufferedImage itemImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + xMaterial.name().toLowerCase()).getTexture(32, 32);
+                BufferedImage itemImage = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + xMaterial.name().toLowerCase()).getTexture(32, 32);
                 BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
                 itemImage = ImageUtils.multiply(itemImage, colorOverlay);
                 if (xMaterial.name().contains("HELMET")) {
@@ -295,7 +323,7 @@ public class ItemRenderUtils {
             if (xMaterial.equals(XMaterial.TIPPED_ARROW)) {
                 PotionMeta meta = (PotionMeta) item.getItemMeta();
                 PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
-                BufferedImage tippedArrowHead = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "tipped_arrow_head").getTexture(32, 32);
+                BufferedImage tippedArrowHead = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "tipped_arrow_head").getTexture(32, 32);
 
                 int color;
                 try {
@@ -315,7 +343,7 @@ public class ItemRenderUtils {
             } else {
                 PotionMeta meta = (PotionMeta) item.getItemMeta();
                 PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
-                BufferedImage potionOverlay = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "potion_overlay").getTexture(32, 32);
+                BufferedImage potionOverlay = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "potion_overlay").getTexture(32, 32);
 
                 int color;
                 try {
@@ -341,8 +369,8 @@ public class ItemRenderUtils {
         } else if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:spawn_egg"))) {
             SpawnEggTintData tintData = TintUtils.getSpawnEggTint(xMaterial);
             if (tintData != null) {
-                BufferedImage baseImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg").getTexture();
-                BufferedImage overlayImage = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg_overlay").getTexture(baseImage.getWidth(), baseImage.getHeight());
+                BufferedImage baseImage = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg").getTexture();
+                BufferedImage overlayImage = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg_overlay").getTexture(baseImage.getWidth(), baseImage.getHeight());
 
                 BufferedImage colorBase = ImageUtils.changeColorTo(ImageUtils.copyImage(baseImage), tintData.getBase());
                 BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(overlayImage), tintData.getOverlay());
@@ -353,9 +381,35 @@ public class ItemRenderUtils {
                 providedTextures.put(ResourceRegistry.SPAWN_EGG_PLACEHOLDER, new GeneratedTextureResource(manager, baseImage));
                 providedTextures.put(ResourceRegistry.SPAWN_EGG_OVERLAY_PLACEHOLDER, new GeneratedTextureResource(manager, overlayImage));
             }
+        } else if (xMaterial.equals(XMaterial.FIREWORK_STAR)) {
+            int overlayColor;
+
+            int[] is;
+            int[] nArray = is = NBTEditor.contains(item, "Explosion", "Colors") ? NBTEditor.getIntArray(item, "Explosion", "Colors") : null;
+            if (is == null || is.length == 0) {
+                overlayColor = 0x8A8A8A;
+            } else if (is.length == 1) {
+                overlayColor = is[0];
+            } else {
+                int i = 0;
+                int j = 0;
+                int k = 0;
+                for (int l : is) {
+                    i += (l & 0xFF0000) >> 16;
+                    j += (l & 0xFF00) >> 8;
+                    k += (l & 0xFF);
+                }
+                overlayColor = (i /= is.length) << 16 | (j /= is.length) << 8 | (k /= is.length);
+            }
+
+            BufferedImage fireworkStarOverlay = manager.getTextureManager().getTexture(ResourceRegistry.FIREWORK_STAR_OVERLAY_LOCATION).getTexture();
+            BufferedImage tint = ImageUtils.changeColorTo(ImageUtils.copyImage(fireworkStarOverlay), overlayColor);
+            fireworkStarOverlay = ImageUtils.multiply(fireworkStarOverlay, tint);
+
+            providedTextures.put(ResourceRegistry.FIREWORK_STAR_OVERLAY_LOCATION, new GeneratedTextureResource(manager, fireworkStarOverlay));
         } else if (InteractiveChat.version.isLegacy() && xMaterial.isOneOf(Collections.singletonList("CONTAINS:bed"))) {
             String colorName = xMaterial.name().replace("_BED", "").toLowerCase();
-            BufferedImage bedTexture = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "bed/" + colorName).getTexture();
+            BufferedImage bedTexture = manager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "bed/" + colorName).getTexture();
             providedTextures.put(ResourceRegistry.LEGACY_BED_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, bedTexture));
         } else if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_9) && xMaterial.equals(XMaterial.ENDER_PEARL)) {
             ICPlayer icplayer = player.getPlayer();
@@ -391,6 +445,18 @@ public class ItemRenderUtils {
         } else if (xMaterial.equals(XMaterial.BUNDLE)) {
             float fullness = BundleUtils.getFullnessPercentage(((BundleMeta) item.getItemMeta()).getItems());
             predicates.put(ModelOverrideType.FILLED, fullness);
+        } else if (FilledMapUtils.isFilledMap(item)) {
+            int markingColor;
+            if (NBTEditor.contains(item, "display", "MapColor")) {
+                markingColor = -16777216 | NBTEditor.getInt(item, "display", "MapColor") & 16777215;
+            } else {
+                markingColor = -12173266;
+            }
+            BufferedImage filledMapMarkings = manager.getTextureManager().getTexture(ResourceRegistry.MAP_MARKINGS_LOCATION).getTexture();
+            BufferedImage tint = ImageUtils.changeColorTo(ImageUtils.copyImage(filledMapMarkings), markingColor);
+            filledMapMarkings = ImageUtils.multiply(filledMapMarkings, tint);
+
+            providedTextures.put(ResourceRegistry.MAP_MARKINGS_LOCATION, new GeneratedTextureResource(manager, filledMapMarkings));
         }
 
         String modelKey = directLocation == null ? ResourceRegistry.ITEM_MODEL_LOCATION + ModelUtils.getItemModelKey(xMaterial) : directLocation;
@@ -417,7 +483,7 @@ public class ItemRenderUtils {
                             if (overriddenResource.equalsIgnoreCase(ResourceRegistry.TIPPED_ARROW_HEAD_PLACEHOLDER)) {
                                 PotionMeta meta = (PotionMeta) item.getItemMeta();
                                 PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
-                                BufferedImage tippedArrowHead = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "tipped_arrow_head").getTexture(32, 32);
+                                BufferedImage tippedArrowHead = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "tipped_arrow_head").getTexture(32, 32);
 
                                 int color;
                                 try {
@@ -513,9 +579,9 @@ public class ItemRenderUtils {
         private String modelKey;
         private Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction;
         private UnaryOperator<BufferedImage> enchantmentGlintFunction;
-        private UnaryOperator<BufferedImage> rawEnchantmentGlintFunction;
+        private Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintFunction;
 
-        public ItemStackProcessResult(boolean requiresEnchantmentGlint, Map<ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, String modelKey, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, UnaryOperator<BufferedImage> enchantmentGlintFunction, UnaryOperator<BufferedImage> rawEnchantmentGlintFunction) {
+        public ItemStackProcessResult(boolean requiresEnchantmentGlint, Map<ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, String modelKey, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, UnaryOperator<BufferedImage> enchantmentGlintFunction, Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintFunction) {
             this.requiresEnchantmentGlint = requiresEnchantmentGlint;
             this.predicates = predicates;
             this.providedTextures = providedTextures;
@@ -554,7 +620,7 @@ public class ItemRenderUtils {
             return enchantmentGlintFunction;
         }
 
-        public UnaryOperator<BufferedImage> getRawEnchantmentGlintFunction() {
+        public Function<BufferedImage, RawEnchantmentGlintData> getRawEnchantmentGlintFunction() {
             return rawEnchantmentGlintFunction;
         }
 

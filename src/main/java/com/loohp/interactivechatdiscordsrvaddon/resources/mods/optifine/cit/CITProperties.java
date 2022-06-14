@@ -39,7 +39,9 @@ import com.loohp.interactivechat.utils.NBTParsingUtils;
 import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.IntegerRange;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PercentageOrIntegerRange;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlot;
@@ -236,7 +238,13 @@ public abstract class CITProperties {
             double rotation = Double.parseDouble(properties.getProperty("rotation", "0.0"));
             double duration = Double.parseDouble(properties.getProperty("duration", "0.0"));
             String blend = properties.getProperty("blend", "add");
-            return new EnchantmentProperties(weight, items, stackSize, damage, damageMask, hand, enchantments, nbtMatch, layer, speed, rotation, duration, blend, texture);
+            OpenGLBlending openGLBlending = OpenGLBlending.ADD;
+            try {
+                openGLBlending = OpenGLBlending.fromString(blend);
+            } catch (Throwable e) {
+                new ResourceLoadingException("Invalid blend mode \"" + blend + "\" in " + file.getAbsolutePath(), e).printStackTrace();
+            }
+            return new EnchantmentProperties(weight, items, stackSize, damage, damageMask, hand, enchantments, nbtMatch, layer, speed, rotation, duration, openGLBlending, texture);
         }
         throw new IllegalArgumentException("Invalid CIT property type \"" + type + "\"");
     }

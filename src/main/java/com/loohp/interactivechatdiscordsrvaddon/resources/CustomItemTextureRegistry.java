@@ -25,6 +25,7 @@ import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager.ResourceRegistrySupplier;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
@@ -37,12 +38,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class CustomItemTextureRegistry implements IResourceRegistry {
 
     public static final String IDENTIFIER = "CustomItemTextureRegistry";
 
-    public static ResourceRegistrySupplier getDefaultSupplier() {
+    public static ResourceRegistrySupplier<CustomItemTextureRegistry> getDefaultSupplier() {
         return manager -> new CustomItemTextureRegistry();
     }
 
@@ -77,8 +79,8 @@ public class CustomItemTextureRegistry implements IResourceRegistry {
         return resolvers.stream().map(each -> each.getElytraOverrideTextures(heldSlot, itemStack)).filter(each -> each.isPresent()).findFirst().flatMap(each -> each);
     }
 
-    public Optional<TextureResource> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack) {
-        return resolvers.stream().map(each -> each.getEnchantmentGlintOverrideTextures(heldSlot, itemStack)).filter(each -> each.isPresent()).findFirst().flatMap(each -> each);
+    public List<ValuePairs<TextureResource, OpenGLBlending>> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack, Supplier<List<ValuePairs<TextureResource, OpenGLBlending>>> ifEmpty) {
+        return resolvers.stream().map(each -> each.getEnchantmentGlintOverrideTextures(heldSlot, itemStack)).filter(each -> !each.isEmpty()).findFirst().orElseGet(ifEmpty);
     }
 
     public Optional<TextureResource> getArmorOverrideTextures(String layer, EquipmentSlot heldSlot, ItemStack itemStack, OfflineICPlayer player, World world, LivingEntity entity) {
@@ -91,7 +93,7 @@ public class CustomItemTextureRegistry implements IResourceRegistry {
 
         Optional<TextureResource> getElytraOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack);
 
-        Optional<TextureResource> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack);
+        List<ValuePairs<TextureResource, OpenGLBlending>> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack);
 
         Optional<TextureResource> getArmorOverrideTextures(String layer, EquipmentSlot heldSlot, ItemStack itemStack, OfflineICPlayer player, World world, LivingEntity entity);
 

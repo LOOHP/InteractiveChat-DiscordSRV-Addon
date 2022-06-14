@@ -151,9 +151,9 @@ public class ModelManager extends AbstractManager implements IModelManager {
                     return resolveBlockModel(override.getModel(), is1_8, null);
                 }
             }
-            model = BlockModel.resolve(parent, model, is1_8);
+            model = model.resolve(parent, is1_8);
         }
-        return BlockModel.resolve(model, is1_8);
+        return model.resolve( is1_8);
     }
 
 }

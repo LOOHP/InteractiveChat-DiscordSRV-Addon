@@ -29,6 +29,10 @@ import java.util.Objects;
 
 public class ModelOverride {
 
+    private static float floatValueOr(Float value, float fallback) {
+        return value == null ? fallback : value;
+    }
+
     private Map<ModelOverrideType, Float> predicates;
     private String model;
 
@@ -54,10 +58,12 @@ public class ModelOverride {
             data = Collections.emptyMap();
         }
         for (Entry<ModelOverrideType, Float> entry : predicates.entrySet()) {
-            float value = data.getOrDefault(entry.getKey(), Float.NEGATIVE_INFINITY);
-            float valueComparing = entry.getValue();
-            if (value < valueComparing) {
-                return false;
+            if (entry.getValue() != null) {
+                float value = floatValueOr(data.get(entry.getKey()), Float.NEGATIVE_INFINITY);
+                float valueComparing = entry.getValue();
+                if (value < valueComparing) {
+                    return false;
+                }
             }
         }
         return true;

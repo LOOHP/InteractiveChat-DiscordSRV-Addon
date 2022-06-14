@@ -31,9 +31,11 @@ import com.loohp.interactivechat.utils.LanguageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.api.events.InteractiveChatDiscordSRVConfigReloadEvent;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents.DiscordAttachmentData;
+import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater.UpdaterResponse;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackInfoUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.GraphicsToPacketMapWrapper;
 import net.md_5.bungee.api.ChatColor;
@@ -69,23 +71,23 @@ public class Commands implements CommandExecutor, TabCompleter {
                 sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.defaultResourceHashLang.replaceFirst("%s", InteractiveChatDiscordSrvAddon.plugin.defaultResourceHash + " (" + InteractiveChat.exactMinecraftVersion + ")"));
                 sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.loadedResourcesLang);
                 for (ResourcePackInfo info : InteractiveChatDiscordSrvAddon.plugin.resourceManager.getResourcePackInfo()) {
-                    String name = info.getName();
+                    String name = ResourcePackInfoUtils.resolveName(info);
                     if (info.getStatus()) {
-                        Component component = Component.text(" - " + name).color(info.compareServerPackFormat() == 0 ? NamedTextColor.GREEN : NamedTextColor.YELLOW);
-                        Component hoverComponent = info.getDescription();
-                        if (info.compareServerPackFormat() > 0) {
+                        Component component = Component.text(" - " + name).color(info.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) == 0 ? NamedTextColor.GREEN : NamedTextColor.YELLOW);
+                        Component hoverComponent = ResourcePackInfoUtils.resolveDescription(info);
+                        if (info.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) > 0) {
                             hoverComponent = hoverComponent.append(Component.text("\n")).append(Component.translatable(TranslationKeyUtils.getNewIncompatiblePack()).color(NamedTextColor.YELLOW));
-                        } else if (info.compareServerPackFormat() < 0) {
+                        } else if (info.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) < 0) {
                             hoverComponent = hoverComponent.append(Component.text("\n")).append(Component.translatable(TranslationKeyUtils.getOldIncompatiblePack()).color(NamedTextColor.YELLOW));
                         }
                         component = component.hoverEvent(HoverEvent.showText(hoverComponent));
                         InteractiveChatAPI.sendMessage(sender, component);
                         if (!(sender instanceof Player)) {
-                            for (Component each : ComponentStyling.splitAtLineBreaks(info.getDescription())) {
+                            for (Component each : ComponentStyling.splitAtLineBreaks(ResourcePackInfoUtils.resolveDescription(info))) {
                                 InteractiveChatAPI.sendMessage(sender, Component.text("   - ").color(NamedTextColor.GRAY).append(each));
-                                if (info.compareServerPackFormat() > 0) {
+                                if (info.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) > 0) {
                                     sender.sendMessage(ChatColor.YELLOW + "     " + LanguageUtils.getTranslation(TranslationKeyUtils.getNewIncompatiblePack(), InteractiveChatDiscordSrvAddon.plugin.language));
-                                } else if (info.compareServerPackFormat() < 0) {
+                                } else if (info.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) < 0) {
                                     sender.sendMessage(ChatColor.YELLOW + "     " + LanguageUtils.getTranslation(TranslationKeyUtils.getOldIncompatiblePack(), InteractiveChatDiscordSrvAddon.plugin.language));
                                 }
                             }

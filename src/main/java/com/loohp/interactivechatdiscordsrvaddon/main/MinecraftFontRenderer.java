@@ -43,6 +43,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimat
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackInfoUtils;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -460,7 +461,7 @@ public class MinecraftFontRenderer extends JFrame {
 
         textAreaResources.setText("Loaded Resources:\n");
         for (ResourcePackInfo info : resourceManager.getResourcePackInfo()) {
-            textAreaResources.append(" - " + info.getName());
+            textAreaResources.append(" - " + ResourcePackInfoUtils.resolveName(info));
             if (!info.getStatus()) {
                 textAreaResources.append(" (Failed)");
             }

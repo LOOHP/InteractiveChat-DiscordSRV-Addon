@@ -35,6 +35,7 @@ import com.loohp.interactivechat.objectholders.ICPlayerFactory;
 import com.loohp.interactivechat.objectholders.MentionPair;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 import com.loohp.interactivechat.objectholders.PlaceholderCooldownManager;
+import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechat.objectholders.WebData;
 import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.ChatColorUtils;
@@ -69,6 +70,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.HoverClickDisplayD
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.IDProvider;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayType;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ReactionsHandler;
 import com.loohp.interactivechatdiscordsrvaddon.registry.DiscordDataRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.utils.AchievementUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.AdvancementUtils;
@@ -76,7 +78,6 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DeathMessageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordContentUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils;
-import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordDescription;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordToolTip;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.TitledInventoryWrapper;
@@ -146,6 +147,10 @@ public class OutboundToDiscordEvents implements Listener {
     @Subscribe(priority = ListenerPriority.HIGHEST)
     public void onGameToDiscord(GameChatMessagePreProcessEvent event) {
         Debug.debug("Triggering onGameToDiscord");
+        if (event.isCancelled()) {
+            Debug.debug("onGameToDiscord already cancelled");
+            return;
+        }
         InteractiveChatDiscordSrvAddon.plugin.messagesCounter.incrementAndGet();
 
         Player sender = event.getPlayer();
@@ -154,11 +159,23 @@ public class OutboundToDiscordEvents implements Listener {
 
         message = processGameMessage(icSender, message);
 
+        if (message == null) {
+            event.setCancelled(true);
+            return;
+        }
+
         event.setMessageComponent(ComponentStringUtils.toDiscordSRVComponent(message));
     }
 
     @Subscribe(priority = ListenerPriority.HIGHEST)
     public void onVentureChatHookToDiscord(VentureChatMessagePreProcessEvent event) {
+        Debug.debug("Triggering onVentureChatHookToDiscord");
+        if (event.isCancelled()) {
+            Debug.debug("onVentureChatHookToDiscord already cancelled");
+            return;
+        }
+        InteractiveChatDiscordSrvAddon.plugin.messagesCounter.incrementAndGet();
+
         ICPlayer icSender = null;
         MineverseChatPlayer mcPlayer = event.getVentureChatEvent().getMineverseChatPlayer();
         if (mcPlayer != null) {
@@ -172,6 +189,11 @@ public class OutboundToDiscordEvents implements Listener {
         Component message = ComponentStringUtils.toRegularComponent(event.getMessageComponent());
 
         message = processGameMessage(icSender, message);
+
+        if (message == null) {
+            event.setCancelled(true);
+            return;
+        }
 
         event.setMessageComponent(ComponentStringUtils.toDiscordSRVComponent(message));
     }
@@ -556,22 +578,14 @@ public class OutboundToDiscordEvents implements Listener {
             BufferedImage image = ImageGeneration.getItemStackImage(item, ICPlayerFactory.getICPlayer(player), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
             byte[] itemData = ImageUtils.toArray(image);
 
-            DiscordDescription description = DiscordItemStackUtils.getDiscordDescription(item, icPlayer);
-
             content.addAttachment("Item.png", itemData);
 
-            if (InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImage) {
-                DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, icPlayer);
-                if (!discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
-                    BufferedImage tooltip = ImageGeneration.getToolTipImage(discordToolTip.getComponents());
-                    byte[] tooltipData = ImageUtils.toArray(tooltip);
-                    content.addAttachment("ToolTip.png", tooltipData);
-                    content.addImageUrl("attachment://ToolTip.png");
-                } else {
-                    content.addDescription(description.getDescription().orElse(null));
-                }
-            } else {
-                content.addDescription(description.getDescription().orElse(null));
+            DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, icPlayer);
+            if (!discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
+                BufferedImage tooltip = ImageGeneration.getToolTipImage(discordToolTip.getComponents());
+                byte[] tooltipData = ImageUtils.toArray(tooltip);
+                content.addAttachment("ToolTip.png", tooltipData);
+                content.addImageUrl("attachment://ToolTip.png");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -780,7 +794,9 @@ public class OutboundToDiscordEvents implements Listener {
             dataList.sort(DISPLAY_DATA_COMPARATOR);
 
             Debug.debug("discordMessageSent creating contents");
-            List<DiscordMessageContent> contents = DiscordContentUtils.createContents(dataList, player);
+            ValuePairs<List<DiscordMessageContent>, ReactionsHandler> pair = DiscordContentUtils.createContents(dataList, player);
+            List<DiscordMessageContent> contents = pair.getFirst();
+            ReactionsHandler reactionsHandler = pair.getSecond();
 
             DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
             Bukkit.getPluginManager().callEvent(discordImageEvent);
@@ -791,13 +807,20 @@ public class OutboundToDiscordEvents implements Listener {
                 text = discordImageEvent.getNewMessage();
                 MessageAction action = message.editMessage(text);
                 List<MessageEmbed> embeds = new ArrayList<>();
+                int i = 0;
                 for (DiscordMessageContent content : contents) {
-                    embeds.addAll(content.toJDAMessageEmbeds());
-                    for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
-                        action = action.addFile(attachment.getValue(), attachment.getKey());
+                    i += content.getAttachments().size();
+                    if (i <= 10) {
+                        embeds.addAll(content.toJDAMessageEmbeds());
+                        for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
+                            action = action.addFile(attachment.getValue(), attachment.getKey());
+                        }
                     }
                 }
                 action.setEmbeds(embeds).queue();
+                if (!reactionsHandler.getEmojis().isEmpty()) {
+                    DiscordReactionEvents.register(message, reactionsHandler, contents);
+                }
             }
         });
     }
@@ -868,7 +891,9 @@ public class OutboundToDiscordEvents implements Listener {
                 dataList.sort(DISPLAY_DATA_COMPARATOR);
 
                 Debug.debug("onMessageReceived creating contents");
-                List<DiscordMessageContent> contents = DiscordContentUtils.createContents(dataList, player);
+                ValuePairs<List<DiscordMessageContent>, ReactionsHandler> pair = DiscordContentUtils.createContents(dataList, player);
+                List<DiscordMessageContent> contents = pair.getFirst();
+                ReactionsHandler reactionsHandler = pair.getSecond();
 
                 DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
                 Bukkit.getPluginManager().callEvent(discordImageEvent);
@@ -879,13 +904,20 @@ public class OutboundToDiscordEvents implements Listener {
                 } else {
                     text = discordImageEvent.getNewMessage();
                     WebhookMessageBuilder builder = new WebhookMessageBuilder().setContent(text);
+                    int i = 0;
                     for (DiscordMessageContent content : contents) {
-                        builder.addEmbeds(content.toWebhookEmbeds());
-                        for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
-                            builder.addFile(attachment.getKey(), attachment.getValue());
+                        i += content.getAttachments().size();
+                        if (i <= 10) {
+                            builder.addEmbeds(content.toWebhookEmbeds());
+                            for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
+                                builder.addFile(attachment.getKey(), attachment.getValue());
+                            }
                         }
                     }
                     client.edit(messageId, builder.build());
+                    if (!reactionsHandler.getEmojis().isEmpty()) {
+                        DiscordReactionEvents.register(message, reactionsHandler, contents);
+                    }
                 }
                 client.close();
             });

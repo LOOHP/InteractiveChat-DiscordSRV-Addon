@@ -2,8 +2,6 @@ InventoryImage:
   #Whether to generate images for the item placeholder
   Item:
     Enabled: true
-    #Show information about the item in a tooltip image instead of text
-    UseTooltipImage: true
     #If UseTooltipImage is true, should the plugin attach tooltip image if the target item
     #is just a plain base item with no information worth showing
     UseTooltipImageOnBaseItem: false

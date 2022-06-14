@@ -206,9 +206,9 @@ public class ChimeManager extends ModManager implements IChimeManager {
                     }
                 }
             }
-            model = BlockModel.resolve(parent, model, is1_8);
+            model = model.resolve(parent, is1_8);
         }
-        return BlockModel.resolve(model, is1_8);
+        return model.resolve( is1_8);
     }
 
     @SuppressWarnings("DeprecatedIsStillUsed")
@@ -244,9 +244,9 @@ public class ChimeManager extends ModManager implements IChimeManager {
                     return resolveBlockModel(override.getModel(), is1_8, null);
                 }
             }
-            model = BlockModel.resolve(parent, model, is1_8);
+            model = model.resolve(parent, is1_8);
         }
-        return BlockModel.resolve(model, is1_8);
+        return model.resolve( is1_8);
     }
 
     @Override

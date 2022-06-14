@@ -38,24 +38,33 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.M
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.ModManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.ArmorProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.CITGlobalProperties;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.CITGlobalProperties.EnchantmentVisibilityMethod;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.CITProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.ElytraProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.ItemProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -70,7 +79,7 @@ public class OptifineManager extends ModManager implements IOptifineManager {
 
     public static final String MOD_NAME = "Optifine";
     public static final List<String> ASSETS_FOLDERS = Collections.unmodifiableList(Arrays.asList("optifine", "mcpatcher"));
-    public static final CITGlobalProperties DEFAULT_CIT_GLOBAL_PROPERTIES = new CITGlobalProperties(true, Integer.MAX_VALUE, "average", 0.5);
+    public static final CITGlobalProperties DEFAULT_CIT_GLOBAL_PROPERTIES = new CITGlobalProperties(true, Integer.MAX_VALUE, EnchantmentVisibilityMethod.AVERAGE, 0.5);
     private static final BufferedImage BLANK_ENCHANTMENT = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
 
     private Map<String, ValuePairs<ResourcePackFile, ?>> assets;
@@ -286,24 +295,113 @@ public class OptifineManager extends ModManager implements IOptifineManager {
     }
 
     @Override
-    public TextureResource getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack) {
+    public List<ValuePairs<TextureResource, OpenGLBlending>> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack) {
         Map<String, TextureResource> overrideTextures = new HashMap<>();
         if (itemStack == null || itemStack.getType().equals(Material.AIR)) {
-            return getCITGlobalProperties().isUseGlint() ? null : new GeneratedTextureResource(manager, BLANK_ENCHANTMENT);
+            return getCITGlobalProperties().isUseGlint() ? Collections.emptyList() : Collections.singletonList(new ValuePairs<>(new GeneratedTextureResource(manager, BLANK_ENCHANTMENT), OpenGLBlending.ADD));
         }
-        ValuePairs<ResourcePackFile, EnchantmentProperties> citOverride = getCITOverride(heldSlot, itemStack, EnchantmentProperties.class);
-        if (citOverride == null) {
-            return getCITGlobalProperties().isUseGlint() ? null : new GeneratedTextureResource(manager, BLANK_ENCHANTMENT);
+        List<ValuePairs<ResourcePackFile, EnchantmentProperties>> citOverrides = getCITOverrides(heldSlot, itemStack, EnchantmentProperties.class);
+        List<ValuePairs<TextureResource, OpenGLBlending>> result = new ArrayList<>();
+        Object2IntMap<TextureResource> layer = new Object2IntOpenHashMap<>();
+        for (ValuePairs<ResourcePackFile, EnchantmentProperties> citOverride : citOverrides) {
+            EnchantmentProperties enchantmentProperties = citOverride.getSecond();
+            String path = enchantmentProperties.getOverrideAsset("", "png");
+            if (path != null) {
+                int currentLayer = enchantmentProperties.getLayer();
+                Iterator<Object2IntMap.Entry<TextureResource>> itr = layer.object2IntEntrySet().iterator();
+                while (itr.hasNext()) {
+                    Object2IntMap.Entry<TextureResource> entry = itr.next();
+                    if (entry.getIntValue() == currentLayer) {
+                        itr.remove();
+                        result.removeIf(each -> each.getFirst().equals(entry.getKey()));
+                    }
+                }
+                String extension = path.substring(path.lastIndexOf(".") + 1);
+                String resourceLocation = resolveAsset(citOverride.getFirst(), path, "png");
+                BufferedImage texture = getTexture(resourceLocation).getTexture();
+                Map<Enchantment, Integer> stackEnchantments = itemStack.getEnchantments();
+                float intensity;
+                switch (getCITGlobalProperties().getMethod()) {
+                    case AVERAGE: {
+                        Enchantment enchantment = null;
+                        for (Enchantment enchantmentMatch : enchantmentProperties.getEnchantments().keySet()) {
+                            if (stackEnchantments.containsKey(enchantmentMatch)) {
+                                enchantment = enchantmentMatch;
+                                break;
+                            }
+                        }
+                        if (enchantment == null) {
+                            intensity = 0F;
+                        } else {
+                            float sum = 0F;
+                            for (Integer value : stackEnchantments.values()) {
+                                sum += value;
+                            }
+                            intensity = (float) stackEnchantments.get(enchantment) / sum;
+                        }
+                        break;
+                    }
+                    case LAYERED: {
+                        Enchantment enchantment = null;
+                        for (Enchantment enchantmentMatch : enchantmentProperties.getEnchantments().keySet()) {
+                            if (stackEnchantments.containsKey(enchantmentMatch)) {
+                                enchantment = enchantmentMatch;
+                                break;
+                            }
+                        }
+                        if (enchantment == null) {
+                            intensity = 0F;
+                        } else {
+                            float max = 0F;
+                            for (Integer value : stackEnchantments.values()) {
+                                if (value > max) {
+                                    max = value;
+                                }
+                            }
+                            intensity = (float) stackEnchantments.get(enchantment) / max;
+                        }
+                        break;
+                    }
+                    default: {
+                        intensity = 1F;
+                        break;
+                    }
+                }
+                if (intensity == 0F) {
+                    texture = new BufferedImage(texture.getWidth(), texture.getHeight(), BufferedImage.TYPE_INT_ARGB);
+                } else if (intensity < 1F) {
+                    BufferedImage blackImage = new BufferedImage(texture.getWidth(), texture.getHeight(), BufferedImage.TYPE_INT_ARGB);
+                    Graphics2D g = blackImage.createGraphics();
+                    g.setColor(new Color(0, 0, 0, Math.min(255, (int) (255 * (1F - intensity)))));
+                    g.fillRect(0, 0, blackImage.getWidth(), blackImage.getHeight());
+                    g.dispose();
+                    Graphics2D g2 = texture.createGraphics();
+                    g2.drawImage(blackImage, 0, 0, null);
+                    g2.dispose();
+                }
+                texture = ImageUtils.rotateImageByDegrees(texture, enchantmentProperties.getRotation());
+                GeneratedTextureResource textureResource = new GeneratedTextureResource(manager, texture);
+                result.add(new ValuePairs<>(textureResource, enchantmentProperties.getBlend()));
+                layer.put(textureResource, currentLayer);
+            }
         }
-        String path = citOverride.getSecond().getOverrideAsset("", "png");
-        if (path != null) {
-            String extension = path.substring(path.lastIndexOf(".") + 1);
-            String resourceLocation = resolveAsset(citOverride.getFirst(), path, "png");
-            BufferedImage texture = getTexture(resourceLocation).getTexture();
-            texture = ImageUtils.rotateImageByDegrees(texture, citOverride.getSecond().getRotation());
-            return new GeneratedTextureResource(manager, texture);
+        if (result.isEmpty()) {
+            return getCITGlobalProperties().isUseGlint() ? Collections.emptyList() : Collections.singletonList(new ValuePairs<>(new GeneratedTextureResource(manager, BLANK_ENCHANTMENT), OpenGLBlending.ADD));
         }
-        return getCITGlobalProperties().isUseGlint() ? null : new GeneratedTextureResource(manager, BLANK_ENCHANTMENT);
+        result.sort(Comparator.comparing(each -> layer.getOrDefault(each, 0)));
+        for (int i = 0; i < result.size(); i++) {
+            if (result.get(i).getSecond().equals(OpenGLBlending.REPLACE)) {
+                for (int u = 0; u < i; u++) {
+                    //noinspection SuspiciousListRemoveInLoop
+                    result.remove(u);
+                }
+                i = 1;
+            }
+        }
+        while (result.size() > getCITGlobalProperties().getCap() && !result.isEmpty()) {
+            result.remove(0);
+        }
+        return result;
     }
 
     public static String resolveAsset(ResourcePackFile currentFile, String path, String extension) {
@@ -357,6 +455,19 @@ public class OptifineManager extends ModManager implements IOptifineManager {
                 result = new ValuePairs<>(pair.getFirst(), (T) citProperties);
             }
         }
+        return result;
+    }
+
+    @Override
+    public <T extends CITProperties> List<ValuePairs<ResourcePackFile, T>> getCITOverrides(EquipmentSlot heldSlot, ItemStack itemStack, Class<T> type) {
+        List<ValuePairs<ResourcePackFile, T>> result = new ArrayList<>();
+        for (ValuePairs<ResourcePackFile, CITProperties> pair : citOverrides.values()) {
+            CITProperties citProperties = pair.getSecond();
+            if (type.isInstance(citProperties) && citProperties.test(heldSlot, itemStack)) {
+                result.add(new ValuePairs<>(pair.getFirst(), (T) citProperties));
+            }
+        }
+        result.sort(Comparator.comparing(each -> each.getSecond().getWeight()));
         return result;
     }
 
@@ -421,9 +532,9 @@ public class OptifineManager extends ModManager implements IOptifineManager {
                     return resolveBlockModel(override.getModel(), is1_8, null);
                 }
             }
-            model = BlockModel.resolve(parent, model, is1_8);
+            model = model.resolve(parent, is1_8);
         }
-        return BlockModel.resolve(model, is1_8);
+        return model.resolve( is1_8);
     }
 
 }

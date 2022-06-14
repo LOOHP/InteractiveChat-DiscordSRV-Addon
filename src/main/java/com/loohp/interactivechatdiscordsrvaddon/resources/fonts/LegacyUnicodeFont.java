@@ -51,7 +51,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
     }
 
     protected Optional<FontTextureResource> missingCharacter;
-    protected Int2ObjectMap<Optional<FontTextureResource>> charImages;
+    private Int2ObjectMap<Optional<FontTextureResource>> charImages;
     private Int2ObjectMap<GlyphSize> sizes;
     private String template;
 
@@ -78,7 +78,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
             return;
         }
 
-        for (int i = 0; i < 0x10000; i += 0x100) {
+        for (int i = 0; i < 65536; i += 256) {
             TextureResource resource = manager.getFontManager().getFontResource(template.replaceFirst("%s", getSectionSubstring(i)));
             if (resource == null) {
                 continue;
@@ -212,7 +212,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
             g.dispose();
             return new FontRenderResult(image, w + extraWidth, h, (int) Math.floor(accuratePixelSize + 1), italicExtraWidth);
         } else {
-            return new FontRenderResult(image, 0, 0, 0, 0);
+            return new FontRenderResult(image, 0, 0, 0, lastItalicExtraWidth);
         }
     }
 

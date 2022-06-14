@@ -27,17 +27,17 @@ public class CITGlobalProperties {
     public static CITGlobalProperties fromProperties(Properties properties) {
         boolean useGlint = Boolean.parseBoolean(properties.getProperty("useGlint", "true"));
         int cap = Integer.parseInt(properties.getProperty("cap", Integer.MAX_VALUE + ""));
-        String method = properties.getProperty("method", "average");
+        EnchantmentVisibilityMethod method = EnchantmentVisibilityMethod.valueOf(properties.getProperty("method", "average").toUpperCase());
         double fade = Double.parseDouble(properties.getProperty("fade", "0.5"));
         return new CITGlobalProperties(useGlint, cap, method, fade);
     }
 
     private boolean useGlint;
     private int cap;
-    private String method;
+    private EnchantmentVisibilityMethod method;
     private double fade;
 
-    public CITGlobalProperties(boolean useGlint, int cap, String method, double fade) {
+    public CITGlobalProperties(boolean useGlint, int cap, EnchantmentVisibilityMethod method, double fade) {
         this.useGlint = useGlint;
         this.cap = cap;
         this.method = method;
@@ -52,12 +52,18 @@ public class CITGlobalProperties {
         return cap;
     }
 
-    public String getMethod() {
+    public EnchantmentVisibilityMethod getMethod() {
         return method;
     }
 
     public double getFade() {
         return fade;
+    }
+
+    public enum EnchantmentVisibilityMethod {
+
+        AVERAGE, LAYERED, CYCLE;
+
     }
 
 }

@@ -139,7 +139,7 @@ public class FishUtils {
         return null;
     }
 
-    public static enum TropicalFishPattern {
+    public enum TropicalFishPattern {
 
         KOB(0, 0),
         SUNSTREAK(0, 1),

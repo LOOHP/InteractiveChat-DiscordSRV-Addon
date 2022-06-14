@@ -39,6 +39,7 @@ import com.loohp.interactivechat.libs.org.apache.commons.lang3.RandomStringUtils
 import com.loohp.interactivechat.objectholders.LegacyIdKey;
 import com.loohp.interactivechat.utils.ComponentCompacting;
 import com.loohp.interactivechat.utils.ComponentFlattening;
+import com.loohp.interactivechat.utils.ComponentModernizing;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.ItemNBTUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontProvider;
@@ -150,8 +151,8 @@ public class ComponentStringUtils {
                 }
             } else if (each instanceof TranslatableComponent) {
                 TranslatableComponent translatableComponent = (TranslatableComponent) each;
-                TextComponent textComponent = convertSingleTranslatable(translatableComponent, translateFunction);
-                String content = textComponent.content();
+                Component textComponent = convertSingleTranslatable(translatableComponent, translateFunction);
+                String content = PlainTextComponentSerializer.plainText().serialize(textComponent);
                 int length = 0;
                 for (int i = 0; i < content.length(); ) {
                     int codePoint = content.codePointAt(i);
@@ -229,7 +230,7 @@ public class ComponentStringUtils {
         return ComponentCompacting.optimize(component.children(children));
     }
 
-    public static TextComponent convertSingleTranslatable(TranslatableComponent component, UnaryOperator<String> translateFunction) {
+    public static Component convertSingleTranslatable(TranslatableComponent component, UnaryOperator<String> translateFunction) {
         String translation = translateFunction.apply(component.key());
         List<Component> args = component.args();
 
@@ -276,7 +277,7 @@ public class ComponentStringUtils {
             throw new RuntimeException(illegalArgumentException);
         }
 
-        return Component.empty().style(component.style()).children(parts);
+        return ComponentModernizing.modernize(Component.empty().style(component.style()).children(parts));
     }
 
     public static String convertFormattedString(String translation, Object... args) {

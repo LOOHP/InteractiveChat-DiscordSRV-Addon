@@ -42,12 +42,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -74,12 +73,18 @@ public class ResourceManager implements AutoCloseable {
     private AtomicBoolean isValid;
     private UUID uuid;
 
-    public ResourceManager(boolean flattenLegacy, boolean fontLegacy, Collection<ModManagerSupplier> modManagerProviders, Collection<ResourceRegistrySupplier> resourceManagerUtilsProviders) {
-        this.resourcePackInfo = new LinkedList<>();
+    public ResourceManager(boolean flattenLegacy, boolean fontLegacy, Collection<ModManagerSupplier<?>> modManagerProviders, Collection<ResourceRegistrySupplier<?>> resourceManagerUtilsProviders) {
+        this.resourcePackInfo = new ArrayList<>();
+
+        this.flattenLegacy = flattenLegacy;
+        this.fontLegacy = fontLegacy;
+
+        this.isValid = new AtomicBoolean(true);
+        this.uuid = UUID.randomUUID();
 
         this.resourceRegistries = new HashMap<>();
-        for (ResourceRegistrySupplier resourceRegistrySupplier : resourceManagerUtilsProviders) {
-            IResourceRegistry resourceRegistry = resourceRegistrySupplier.apply(this);
+        for (ResourceRegistrySupplier<?> resourceRegistrySupplier : resourceManagerUtilsProviders) {
+            IResourceRegistry resourceRegistry = resourceRegistrySupplier.init(this);
             this.resourceRegistries.put(resourceRegistry.getRegistryIdentifier(), resourceRegistry);
         }
 
@@ -89,19 +94,16 @@ public class ResourceManager implements AutoCloseable {
         this.languageManager = new LanguageManager(this);
 
         this.modManagers = new HashMap<>();
-        for (ModManagerSupplier modManagerProvider : modManagerProviders) {
-            ModManager modManager = modManagerProvider.apply(this);
+        for (ModManagerSupplier<?> modManagerProvider : modManagerProviders) {
+            ModManager modManager = modManagerProvider.init(this);
             this.modManagers.put(modManager.getModName(), modManager);
         }
-
-        this.flattenLegacy = flattenLegacy;
-        this.fontLegacy = fontLegacy;
-
-        this.isValid = new AtomicBoolean(true);
-        this.uuid = UUID.randomUUID();
     }
 
     public synchronized ResourcePackInfo loadResources(File resourcePackFile, ResourcePackType type) {
+        if (!isValid()) {
+            throw new IllegalStateException("ResourceManager already closed!");
+        }
         String resourcePackName = resourcePackFile.getName();
         if (!resourcePackFile.exists()) {
             new IllegalArgumentException(resourcePackFile.getAbsolutePath() + " is not a directory nor is a zip file.").printStackTrace();
@@ -116,7 +118,7 @@ public class ResourceManager implements AutoCloseable {
             try {
                 resourcePack = new ResourcePackZipEntryFile(resourcePackFile);
             } catch (IOException e) {
-                new IllegalArgumentException(resourcePackFile.getAbsolutePath() + " is an invalid zip file.").printStackTrace();
+                new IllegalArgumentException(resourcePackFile.getAbsolutePath() + " is an invalid zip file.", e).printStackTrace();
                 ResourcePackInfo info = new ResourcePackInfo(this, null, type, resourcePackName, "Resource Pack is an invalid zip file.");
                 resourcePackInfo.add(0, info);
                 return info;
@@ -385,31 +387,40 @@ public class ResourceManager implements AutoCloseable {
                 }
             }
             for (IResourceRegistry resourceRegistry : resourceRegistries.values()) {
-                try {
-                    resourceRegistry.getClass().getMethod("close").invoke(resourceRegistry);
-                } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignore) {
-                }
+                resourceRegistry.close();
             }
+
+            modelManager.close();
+            textureManager.close();
+            fontManager.close();
+            languageManager.close();
             for (ModManager modManager : modManagers.values()) {
-                try {
-                    modManager.getClass().getMethod("close").invoke(modManager);
-                } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignore) {
-                }
+                modManager.close();
             }
         }
     }
 
-    public interface ModManagerSupplier extends Function<ResourceManager, ModManager> {
+    @FunctionalInterface
+    public interface ModManagerSupplier<T extends ModManager> extends Function<ResourceManager, T> {
+
+        T init(ResourceManager resourceManager);
 
         @Override
-        ModManager apply(ResourceManager resourceManager);
+        default T apply(ResourceManager resourceManager) {
+            return init(resourceManager);
+        }
 
     }
 
-    public interface ResourceRegistrySupplier extends Function<ResourceManager, IResourceRegistry> {
+    @FunctionalInterface
+    public interface ResourceRegistrySupplier<T extends IResourceRegistry> extends Function<ResourceManager, T> {
+
+        T init(ResourceManager resourceManager);
 
         @Override
-        IResourceRegistry apply(ResourceManager resourceManager);
+        default T apply(ResourceManager resourceManager) {
+            return init(resourceManager);
+        }
 
     }
 

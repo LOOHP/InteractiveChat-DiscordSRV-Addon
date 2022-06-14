@@ -27,7 +27,7 @@ import org.bukkit.entity.Player;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.stream.Stream;
+import java.util.Arrays;
 
 public class DeathMessageUtils {
 
@@ -46,8 +46,8 @@ public class DeathMessageUtils {
             nmsCombatTrackerClass = NMSUtils.getNMSClass("net.minecraft.server.%s.CombatTracker", "net.minecraft.world.damagesource.CombatTracker");
             nmsIChatBaseComponentClass = NMSUtils.getNMSClass("net.minecraft.server.%s.IChatBaseComponent", "net.minecraft.network.chat.IChatBaseComponent");
             getNmsEntityPlayerMethod = craftPlayerClass.getMethod("getHandle");
-            nmsCombatTrackerField = Stream.of(nmsEntityPlayerClass.getFields()).filter(each -> each.getType().equals(nmsCombatTrackerClass)).findFirst().get();
-            getDeathMessageMethod = Stream.of(nmsCombatTrackerClass.getMethods()).filter(each -> each.getReturnType().equals(nmsIChatBaseComponentClass)).findFirst().get();
+            nmsCombatTrackerField = Arrays.stream(nmsEntityPlayerClass.getFields()).filter(each -> each.getType().equals(nmsCombatTrackerClass)).findFirst().get();
+            getDeathMessageMethod = Arrays.stream(nmsCombatTrackerClass.getMethods()).filter(each -> each.getReturnType().equals(nmsIChatBaseComponentClass)).findFirst().get();
         } catch (ClassNotFoundException | SecurityException | NoSuchMethodException e) {
             e.printStackTrace();
         }

@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -86,6 +87,7 @@ public class BlockModel {
         if (elementsArray != null) {
             for (Object obj : elementsArray) {
                 JSONObject elementJson = (JSONObject) obj;
+                String name = (String) elementJson.get("name");
                 JSONArray fromArray = (JSONArray) elementJson.get("from");
                 JSONArray toArray = (JSONArray) elementJson.get("to");
                 Coordinates3D from = new Coordinates3D(((Number) fromArray.get(0)).doubleValue(), ((Number) fromArray.get(1)).doubleValue(), ((Number) fromArray.get(2)).doubleValue());
@@ -124,11 +126,10 @@ public class BlockModel {
                         }
                         String faceTexture = (String) faceJson.get("texture");
                         Object cullfaceObj = faceJson.get("cullface");
-                        ModelFaceSide cullface = null;
+                        ModelFaceSide cullface;
                         if (cullfaceObj != null && cullfaceObj instanceof String) {
                             cullface = ModelFaceSide.fromKey((String) cullfaceObj);
-                        }
-                        if (cullface == null) {
+                        } else {
                             cullface = side;
                         }
                         int faceRotation = ((Number) faceJson.getOrDefault("rotation", 0)).intValue();
@@ -136,14 +137,15 @@ public class BlockModel {
                         face.put(side, new ModelFace(side, uv, faceTexture, cullface, faceRotation, faceTintindex));
                     }
                 }
-                elements.add(new ModelElement(from, to, rotation, shade, face));
+                elements.add(new ModelElement(name, from, to, rotation, shade, face));
             }
         }
         List<ModelOverride> overrides = new ArrayList<>();
         JSONArray overridesArray = (JSONArray) rootJson.get("overrides");
         if (overridesArray != null) {
-            for (Object obj : overridesArray) {
-                JSONObject overrideJson = (JSONObject) obj;
+            ListIterator<Object> itr = overridesArray.listIterator(overridesArray.size());
+            while (itr.hasPrevious()) {
+                JSONObject overrideJson = (JSONObject) itr.previous();
                 JSONObject predicateJson = (JSONObject) overrideJson.get("predicate");
                 Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
                 for (Object obj1 : predicateJson.keySet()) {
@@ -159,96 +161,7 @@ public class BlockModel {
                 overrides.add(new ModelOverride(predicates, model));
             }
         }
-        Collections.reverse(overrides);
         return new BlockModel(manager, resourceLocation, parent, ambientocclusion, guiLight, display, texture, elements, overrides);
-    }
-
-    public static BlockModel resolve(BlockModel childrenModel, boolean post1_8) {
-        boolean ambientocclusion = childrenModel.isAmbientocclusion();
-        Map<ModelDisplayPosition, ModelDisplay> display = new EnumMap<>(ModelDisplayPosition.class);
-        display.putAll(childrenModel.getRawDisplay());
-        Map<String, String> textures = new HashMap<>(childrenModel.getTextures());
-        for (Entry<String, String> entry : textures.entrySet()) {
-            String value = entry.getValue();
-            if (value.startsWith("#")) {
-                String var = value.substring(1);
-                String mapped = textures.get(var);
-                if (mapped != null) {
-                    entry.setValue(mapped);
-                }
-            }
-        }
-        List<ModelElement> elements = new ArrayList<>(childrenModel.getElements());
-        for (int i = 0; i < elements.size(); i++) {
-            ModelElement element = elements.get(i);
-            Map<ModelFaceSide, ModelFace> faces = new EnumMap<>(ModelFaceSide.class);
-            faces.putAll(element.getFaces());
-            for (Entry<ModelFaceSide, ModelFace> entry : faces.entrySet()) {
-                ModelFace face = entry.getValue();
-                String value = entry.getValue().getTexture();
-                if (value.startsWith("#")) {
-                    String var = value.substring(1);
-                    String mapped = textures.get(var);
-                    if (mapped != null) {
-                        entry.setValue(face.cloneWithNewTexture(mapped));
-                    }
-                }
-            }
-            elements.set(i, new ModelElement(element.getFrom(), element.getTo(), element.getRotation(), element.isShade(), faces));
-        }
-        BlockModel newBlockModel = new BlockModel(childrenModel.getManager(), childrenModel.getResourceLocation(), childrenModel.getRawParent(), ambientocclusion, childrenModel.getRawGUILight(), display, textures, elements, childrenModel.getOverrides());
-        if (post1_8) {
-            String newRawParent = newBlockModel.getRawParent();
-            if (newRawParent == null) {
-                return resolve(newBlockModel.getManager().getRawBlockModel(ResourceRegistry.IC_OLD_BASE_BLOCK_MODEL), newBlockModel, post1_8);
-            } else if (newRawParent.equals(ModelManager.ITEM_BASE)) {
-                return resolve(newBlockModel.getManager().getRawBlockModel(ResourceRegistry.IC_OLD_BASE_ITEM_MODEL), newBlockModel, post1_8);
-            }
-        }
-        return newBlockModel;
-    }
-
-    public static BlockModel resolve(BlockModel parentModel, BlockModel childrenModel, boolean post1_8) {
-        String parent = parentModel.getRawParent();
-        ModelGUILight guiLight = childrenModel.getRawGUILight();
-        if (parentModel.getRawGUILight() != null) {
-            guiLight = parentModel.getRawGUILight();
-        }
-        Map<ModelDisplayPosition, ModelDisplay> display = new EnumMap<>(ModelDisplayPosition.class);
-        display.putAll(parentModel.getRawDisplay());
-        display.putAll(childrenModel.getRawDisplay());
-        Map<String, String> textures = new HashMap<>();
-        textures.putAll(parentModel.getTextures());
-        textures.putAll(childrenModel.getTextures());
-        for (Entry<String, String> entry : textures.entrySet()) {
-            String value = entry.getValue();
-            if (value.startsWith("#")) {
-                String var = value.substring(1);
-                String mapped = textures.get(var);
-                if (mapped != null) {
-                    entry.setValue(mapped);
-                }
-            }
-        }
-        List<ModelElement> elements = new ArrayList<>(childrenModel.getElements().isEmpty() ? parentModel.getElements() : childrenModel.getElements());
-        for (int i = 0; i < elements.size(); i++) {
-            ModelElement element = elements.get(i);
-            Map<ModelFaceSide, ModelFace> faces = new EnumMap<>(ModelFaceSide.class);
-            faces.putAll(element.getFaces());
-            for (Entry<ModelFaceSide, ModelFace> entry : faces.entrySet()) {
-                ModelFace face = entry.getValue();
-                String value = entry.getValue().getTexture();
-                if (value.startsWith("#")) {
-                    String var = value.substring(1);
-                    String mapped = textures.get(var);
-                    if (mapped != null) {
-                        entry.setValue(face.cloneWithNewTexture(mapped));
-                    }
-                }
-            }
-            elements.set(i, new ModelElement(element.getFrom(), element.getTo(), element.getRotation(), element.isShade(), faces));
-        }
-        return new BlockModel(childrenModel.getManager(), childrenModel.getResourceLocation(), parent, childrenModel.isAmbientocclusion(), guiLight, display, textures, elements, parentModel.getOverrides());
     }
 
     private IModelManager manager;
@@ -326,6 +239,94 @@ public class BlockModel {
 
     public List<ModelOverride> getOverrides() {
         return overrides;
+    }
+
+    public BlockModel resolve(boolean post1_8) {
+        boolean ambientocclusion = this.isAmbientocclusion();
+        Map<ModelDisplayPosition, ModelDisplay> display = new EnumMap<>(ModelDisplayPosition.class);
+        display.putAll(this.getRawDisplay());
+        Map<String, String> textures = new HashMap<>(this.getTextures());
+        for (Entry<String, String> entry : textures.entrySet()) {
+            String value = entry.getValue();
+            if (value.startsWith("#")) {
+                String var = value.substring(1);
+                String mapped = textures.get(var);
+                if (mapped != null) {
+                    entry.setValue(mapped);
+                }
+            }
+        }
+        List<ModelElement> elements = new ArrayList<>(this.getElements());
+        for (int i = 0; i < elements.size(); i++) {
+            ModelElement element = elements.get(i);
+            Map<ModelFaceSide, ModelFace> faces = new EnumMap<>(ModelFaceSide.class);
+            faces.putAll(element.getFaces());
+            for (Entry<ModelFaceSide, ModelFace> entry : faces.entrySet()) {
+                ModelFace face = entry.getValue();
+                String value = entry.getValue().getTexture();
+                if (value.startsWith("#")) {
+                    String var = value.substring(1);
+                    String mapped = textures.get(var);
+                    if (mapped != null) {
+                        entry.setValue(face.cloneWithNewTexture(mapped));
+                    }
+                }
+            }
+            elements.set(i, new ModelElement(element.getName(), element.getFrom(), element.getTo(), element.getRotation(), element.isShade(), faces));
+        }
+        BlockModel newBlockModel = new BlockModel(this.getManager(), this.getResourceLocation(), this.getRawParent(), ambientocclusion, this.getRawGUILight(), display, textures, elements, this.getOverrides());
+        if (post1_8) {
+            String newRawParent = newBlockModel.getRawParent();
+            if (newRawParent == null) {
+                return newBlockModel.getManager().getRawBlockModel(ResourceRegistry.IC_OLD_BASE_BLOCK_MODEL).resolve(newBlockModel, post1_8);
+            } else if (newRawParent.equals(ModelManager.ITEM_BASE)) {
+                return newBlockModel.getManager().getRawBlockModel(ResourceRegistry.IC_OLD_BASE_ITEM_MODEL).resolve(newBlockModel, post1_8);
+            }
+        }
+        return newBlockModel;
+    }
+
+    public BlockModel resolve(BlockModel parentModel, boolean post1_8) {
+        String parent = parentModel.getRawParent();
+        ModelGUILight guiLight = this.getRawGUILight();
+        if (parentModel.getRawGUILight() != null) {
+            guiLight = parentModel.getRawGUILight();
+        }
+        Map<ModelDisplayPosition, ModelDisplay> display = new EnumMap<>(ModelDisplayPosition.class);
+        display.putAll(parentModel.getRawDisplay());
+        display.putAll(this.getRawDisplay());
+        Map<String, String> textures = new HashMap<>();
+        textures.putAll(parentModel.getTextures());
+        textures.putAll(this.getTextures());
+        for (Entry<String, String> entry : textures.entrySet()) {
+            String value = entry.getValue();
+            if (value.startsWith("#")) {
+                String var = value.substring(1);
+                String mapped = textures.get(var);
+                if (mapped != null) {
+                    entry.setValue(mapped);
+                }
+            }
+        }
+        List<ModelElement> elements = new ArrayList<>(this.getElements().isEmpty() ? parentModel.getElements() : this.getElements());
+        for (int i = 0; i < elements.size(); i++) {
+            ModelElement element = elements.get(i);
+            Map<ModelFaceSide, ModelFace> faces = new EnumMap<>(ModelFaceSide.class);
+            faces.putAll(element.getFaces());
+            for (Entry<ModelFaceSide, ModelFace> entry : faces.entrySet()) {
+                ModelFace face = entry.getValue();
+                String value = entry.getValue().getTexture();
+                if (value.startsWith("#")) {
+                    String var = value.substring(1);
+                    String mapped = textures.get(var);
+                    if (mapped != null) {
+                        entry.setValue(face.cloneWithNewTexture(mapped));
+                    }
+                }
+            }
+            elements.set(i, new ModelElement(element.getName(), element.getFrom(), element.getTo(), element.getRotation(), element.isShade(), faces));
+        }
+        return new BlockModel(this.getManager(), this.getResourceLocation(), parent, this.isAmbientocclusion(), guiLight, display, textures, elements, parentModel.getOverrides());
     }
 
     @Override

@@ -39,6 +39,7 @@ import com.loohp.interactivechatdiscordsrvaddon.api.events.ResourceManagerInitia
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordReactionEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordReadyEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.ICPlayerEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
@@ -46,8 +47,9 @@ import com.loohp.interactivechatdiscordsrvaddon.listeners.OutboundToDiscordEvent
 import com.loohp.interactivechatdiscordsrvaddon.metrics.Charts;
 import com.loohp.interactivechatdiscordsrvaddon.metrics.Metrics;
 import com.loohp.interactivechatdiscordsrvaddon.registry.InteractiveChatRegistry;
-import com.loohp.interactivechatdiscordsrvaddon.resources.ICacheManager;
+import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ICacheManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager.ModManagerSupplier;
@@ -60,6 +62,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.Optifine
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.dependencies.jda.api.Permission;
+import github.scarsz.discordsrv.dependencies.jda.api.requests.GatewayIntent;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -94,7 +97,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Stream;
 
 public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listener {
 
@@ -136,7 +138,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public String itemDisplayMultiple = "";
     public Color invColor = Color.black;
     public Color enderColor = Color.black;
-    public boolean itemUseTooltipImage = true;
     public boolean itemUseTooltipImageOnBaseItem = false;
     public boolean itemAltAir = true;
     public boolean invShowLevel = true;
@@ -239,6 +240,11 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public ExecutorService mediaReadingService;
 
     protected Map<String, byte[]> extras = new ConcurrentHashMap<>();
+
+    @Override
+    public void onLoad() {
+        DiscordSRV.api.requireIntent(GatewayIntent.GUILD_MESSAGE_REACTIONS);
+    }
 
     @Override
     public void onEnable() {
@@ -350,6 +356,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
     @Override
     public void onDisable() {
+        DiscordReactionEvents.unregisterAll();
         modelRenderer.close();
         mediaReadingService.shutdown();
         if (resourceManager != null) {
@@ -409,7 +416,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         usePlayerInvView = config.getConfiguration().getBoolean("InventoryImage.Inventory.UsePlayerInventoryView");
         renderHandHeldItems = config.getConfiguration().getBoolean("InventoryImage.Inventory.RenderHandHeldItems");
 
-        itemUseTooltipImage = config.getConfiguration().getBoolean("InventoryImage.Item.UseTooltipImage");
         itemUseTooltipImageOnBaseItem = config.getConfiguration().getBoolean("InventoryImage.Item.UseTooltipImageOnBaseItem");
         itemAltAir = config.getConfiguration().getBoolean("InventoryImage.Item.AlternateAirTexture");
 
@@ -532,7 +538,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
     public void reloadTextures(boolean redownload, boolean clean, CommandSender... receivers) {
         CommandSender[] senders;
-        if (Stream.of(receivers).noneMatch(each -> each.equals(Bukkit.getConsoleSender()))) {
+        if (Arrays.stream(receivers).noneMatch(each -> each.equals(Bukkit.getConsoleSender()))) {
             senders = new CommandSender[receivers.length + 1];
             System.arraycopy(receivers, 0, senders, 0, receivers.length);
             senders[senders.length - 1] = Bukkit.getConsoleSender();
@@ -600,7 +606,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
                 sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Reloading ResourceManager: " + ChatColor.YELLOW + String.join(", ", resourceList), senders);
 
-                List<ModManagerSupplier> mods = new ArrayList<>();
+                List<ModManagerSupplier<?>> mods = new ArrayList<>();
                 if (optifineCustomTextures) {
                     mods.add(manager -> new OptifineManager(manager));
                 }
@@ -634,9 +640,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                         File resourcePackFile = new File(getDataFolder(), "resourcepacks/" + resourceName);
                         ResourcePackInfo info = resourceManager.loadResources(resourcePackFile, ResourcePackType.LOCAL);
                         if (info.getStatus()) {
-                            if (info.compareServerPackFormat() > 0) {
+                            if (info.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) > 0) {
                                 sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] Warning: \"" + resourceName + "\" was made for a newer version of Minecraft!", senders);
-                            } else if (info.compareServerPackFormat() < 0) {
+                            } else if (info.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) < 0) {
                                 sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] Warning: \"" + resourceName + "\" was made for an older version of Minecraft!", senders);
                             }
                         } else {
@@ -657,9 +663,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"" + resourceName + "\" resources...");
                         ResourcePackInfo info = resourceManager.loadResources(serverResourcePack, ResourcePackType.SERVER);
                         if (info.getStatus()) {
-                            if (info.compareServerPackFormat() > 0) {
+                            if (info.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) > 0) {
                                 sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] Warning: \"" + resourceName + "\" was made for a newer version of Minecraft!", senders);
-                            } else if (info.compareServerPackFormat() < 0) {
+                            } else if (info.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) < 0) {
                                 sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] Warning: \"" + resourceName + "\" was made for an older version of Minecraft!", senders);
                             }
                         } else {

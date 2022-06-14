@@ -46,6 +46,20 @@ import java.util.stream.Collectors;
 
 public class LanguageManager extends AbstractManager implements ILanguageManager {
 
+    public static TranslateFunction defaultTranslateFunction(LanguageManager manager) {
+        return (translationKey, language) -> {
+            Map<String, String> mapping = manager.translations.get(language);
+            if (mapping == null) {
+                return translationKey;
+            }
+            return mapping.getOrDefault(translationKey, translationKey);
+        };
+    }
+
+    public static Supplier<Collection<String>> defaultAvailableLanguagesSupplier(LanguageManager manager) {
+        return () -> manager.translations.keySet();
+    }
+
     private Map<String, LanguageMeta> languageMeta;
     private Map<String, Map<String, String>> translations;
     private List<Consumer<LanguageReloadEvent>> reloadListeners;
@@ -57,14 +71,8 @@ public class LanguageManager extends AbstractManager implements ILanguageManager
         this.languageMeta = new HashMap<>();
         this.translations = new HashMap<>();
         this.reloadListeners = Collections.synchronizedList(new LinkedList<>());
-        this.translateFunction = (translationKey, language) -> {
-            Map<String, String> mapping = translations.get(language);
-            if (mapping == null) {
-                return translationKey;
-            }
-            return mapping.getOrDefault(translationKey, translationKey);
-        };
-        this.availableLanguagesSupplier = () -> translations.keySet();
+        this.translateFunction = defaultTranslateFunction(this);
+        this.availableLanguagesSupplier = defaultAvailableLanguagesSupplier(this);
     }
 
     @Override
@@ -152,13 +160,7 @@ public class LanguageManager extends AbstractManager implements ILanguageManager
     }
 
     public void clearTranslateFunction() {
-        this.translateFunction = (translationKey, language) -> {
-            Map<String, String> mapping = translations.get(language);
-            if (mapping == null) {
-                return translationKey;
-            }
-            return mapping.getOrDefault(translationKey, translationKey);
-        };
+        this.translateFunction = defaultTranslateFunction(this);
         reload();
     }
 
@@ -187,7 +189,7 @@ public class LanguageManager extends AbstractManager implements ILanguageManager
     }
 
     public void resetAvailableLanguagesSupplier() {
-        this.availableLanguagesSupplier = () -> translations.keySet();
+        this.availableLanguagesSupplier = defaultAvailableLanguagesSupplier(this);
         reload();
     }
 
