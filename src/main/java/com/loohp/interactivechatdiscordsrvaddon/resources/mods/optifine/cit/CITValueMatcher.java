@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 
 public abstract class CITValueMatcher {
 
-    private final String value;
+    private String value;
 
     private IntTag matchInteger;
     private ByteTag matchByte;
@@ -46,12 +46,13 @@ public abstract class CITValueMatcher {
     public CITValueMatcher(String value) {
         this.value = value;
         try {
-            if (value.startsWith("#"))
+            if (value.startsWith("#")) {
                 matchInteger = new IntTag(Integer.parseInt(value.substring(1).toLowerCase(), 16));
-            else if (value.startsWith("0x"))
+            } else if (value.startsWith("0x")) {
                 matchInteger = new IntTag(Integer.parseInt(value.substring(2).toLowerCase(), 16));
-            else
+            } else {
                 matchInteger = new IntTag(Integer.parseInt(value));
+            }
         } catch (Exception ignored) {
         }
         try {
@@ -86,31 +87,31 @@ public abstract class CITValueMatcher {
         return value;
     }
 
-    public IntTag matchInteger() {
+    public IntTag intTag() {
         return matchInteger;
     }
 
-    public ByteTag matchByte() {
+    public ByteTag byteTag() {
         return matchByte;
     }
 
-    public FloatTag matchFloat() {
+    public FloatTag floatTag() {
         return matchFloat;
     }
 
-    public DoubleTag matchDouble() {
+    public DoubleTag doubleTag() {
         return matchDouble;
     }
 
-    public LongTag matchLong() {
+    public LongTag longTag() {
         return matchLong;
     }
 
-    public ShortTag matchShort() {
+    public ShortTag shortTag() {
         return matchShort;
     }
 
-    public Tag<?> matchTag() {
+    public Tag<?> tag() {
         return matchTag;
     }
 

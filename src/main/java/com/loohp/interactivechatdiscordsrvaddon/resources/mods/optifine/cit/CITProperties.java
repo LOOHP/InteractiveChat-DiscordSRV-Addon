@@ -353,47 +353,51 @@ public abstract class CITProperties {
                     } catch (Throwable e) {
                         return false;
                     }
-                    if (subTag instanceof StringTag) {
-                        String rawStringValue = ((StringTag) subTag).getValue();
-                        String jsonResultValue;
-                        try {
-                            Component component = InteractiveChatComponentSerializer.gson().deserialize(rawStringValue);
-                            jsonResultValue = OptifineUtils.componentToString(component, translateFunction);
-                        } catch (Throwable ignore) {
-                            jsonResultValue = null;
-                        }
-                        if (!nbtValueMatcher.matches(rawStringValue) && (jsonResultValue == null || !nbtValueMatcher.matches(jsonResultValue))) {
+                    try {
+                        if (subTag instanceof StringTag) {
+                            String rawStringValue = ((StringTag) subTag).getValue();
+                            String jsonResultValue;
+                            try {
+                                Component component = InteractiveChatComponentSerializer.gson().deserialize(rawStringValue);
+                                jsonResultValue = OptifineUtils.componentToString(component, translateFunction);
+                            } catch (Throwable ignore) {
+                                jsonResultValue = null;
+                            }
+                            if (!nbtValueMatcher.matches(rawStringValue) && (jsonResultValue == null || !nbtValueMatcher.matches(jsonResultValue))) {
+                                return false;
+                            }
+                        } else if (subTag instanceof IntTag) {
+                            if (!nbtValueMatcher.intTag().equals(subTag)) {
+                                return false;
+                            }
+                        } else if (subTag instanceof LongTag) {
+                            if (!nbtValueMatcher.longTag().equals(subTag)) {
+                                return false;
+                            }
+                        } else if (subTag instanceof ByteTag) {
+                            if (!nbtValueMatcher.byteTag().equals(subTag)) {
+                                return false;
+                            }
+                        } else if (subTag instanceof ShortTag) {
+                            if (!nbtValueMatcher.shortTag().equals(subTag)) {
+                                return false;
+                            }
+                        } else if (subTag instanceof FloatTag) {
+                            if (!nbtValueMatcher.floatTag().equals(subTag)) {
+                                return false;
+                            }
+                        } else if (subTag instanceof DoubleTag) {
+                            if (!nbtValueMatcher.doubleTag().equals(subTag)) {
+                                return false;
+                            }
+                        } else if (subTag instanceof CompoundTag || subTag instanceof ListTag) {
+                            if (!nbtValueMatcher.tag().equals(subTag)) {
+                                return false;
+                            }
+                        } else {
                             return false;
                         }
-                    } else if (subTag instanceof IntTag) {
-                        if (!nbtValueMatcher.matchInteger().equals(subTag)) {
-                            return false;
-                        }
-                    } else if (subTag instanceof LongTag) {
-                        if (!nbtValueMatcher.matchLong().equals(subTag)) {
-                            return false;
-                        }
-                    } else if (subTag instanceof ByteTag) {
-                        if (!nbtValueMatcher.matchByte().equals(subTag)) {
-                            return false;
-                        }
-                    } else if (subTag instanceof ShortTag) {
-                        if (!nbtValueMatcher.matchShort().equals(subTag)) {
-                            return false;
-                        }
-                    } else if (subTag instanceof FloatTag) {
-                        if (!nbtValueMatcher.matchFloat().equals(subTag)) {
-                            return false;
-                        }
-                    } else if (subTag instanceof DoubleTag) {
-                        if (!nbtValueMatcher.matchDouble().equals(subTag)) {
-                            return false;
-                        }
-                    } else if (subTag instanceof CompoundTag || subTag instanceof ListTag) {
-                        if (!nbtValueMatcher.matchTag().equals(subTag)) {
-                            return false;
-                        }
-                    } else {
+                    } catch (Throwable e) {
                         return false;
                     }
                 }
