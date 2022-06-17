@@ -132,23 +132,23 @@ public abstract class CITProperties {
             }
         }
 
-        Map<String, CITStringMatcher> nbtMatch = new HashMap<>();
+        Map<String, CITValueMatcher> nbtMatch = new HashMap<>();
         for (Entry<Object, Object> entry : properties.entrySet()) {
             String key = (String) entry.getKey();
             if (key.startsWith("nbt")) {
                 String path = key.substring(key.length() > 3 ? 4 : 3);
                 String value = (String) entry.getValue();
-                CITStringMatcher matcher;
+                CITValueMatcher matcher;
                 if (value.startsWith("regex:")) {
-                    matcher = new CITStringMatcher.RegexMatcher(value.substring(6));
+                    matcher = new CITValueMatcher.RegexMatcher(value.substring(6));
                 } else if (value.startsWith("iregex:")) {
-                    matcher = new CITStringMatcher.IRegexMatcher(value.substring(7));
+                    matcher = new CITValueMatcher.IRegexMatcher(value.substring(7));
                 } else if (value.startsWith("pattern:")) {
-                    matcher = new CITStringMatcher.PatternMatcher(value.substring(8));
+                    matcher = new CITValueMatcher.PatternMatcher(value.substring(8));
                 } else if (value.startsWith("ipattern:")) {
-                    matcher = new CITStringMatcher.IPatternMatcher(value.substring(9));
+                    matcher = new CITValueMatcher.IPatternMatcher(value.substring(9));
                 } else {
-                    matcher = new CITStringMatcher.DirectMatcher(value);
+                    matcher = new CITValueMatcher.DirectMatcher(value);
                 }
                 nbtMatch.put(path, matcher);
             }
@@ -258,9 +258,9 @@ public abstract class CITProperties {
     protected int damageMask;
     protected EquipmentSlot hand;
     protected Map<Enchantment, IntegerRange> enchantments;
-    protected Map<String, CITStringMatcher> nbtMatch;
+    protected Map<String, CITValueMatcher> nbtMatch;
 
-    public CITProperties(int weight, Set<XMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, CITStringMatcher> nbtMatch) {
+    public CITProperties(int weight, Set<XMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, CITValueMatcher> nbtMatch) {
         this.weight = weight;
         this.items = items;
         this.stackSize = stackSize;
@@ -299,7 +299,7 @@ public abstract class CITProperties {
         return enchantments;
     }
 
-    public Map<String, CITStringMatcher> getNbtMatch() {
+    public Map<String, CITValueMatcher> getNbtMatch() {
         return nbtMatch;
     }
 
@@ -337,9 +337,9 @@ public abstract class CITProperties {
             CompoundTag tag = (CompoundTag) NBTParsingUtils.fromSNBT(nbt);
             if (tag.containsKey("tag")) {
                 tag = tag.getCompoundTag("tag");
-                for (Entry<String, CITStringMatcher> entry : nbtMatch.entrySet()) {
+                for (Entry<String, CITValueMatcher> entry : nbtMatch.entrySet()) {
                     String key = entry.getKey();
-                    CITStringMatcher nbtValueMatcher = entry.getValue();
+                    CITValueMatcher nbtValueMatcher = entry.getValue();
                     String[] paths = key.split("\\.");
                     Tag<?> subTag = tag;
                     try {
@@ -366,27 +366,31 @@ public abstract class CITProperties {
                             return false;
                         }
                     } else if (subTag instanceof IntTag) {
-                        if (Integer.parseInt(nbtValueMatcher.value()) != ((IntTag) subTag).asInt()) {
+                        if (!nbtValueMatcher.matchInteger().equals(subTag)) {
                             return false;
                         }
                     } else if (subTag instanceof LongTag) {
-                        if (Long.parseLong(nbtValueMatcher.value()) != ((LongTag) subTag).asLong()) {
+                        if (!nbtValueMatcher.matchLong().equals(subTag)) {
                             return false;
                         }
                     } else if (subTag instanceof ByteTag) {
-                        if (Byte.parseByte(nbtValueMatcher.value()) != ((ByteTag) subTag).asByte()) {
+                        if (!nbtValueMatcher.matchByte().equals(subTag)) {
                             return false;
                         }
                     } else if (subTag instanceof ShortTag) {
-                        if (Short.parseShort(nbtValueMatcher.value()) != ((ShortTag) subTag).asShort()) {
+                        if (!nbtValueMatcher.matchShort().equals(subTag)) {
                             return false;
                         }
                     } else if (subTag instanceof FloatTag) {
-                        if (Float.parseFloat(nbtValueMatcher.value()) != ((FloatTag) subTag).asFloat()) {
+                        if (!nbtValueMatcher.matchFloat().equals(subTag)) {
                             return false;
                         }
                     } else if (subTag instanceof DoubleTag) {
-                        if (Double.parseDouble(nbtValueMatcher.value()) != ((DoubleTag) subTag).asDouble()) {
+                        if (!nbtValueMatcher.matchDouble().equals(subTag)) {
+                            return false;
+                        }
+                    } else if (subTag instanceof CompoundTag || subTag instanceof ListTag) {
+                        if (!nbtValueMatcher.matchTag().equals(subTag)) {
                             return false;
                         }
                     } else {

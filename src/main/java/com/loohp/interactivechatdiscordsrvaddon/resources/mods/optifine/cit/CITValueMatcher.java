@@ -20,14 +20,64 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit;
 
+import com.loohp.interactivechat.libs.net.querz.nbt.tag.ByteTag;
+import com.loohp.interactivechat.libs.net.querz.nbt.tag.DoubleTag;
+import com.loohp.interactivechat.libs.net.querz.nbt.tag.FloatTag;
+import com.loohp.interactivechat.libs.net.querz.nbt.tag.IntTag;
+import com.loohp.interactivechat.libs.net.querz.nbt.tag.LongTag;
+import com.loohp.interactivechat.libs.net.querz.nbt.tag.ShortTag;
+import com.loohp.interactivechat.libs.net.querz.nbt.tag.Tag;
+import com.loohp.interactivechat.utils.NBTParsingUtils;
+
 import java.util.regex.Pattern;
 
-public abstract class CITStringMatcher {
+public abstract class CITValueMatcher {
 
     private final String value;
 
-    public CITStringMatcher(String value) {
+    private IntTag matchInteger;
+    private ByteTag matchByte;
+    private FloatTag matchFloat;
+    private DoubleTag matchDouble;
+    private LongTag matchLong;
+    private ShortTag matchShort;
+    private Tag<?> matchTag;
+
+    public CITValueMatcher(String value) {
         this.value = value;
+        try {
+            if (value.startsWith("#"))
+                matchInteger = new IntTag(Integer.parseInt(value.substring(1).toLowerCase(), 16));
+            else if (value.startsWith("0x"))
+                matchInteger = new IntTag(Integer.parseInt(value.substring(2).toLowerCase(), 16));
+            else
+                matchInteger = new IntTag(Integer.parseInt(value));
+        } catch (Exception ignored) {
+        }
+        try {
+            matchByte = new ByteTag(Byte.parseByte(value));
+        } catch (Exception ignored) {
+        }
+        try {
+            matchFloat = new FloatTag(Float.parseFloat(value));
+        } catch (Exception ignored) {
+        }
+        try {
+            matchDouble = new DoubleTag(Double.parseDouble(value));
+        } catch (Exception ignored) {
+        }
+        try {
+            matchLong = new LongTag(Long.parseLong(value));
+        } catch (Exception ignored) {
+        }
+        try {
+            matchShort = new ShortTag(Short.parseShort(value));
+        } catch (Exception ignored) {
+        }
+        try {
+            matchTag = NBTParsingUtils.fromSNBT(value);
+        } catch (Exception ignored) {
+        }
     }
 
     public abstract boolean matches(String value);
@@ -36,7 +86,35 @@ public abstract class CITStringMatcher {
         return value;
     }
 
-    public static class DirectMatcher extends CITStringMatcher {
+    public IntTag matchInteger() {
+        return matchInteger;
+    }
+
+    public ByteTag matchByte() {
+        return matchByte;
+    }
+
+    public FloatTag matchFloat() {
+        return matchFloat;
+    }
+
+    public DoubleTag matchDouble() {
+        return matchDouble;
+    }
+
+    public LongTag matchLong() {
+        return matchLong;
+    }
+
+    public ShortTag matchShort() {
+        return matchShort;
+    }
+
+    public Tag<?> matchTag() {
+        return matchTag;
+    }
+
+    public static class DirectMatcher extends CITValueMatcher {
 
         protected final String pattern;
 
@@ -52,7 +130,7 @@ public abstract class CITStringMatcher {
 
     }
 
-    public static class RegexMatcher extends CITStringMatcher {
+    public static class RegexMatcher extends CITValueMatcher {
 
         protected final Pattern pattern;
 
@@ -72,7 +150,7 @@ public abstract class CITStringMatcher {
 
     }
 
-    public static class PatternMatcher extends CITStringMatcher {
+    public static class PatternMatcher extends CITValueMatcher {
 
         protected final String pattern;
 
