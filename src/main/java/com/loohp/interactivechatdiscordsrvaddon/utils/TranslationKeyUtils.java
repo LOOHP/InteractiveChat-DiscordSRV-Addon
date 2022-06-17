@@ -100,7 +100,11 @@ public class TranslationKeyUtils {
                     }, () -> {
                         return nmsMobEffectListClass.getMethod("byId", int.class);
                     });
-                    getEffectKeyMethod = nmsMobEffectListClass.getMethod("c");
+                    if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19)) {
+                        getEffectKeyMethod = nmsMobEffectListClass.getMethod("d");
+                    } else {
+                        getEffectKeyMethod = nmsMobEffectListClass.getMethod("c");
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();

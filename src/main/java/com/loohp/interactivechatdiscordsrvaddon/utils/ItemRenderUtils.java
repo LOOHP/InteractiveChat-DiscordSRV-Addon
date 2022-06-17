@@ -88,7 +88,7 @@ public class ItemRenderUtils {
 
     private static final Random RANDOM = new Random();
 
-    public static ItemStackProcessResult processItemForRendering(ResourceManager manager, OfflineICPlayer player, ItemStack item, EquipmentSlot slot, boolean is1_8) throws IOException {
+    public static ItemStackProcessResult processItemForRendering(ResourceManager manager, OfflineICPlayer player, ItemStack item, EquipmentSlot slot, boolean is1_8, String language) throws IOException {
         World world = null;
         LivingEntity livingEntity = null;
         if (player.isOnline() && player.getPlayer().isLocal()) {
@@ -111,7 +111,7 @@ public class ItemRenderUtils {
             requiresEnchantmentGlint = true;
         }
 
-        List<ValuePairs<TextureResource, OpenGLBlending>> enchantmentGlintResource = manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(null, item, () -> ImageGeneration.getDefaultEnchantmentTint());
+        List<ValuePairs<TextureResource, OpenGLBlending>> enchantmentGlintResource = manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(null, item, () -> ImageGeneration.getDefaultEnchantmentTint(), manager.getLanguageManager().getTranslateFunction().ofLanguage(language));
         UnaryOperator<BufferedImage> enchantmentGlintFunction = image -> ImageGeneration.getEnchantedImage(enchantmentGlintResource, image);
         Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintFunction = image -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> ImageGeneration.getRawEnchantedImage(each.getFirst(), image)).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
 
@@ -461,7 +461,7 @@ public class ItemRenderUtils {
 
         String modelKey = directLocation == null ? ResourceRegistry.ITEM_MODEL_LOCATION + ModelUtils.getItemModelKey(xMaterial) : directLocation;
 
-        Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction = manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, slot, item, is1_8, predicates, player, world, livingEntity).map(function -> {
+        Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction = manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, slot, item, is1_8, predicates, player, world, livingEntity, manager.getLanguageManager().getTranslateFunction().ofLanguage(language)).map(function -> {
             return function.andThen(result -> {
                 Map<String, TextureResource> overrideTextures = result.getSecond();
                 for (Entry<String, TextureResource> entry : overrideTextures.entrySet()) {

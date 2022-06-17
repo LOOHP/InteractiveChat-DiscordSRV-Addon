@@ -22,7 +22,7 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.ByteTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.CompoundTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.DoubleTag;
@@ -41,6 +41,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.IntegerRange;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PercentageOrIntegerRange;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
+import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.OptifineUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -56,6 +57,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.UnaryOperator;
 
 public abstract class CITProperties {
 
@@ -302,7 +304,7 @@ public abstract class CITProperties {
     }
 
     @SuppressWarnings("deprecation")
-    public boolean test(EquipmentSlot heldSlot, ItemStack itemStack) {
+    public boolean test(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction) {
         if (itemStack == null || itemStack.getType().equals(Material.AIR)) {
             return false;
         }
@@ -352,21 +354,16 @@ public abstract class CITProperties {
                         return false;
                     }
                     if (subTag instanceof StringTag) {
-                        String value = ((StringTag) subTag).getValue();
+                        String rawStringValue = ((StringTag) subTag).getValue();
+                        String jsonResultValue;
                         try {
-                            value = LegacyComponentSerializer.legacySection().serialize(InteractiveChatComponentSerializer.gson().deserialize(value));
-                        } catch (Exception e) {
-                            value = ((StringTag) subTag).getValue();
+                            Component component = InteractiveChatComponentSerializer.gson().deserialize(rawStringValue);
+                            jsonResultValue = OptifineUtils.componentToString(component, translateFunction);
+                        } catch (Throwable ignore) {
+                            jsonResultValue = null;
                         }
-                        if (!nbtValueMatcher.matches(value)) {
-                            try {
-                                String jsonMatcher = LegacyComponentSerializer.legacySection().serialize(InteractiveChatComponentSerializer.gson().deserialize(nbtValueMatcher.value()));
-                                if (!nbtValueMatcher.getClass().getConstructor(String.class).newInstance(jsonMatcher).matches(value)) {
-                                    return false;
-                                }
-                            } catch (Exception e) {
-                                return false;
-                            }
+                        if (!nbtValueMatcher.matches(rawStringValue) && (jsonResultValue == null || !nbtValueMatcher.matches(jsonResultValue))) {
+                            return false;
                         }
                     } else if (subTag instanceof IntTag) {
                         if (Integer.parseInt(nbtValueMatcher.value()) != ((IntTag) subTag).asInt()) {

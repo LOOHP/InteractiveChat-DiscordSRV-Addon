@@ -36,21 +36,22 @@ import org.bukkit.inventory.ItemStack;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 public interface IOptifineManager extends ITextureManager, IModelManager {
 
-    Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> getItemPostResolveFunction(EquipmentSlot heldSlot, ItemStack itemStack, boolean is1_8, Map<ModelOverrideType, Float> predicates);
+    Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> getItemPostResolveFunction(EquipmentSlot heldSlot, ItemStack itemStack, boolean is1_8, Map<ModelOverrideType, Float> predicates, UnaryOperator<String> translateFunction);
 
-    TextureResource getElytraOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack);
+    TextureResource getElytraOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction);
 
-    TextureResource getArmorOverrideTextures(String layer, EquipmentSlot heldSlot, ItemStack itemStack);
+    TextureResource getArmorOverrideTextures(String layer, EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction);
 
-    List<ValuePairs<TextureResource, OpenGLBlending>> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack);
+    List<ValuePairs<TextureResource, OpenGLBlending>> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction);
 
     CITGlobalProperties getCITGlobalProperties();
 
-    <T extends CITProperties> ValuePairs<ResourcePackFile, T> getCITOverride(EquipmentSlot heldSlot, ItemStack itemStack, Class<T> type);
+    <T extends CITProperties> ValuePairs<ResourcePackFile, T> getCITOverride(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction, Class<T> type);
 
-    <T extends CITProperties> List<ValuePairs<ResourcePackFile, T>> getCITOverrides(EquipmentSlot heldSlot, ItemStack itemStack, Class<T> type);
+    <T extends CITProperties> List<ValuePairs<ResourcePackFile, T>> getCITOverrides(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction, Class<T> type);
 
 }

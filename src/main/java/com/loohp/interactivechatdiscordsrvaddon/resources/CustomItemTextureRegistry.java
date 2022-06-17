@@ -39,6 +39,7 @@ import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 public class CustomItemTextureRegistry implements IResourceRegistry {
 
@@ -71,31 +72,31 @@ public class CustomItemTextureRegistry implements IResourceRegistry {
         resolvers.remove(resolver);
     }
 
-    public Optional<Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>>> getItemPostResolveFunction(String modelKey, EquipmentSlot heldSlot, ItemStack itemStack, boolean is1_8, Map<ModelOverrideType, Float> predicates, OfflineICPlayer player, World world, LivingEntity entity) {
-        return resolvers.stream().map(each -> (Function<ValuePairs<BlockModel, Map<String, TextureResource>>, ValuePairs<BlockModel, Map<String, TextureResource>>>) result -> each.getItemPostResolveFunction(result, modelKey, heldSlot, itemStack, is1_8, predicates, player, world, entity)).reduce(Function::andThen).map(each -> ((Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>>) blockModel -> new ValuePairs<>(blockModel, new HashMap<>())).andThen(each));
+    public Optional<Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>>> getItemPostResolveFunction(String modelKey, EquipmentSlot heldSlot, ItemStack itemStack, boolean is1_8, Map<ModelOverrideType, Float> predicates, OfflineICPlayer player, World world, LivingEntity entity, UnaryOperator<String> translateFunction) {
+        return resolvers.stream().map(each -> (Function<ValuePairs<BlockModel, Map<String, TextureResource>>, ValuePairs<BlockModel, Map<String, TextureResource>>>) result -> each.getItemPostResolveFunction(result, modelKey, heldSlot, itemStack, is1_8, predicates, player, world, entity, translateFunction)).reduce(Function::andThen).map(each -> ((Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>>) blockModel -> new ValuePairs<>(blockModel, new HashMap<>())).andThen(each));
     }
 
-    public Optional<TextureResource> getElytraOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack) {
-        return resolvers.stream().map(each -> each.getElytraOverrideTextures(heldSlot, itemStack)).filter(each -> each.isPresent()).findFirst().flatMap(each -> each);
+    public Optional<TextureResource> getElytraOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction) {
+        return resolvers.stream().map(each -> each.getElytraOverrideTextures(heldSlot, itemStack, translateFunction)).filter(each -> each.isPresent()).findFirst().flatMap(each -> each);
     }
 
-    public List<ValuePairs<TextureResource, OpenGLBlending>> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack, Supplier<List<ValuePairs<TextureResource, OpenGLBlending>>> ifEmpty) {
-        return resolvers.stream().map(each -> each.getEnchantmentGlintOverrideTextures(heldSlot, itemStack)).filter(each -> !each.isEmpty()).findFirst().orElseGet(ifEmpty);
+    public List<ValuePairs<TextureResource, OpenGLBlending>> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack, Supplier<List<ValuePairs<TextureResource, OpenGLBlending>>> ifEmpty, UnaryOperator<String> translateFunction) {
+        return resolvers.stream().map(each -> each.getEnchantmentGlintOverrideTextures(heldSlot, itemStack, translateFunction)).filter(each -> !each.isEmpty()).findFirst().orElseGet(ifEmpty);
     }
 
-    public Optional<TextureResource> getArmorOverrideTextures(String layer, EquipmentSlot heldSlot, ItemStack itemStack, OfflineICPlayer player, World world, LivingEntity entity) {
-        return resolvers.stream().map(each -> each.getArmorOverrideTextures(layer, heldSlot, itemStack, player, world, entity)).filter(each -> each.isPresent()).findFirst().flatMap(each -> each);
+    public Optional<TextureResource> getArmorOverrideTextures(String layer, EquipmentSlot heldSlot, ItemStack itemStack, OfflineICPlayer player, World world, LivingEntity entity, UnaryOperator<String> translateFunction) {
+        return resolvers.stream().map(each -> each.getArmorOverrideTextures(layer, heldSlot, itemStack, player, world, entity, translateFunction)).filter(each -> each.isPresent()).findFirst().flatMap(each -> each);
     }
 
     public interface CustomItemTextureResolver {
 
-        ValuePairs<BlockModel, Map<String, TextureResource>> getItemPostResolveFunction(ValuePairs<BlockModel, Map<String, TextureResource>> previousResult, String modelKey, EquipmentSlot heldSlot, ItemStack itemStack, boolean is1_8, Map<ModelOverrideType, Float> predicates, OfflineICPlayer player, World world, LivingEntity entity);
+        ValuePairs<BlockModel, Map<String, TextureResource>> getItemPostResolveFunction(ValuePairs<BlockModel, Map<String, TextureResource>> previousResult, String modelKey, EquipmentSlot heldSlot, ItemStack itemStack, boolean is1_8, Map<ModelOverrideType, Float> predicates, OfflineICPlayer player, World world, LivingEntity entity, UnaryOperator<String> translateFunction);
 
-        Optional<TextureResource> getElytraOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack);
+        Optional<TextureResource> getElytraOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction);
 
-        List<ValuePairs<TextureResource, OpenGLBlending>> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack);
+        List<ValuePairs<TextureResource, OpenGLBlending>> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction);
 
-        Optional<TextureResource> getArmorOverrideTextures(String layer, EquipmentSlot heldSlot, ItemStack itemStack, OfflineICPlayer player, World world, LivingEntity entity);
+        Optional<TextureResource> getArmorOverrideTextures(String layer, EquipmentSlot heldSlot, ItemStack itemStack, OfflineICPlayer player, World world, LivingEntity entity, UnaryOperator<String> translateFunction);
 
     }
 

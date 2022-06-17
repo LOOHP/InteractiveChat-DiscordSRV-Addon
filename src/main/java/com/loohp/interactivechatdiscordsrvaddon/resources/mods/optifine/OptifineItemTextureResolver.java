@@ -35,6 +35,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 public class OptifineItemTextureResolver implements CustomItemTextureResolver {
 
@@ -49,26 +50,26 @@ public class OptifineItemTextureResolver implements CustomItemTextureResolver {
     }
 
     @Override
-    public ValuePairs<BlockModel, Map<String, TextureResource>> getItemPostResolveFunction(ValuePairs<BlockModel, Map<String, TextureResource>> previousResult, String modelKey, EquipmentSlot heldSlot, ItemStack itemStack, boolean is1_8, Map<ModelOverrideType, Float> predicates, OfflineICPlayer player, World world, LivingEntity entity) {
+    public ValuePairs<BlockModel, Map<String, TextureResource>> getItemPostResolveFunction(ValuePairs<BlockModel, Map<String, TextureResource>> previousResult, String modelKey, EquipmentSlot heldSlot, ItemStack itemStack, boolean is1_8, Map<ModelOverrideType, Float> predicates, OfflineICPlayer player, World world, LivingEntity entity, UnaryOperator<String> translateFunction) {
         Map<String, TextureResource> map = previousResult.getSecond();
-        ValuePairs<BlockModel, Map<String, TextureResource>> pair = optifineManager.getItemPostResolveFunction(heldSlot, itemStack, is1_8, predicates).apply(previousResult.getFirst());
+        ValuePairs<BlockModel, Map<String, TextureResource>> pair = optifineManager.getItemPostResolveFunction(heldSlot, itemStack, is1_8, predicates, translateFunction).apply(previousResult.getFirst());
         map.putAll(pair.getSecond());
         return new ValuePairs<>(pair.getFirst(), map);
     }
 
     @Override
-    public Optional<TextureResource> getElytraOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack) {
-        return Optional.ofNullable(optifineManager.getElytraOverrideTextures(heldSlot, itemStack));
+    public Optional<TextureResource> getElytraOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction) {
+        return Optional.ofNullable(optifineManager.getElytraOverrideTextures(heldSlot, itemStack, translateFunction));
     }
 
     @Override
-    public List<ValuePairs<TextureResource, OpenGLBlending>> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack) {
-        return optifineManager.getEnchantmentGlintOverrideTextures(heldSlot, itemStack);
+    public List<ValuePairs<TextureResource, OpenGLBlending>> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction) {
+        return optifineManager.getEnchantmentGlintOverrideTextures(heldSlot, itemStack, translateFunction);
     }
 
     @Override
-    public Optional<TextureResource> getArmorOverrideTextures(String layer, EquipmentSlot heldSlot, ItemStack itemStack, OfflineICPlayer player, World world, LivingEntity entity) {
-        return Optional.ofNullable(optifineManager.getArmorOverrideTextures(layer, heldSlot, itemStack));
+    public Optional<TextureResource> getArmorOverrideTextures(String layer, EquipmentSlot heldSlot, ItemStack itemStack, OfflineICPlayer player, World world, LivingEntity entity, UnaryOperator<String> translateFunction) {
+        return Optional.ofNullable(optifineManager.getArmorOverrideTextures(layer, heldSlot, itemStack, translateFunction));
     }
 
 }

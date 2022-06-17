@@ -73,6 +73,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 public class OptifineManager extends ModManager implements IOptifineManager {
@@ -178,11 +179,11 @@ public class OptifineManager extends ModManager implements IOptifineManager {
     }
 
     @Override
-    public Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> getItemPostResolveFunction(EquipmentSlot heldSlot, ItemStack itemStack, boolean is1_8, Map<ModelOverrideType, Float> predicates) {
+    public Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> getItemPostResolveFunction(EquipmentSlot heldSlot, ItemStack itemStack, boolean is1_8, Map<ModelOverrideType, Float> predicates, UnaryOperator<String> translateFunction) {
         if (itemStack == null || itemStack.getType().equals(Material.AIR)) {
             return ModelRenderer.DEFAULT_POST_RESOLVE_FUNCTION;
         }
-        ValuePairs<ResourcePackFile, ItemProperties> citOverride = getCITOverride(heldSlot, itemStack, ItemProperties.class);
+        ValuePairs<ResourcePackFile, ItemProperties> citOverride = getCITOverride(heldSlot, itemStack, translateFunction, ItemProperties.class);
         if (citOverride == null) {
             return ModelRenderer.DEFAULT_POST_RESOLVE_FUNCTION;
         } else {
@@ -256,11 +257,11 @@ public class OptifineManager extends ModManager implements IOptifineManager {
     }
 
     @Override
-    public TextureResource getElytraOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack) {
+    public TextureResource getElytraOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction) {
         if (itemStack == null || !itemStack.getType().equals(Material.valueOf("ELYTRA"))) {
             return null;
         }
-        ValuePairs<ResourcePackFile, ElytraProperties> citOverride = getCITOverride(heldSlot, itemStack, ElytraProperties.class);
+        ValuePairs<ResourcePackFile, ElytraProperties> citOverride = getCITOverride(heldSlot, itemStack, translateFunction, ElytraProperties.class);
         if (citOverride == null) {
             return null;
         }
@@ -274,11 +275,11 @@ public class OptifineManager extends ModManager implements IOptifineManager {
     }
 
     @Override
-    public TextureResource getArmorOverrideTextures(String layer, EquipmentSlot heldSlot, ItemStack itemStack) {
+    public TextureResource getArmorOverrideTextures(String layer, EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction) {
         if (itemStack == null || itemStack.getType().equals(Material.AIR)) {
             return null;
         }
-        ValuePairs<ResourcePackFile, ArmorProperties> citOverride = getCITOverride(heldSlot, itemStack, ArmorProperties.class);
+        ValuePairs<ResourcePackFile, ArmorProperties> citOverride = getCITOverride(heldSlot, itemStack, translateFunction, ArmorProperties.class);
         if (citOverride == null) {
             return null;
         }
@@ -295,12 +296,12 @@ public class OptifineManager extends ModManager implements IOptifineManager {
     }
 
     @Override
-    public List<ValuePairs<TextureResource, OpenGLBlending>> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack) {
+    public List<ValuePairs<TextureResource, OpenGLBlending>> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction) {
         Map<String, TextureResource> overrideTextures = new HashMap<>();
         if (itemStack == null || itemStack.getType().equals(Material.AIR)) {
             return getCITGlobalProperties().isUseGlint() ? Collections.emptyList() : Collections.singletonList(new ValuePairs<>(new GeneratedTextureResource(manager, BLANK_ENCHANTMENT), OpenGLBlending.ADD));
         }
-        List<ValuePairs<ResourcePackFile, EnchantmentProperties>> citOverrides = getCITOverrides(heldSlot, itemStack, EnchantmentProperties.class);
+        List<ValuePairs<ResourcePackFile, EnchantmentProperties>> citOverrides = getCITOverrides(heldSlot, itemStack, translateFunction, EnchantmentProperties.class);
         List<ValuePairs<TextureResource, OpenGLBlending>> result = new ArrayList<>();
         Object2IntMap<TextureResource> layer = new Object2IntOpenHashMap<>();
         for (ValuePairs<ResourcePackFile, EnchantmentProperties> citOverride : citOverrides) {
@@ -446,12 +447,12 @@ public class OptifineManager extends ModManager implements IOptifineManager {
     }
 
     @Override
-    public <T extends CITProperties> ValuePairs<ResourcePackFile, T> getCITOverride(EquipmentSlot heldSlot, ItemStack itemStack, Class<T> type) {
+    public <T extends CITProperties> ValuePairs<ResourcePackFile, T> getCITOverride(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction, Class<T> type) {
         ValuePairs<ResourcePackFile, T> result = null;
         int weight = Integer.MIN_VALUE;
         for (ValuePairs<ResourcePackFile, CITProperties> pair : citOverrides.values()) {
             CITProperties citProperties = pair.getSecond();
-            if (type.isInstance(citProperties) && citProperties.getWeight() > weight && citProperties.test(heldSlot, itemStack)) {
+            if (type.isInstance(citProperties) && citProperties.getWeight() > weight && citProperties.test(heldSlot, itemStack, translateFunction)) {
                 result = new ValuePairs<>(pair.getFirst(), (T) citProperties);
             }
         }
@@ -459,11 +460,11 @@ public class OptifineManager extends ModManager implements IOptifineManager {
     }
 
     @Override
-    public <T extends CITProperties> List<ValuePairs<ResourcePackFile, T>> getCITOverrides(EquipmentSlot heldSlot, ItemStack itemStack, Class<T> type) {
+    public <T extends CITProperties> List<ValuePairs<ResourcePackFile, T>> getCITOverrides(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction, Class<T> type) {
         List<ValuePairs<ResourcePackFile, T>> result = new ArrayList<>();
         for (ValuePairs<ResourcePackFile, CITProperties> pair : citOverrides.values()) {
             CITProperties citProperties = pair.getSecond();
-            if (type.isInstance(citProperties) && citProperties.test(heldSlot, itemStack)) {
+            if (type.isInstance(citProperties) && citProperties.test(heldSlot, itemStack, translateFunction)) {
                 result.add(new ValuePairs<>(pair.getFirst(), (T) citProperties));
             }
         }
