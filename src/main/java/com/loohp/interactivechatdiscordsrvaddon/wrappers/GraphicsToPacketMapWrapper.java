@@ -78,7 +78,7 @@ public class GraphicsToPacketMapWrapper {
 
     private volatile boolean done;
     private List<ImageFrame> frames;
-    private byte[][] colors;
+    private List<byte[]> colors;
     private ItemStack mapItem;
     private int totalTime;
     private boolean playbackBar;
@@ -124,7 +124,7 @@ public class GraphicsToPacketMapWrapper {
         if (!done) {
             throw new IllegalStateException("Future has not complete!");
         }
-        this.colors = new byte[frames.size()][];
+        this.colors = new ArrayList<>();
         this.mapItem = XMaterial.FILLED_MAP.parseItem();
         if (InteractiveChat.version.isLegacy()) {
             mapItem.setDurability(MAP_ID);
@@ -138,10 +138,12 @@ public class GraphicsToPacketMapWrapper {
             totalTime += frame.getDelay();
         }
         this.totalTime = totalTime;
-        int currentTime = 0;
-        int i = 0;
-        for (ImageFrame frame : frames) {
-            BufferedImage processedFrame = ImageUtils.resizeImageQuality(ImageUtils.squarify(frame.getImage()), 128, 128);
+        for (int currentTime = 0; currentTime <= totalTime; currentTime += 50) {
+            int currentFrame = getFrameAt(currentTime);
+            if (currentFrame < 0) {
+                break;
+            }
+            BufferedImage processedFrame = ImageUtils.resizeImageQuality(ImageUtils.squarify(frames.get(currentFrame).getImage()), 128, 128);
             if (playbackBar) {
                 Graphics2D g = processedFrame.createGraphics();
                 g.setColor(InteractiveChatDiscordSrvAddon.plugin.playbackBarEmptyColor);
@@ -159,9 +161,7 @@ public class GraphicsToPacketMapWrapper {
                 g.dispose();
                 processedFrame = background;
             }
-            this.colors[i] = MapPalette.imageToBytes(processedFrame);
-            currentTime += frame.getDelay();
-            i++;
+            this.colors.add(MapPalette.imageToBytes(processedFrame));
         }
     }
 
@@ -241,22 +241,21 @@ public class GraphicsToPacketMapWrapper {
 
         GraphicsToPacketMapWrapper ref = this;
         new BukkitRunnable() {
-            int frameTime = 0;
+            int index = 0;
 
             @Override
             public void run() {
                 GraphicsToPacketMapWrapper wrapper = InboundToGameEvents.MAP_VIEWERS.get(player);
                 if (wrapper != null && wrapper.equals(ref)) {
-                    int current = getFrameAt(frameTime);
-                    if (current < 0) {
-                        current = 0;
-                        frameTime = 0;
-                    }
                     try {
+                        byte[] colorArray = colors.get(index);
+                        if (colorArray == null) {
+                            throw new IllegalStateException("Color Array at index " + index + " is null!");
+                        }
                         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_17)) {
-                            packet2.getModifier().write(4, nmsWorldMapBClassConstructor.newInstance(0, 0, 128, 128, colors[current]));
+                            packet2.getModifier().write(4, nmsWorldMapBClassConstructor.newInstance(0, 0, 128, 128, colorArray));
                         } else {
-                            packet2.getByteArrays().write(0, colors[current]);
+                            packet2.getByteArrays().write(0, colorArray);
                         }
                         protocollib.sendServerPacket(player, packet2);
                     } catch (InvocationTargetException | FieldAccessException | InstantiationException |
@@ -266,7 +265,9 @@ public class GraphicsToPacketMapWrapper {
                 } else {
                     this.cancel();
                 }
-                frameTime += 50;
+                if (++index >= colors.size()) {
+                    index = 0;
+                }
             }
         }.runTaskTimer(InteractiveChatDiscordSrvAddon.plugin, 0, 1);
     }
