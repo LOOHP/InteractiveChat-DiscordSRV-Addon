@@ -190,6 +190,9 @@ public class GraphicsToPacketMapWrapper {
         if (!done) {
             throw new IllegalStateException("Future has not complete!");
         }
+        if (colors == null || colors.isEmpty()) {
+            return;
+        }
         InteractiveChatDiscordSrvAddon.plugin.imagesViewedCounter.incrementAndGet();
         InboundToGameEvents.MAP_VIEWERS.put(player, this);
 
