@@ -69,6 +69,7 @@ import org.bukkit.inventory.ItemStack;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -284,6 +285,7 @@ public class InboundToGameEvents implements Listener {
                             Bukkit.getPluginManager().callEvent(dace);
                             DATA.put(data.getUniqueId(), data);
                             Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(data.getUniqueId()), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
+                        } catch (FileNotFoundException ignore) {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }

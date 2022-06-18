@@ -34,25 +34,19 @@ public class URLRequestUtils {
 
     public static final Pattern IMAGE_URL_PATTERN = Pattern.compile("https?:/(?:/[^/]+)+\\.(jpg|jpeg|gif|png)(?:\\?.*)*");
 
-    public static InputStream getInputStream(String link) {
+    public static InputStream getInputStream(String link) throws IOException {
         InputStream stream = getInputStream0(link);
         return stream == null ? new ByteArrayInputStream(new byte[0]) : stream;
     }
 
-    public static InputStream getInputStream0(String link) {
-        URLConnection connection;
-        try {
-            connection = new URL(link).openConnection();
-            connection.setUseCaches(false);
-            connection.setDefaultUseCaches(false);
-            connection.addRequestProperty("User-Agent", "Mozilla/5.0");
-            connection.addRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
-            connection.addRequestProperty("Pragma", "no-cache");
-            return connection.getInputStream();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
+    public static InputStream getInputStream0(String link) throws IOException {
+        URLConnection connection = new URL(link).openConnection();
+        connection.setUseCaches(false);
+        connection.setDefaultUseCaches(false);
+        connection.addRequestProperty("User-Agent", "Mozilla/5.0");
+        connection.addRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
+        connection.addRequestProperty("Pragma", "no-cache");
+        return connection.getInputStream();
     }
 
     public static InputStream retrieveInputStreamUntilSuccessful(List<ThrowingSupplier<InputStream>> sources) {

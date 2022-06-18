@@ -176,7 +176,11 @@ public class Commands implements CommandExecutor, TabCompleter {
                         if (imageMap.futureCancelled()) {
                             sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.linkExpired);
                         } else if (imageMap.futureCompleted()) {
-                            imageMap.show((Player) sender);
+                            if (imageMap.getColors() == null || imageMap.getColors().isEmpty()) {
+                                sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.linkExpired);
+                            } else {
+                                imageMap.show((Player) sender);
+                            }
                         } else {
                             sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.previewLoading);
                         }
