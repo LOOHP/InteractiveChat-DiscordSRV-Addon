@@ -123,6 +123,7 @@ import java.util.stream.Stream;
 public class ImageGeneration {
 
     public static final int MAP_ICON_PER_ROLE = InteractiveChat.version.isLegacy() ? 4 : 16;
+    public static final int MAP_SIZE = 1120;
     public static final int SPACING = 36;
     public static final double ITEM_AMOUNT_TEXT_DARKEN_FACTOR = 75.0 / 255.0;
     public static final Color ENCHANTMENT_GLINT_LEGACY_COLOR = new Color(164, 84, 255);
@@ -877,10 +878,10 @@ public class ImageGeneration {
 
         BufferedImage background = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.MAP_TEXTURE_LOCATION + "map_background").getTexture();
 
-        BufferedImage image = new BufferedImage(1120, 1120, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage image = new BufferedImage(MAP_SIZE, MAP_SIZE, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        g.drawImage(background, 0, 0, 1120, 1120, null);
+        g.drawImage(background, 0, 0, image.getWidth(), image.getHeight(), null);
         g.dispose();
 
         int borderOffset = (int) (image.getWidth() / 23.3333333333333333333);

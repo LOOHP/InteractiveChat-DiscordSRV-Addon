@@ -42,6 +42,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.HoverClickDisplayD
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ReactionsHandler;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
@@ -100,49 +101,51 @@ public class DiscordContentUtils {
                         contents.add(content);
 
                         DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, player);
-                        if (!discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
-                            BufferedImage tooltip = ImageGeneration.getToolTipImage(discordToolTip.getComponents());
-                            byte[] tooltipData = ImageUtils.toArray(tooltip);
-                            content.addAttachment("ToolTip_" + i + ".png", tooltipData);
-                            content.addImageUrl("attachment://ToolTip_" + i + ".png");
-                        }
+                        List<ToolTipComponent<?>> toolTipComponents = discordToolTip.getComponents();
 
+                        boolean forceShow = false;
                         if (type.equals(ImageDisplayType.ITEM_CONTAINER)) {
-                            content.getImageUrls().remove("attachment://ToolTip_" + i + ".png");
-                            content.getAttachments().remove("ToolTip_" + i + ".png");
                             TitledInventoryWrapper inv = iData.getInventory().get();
                             BufferedImage container = ImageGeneration.getInventoryImage(inv.getInventory(), inv.getTitle(), data.getPlayer());
-                            byte[] containerData = ImageUtils.toArray(container);
-                            content.addAttachment("Container_" + i + ".png", containerData);
-                            content.addImageUrl("attachment://Container_" + i + ".png");
-                        } else {
+                            toolTipComponents.add(ToolTipComponent.image(container));
+                            forceShow = true;
+                        } else if (iData.isFilledMap()) {
+                            forceShow = true;
+                        }
+
+                        if (forceShow || !discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
+                            BufferedImage tooltip = ImageGeneration.getToolTipImage(toolTipComponents);
+
                             if (iData.isFilledMap()) {
                                 MapView mapView = FilledMapUtils.getMapView(item);
                                 boolean isContextual = mapView == null || FilledMapUtils.isContextual(mapView);
                                 ICPlayer icPlayer = iData.getPlayer().getPlayer();
                                 boolean isPlayerLocal = icPlayer != null && icPlayer.isLocal();
                                 if (!isContextual || isPlayerLocal) {
-                                    content.getImageUrls().remove("attachment://ToolTip_" + i + ".png");
-                                    content.getAttachments().remove("ToolTip_" + i + ".png");
                                     BufferedImage map = ImageGeneration.getMapImage(item, isPlayerLocal ? icPlayer.getLocalPlayer() : null);
-                                    byte[] mapData = ImageUtils.toArray(map);
-                                    content.addAttachment("Map_" + i + ".png", mapData);
-                                    content.addImageUrl("attachment://Map_" + i + ".png");
+                                    tooltip = ImageUtils.resizeImage(tooltip, 5);
+                                    tooltip = ImageUtils.appendImageBottom(tooltip, map, 10, 0);
                                 }
-                            } else if (iData.isBook()) {
-                                List<Component> pages = BookUtils.getPages((BookMeta) item.getItemMeta());
-                                List<Supplier<BufferedImage>> images = ImageGeneration.getBookInterfaceSuppliers(pages);
-                                byte[][] cachedImages = new byte[images.size()][];
-                                cachedImages[0] = ImageUtils.toArray(images.get(0).get());
-                                if (!images.isEmpty()) {
-                                    reactions.add(LEFT_EMOJI);
-                                    reactions.add(RIGHT_EMOJI);
-                                    AtomicInteger currentPage = new AtomicInteger(0);
-                                    reactionConsumer = reactionConsumer.andThen(getBookHandler(images, cachedImages));
-                                    DiscordMessageContent bookContent = new DiscordMessageContent(null, null, null, "attachment://Page.png", color);
-                                    bookContent.addAttachment("Page.png", cachedImages[0]);
-                                    contents.add(bookContent);
-                                }
+                            }
+
+                            byte[] tooltipData = ImageUtils.toArray(tooltip);
+                            content.addAttachment("ToolTip_" + i + ".png", tooltipData);
+                            content.addImageUrl("attachment://ToolTip_" + i + ".png");
+                        }
+
+                        if (iData.isBook()) {
+                            List<Component> pages = BookUtils.getPages((BookMeta) item.getItemMeta());
+                            List<Supplier<BufferedImage>> images = ImageGeneration.getBookInterfaceSuppliers(pages);
+                            byte[][] cachedImages = new byte[images.size()][];
+                            cachedImages[0] = ImageUtils.toArray(images.get(0).get());
+                            if (!images.isEmpty()) {
+                                reactions.add(LEFT_EMOJI);
+                                reactions.add(RIGHT_EMOJI);
+                                AtomicInteger currentPage = new AtomicInteger(0);
+                                reactionConsumer = reactionConsumer.andThen(getBookHandler(images, cachedImages));
+                                DiscordMessageContent bookContent = new DiscordMessageContent(null, null, null, "attachment://Page.png", color);
+                                bookContent.addAttachment("Page.png", cachedImages[0]);
+                                contents.add(bookContent);
                             }
                         }
                     } catch (Exception e) {
