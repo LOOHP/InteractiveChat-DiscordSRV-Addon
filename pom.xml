@@ -25,7 +25,7 @@
     <groupId>com.loohp</groupId>
     <artifactId>InteractiveChatDiscordSrvAddon</artifactId>
     <name>InteractiveChatDiscordSrvAddon</name>
-    <version>4.2.1.0</version>
+    <version>4.2.2.0</version>
 
     <description>Have InteractiveChat Placeholders translated on DiscordSRV discord messages.</description>
     <url>https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon</url>
@@ -139,6 +139,10 @@
                                 <relocation>
                                     <pattern>com.intellij</pattern>
                                     <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.com.intellij</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.objectweb</pattern>
+                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.org.objectweb</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
@@ -323,6 +327,12 @@
             <groupId>com.intellij</groupId>
             <artifactId>forms_rt</artifactId>
             <version>7.0.3</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>asm</groupId>
+                    <artifactId>asm-commons</artifactId>
+                </exclusion>
+            </exclusions>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -382,7 +392,7 @@
         <dependency>
             <groupId>com.loohp</groupId>
             <artifactId>InteractiveChat</artifactId>
-            <version>4.2.1.0</version>
+            <version>4.2.2.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
