@@ -20,7 +20,7 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
-import com.loohp.interactivechat.libs.org.apache.commons.lang3.StringEscapeUtils;
+import com.loohp.interactivechat.libs.org.apache.commons.text.StringEscapeUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -120,7 +120,6 @@ public class FontProvider {
         return null;
     }
 
-    @SuppressWarnings("deprecation")
     public MinecraftFont forCharacter(String character) {
         MinecraftFont font = forCharacterOrNull(character);
         if (font != null) {
