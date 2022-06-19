@@ -48,7 +48,6 @@ public class LibraryLoader {
         RELOCATION_RULES.add(new Relocation(dot("org{}eclipse"), "org.eclipse"));
         RELOCATION_RULES.add(new Relocation(dot("org{}json"), "org.json"));
         RELOCATION_RULES.add(new Relocation(dot("org{}mapdb"), "org.mapdb"));
-        RELOCATION_RULES.add(new Relocation(dot("org{}objectweb"), "org.objectweb"));
     }
 
     private static String dot(String str) {

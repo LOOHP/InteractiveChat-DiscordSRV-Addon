@@ -137,10 +137,6 @@
                                     <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.org.mapdb</shadedPattern>
                                 </relocation>
                                 <relocation>
-                                    <pattern>org.objectweb</pattern>
-                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.org.objectweb</shadedPattern>
-                                </relocation>
-                                <relocation>
                                     <pattern>com.intellij</pattern>
                                     <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.com.intellij</shadedPattern>
                                 </relocation>
