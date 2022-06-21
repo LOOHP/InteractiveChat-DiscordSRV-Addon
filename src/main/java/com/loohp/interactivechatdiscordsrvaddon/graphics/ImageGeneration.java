@@ -1452,7 +1452,7 @@ public class ImageGeneration {
                     @Override
                     public int applyAsInt(CharacterLengthProviderData data) {
                         String character = data.getCharacter();
-                        FontRenderResult renderResult = resourceManager.get().getFontManager().getFontProviders(data.getFont().asString()).forCharacter(character).printCharacter(temp, character, 0, 0, 16, lastItalicExtraWidth, NamedTextColor.BLACK, data.getDecorations());
+                        FontRenderResult renderResult = resourceManager.get().getFontManager().getFontProviders(data.getFont()).forCharacter(character).printCharacter(temp, character, 0, 0, 16, lastItalicExtraWidth, NamedTextColor.BLACK, data.getDecorations());
                         lastItalicExtraWidth = renderResult.getItalicExtraWidth();
                         return renderResult.getWidth() + renderResult.getSpaceWidth();
                     }

@@ -70,9 +70,6 @@ public class ComponentStringUtils {
         boolean nullCurrentLine = true;
         for (Component each : child) {
             Key font = each.font();
-            if (font == null) {
-                font = Key.key("minecraft:default");
-            }
             List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
             if (each instanceof TextComponent) {
                 TextComponent textComponent = (TextComponent) each;

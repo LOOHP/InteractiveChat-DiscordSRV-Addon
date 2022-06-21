@@ -31,7 +31,6 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.
 import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechat.utils.ComponentCompacting;
 import com.loohp.interactivechat.utils.ComponentFlattening;
-import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.MinecraftFont;
 import it.unimi.dsi.fastutil.chars.CharObjectImmutablePair;
 import it.unimi.dsi.fastutil.chars.CharObjectPair;
 
@@ -49,9 +48,6 @@ public class CharacterData {
         component = ComponentFlattening.flatten(component);
         for (Component each : component.children()) {
             Key font = each.style().font();
-            if (font == null) {
-                font = MinecraftFont.DEFAULT_FONT_KEY;
-            }
             TextColor color = each.color();
             if (color == null) {
                 color = NamedTextColor.WHITE;

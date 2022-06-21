@@ -20,6 +20,7 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
+import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream;
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
@@ -45,13 +46,16 @@ import java.util.regex.Pattern;
 
 public class FontManager extends AbstractManager implements IFontManager {
 
-    public static final String DEFAULT_FONT = "minecraft:default";
+    public static final Key DEFAULT_FONT = Key.key("minecraft:default");
+    public static final Key UNIFORM_FONT = Key.key("minecraft:uniform");
 
+    private Key defaultKey;
     private Map<String, FontProvider> fonts;
     private Map<String, Map<String, ResourcePackFile>> files;
 
     public FontManager(ResourceManager manager) {
         super(manager);
+        this.defaultKey = DEFAULT_FONT;
         this.fonts = new HashMap<>();
         this.files = new HashMap<>();
     }
@@ -144,6 +148,15 @@ public class FontManager extends AbstractManager implements IFontManager {
     }
 
     @Override
+    public Key getDefaultFontKey() {
+        return defaultKey;
+    }
+
+    public void setDefaultKey(Key defaultKey) {
+        this.defaultKey = defaultKey;
+    }
+
+    @Override
     protected void reload() {
         for (FontProvider provider : fonts.values()) {
             provider.reloadFonts();
@@ -182,11 +195,17 @@ public class FontManager extends AbstractManager implements IFontManager {
     }
 
     @Override
+    public FontProvider getFontProviders(Key resourceKey) {
+        return getFontProviders(resourceKey == null ? getDefaultFontKey().asString() : resourceKey.asString());
+    }
+
+    @Override
     public FontProvider getFontProviders(String resourceLocation) {
         if (!resourceLocation.contains(":")) {
             resourceLocation = ResourceRegistry.DEFAULT_NAMESPACE + ":" + resourceLocation;
         }
-        return fonts.getOrDefault(resourceLocation, resourceLocation.equals(DEFAULT_FONT) ? null : getFontProviders(DEFAULT_FONT));
+        String defaultFont = defaultKey.asString();
+        return fonts.getOrDefault(resourceLocation, resourceLocation.equals(defaultFont) ? null : getFontProviders(defaultFont));
     }
 
 }

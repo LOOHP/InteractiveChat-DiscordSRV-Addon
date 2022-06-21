@@ -252,6 +252,8 @@ Resources:
   #Visit this page for all the languages that Minecraft offers:
   #https://minecraft.fandom.com/wiki/Language
   Language: en_us
+  #Apply the force unicode setting to languages and fonts
+  ForceUnicodeFont: false
   #Put server resource pack from server.properties
   #at the top of the resource pack ordering list if it is available
   IncludeServerResourcePack: true

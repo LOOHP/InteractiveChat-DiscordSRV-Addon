@@ -55,6 +55,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager.ModManagerSupplier;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackType;
+import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.ModManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimeManager;
@@ -230,6 +231,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public PlaceholderCooldownManager placeholderCooldownManager = new PlaceholderCooldownManager();
     public String defaultResourceHash = "N/A";
     public List<String> resourceOrder = new ArrayList<>();
+    public boolean forceUnicode = false;
     public boolean includeServerResourcePack = true;
     public String alternateResourcePackURL = "";
     public String alternateResourcePackHash = "";
@@ -526,6 +528,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
         language = config.getConfiguration().getString("Resources.Language");
         LanguageUtils.loadTranslations(language);
+        forceUnicode = config.getConfiguration().getBoolean("Resources.ForceUnicodeFont");
 
         FontTextureResource.setCacheTime(cacheTimeout);
 
@@ -623,6 +626,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                     Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Registered ModManager \"" + entry.getKey() + "\" of class \"" + entry.getValue().getClass().getName() + "\"");
                 }
 
+                resourceManager.getFontManager().setDefaultKey(forceUnicode ? FontManager.UNIFORM_FONT : FontManager.DEFAULT_FONT);
                 resourceManager.getLanguageManager().setTranslateFunction((translateKey, language) -> LanguageUtils.getTranslation(translateKey, language));
                 resourceManager.getLanguageManager().setAvailableLanguagesSupplier(() -> LanguageUtils.getLoadedLanguages());
                 resourceManager.getLanguageManager().registerReloadListener(e -> {

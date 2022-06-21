@@ -540,7 +540,7 @@ public class ImageUtils {
                 character += String.valueOf(c);
             }
             CharacterData characterData = pair.right();
-            MinecraftFont fontProvider = manager.getFontManager().getFontProviders(characterData.getFont().asString()).forCharacter(character);
+            MinecraftFont fontProvider = manager.getFontManager().getFontProviders(characterData.getFont()).forCharacter(character);
             FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, characterData.getColor(), characterData.getDecorations());
             textImage = result.getImage();
             x += result.getWidth() + result.getSpaceWidth();
@@ -666,7 +666,7 @@ public class ImageUtils {
                 character += String.valueOf(c);
             }
             CharacterData characterData = pair.right();
-            MinecraftFont fontProvider = manager.getFontManager().getFontProviders(characterData.getFont().asString()).forCharacter(character);
+            MinecraftFont fontProvider = manager.getFontManager().getFontProviders(characterData.getFont()).forCharacter(character);
             FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, characterData.getColor(), characterData.getDecorations());
             textImage = result.getImage();
             x += result.getWidth() + result.getSpaceWidth();
