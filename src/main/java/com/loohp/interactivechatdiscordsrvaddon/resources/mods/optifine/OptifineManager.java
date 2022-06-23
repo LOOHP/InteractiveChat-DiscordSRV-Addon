@@ -453,6 +453,7 @@ public class OptifineManager extends ModManager implements IOptifineManager {
         for (ValuePairs<ResourcePackFile, CITProperties> pair : citOverrides.values()) {
             CITProperties citProperties = pair.getSecond();
             if (type.isInstance(citProperties) && citProperties.getWeight() > weight && citProperties.test(heldSlot, itemStack, translateFunction)) {
+                weight = citProperties.getWeight();
                 result = new ValuePairs<>(pair.getFirst(), (T) citProperties);
             }
         }
