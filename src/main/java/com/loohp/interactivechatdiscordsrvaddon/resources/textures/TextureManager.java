@@ -54,8 +54,8 @@ public class TextureManager extends AbstractManager implements ITextureManager {
         g.setColor(MISSING_TEXTURE_0);
         g.fillRect(0, 0, width, length);
         g.setColor(MISSING_TEXTURE_1);
-        g.fillRect(0, 0, width / 2, length / 2);
-        g.fillRect(width / 2, length / 2, width / 2, length / 2);
+        g.fillRect(width / 2, 0, width / 2, length / 2);
+        g.fillRect(0, length / 2, width / 2, length / 2);
         g.dispose();
         return image;
     }

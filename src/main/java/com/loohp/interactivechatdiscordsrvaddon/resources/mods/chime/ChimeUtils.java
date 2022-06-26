@@ -22,6 +22,9 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime;
 
 import com.google.common.collect.BoundType;
 import com.google.common.collect.Range;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.ComponentIteratorType;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.TextComponent;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.ByteTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.CompoundTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.IntTag;
@@ -33,16 +36,51 @@ import com.loohp.interactivechat.libs.net.querz.nbt.tag.StringTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.Tag;
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
+import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
+import com.loohp.interactivechat.utils.ItemNBTUtils;
+import com.loohp.interactivechat.utils.NBTParsingUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimeModelOverride.ChimeModelOverrideType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimePredicateEnums.ItemInHand;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimePredicateEnums.TargetType;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 
+import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 
 public class ChimeUtils {
+
+    public static String getItemDisplayName(ItemStack itemStack, UnaryOperator<String> translateFunction) {
+        if (!itemStack.hasItemMeta() || !itemStack.getItemMeta().hasDisplayName()) {
+            return "";
+        }
+        try {
+            String rawStringValue = ((CompoundTag) NBTParsingUtils.fromSNBT(ItemNBTUtils.getNMSItemStackJson(itemStack))).getCompoundTag("tag").getCompoundTag("display").getString("Name");
+            try {
+                Component component = InteractiveChatComponentSerializer.gson().deserialize(rawStringValue);
+                return componentToString(component, translateFunction);
+            } catch (Throwable ignore) {
+                return rawStringValue;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    public static String componentToString(Component component, UnaryOperator<String> translateFunction) {
+        StringBuilder sb = new StringBuilder();
+        for (Component each : ComponentStringUtils.resolve(component, translateFunction).iterable(ComponentIteratorType.DEPTH_FIRST)) {
+            if (each instanceof TextComponent) {
+                sb.append(((TextComponent) each).content());
+            }
+        }
+        return sb.toString();
+    }
 
     public static Map<ChimeModelOverrideType, Object> getAllPredicates(JSONObject predicateJson, String... preKeys) {
         Map<ChimeModelOverrideType, Object> map = new EnumMap<>(ChimeModelOverrideType.class);

@@ -50,6 +50,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 public class ChimeManager extends ModManager implements IChimeManager {
@@ -164,14 +165,14 @@ public class ChimeManager extends ModManager implements IChimeManager {
         return getRawBlockModel(resourceLocation, false);
     }
 
-    public BlockModel resolveBlockModel(String resourceLocation, boolean is1_8, Map<ModelOverrideType, Float> predicates, OfflineICPlayer player, World world, LivingEntity entity, ItemStack itemStack) {
+    public BlockModel resolveBlockModel(String resourceLocation, boolean is1_8, Map<ModelOverrideType, Float> predicates, OfflineICPlayer player, World world, LivingEntity entity, ItemStack itemStack, UnaryOperator<String> translateFunction) {
         BlockModel model = getRawBlockModel(resourceLocation, true);
         if (model == null) {
             return null;
         }
         for (ModelOverride override : model.getOverrides()) {
             if (override instanceof ChimeModelOverride) {
-                if (((ChimeModelOverride) override).test(predicates, player, world, entity, itemStack)) {
+                if (((ChimeModelOverride) override).test(predicates, player, world, entity, itemStack, translateFunction)) {
                     return resolveBlockModel(override.getModel(), is1_8, null);
                 }
             } else {
@@ -197,7 +198,7 @@ public class ChimeManager extends ModManager implements IChimeManager {
             }
             for (ModelOverride override : model.getOverrides()) {
                 if (override instanceof ChimeModelOverride) {
-                    if (((ChimeModelOverride) override).test(predicates, player, world, entity, itemStack)) {
+                    if (((ChimeModelOverride) override).test(predicates, player, world, entity, itemStack, translateFunction)) {
                         return resolveBlockModel(override.getModel(), is1_8, null);
                     }
                 } else {
@@ -269,7 +270,7 @@ public class ChimeManager extends ModManager implements IChimeManager {
     }
 
     @Override
-    public TextureResource getArmorOverrideTextures(String layer, ItemStack itemStack, OfflineICPlayer player, World world, LivingEntity entity) {
+    public TextureResource getArmorOverrideTextures(String layer, ItemStack itemStack, OfflineICPlayer player, World world, LivingEntity entity, UnaryOperator<String> translateFunction) {
         for (String overrideLocation : overrideLocations) {
             String resourceKey = "minecraft:" + overrideLocation + "armor/" + layer;
             BlockModel model = getRawBlockModel(resourceKey, true);
@@ -277,7 +278,7 @@ public class ChimeManager extends ModManager implements IChimeManager {
                 return null;
             }
             for (ChimeModelOverride override : ((ChimeBlockModel) model).getChimeOverrides()) {
-                if (override.hasArmorTexture() && override.test(null, player, world, entity, itemStack)) {
+                if (override.hasArmorTexture() && override.test(null, player, world, entity, itemStack, translateFunction)) {
                     return getTexture(override.getArmorTexture());
                 }
             }

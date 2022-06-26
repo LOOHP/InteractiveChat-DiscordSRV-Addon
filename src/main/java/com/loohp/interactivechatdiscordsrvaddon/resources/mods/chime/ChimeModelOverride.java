@@ -21,12 +21,10 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime;
 
 import com.google.common.collect.Range;
-import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.CompoundTag;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
-import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ItemNBTUtils;
 import com.loohp.interactivechat.utils.NBTParsingUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
@@ -51,6 +49,7 @@ import org.bukkit.util.RayTraceResult;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 public class ChimeModelOverride extends ModelOverride {
@@ -89,12 +88,12 @@ public class ChimeModelOverride extends ModelOverride {
         return false;
     }
 
-    public boolean test(Map<ModelOverrideType, Float> data, OfflineICPlayer player, World world, LivingEntity entity, ItemStack itemStack) {
+    public boolean test(Map<ModelOverrideType, Float> data, OfflineICPlayer player, World world, LivingEntity entity, ItemStack itemStack, UnaryOperator<String> translateFunction) {
         if (!super.test(data)) {
             return false;
         }
         for (Entry<ChimeModelOverrideType, Object> entry : chimePredicates.entrySet()) {
-            if (!entry.getKey().test(entry.getValue(), player, world, entity, itemStack)) {
+            if (!entry.getKey().test(entry.getValue(), player, world, entity, itemStack, translateFunction)) {
                 return false;
             }
         }
@@ -124,21 +123,17 @@ public class ChimeModelOverride extends ModelOverride {
     @SuppressWarnings("deprecation")
     public enum ChimeModelOverrideType {
 
-        COUNT("count", Range.class, (value, player, world, livingEntity, itemStack) -> {
+        COUNT("count", Range.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return value.contains(itemStack.getAmount());
         }),
-        DURABILITY("durability", Range.class, (value, player, world, livingEntity, itemStack) -> {
-            if (InteractiveChat.version.isLegacy()) {
-                return value.contains(itemStack.getDurability());
+        DURABILITY("durability", Range.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
+            if (itemStack.hasItemMeta() && itemStack.getItemMeta() instanceof Damageable) {
+                return value.contains(((Damageable) itemStack.getItemMeta()).getDamage());
             } else {
-                if (itemStack.hasItemMeta() && itemStack.getItemMeta() instanceof Damageable) {
-                    return value.contains(((Damageable) itemStack.getItemMeta()).getDamage());
-                } else {
-                    return value.contains(0);
-                }
+                return value.contains(0);
             }
         }),
-        NBT("nbt", JSONObject.class, (value, player, world, livingEntity, itemStack) -> {
+        NBT("nbt", JSONObject.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             String nbt = ItemNBTUtils.getNMSItemStackJson(itemStack);
             CompoundTag compoundTag = (CompoundTag) NBTParsingUtils.fromSNBT(nbt);
             if (compoundTag.containsKey("tag")) {
@@ -147,21 +142,15 @@ public class ChimeModelOverride extends ModelOverride {
                 return false;
             }
         }),
-        NAME("name", String.class, (value, player, world, livingEntity, itemStack) -> {
-            String name;
-            if (itemStack.hasItemMeta() && itemStack.getItemMeta() != null) {
-                String displayName = itemStack.getItemMeta().getDisplayName();
-                name = displayName == null ? "" : ChatColorUtils.stripColor(displayName);
-            } else {
-                name = "";
-            }
+        NAME("name", String.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
+            String name = ChimeUtils.getItemDisplayName(itemStack, translateFunction);
             if (value.startsWith("/") && value.endsWith("/")) {
                 return Pattern.matches(value.substring(1, value.length() - 1), name);
             } else {
                 return value.equals(name);
             }
         }),
-        HASH("hash", HashPredicate.class, (value, player, world, livingEntity, itemStack) -> {
+        HASH("hash", HashPredicate.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             String nbt = ItemNBTUtils.getNMSItemStackJson(itemStack);
             CompoundTag compoundTag = (CompoundTag) NBTParsingUtils.fromSNBT(nbt);
             if (compoundTag.containsKey("tag")) {
@@ -170,52 +159,52 @@ public class ChimeModelOverride extends ModelOverride {
                 return false;
             }
         }),
-        DIMENSION_ID("dimension/id", String.class, (value, player, world, livingEntity, itemStack) -> {
+        DIMENSION_ID("dimension/id", String.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return world != null && WorldUtils.getNamespacedKey(world).equals(value);
         }),
-        DIMENSION_HAS_SKY_LIGHT("dimension/has_sky_light", boolean.class, (value, player, world, livingEntity, itemStack) -> {
+        DIMENSION_HAS_SKY_LIGHT("dimension/has_sky_light", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return world != null && new DimensionManagerWrapper(world).hasSkyLight() == value;
         }),
-        DIMENSION_HAS_CEILING("dimension/has_ceiling", boolean.class, (value, player, world, livingEntity, itemStack) -> {
+        DIMENSION_HAS_CEILING("dimension/has_ceiling", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return world != null && new DimensionManagerWrapper(world).hasCeiling() == value;
         }),
-        DIMENSION_ULTRAWARM("dimension/ultrawarm", boolean.class, (value, player, world, livingEntity, itemStack) -> {
+        DIMENSION_ULTRAWARM("dimension/ultrawarm", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return world != null && new DimensionManagerWrapper(world).ultraWarm() == value;
         }),
-        DIMENSION_NATURAL("dimension/natural", boolean.class, (value, player, world, livingEntity, itemStack) -> {
+        DIMENSION_NATURAL("dimension/natural", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return world != null && new DimensionManagerWrapper(world).natural() == value;
         }),
-        DIMENSION_HAS_ENDER_DRAGON_FIGHT("dimension/has_ender_dragon_fight", boolean.class, (value, player, world, livingEntity, itemStack) -> {
+        DIMENSION_HAS_ENDER_DRAGON_FIGHT("dimension/has_ender_dragon_fight", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return world != null && new DimensionManagerWrapper(world).createDragonFight() == value;
         }),
-        DIMENSION_PIGLIN_SAFE("dimension/piglin_safe", boolean.class, (value, player, world, livingEntity, itemStack) -> {
+        DIMENSION_PIGLIN_SAFE("dimension/piglin_safe", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return world != null && new DimensionManagerWrapper(world).piglinSafe() == value;
         }),
-        DIMENSION_BED_WORKS("dimension/bed_works", boolean.class, (value, player, world, livingEntity, itemStack) -> {
+        DIMENSION_BED_WORKS("dimension/bed_works", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return world != null && new DimensionManagerWrapper(world).bedWorks() == value;
         }),
-        DIMENSION_RESPAWN_ANCHOR_WORKS("dimension/respawn_anchor_works", boolean.class, (value, player, world, livingEntity, itemStack) -> {
+        DIMENSION_RESPAWN_ANCHOR_WORKS("dimension/respawn_anchor_works", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return world != null && new DimensionManagerWrapper(world).respawnAnchorWorks() == value;
         }),
-        DIMENSION_HAS_RAIDS("dimension/has_raids", boolean.class, (value, player, world, livingEntity, itemStack) -> {
+        DIMENSION_HAS_RAIDS("dimension/has_raids", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return world != null && new DimensionManagerWrapper(world).hasRaids() == value;
         }),
-        WORLD_RAINING("world/raining", boolean.class, (value, player, world, livingEntity, itemStack) -> {
+        WORLD_RAINING("world/raining", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return world != null && world.hasStorm() == value;
         }),
-        WORLD_THUNDERING("world/thundering", boolean.class, (value, player, world, livingEntity, itemStack) -> {
+        WORLD_THUNDERING("world/thundering", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return world != null && world.isThundering() == value;
         }),
-        WORLD_BIOME_ID("world/biome/id", String.class, (value, player, world, livingEntity, itemStack) -> {
+        WORLD_BIOME_ID("world/biome/id", String.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return world != null && livingEntity != null && world.getBiome(livingEntity.getLocation()).getKey().toString().equals(value);
         }),
-        WORLD_BIOME_PRECIPITATION("world/biome/precipitation", BiomePrecipitation.class, (value, player, world, livingEntity, itemStack) -> {
+        WORLD_BIOME_PRECIPITATION("world/biome/precipitation", BiomePrecipitation.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             if (world == null || livingEntity == null) {
                 return false;
             }
             return WorldUtils.getPrecipitation(livingEntity.getLocation()).equals(value);
         }),
-        WORLD_BIOME_TEMPERATURE("world/biome/temperature", Range.class, (value, player, world, livingEntity, itemStack) -> {
+        WORLD_BIOME_TEMPERATURE("world/biome/temperature", Range.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             if (world == null || livingEntity == null) {
                 return false;
             }
@@ -226,7 +215,7 @@ public class ChimeModelOverride extends ModelOverride {
                 return value.contains(world.getTemperature(location.getBlockX(), location.getBlockZ()));
             }
         }),
-        WORLD_BIOME_DOWNFALL("world/biome/downfall", Range.class, (value, player, world, livingEntity, itemStack) -> {
+        WORLD_BIOME_DOWNFALL("world/biome/downfall", Range.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             if (world == null || livingEntity == null) {
                 return false;
             }
@@ -237,7 +226,7 @@ public class ChimeModelOverride extends ModelOverride {
                 return value.contains(world.getHumidity(location.getBlockX(), location.getBlockZ()));
             }
         }),
-        ENTITY_NBT("entity/nbt", JSONObject.class, (value, player, world, livingEntity, itemStack) -> {
+        ENTITY_NBT("entity/nbt", JSONObject.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             if (livingEntity == null) {
                 return false;
             }
@@ -245,32 +234,32 @@ public class ChimeModelOverride extends ModelOverride {
             CompoundTag compoundTag = (CompoundTag) NBTParsingUtils.fromSNBT(nbt);
             return ChimeUtils.matchesJsonObject(value, compoundTag);
         }),
-        ENTITY_X("entity/x", Range.class, (value, player, world, livingEntity, itemStack) -> {
+        ENTITY_X("entity/x", Range.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return livingEntity != null && value.contains(livingEntity.getLocation().getX());
         }),
-        ENTITY_Y("entity/y", Range.class, (value, player, world, livingEntity, itemStack) -> {
+        ENTITY_Y("entity/y", Range.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return livingEntity != null && value.contains(livingEntity.getLocation().getY());
         }),
-        ENTITY_Z("entity/z", Range.class, (value, player, world, livingEntity, itemStack) -> {
+        ENTITY_Z("entity/z", Range.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return livingEntity != null && value.contains(livingEntity.getLocation().getZ());
         }),
-        ENTITY_LIGHT("entity/light", Range.class, (value, player, world, livingEntity, itemStack) -> {
+        ENTITY_LIGHT("entity/light", Range.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return livingEntity != null && value.contains(livingEntity.getLocation().getBlock().getLightLevel());
         }),
-        ENTITY_BLOCK_LIGHT("entity/block_light", Range.class, (value, player, world, livingEntity, itemStack) -> {
+        ENTITY_BLOCK_LIGHT("entity/block_light", Range.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return livingEntity != null && value.contains(livingEntity.getLocation().getBlock().getLightFromBlocks());
         }),
-        ENTITY_SKY_LIGHT("entity/sky_light", Range.class, (value, player, world, livingEntity, itemStack) -> {
+        ENTITY_SKY_LIGHT("entity/sky_light", Range.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return livingEntity != null && value.contains(livingEntity.getLocation().getBlock().getLightFromSky());
         }),
-        ENTITY_CAN_SEE_SKY("entity/can_see_sky", boolean.class, (value, player, world, livingEntity, itemStack) -> {
+        ENTITY_CAN_SEE_SKY("entity/can_see_sky", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             if (livingEntity == null) {
                 return false;
             }
             Location location = livingEntity.getEyeLocation();
             return (livingEntity.getWorld().getHighestBlockYAt(location) <= location.getY()) == value;
         }),
-        ENTITY_HAND("entity/hand", ItemInHand.class, (value, player, world, livingEntity, itemStack) -> {
+        ENTITY_HAND("entity/hand", ItemInHand.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             if (livingEntity == null) {
                 if (player == null) {
                     return false;
@@ -303,7 +292,7 @@ public class ChimeModelOverride extends ModelOverride {
             }
             return false;
         }),
-        ENTITY_SLOT("entity/slot", EquipmentSlot.class, (value, player, world, livingEntity, itemStack) -> {
+        ENTITY_SLOT("entity/slot", EquipmentSlot.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             if (livingEntity == null) {
                 if (player == null) {
                     return false;
@@ -332,7 +321,7 @@ public class ChimeModelOverride extends ModelOverride {
             }
             return false;
         }),
-        ENTITY_TARGET("entity/target", TargetType.class, (value, player, world, livingEntity, itemStack) -> {
+        ENTITY_TARGET("entity/target", TargetType.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             if (!(livingEntity instanceof Player)) {
                 return false;
             }
@@ -347,7 +336,7 @@ public class ChimeModelOverride extends ModelOverride {
             }
             return false;
         }),
-        ENTITY_TARGET_BLOCK_ID("entity/target_block/id", String.class, (value, player, world, livingEntity, itemStack) -> {
+        ENTITY_TARGET_BLOCK_ID("entity/target_block/id", String.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             if (livingEntity == null) {
                 return false;
             }
@@ -371,7 +360,7 @@ public class ChimeModelOverride extends ModelOverride {
                 return value.equals(material.getKey().toString());
             }
         }),
-        ENTITY_TARGET_BLOCK_CAN_MINE("entity/target_block/can_mine", boolean.class, (value, player, world, livingEntity, itemStack) -> {
+        ENTITY_TARGET_BLOCK_CAN_MINE("entity/target_block/can_mine", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             if (livingEntity == null) {
                 return false;
             }
@@ -381,7 +370,7 @@ public class ChimeModelOverride extends ModelOverride {
             }
             return result.getHitBlock().isPreferredTool(itemStack);
         }),
-        ENTITY_TARGET_ENTITY_ID("entity/target_entity/id", String.class, (value, player, world, livingEntity, itemStack) -> {
+        ENTITY_TARGET_ENTITY_ID("entity/target_entity/id", String.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             if (livingEntity == null) {
                 return false;
             }
@@ -394,7 +383,7 @@ public class ChimeModelOverride extends ModelOverride {
             }
             return result.getHitEntity().getType().getKey().toString().equals(value);
         }),
-        ENTITY_TARGET_ENTITY_NBT("entity/target_entity/nbt", JSONObject.class, (value, player, world, livingEntity, itemStack) -> {
+        ENTITY_TARGET_ENTITY_NBT("entity/target_entity/nbt", JSONObject.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             if (livingEntity == null) {
                 return false;
             }
@@ -431,9 +420,9 @@ public class ChimeModelOverride extends ModelOverride {
             return predicate;
         }
 
-        public boolean test(Object value, OfflineICPlayer player, World world, LivingEntity entity, ItemStack itemStack) {
+        public boolean test(Object value, OfflineICPlayer player, World world, LivingEntity entity, ItemStack itemStack, UnaryOperator<String> translateFunction) {
             try {
-                return predicate.test(value, player, world, entity, itemStack);
+                return predicate.test(value, player, world, entity, itemStack, translateFunction);
             } catch (Throwable e) {
                 return false;
             }
@@ -470,7 +459,7 @@ public class ChimeModelOverride extends ModelOverride {
     @FunctionalInterface
     public interface ChimeOverridePredicate<T> {
 
-        boolean test(T t, OfflineICPlayer player, World world, LivingEntity entity, ItemStack itemStack) throws Throwable;
+        boolean test(T t, OfflineICPlayer player, World world, LivingEntity entity, ItemStack itemStack, UnaryOperator<String> translateFunction) throws Throwable;
 
     }
 

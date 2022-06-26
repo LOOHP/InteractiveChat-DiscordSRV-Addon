@@ -53,7 +53,7 @@ public class ChimeItemTextureResolver implements CustomItemTextureResolver {
 
     @Override
     public ValuePairs<BlockModel, Map<String, TextureResource>> getItemPostResolveFunction(ValuePairs<BlockModel, Map<String, TextureResource>> previousResult, String modelKey, EquipmentSlot heldSlot, ItemStack itemStack, boolean is1_8, Map<ModelOverrideType, Float> predicates, OfflineICPlayer player, World world, LivingEntity entity, UnaryOperator<String> translateFunction) {
-        return new ValuePairs<>(chimeManager.resolveBlockModel(modelKey, is1_8, predicates, player, world, entity, itemStack), previousResult.getSecond());
+        return new ValuePairs<>(chimeManager.resolveBlockModel(modelKey, is1_8, predicates, player, world, entity, itemStack, translateFunction), previousResult.getSecond());
     }
 
     @Override
@@ -68,7 +68,7 @@ public class ChimeItemTextureResolver implements CustomItemTextureResolver {
 
     @Override
     public Optional<TextureResource> getArmorOverrideTextures(String layer, EquipmentSlot heldSlot, ItemStack itemStack, OfflineICPlayer player, World world, LivingEntity entity, UnaryOperator<String> translateFunction) {
-        return Optional.ofNullable(chimeManager.getArmorOverrideTextures(layer, itemStack, player, world, entity));
+        return Optional.ofNullable(chimeManager.getArmorOverrideTextures(layer, itemStack, player, world, entity, translateFunction));
     }
 
 }

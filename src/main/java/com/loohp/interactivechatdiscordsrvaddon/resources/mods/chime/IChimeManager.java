@@ -28,8 +28,10 @@ import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.function.UnaryOperator;
+
 public interface IChimeManager extends IModelManager, ITextureManager {
 
-    TextureResource getArmorOverrideTextures(String layer, ItemStack itemStack, OfflineICPlayer player, World world, LivingEntity entity);
+    TextureResource getArmorOverrideTextures(String layer, ItemStack itemStack, OfflineICPlayer player, World world, LivingEntity entity, UnaryOperator<String> translateFunction);
 
 }
