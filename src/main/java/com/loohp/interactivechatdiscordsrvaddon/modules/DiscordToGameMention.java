@@ -21,18 +21,19 @@
 package com.loohp.interactivechatdiscordsrvaddon.modules;
 
 import com.loohp.interactivechat.config.Config;
+import com.loohp.interactivechat.objectholders.Either;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.SoundUtils;
 import com.loohp.interactivechat.utils.TitleUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import net.md_5.bungee.api.ChatColor;
-import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
+import java.util.Arrays;
+
 public class DiscordToGameMention {
 
-    public static void playTitleScreen(String sender, String channelName, String guild, Player reciever) {
+    public static void playTitleScreen(String sender, String channelName, String guild, Player receiver) {
         Config config = Config.getConfig(InteractiveChatDiscordSrvAddon.CONFIG_ID);
 
         String title = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordMention.MentionedTitle").replace("{DiscordUser}", sender).replace("{TextChannel}", "#" + channelName).replace("{Guild}", guild));
@@ -40,34 +41,44 @@ public class DiscordToGameMention {
         String actionbar = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordMention.DiscordMentionActionbar").replace("{DiscordUser}", sender).replace("{TextChannel}", "#" + channelName).replace("{Guild}", guild));
 
         String settings = config.getConfiguration().getString("DiscordMention.MentionedSound");
-        Sound sound = null;
+        Either<Sound, String> sound;
         float volume = 3.0F;
         float pitch = 1.0F;
 
         String[] settingsArgs = settings.split(":");
-        if (settingsArgs.length == 3) {
-            settings = settingsArgs[0];
+        if (settingsArgs.length >= 3) {
+            settings = String.join("", Arrays.copyOfRange(settingsArgs, 0, settingsArgs.length - 2)).toUpperCase();
             try {
-                volume = Float.parseFloat(settingsArgs[1]);
+                volume = Float.parseFloat(settingsArgs[settingsArgs.length - 2]);
             } catch (Exception ignore) {
             }
             try {
-                pitch = Float.parseFloat(settingsArgs[2]);
+                pitch = Float.parseFloat(settingsArgs[settingsArgs.length - 1]);
             } catch (Exception ignore) {
             }
-        } else if (settingsArgs.length > 0) {
-            settings = settingsArgs[0];
+        } else {
+            settings = settings.toUpperCase();
         }
 
-        sound = SoundUtils.parseSound(settings);
-        if (sound == null) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "Invalid Sound: " + settings);
+        Sound bukkitSound = SoundUtils.parseSound(settings);
+        if (bukkitSound == null) {
+            settings = settings.toLowerCase();
+            if (!settings.contains(":")) {
+                settings = "minecraft:" + settings;
+            }
+            sound = Either.right(settings);
+        } else {
+            sound = Either.left(bukkitSound);
         }
 
         int time = (int) Math.round(config.getConfiguration().getDouble("DiscordMention.MentionedTitleDuration") * 20);
-        TitleUtils.sendTitle(reciever, title, subtitle, actionbar, 10, time, 20);
+        TitleUtils.sendTitle(receiver, title, subtitle, actionbar, 10, time, 20);
         if (sound != null) {
-            reciever.playSound(reciever.getLocation(), sound, volume, pitch);
+            if (sound.isLeft()) {
+                receiver.playSound(receiver.getLocation(), sound.getLeft(), volume, pitch);
+            } else {
+                receiver.playSound(receiver.getLocation(), sound.getRight(), volume, pitch);
+            }
         }
     }
 
