@@ -28,7 +28,6 @@ import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
-import com.loohp.interactivechat.utils.JsonUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageMeta;
@@ -150,12 +149,10 @@ public class ResourceManager implements AutoCloseable {
             JSONObject packJson = (JSONObject) json.get("pack");
             format = ((Number) packJson.get("pack_format")).intValue();
             String rawDescription = packJson.get("description").toString();
-            if (JsonUtils.isValid(rawDescription)) {
-                try {
-                    description = InteractiveChatComponentSerializer.gson().deserialize(rawDescription);
-                } catch (Exception e) {
-                    description = null;
-                }
+            try {
+                description = InteractiveChatComponentSerializer.gson().deserialize(rawDescription);
+            } catch (Exception e) {
+                description = null;
             }
             if (description == null) {
                 description = LegacyComponentSerializer.legacySection().deserialize(rawDescription);
