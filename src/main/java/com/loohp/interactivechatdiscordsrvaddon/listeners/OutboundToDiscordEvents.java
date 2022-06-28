@@ -690,7 +690,7 @@ public class OutboundToDiscordEvents implements Listener {
                 color = ColorUtils.getColor(ColorUtils.toChatColor(colorStr));
             }
             if (color.equals(Color.white)) {
-                color = new Color(0xFFFFFE);
+                color = DiscordContentUtils.OFFSET_WHITE;
             }
             messageFormat.setColorRaw(color.getRGB());
         }

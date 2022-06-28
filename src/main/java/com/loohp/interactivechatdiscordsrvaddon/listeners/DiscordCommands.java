@@ -676,7 +676,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                         if (color == null) {
                             color = new Color(0xAAAAAA);
                         } else if (color.equals(Color.WHITE)) {
-                            color = new Color(0xFFFFFE);
+                            color = DiscordContentUtils.OFFSET_WHITE;
                         }
                         builder.setColor(color);
                         if (packInfo.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) > 0) {

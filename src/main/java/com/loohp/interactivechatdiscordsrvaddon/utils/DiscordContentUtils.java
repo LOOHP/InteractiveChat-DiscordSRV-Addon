@@ -71,6 +71,8 @@ import java.util.function.Supplier;
 
 public class DiscordContentUtils {
 
+    public static final Color OFFSET_WHITE = new Color(0xFFFFFE);
+
     public static final String LEFT_EMOJI = "\u2B05\uFE0F";
     public static final String RIGHT_EMOJI = "\u27A1\uFE0F";
 
@@ -90,13 +92,16 @@ public class DiscordContentUtils {
                     ItemStack item = iData.getItemStack().get();
                     Color color = DiscordItemStackUtils.getDiscordColor(item);
                     if (color == null || color.equals(Color.WHITE)) {
-                        color = new Color(0xFFFFFE);
+                        color = OFFSET_WHITE;
                     }
                     try {
-                        BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer(), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
+                        BufferedImage image = ImageUtils.resizeImage(ImageGeneration.getItemStackImage(item, data.getPlayer(), InteractiveChatDiscordSrvAddon.plugin.itemAltAir), 1.5);
                         byte[] imageData = ImageUtils.toArray(image);
 
-                        DiscordMessageContent content = new DiscordMessageContent(DiscordItemStackUtils.getItemNameForDiscord(item, player), "attachment://Item_" + i + ".png", color);
+                        DiscordMessageContent content = new DiscordMessageContent(title, null, color);
+                        content.setTitle(DiscordItemStackUtils.getItemNameForDiscord(item, player));
+                        content.setThumbnail("attachment://Item_" + i + ".png");
+
                         content.addAttachment("Item_" + i + ".png", imageData);
                         contents.add(content);
 
