@@ -35,6 +35,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent.
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration.State;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import com.loohp.interactivechat.libs.org.apache.commons.lang3.RandomStringUtils;
 import com.loohp.interactivechat.objectholders.LegacyIdKey;
 import com.loohp.interactivechat.utils.ComponentCompacting;
 import com.loohp.interactivechat.utils.ComponentFlattening;
@@ -350,7 +351,14 @@ public class ComponentStringUtils {
         return parent.children(children);
     }
 
+    public static String toMagic(String str) {
+        return toMagic(null, str);
+    }
+
     public static String toMagic(FontProvider provider, String str) {
+        if (provider == null) {
+            return RandomStringUtils.random(str.length());
+        }
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < str.length(); i++) {
             String currentChar = str.substring(i, i + 1);

@@ -473,21 +473,21 @@ public class DiscordItemStackUtils {
             } else {
                 enchantments = item.getEnchantments();
             }
-            for (Entry<Enchantment, Integer> entry : CustomMapUtils.sortMapByValue(enchantments).entrySet()) {
-                Enchantment ench = entry.getKey();
+            for (Entry<Enchantment, Integer> entry : enchantments.entrySet()) {
+                Enchantment enchantment = entry.getKey();
                 int level = entry.getValue();
-                String key = TranslationKeyUtils.getEnchantment(ench);
-                String enchName;
+                String key = TranslationKeyUtils.getEnchantment(enchantment);
+                String enchantmentName;
                 if (key.equals(getTranslation(key, language))) {
-                    enchName = WordUtils.capitalize(ench.getName().toLowerCase().replace("_", " "));
+                    continue;
                 } else {
-                    enchName = key;
+                    enchantmentName = key;
                 }
-                if (enchName != null) {
-                    if (ench.getMaxLevel() == 1 && level == 1) {
-                        prints.add(ToolTipComponent.text(Component.translatable(enchName).color(NamedTextColor.GRAY)));
+                if (enchantmentName != null) {
+                    if (enchantment.getMaxLevel() == 1 && level == 1) {
+                        prints.add(ToolTipComponent.text(Component.translatable(enchantmentName).color(NamedTextColor.GRAY)));
                     } else {
-                        prints.add(ToolTipComponent.text(Component.translatable(enchName).append(Component.text(" ")).append(Component.translatable(TranslationKeyUtils.getEnchantmentLevel(level))).color(NamedTextColor.GRAY)));
+                        prints.add(ToolTipComponent.text(Component.translatable(enchantmentName).append(Component.text(" ")).append(Component.translatable(TranslationKeyUtils.getEnchantmentLevel(level))).color(NamedTextColor.GRAY)));
                     }
                 }
             }
