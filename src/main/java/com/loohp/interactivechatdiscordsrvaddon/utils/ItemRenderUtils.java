@@ -23,15 +23,21 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
+import com.loohp.interactivechat.libs.net.querz.nbt.tag.CompoundTag;
+import com.loohp.interactivechat.libs.net.querz.nbt.tag.IntArrayTag;
+import com.loohp.interactivechat.libs.net.querz.nbt.tag.ListTag;
+import com.loohp.interactivechat.libs.net.querz.nbt.tag.StringTag;
+import com.loohp.interactivechat.libs.net.querz.nbt.tag.Tag;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
-import com.loohp.interactivechat.libs.org.json.simple.parser.ParseException;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechat.utils.CompassUtils;
 import com.loohp.interactivechat.utils.FilledMapUtils;
+import com.loohp.interactivechat.utils.ItemNBTUtils;
 import com.loohp.interactivechat.utils.MCVersion;
+import com.loohp.interactivechat.utils.NBTParsingUtils;
 import com.loohp.interactivechat.utils.SkinUtils;
 import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.BannerGraphics;
@@ -79,6 +85,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -156,15 +163,58 @@ public class ItemRenderUtils {
             }
         } else if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
             BufferedImage skinImage = manager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "steve").getTexture();
-            try {
-                String base64 = SkinUtils.getSkinValue(item.getItemMeta());
-                if (base64 != null) {
-                    JSONObject json = (JSONObject) new JSONParser().parse(new String(Base64.getDecoder().decode(base64)));
-                    String value = (String) ((JSONObject) ((JSONObject) json.get("textures")).get("SKIN")).get("url");
-                    skinImage = ImageUtils.downloadImage(value);
+            if (item.hasItemMeta()) {
+                Tag<?> skullOwnerTag = ((CompoundTag) NBTParsingUtils.fromSNBT(ItemNBTUtils.getNMSItemStackJson(item))).getCompoundTag("tag").get("SkullOwner");
+                try {
+                    String skinURL = null;
+                    if (skullOwnerTag instanceof StringTag) {
+                        skinURL = SkinUtils.getSkinURLFromUUID(Bukkit.getOfflinePlayer(((StringTag) skullOwnerTag).getValue()).getUniqueId());
+                    } else if (skullOwnerTag instanceof CompoundTag) {
+                        CompoundTag propertiesTag = (CompoundTag) ((CompoundTag) skullOwnerTag).get("Properties");
+                        if (propertiesTag != null) {
+                            ListTag<?> texturesTag = (ListTag<?>) propertiesTag.get("textures");
+                            if (texturesTag != null && texturesTag.size() > 0) {
+                                StringTag valueTag = (StringTag) ((CompoundTag) texturesTag.get(0)).get("Value");
+                                if (valueTag != null) {
+                                    JSONObject texturesJson = (JSONObject) ((JSONObject) new JSONParser().parse(new String(Base64.getDecoder().decode(valueTag.getValue())))).get("textures");
+                                    if (texturesJson != null) {
+                                        JSONObject skinJson = (JSONObject) texturesJson.get("SKIN");
+                                        if (skinJson != null) {
+                                            skinURL = (String) skinJson.get("url");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (skinURL == null) {
+                            Tag<?> uuidTag = ((CompoundTag) skullOwnerTag).get("Id");
+                            if (uuidTag != null) {
+                                if (uuidTag instanceof StringTag) {
+                                    try {
+                                        skinURL = SkinUtils.getSkinURLFromUUID(UUID.fromString(((StringTag) uuidTag).getValue()));
+                                    } catch (IllegalArgumentException ignore) {
+                                    }
+                                } else if (uuidTag instanceof IntArrayTag) {
+                                    int[] array = ((IntArrayTag) uuidTag).getValue();
+                                    if (array.length == 4) {
+                                        UUID uuid = new UUID((long) array[0] << 32 | (long) array[1] & 4294967295L, (long) array[2] << 32 | (long) array[3] & 4294967295L);
+                                        skinURL = SkinUtils.getSkinURLFromUUID(uuid);
+                                    }
+                                }
+                            }
+                        }
+                        if (skinURL == null) {
+                            StringTag nameTag = (StringTag) ((CompoundTag) skullOwnerTag).get("Name");
+                            skinURL = SkinUtils.getSkinURLFromUUID(Bukkit.getOfflinePlayer(nameTag.getValue()).getUniqueId());
+                        }
+                    }
+                    System.out.println("Skin: " + skinURL);
+                    if (skinURL != null) {
+                        skinImage = ImageUtils.downloadImage(skinURL);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (ParseException e) {
-                e.printStackTrace();
             }
             providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, ModelUtils.convertToModernSkinTexture(skinImage)));
         } else if (xMaterial.equals(XMaterial.ELYTRA)) {

@@ -125,6 +125,7 @@ public class ImageGeneration {
     public static final int MAP_ICON_PER_ROLE = InteractiveChat.version.isLegacy() ? 4 : 16;
     public static final int MAP_SIZE = 1120;
     public static final int SPACING = 36;
+    public static final int DEFAULT_ITEM_RENDER_SIZE = 32;
     public static final double ITEM_AMOUNT_TEXT_DARKEN_FACTOR = 75.0 / 255.0;
     public static final Color ENCHANTMENT_GLINT_LEGACY_COLOR = new Color(164, 84, 255);
     public static final String PLAYER_CAPE_CACHE_KEY = "PlayerCapeTexture";
@@ -223,11 +224,21 @@ public class ImageGeneration {
         return getItemStackImage(item, player, false);
     }
 
+    public static BufferedImage getItemStackImage(ItemStack item, OfflineICPlayer player, int renderSize) throws IOException {
+        return getItemStackImage(item, player, false, renderSize);
+    }
+
     public static BufferedImage getItemStackImage(ItemStack item, OfflineICPlayer player, boolean alternateAir) throws IOException {
+        return getItemStackImage(item, player, alternateAir, DEFAULT_ITEM_RENDER_SIZE);
+    }
+
+    public static BufferedImage getItemStackImage(ItemStack item, OfflineICPlayer player, boolean alternateAir, int renderSize) throws IOException {
         InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
         Debug.debug("ImageGeneration creating item stack image " + item);
 
-        BufferedImage background = new BufferedImage(36, 36, BufferedImage.TYPE_INT_ARGB);
+        double scale = (double) renderSize / DEFAULT_ITEM_RENDER_SIZE;
+
+        BufferedImage background = new BufferedImage((int) Math.round(36 * scale), (int) Math.round(36 * scale), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = background.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 
@@ -240,7 +251,7 @@ public class ImageGeneration {
                 return background;
             }
         } else {
-            itemImage = getRawItemImage(item, player);
+            itemImage = getRawItemImage(item, player, renderSize);
         }
 
         if (itemImage != null) {
@@ -799,8 +810,14 @@ public class ImageGeneration {
     }
 
     private static BufferedImage getRawItemImage(ItemStack item, OfflineICPlayer player) throws IOException {
+        return getRawItemImage(item, player, DEFAULT_ITEM_RENDER_SIZE);
+    }
+
+    private static BufferedImage getRawItemImage(ItemStack item, OfflineICPlayer player, int size) throws IOException {
         InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
         Debug.debug("ImageGeneration creating raw item stack image " + (item == null ? "null" : ItemNBTUtils.getNMSItemStackJson(item)));
+
+        double scale = (double) size / DEFAULT_ITEM_RENDER_SIZE;
 
         XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
         int amount = item.getAmount();
@@ -813,12 +830,12 @@ public class ImageGeneration {
         String modelKey = processResult.getModelKey();
 
         BufferedImage itemImage;
-        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, resourceManager.get(), processResult.getPostResolveFunction(), version.get().isOld(), modelKey, ModelDisplayPosition.GUI, predicates, providedTextures, tintIndexData, requiresEnchantmentGlint, processResult.getEnchantmentGlintFunction(), processResult.getRawEnchantmentGlintFunction());
+        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(size, size, resourceManager.get(), processResult.getPostResolveFunction(), version.get().isOld(), modelKey, ModelDisplayPosition.GUI, predicates, providedTextures, tintIndexData, requiresEnchantmentGlint, processResult.getEnchantmentGlintFunction(), processResult.getRawEnchantmentGlintFunction());
         if (renderResult.isSuccessful()) {
             itemImage = renderResult.getImage();
         } else {
             Debug.debug("ImageGeneration creating missing Image for material " + xMaterial);
-            itemImage = TextureManager.getMissingImage(32, 32);
+            itemImage = TextureManager.getMissingImage(size, size);
         }
 
         if (item.getType().getMaxDurability() > 0) {
@@ -827,33 +844,33 @@ public class ImageGeneration {
             double percentage = Math.max(0.0, Math.min(1.0, ((double) durability / (double) maxDur)));
             if (percentage < 1) {
                 int hue = (int) (125 * percentage);
-                int length = (int) Math.round(26 * percentage);
+                int length = (int) Math.round(26 * scale * percentage);
                 Color color = Color.getHSBColor((float) hue / 360, 1, 1);
 
                 Graphics2D g4 = itemImage.createGraphics();
                 g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
                 g4.setColor(Color.BLACK);
-                g4.fillPolygon(new int[] {4, 30, 30, 4}, new int[] {26, 26, 30, 30}, 4);
+                g4.fillPolygon(new int[] {(int) Math.round(4 * scale), (int) Math.round(30 * scale), (int) Math.round(30 * scale), (int) Math.round(4 * scale)}, new int[] {(int) Math.round(26 * scale), (int) Math.round(26 * scale), (int) Math.round(30 * scale), (int) Math.round(30 * scale)}, 4);
                 g4.setColor(color);
-                g4.fillPolygon(new int[] {4, 4 + length, 4 + length, 4}, new int[] {26, 26, 28, 28}, 4);
+                g4.fillPolygon(new int[] {(int) Math.round(4 * scale), (int) Math.round(4 * scale + length), (int) Math.round(4 * scale + length), (int) Math.round(4 * scale)}, new int[] {(int) Math.round(26 * scale), (int) Math.round(26 * scale), (int) Math.round(28 * scale), (int) Math.round(28 * scale)}, 4);
                 g4.dispose();
             }
         }
         if (xMaterial.equals(XMaterial.BUNDLE)) {
             double fullness = Math.max(0.0, Math.min(1.0, BundleUtils.getFullnessPercentage(((BundleMeta) item.getItemMeta()).getItems())));
-            int length = (int) Math.round(26 * fullness);
+            int length = (int) Math.round(26 * scale * fullness);
 
             Graphics2D g4 = itemImage.createGraphics();
             g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             g4.setColor(Color.BLACK);
-            g4.fillPolygon(new int[] {4, 30, 30, 4}, new int[] {26, 26, 30, 30}, 4);
+            g4.fillPolygon(new int[] {(int) Math.round(4 * scale), (int) Math.round(30 * scale), (int) Math.round(30 * scale), (int) Math.round(4 * scale)}, new int[] {(int) Math.round(26 * scale), (int) Math.round(26 * scale), (int) Math.round(30 * scale), (int) Math.round(30 * scale)}, 4);
             g4.setColor(BUNDLE_FULLNESS_BAR_COLOR);
-            g4.fillPolygon(new int[] {4, 4 + length, 4 + length, 4}, new int[] {26, 26, 28, 28}, 4);
+            g4.fillPolygon(new int[] {(int) Math.round(4 * scale), (int) Math.round(4 * scale + length), (int) Math.round(4 * scale + length), (int) Math.round(4 * scale)}, new int[] {(int) Math.round(26 * scale), (int) Math.round(26 * scale), (int) Math.round(28 * scale), (int) Math.round(28 * scale)}, 4);
             g4.dispose();
         }
 
         if (amount != 1) {
-            BufferedImage newItemImage = new BufferedImage(40, 40, BufferedImage.TYPE_INT_ARGB);
+            BufferedImage newItemImage = new BufferedImage((int) Math.round(40 * scale), (int) Math.round(40 * scale), BufferedImage.TYPE_INT_ARGB);
             Graphics2D g4 = newItemImage.createGraphics();
             g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             g4.drawImage(itemImage, 0, 0, null);
@@ -861,7 +878,7 @@ public class ImageGeneration {
             if (amount <= 0) {
                 component = component.color(NamedTextColor.RED);
             }
-            newItemImage = ImageUtils.printComponentRightAligned(resourceManager.get(), newItemImage, component, InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), 33, 17, 16, ITEM_AMOUNT_TEXT_DARKEN_FACTOR);
+            newItemImage = ImageUtils.printComponentRightAligned(resourceManager.get(), newItemImage, component, InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), (int) Math.round(33 * scale), (int) Math.round(17 * scale), (float) (16 * scale), ITEM_AMOUNT_TEXT_DARKEN_FACTOR);
             g4.dispose();
             itemImage = newItemImage;
         }

@@ -95,7 +95,7 @@ public class DiscordContentUtils {
                         color = OFFSET_WHITE;
                     }
                     try {
-                        BufferedImage image = ImageUtils.resizeImage(ImageGeneration.getItemStackImage(item, data.getPlayer(), InteractiveChatDiscordSrvAddon.plugin.itemAltAir), 1.5);
+                        BufferedImage image = ImageGeneration.getItemStackImage(item, data.getPlayer(), InteractiveChatDiscordSrvAddon.plugin.itemAltAir, 48);
                         byte[] imageData = ImageUtils.toArray(image);
 
                         DiscordMessageContent content = new DiscordMessageContent(title, null, color);
