@@ -20,32 +20,40 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.objectholders;
 
-import github.scarsz.discordsrv.dependencies.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
+import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.GenericComponentInteractionCreateEvent;
+import github.scarsz.discordsrv.dependencies.jda.api.interactions.components.ActionRow;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-public class ReactionsHandler {
+public class InteractionHandler {
 
-    private List<String> emojis;
+    private Collection<? extends ActionRow> interactionToRegister;
+    private List<String> interactions;
     private long expire;
-    private BiConsumer<GuildMessageReactionAddEvent, List<DiscordMessageContent>> reactionConsumer;
+    private BiConsumer<GenericComponentInteractionCreateEvent, List<DiscordMessageContent>> reactionConsumer;
 
-    public ReactionsHandler(List<String> emojis, long expire, BiConsumer<GuildMessageReactionAddEvent, List<DiscordMessageContent>> reactionConsumer) {
-        this.emojis = emojis;
+    public InteractionHandler(Collection<? extends ActionRow> interactionToRegister, List<String> interactions, long expire, BiConsumer<GenericComponentInteractionCreateEvent, List<DiscordMessageContent>> reactionConsumer) {
+        this.interactionToRegister = interactionToRegister;
+        this.interactions = interactions;
         this.expire = expire;
         this.reactionConsumer = reactionConsumer;
     }
 
-    public List<String> getEmojis() {
-        return emojis;
+    public Collection<? extends ActionRow> getInteractionToRegister() {
+        return interactionToRegister;
+    }
+
+    public List<String> getInteractions() {
+        return interactions;
     }
 
     public long getExpire() {
         return expire;
     }
 
-    public BiConsumer<GuildMessageReactionAddEvent, List<DiscordMessageContent>> getReactionConsumer() {
+    public BiConsumer<GenericComponentInteractionCreateEvent, List<DiscordMessageContent>> getReactionConsumer() {
         return reactionConsumer;
     }
 

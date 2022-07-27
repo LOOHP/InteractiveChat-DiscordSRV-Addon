@@ -20,13 +20,7 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.objectholders;
 
-import club.minnced.discord.webhook.send.WebhookEmbed;
-import club.minnced.discord.webhook.send.WebhookEmbed.EmbedAuthor;
-import club.minnced.discord.webhook.send.WebhookEmbed.EmbedField;
-import club.minnced.discord.webhook.send.WebhookEmbed.EmbedFooter;
-import club.minnced.discord.webhook.send.WebhookEmbed.EmbedTitle;
-import club.minnced.discord.webhook.send.WebhookEmbedBuilder;
-import club.minnced.discord.webhook.send.WebhookMessageBuilder;
+import com.loohp.interactivechat.objectholders.ValuePairs;
 import github.scarsz.discordsrv.dependencies.jda.api.EmbedBuilder;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.MessageEmbed;
@@ -327,52 +321,14 @@ public class DiscordMessageContent {
         return RestAction.allOf(actions.keySet());
     }
 
-    public WebhookMessageBuilder toWebhookMessageBuilder() {
-        WebhookEmbedBuilder embed = new WebhookEmbedBuilder().setAuthor(new EmbedAuthor(authorName, authorIconUrl, null)).setColor(color).setThumbnailUrl(thumbnail);
-        if (title != null) {
-            embed.setTitle(new EmbedTitle(title, null));
-        }
-        for (Field field : fields) {
-            embed.addField(new EmbedField(field.isInline(), field.getName(), field.getValue()));
-        }
-        if (description.size() > 0) {
-            embed.setDescription(description.get(0));
-        }
-        if (imageUrl.size() > 0) {
-            embed.setImageUrl(imageUrl.get(0));
-        }
-        if (imageUrl.size() == 1 || description.size() == 1) {
-            if (footer != null) {
-                embed.setFooter(new EmbedFooter(footer, footerImageUrl));
-            }
-        }
-        WebhookMessageBuilder webhookMessage = new WebhookMessageBuilder().addEmbeds(embed.build());
-        for (int i = 1; i < imageUrl.size() || i < description.size(); i++) {
-            WebhookEmbedBuilder otherEmbed = new WebhookEmbedBuilder().setColor(color);
-            if (i < imageUrl.size()) {
-                otherEmbed.setImageUrl(imageUrl.get(i));
-            }
-            if (i < description.size()) {
-                otherEmbed.setDescription(description.get(i));
-            }
-            if (!(i + 1 < imageUrl.size() || i + 1 < description.size())) {
-                if (footer != null) {
-                    otherEmbed.setFooter(new EmbedFooter(footer, footerImageUrl));
-                }
-            }
-            if (!otherEmbed.isEmpty()) {
-                webhookMessage.addEmbeds(otherEmbed.build());
-            }
-        }
-        for (Entry<String, byte[]> entry : attachments.entrySet()) {
-            webhookMessage.addFile(entry.getKey(), entry.getValue());
-        }
-        return webhookMessage;
-    }
-
-    public List<MessageEmbed> toJDAMessageEmbeds() {
+    public ValuePairs<List<MessageEmbed>, Set<String>> toJDAMessageEmbeds() {
+        List<Set<String>> actions = new ArrayList<>();
         List<MessageEmbed> list = new ArrayList<>();
+        Set<String> embeddedAttachments = new HashSet<>();
         EmbedBuilder embed = new EmbedBuilder().setAuthor(authorName, null, authorIconUrl).setColor(color).setThumbnail(thumbnail).setTitle(title);
+        if (thumbnail != null && thumbnail.startsWith("attachment://")) {
+            embeddedAttachments.add(thumbnail.substring(13));
+        }
         for (Field field : fields) {
             embed.addField(field);
         }
@@ -382,6 +338,9 @@ public class DiscordMessageContent {
         if (imageUrl.size() > 0) {
             String url = imageUrl.get(0);
             embed.setImage(url);
+            if (url.startsWith("attachment://")) {
+                embeddedAttachments.add(url.substring(13));
+            }
         }
         if (imageUrl.size() == 1 || description.size() == 1) {
             if (footer != null) {
@@ -400,6 +359,9 @@ public class DiscordMessageContent {
                 String url = imageUrl.get(i);
                 otherEmbed.setImage(url);
                 usedAttachments.add(url);
+                if (url.startsWith("attachment://")) {
+                    embeddedAttachments.add(url.substring(13));
+                }
             }
             if (i < description.size()) {
                 otherEmbed.setDescription(description.get(i));
@@ -415,53 +377,18 @@ public class DiscordMessageContent {
             }
             if (!otherEmbed.isEmpty()) {
                 list.add(otherEmbed.build());
+                actions.add(usedAttachments);
             }
         }
-        return list;
-    }
-
-    public List<WebhookEmbed> toWebhookEmbeds() {
-        List<WebhookEmbed> list = new ArrayList<>();
-        WebhookEmbedBuilder embed = new WebhookEmbedBuilder().setColor(color).setThumbnailUrl(thumbnail);
-        if (title != null) {
-            embed.setTitle(new EmbedTitle(title, null));
-        }
-        for (Field field : fields) {
-            embed.addField(new EmbedField(field.isInline(), field.getName(), field.getValue()));
-        }
-        if (authorName != null) {
-            embed.setAuthor(new EmbedAuthor(authorName, authorIconUrl, null));
-        }
-        if (description.size() > 0) {
-            embed.setDescription(description.get(0));
-        }
-        if (imageUrl.size() > 0) {
-            embed.setImageUrl(imageUrl.get(0));
-        }
-        if (imageUrl.size() == 1 || description.size() == 1) {
-            if (footer != null) {
-                embed.setFooter(new EmbedFooter(footer, footerImageUrl));
-            }
-        }
-        list.add(embed.build());
-        for (int i = 1; i < imageUrl.size() || i < description.size(); i++) {
-            WebhookEmbedBuilder otherEmbed = new WebhookEmbedBuilder().setColor(color);
-            if (i < imageUrl.size()) {
-                otherEmbed.setImageUrl(imageUrl.get(i));
-            }
-            if (i < description.size()) {
-                otherEmbed.setDescription(description.get(i));
-            }
-            if (!(i + 1 < imageUrl.size() || i + 1 < description.size())) {
-                if (footer != null) {
-                    otherEmbed.setFooter(new EmbedFooter(footer, footerImageUrl));
+        for (Set<String> neededUrls : actions) {
+            for (Entry<String, byte[]> attachment : attachments.entrySet()) {
+                String attachmentName = attachment.getKey();
+                if (neededUrls.contains("attachment://" + attachmentName)) {
+                    embeddedAttachments.add(attachmentName);
                 }
             }
-            if (!otherEmbed.isEmpty()) {
-                list.add(otherEmbed.build());
-            }
         }
-        return list;
+        return new ValuePairs<>(list, embeddedAttachments);
     }
 
 }

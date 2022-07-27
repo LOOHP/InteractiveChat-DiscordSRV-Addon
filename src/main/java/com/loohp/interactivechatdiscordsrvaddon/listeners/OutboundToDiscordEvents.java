@@ -20,8 +20,6 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.listeners;
 
-import club.minnced.discord.webhook.WebhookClient;
-import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.api.InteractiveChatAPI;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
@@ -70,7 +68,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.HoverClickDisplayD
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.IDProvider;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayType;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.ReactionsHandler;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.InteractionHandler;
 import com.loohp.interactivechatdiscordsrvaddon.registry.DiscordDataRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.utils.AchievementUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.AdvancementUtils;
@@ -119,8 +117,11 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -595,15 +596,15 @@ public class OutboundToDiscordEvents implements Listener {
             Debug.debug("onDeathMessageSend sending item to discord");
             TextChannel destinationChannel = DiscordSRV.getPlugin().getDestinationTextChannelForGameChannelName(event.getChannel());
             if (event.isUsingWebhooks()) {
-                String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(destinationChannel);
-                WebhookClient client = WebhookClient.withUrl(webHookUrl);
-
-                if (client == null) {
-                    throw new NullPointerException("Unable to get the Webhook client URL for the TextChannel " + destinationChannel.getName());
+                ValuePairs<List<MessageEmbed>, Set<String>> pair = content.toJDAMessageEmbeds();
+                Map<String, InputStream> attachments = new LinkedHashMap<>();
+                for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
+                    if (pair.getSecond().contains(attachment.getKey())) {
+                        attachments.put(attachment.getKey(), new ByteArrayInputStream(attachment.getValue()));
+                    }
                 }
 
-                client.send(content.toWebhookMessageBuilder().setUsername(event.getWebhookName()).setAvatarUrl(event.getWebhookAvatarUrl()).build());
-                client.close();
+                WebhookUtil.deliverMessage(destinationChannel, event.getWebhookName(), event.getWebhookAvatarUrl(), null, pair.getFirst(), attachments, null);
             } else {
                 content.toJDAMessageRestAction(destinationChannel).queue();
             }
@@ -730,15 +731,15 @@ public class OutboundToDiscordEvents implements Listener {
         TextChannel destinationChannel = DiscordSRV.getPlugin().getDestinationTextChannelForGameChannelName(event.getChannel());
         Debug.debug("onAdvancementSend sending message to discord");
         if (event.isUsingWebhooks()) {
-            String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(destinationChannel);
-            WebhookClient client = WebhookClient.withUrl(webHookUrl);
-
-            if (client == null) {
-                throw new NullPointerException("Unable to get the Webhook client URL for the TextChannel " + destinationChannel.getName());
+            ValuePairs<List<MessageEmbed>, Set<String>> pair = content.toJDAMessageEmbeds();
+            Map<String, InputStream> attachments = new LinkedHashMap<>();
+            for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
+                if (pair.getSecond().contains(attachment.getKey())) {
+                    attachments.put(attachment.getKey(), new ByteArrayInputStream(attachment.getValue()));
+                }
             }
 
-            client.send(content.toWebhookMessageBuilder().setUsername(event.getWebhookName()).setAvatarUrl(event.getWebhookAvatarUrl()).build());
-            client.close();
+            WebhookUtil.deliverMessage(destinationChannel, event.getWebhookName(), event.getWebhookAvatarUrl(), null, pair.getFirst(), attachments, null);
         } else {
             content.toJDAMessageRestAction(destinationChannel).queue();
         }
@@ -794,9 +795,9 @@ public class OutboundToDiscordEvents implements Listener {
             dataList.sort(DISPLAY_DATA_COMPARATOR);
 
             Debug.debug("discordMessageSent creating contents");
-            ValuePairs<List<DiscordMessageContent>, ReactionsHandler> pair = DiscordContentUtils.createContents(dataList, player);
+            ValuePairs<List<DiscordMessageContent>, InteractionHandler> pair = DiscordContentUtils.createContents(dataList, player);
             List<DiscordMessageContent> contents = pair.getFirst();
-            ReactionsHandler reactionsHandler = pair.getSecond();
+            InteractionHandler interactionHandler = pair.getSecond();
 
             DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
             Bukkit.getPluginManager().callEvent(discordImageEvent);
@@ -811,15 +812,18 @@ public class OutboundToDiscordEvents implements Listener {
                 for (DiscordMessageContent content : contents) {
                     i += content.getAttachments().size();
                     if (i <= 10) {
-                        embeds.addAll(content.toJDAMessageEmbeds());
+                        ValuePairs<List<MessageEmbed>, Set<String>> valuePair = content.toJDAMessageEmbeds();
+                        embeds.addAll(valuePair.getFirst());
                         for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
-                            action = action.addFile(attachment.getValue(), attachment.getKey());
+                            if (valuePair.getSecond().contains(attachment.getKey())) {
+                                action = action.addFile(attachment.getValue(), attachment.getKey());
+                            }
                         }
                     }
                 }
-                action.setEmbeds(embeds).queue();
-                if (!reactionsHandler.getEmojis().isEmpty()) {
-                    DiscordReactionEvents.register(message, reactionsHandler, contents);
+                action.setEmbeds(embeds).setActionRows(interactionHandler.getInteractionToRegister()).queue();
+                if (!interactionHandler.getInteractions().isEmpty()) {
+                    DiscordInteractionEvents.register(message, interactionHandler, contents);
                 }
             }
         });
@@ -870,13 +874,8 @@ public class OutboundToDiscordEvents implements Listener {
                 }
 
                 String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(channel);
-                WebhookClient client = WebhookClient.withUrl(webHookUrl);
+                WebhookUtil.editMessage(channel, String.valueOf(messageId), text + " ...", (Collection<? extends MessageEmbed>) null);
 
-                if (client == null) {
-                    throw new NullPointerException("Unable to get the Webhook client URL for the TextChannel " + channel.getName());
-                }
-
-                client.edit(messageId, text + " ...");
                 OfflineICPlayer player = DATA.get(matches.iterator().next()).getPlayer();
 
                 List<DiscordDisplayData> dataList = new ArrayList<>();
@@ -891,35 +890,38 @@ public class OutboundToDiscordEvents implements Listener {
                 dataList.sort(DISPLAY_DATA_COMPARATOR);
 
                 Debug.debug("onMessageReceived creating contents");
-                ValuePairs<List<DiscordMessageContent>, ReactionsHandler> pair = DiscordContentUtils.createContents(dataList, player);
+                ValuePairs<List<DiscordMessageContent>, InteractionHandler> pair = DiscordContentUtils.createContents(dataList, player);
                 List<DiscordMessageContent> contents = pair.getFirst();
-                ReactionsHandler reactionsHandler = pair.getSecond();
+                InteractionHandler interactionHandler = pair.getSecond();
 
                 DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
                 Bukkit.getPluginManager().callEvent(discordImageEvent);
 
                 Debug.debug("onMessageReceived sending to discord, Cancelled: " + discordImageEvent.isCancelled());
                 if (discordImageEvent.isCancelled()) {
-                    client.edit(messageId, discordImageEvent.getOriginalMessage());
+                    WebhookUtil.editMessage(channel, String.valueOf(messageId), discordImageEvent.getOriginalMessage(), (Collection<? extends MessageEmbed>) null);
                 } else {
                     text = discordImageEvent.getNewMessage();
-                    WebhookMessageBuilder builder = new WebhookMessageBuilder().setContent(text);
+                    List<MessageEmbed> embeds = new ArrayList<>();
+                    Map<String, InputStream> attachments = new LinkedHashMap<>();
                     int i = 0;
                     for (DiscordMessageContent content : contents) {
                         i += content.getAttachments().size();
                         if (i <= 10) {
-                            builder.addEmbeds(content.toWebhookEmbeds());
+                            ValuePairs<List<MessageEmbed>, Set<String>> valuePair = content.toJDAMessageEmbeds();
+                            embeds.addAll(valuePair.getFirst());
                             for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
-                                builder.addFile(attachment.getKey(), attachment.getValue());
+                                if (valuePair.getSecond().contains(attachment.getKey())) {
+                                    attachments.put(attachment.getKey(), new ByteArrayInputStream(attachment.getValue()));
+                                }
                             }
                         }
                     }
-                    client.edit(messageId, builder.build());
-                    if (!reactionsHandler.getEmojis().isEmpty()) {
-                        DiscordReactionEvents.register(message, reactionsHandler, contents);
+                    WebhookUtil.editMessage(channel, String.valueOf(messageId), text, embeds, attachments, interactionHandler.getInteractionToRegister());
+                    if (!interactionHandler.getInteractions().isEmpty()) {
+                        DiscordInteractionEvents.register(message, interactionHandler, contents);
                     }
                 }
-                client.close();
             });
         }
 

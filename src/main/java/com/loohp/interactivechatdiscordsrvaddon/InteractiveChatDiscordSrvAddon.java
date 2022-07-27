@@ -39,7 +39,7 @@ import com.loohp.interactivechatdiscordsrvaddon.api.events.ResourceManagerInitia
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
-import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordReactionEvents;
+import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordInteractionEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordReadyEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.ICPlayerEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
@@ -149,6 +149,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public String reloadConfigMessage;
     public String reloadTextureMessage;
     public String linkExpired;
+    public String interactionExpire;
     public String previewLoading;
     public String accountNotLinked;
     public String unableToRetrieveData;
@@ -358,7 +359,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
     @Override
     public void onDisable() {
-        DiscordReactionEvents.unregisterAll();
+        DiscordInteractionEvents.unregisterAll();
         modelRenderer.close();
         mediaReadingService.shutdown();
         if (resourceManager != null) {
@@ -388,6 +389,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         accountNotLinked = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.AccountNotLinked"));
         unableToRetrieveData = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.UnableToRetrieveData"));
         invalidDiscordChannel = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.InvalidDiscordChannel"));
+        interactionExpire = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.InteractionExpired"));
         trueLabel = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.TrueLabel"));
         falseLabel = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("Messages.FalseLabel"));
 

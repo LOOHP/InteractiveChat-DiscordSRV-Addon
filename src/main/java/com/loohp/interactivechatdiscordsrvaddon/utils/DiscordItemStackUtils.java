@@ -633,7 +633,11 @@ public class DiscordItemStackUtils {
                 prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getCanDestroy()).color(NamedTextColor.GRAY)));
                 ListTag<StringTag> materialList = (ListTag<StringTag>) NBTParsingUtils.fromSNBT(NBTEditor.getNBTCompound(item, "tag", "CanDestroy").toJson());
                 for (StringTag materialTag : materialList) {
-                    XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
+                    String key = materialTag.getValue();
+                    if (key.contains(":")) {
+                        key = key.substring(key.lastIndexOf(":") + 1);
+                    }
+                    XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(key.toUpperCase());
                     if (parsedXMaterial == null) {
                         prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase())).color(NamedTextColor.DARK_GRAY)));
                     } else {
@@ -649,7 +653,11 @@ public class DiscordItemStackUtils {
                 prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getCanPlace()).color(NamedTextColor.GRAY)));
                 ListTag<StringTag> materialList = (ListTag<StringTag>) NBTParsingUtils.fromSNBT(NBTEditor.getNBTCompound(item, "tag", "CanPlaceOn").toJson());
                 for (StringTag materialTag : materialList) {
-                    XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(materialTag.getValue().replace("minecraft:", "").toUpperCase());
+                    String key = materialTag.getValue();
+                    if (key.contains(":")) {
+                        key = key.substring(key.lastIndexOf(":") + 1);
+                    }
+                    XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(key.toUpperCase());
                     if (parsedXMaterial == null) {
                         prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_GRAY + WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase()))));
                     } else {

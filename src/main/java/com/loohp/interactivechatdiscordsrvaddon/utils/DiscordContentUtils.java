@@ -20,8 +20,6 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
-import club.minnced.discord.webhook.WebhookClient;
-import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
@@ -36,12 +34,13 @@ import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordInteractionEvents;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordMessageContent;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.HoverClickDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayType;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.ReactionsHandler;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.InteractionHandler;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
@@ -49,11 +48,17 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.Mo
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordToolTip;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.TitledInventoryWrapper;
 import github.scarsz.discordsrv.DiscordSRV;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.MessageEmbed;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.User;
-import github.scarsz.discordsrv.dependencies.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
-import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.MessageAction;
-import github.scarsz.discordsrv.util.WebhookUtil;
+import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.GenericComponentInteractionCreateEvent;
+import github.scarsz.discordsrv.dependencies.jda.api.interactions.components.ActionRow;
+import github.scarsz.discordsrv.dependencies.jda.api.interactions.components.Button;
+import github.scarsz.discordsrv.dependencies.jda.api.interactions.components.selections.SelectOption;
+import github.scarsz.discordsrv.dependencies.jda.api.interactions.components.selections.SelectionMenu;
+import github.scarsz.discordsrv.dependencies.jda.api.interactions.components.selections.SelectionMenuInteraction;
+import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.WebhookMessageUpdateAction;
+import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.interactions.ReplyAction;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.map.MapView;
@@ -62,24 +67,32 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class DiscordContentUtils {
 
     public static final Color OFFSET_WHITE = new Color(0xFFFFFE);
 
+    public static final String BOOK_EMOJI = "\uD83D\uDCD6";
     public static final String LEFT_EMOJI = "\u2B05\uFE0F";
     public static final String RIGHT_EMOJI = "\u27A1\uFE0F";
 
-    public static ValuePairs<List<DiscordMessageContent>, ReactionsHandler> createContents(List<DiscordDisplayData> dataList, OfflineICPlayer player) {
+    public static ValuePairs<List<DiscordMessageContent>, InteractionHandler> createContents(List<DiscordDisplayData> dataList, OfflineICPlayer player) {
         List<DiscordMessageContent> contents = new ArrayList<>();
-        List<String> reactions = new ArrayList<>();
-        BiConsumer<GuildMessageReactionAddEvent, List<DiscordMessageContent>> reactionConsumer = (event, discordMessageContents) -> {};
+        List<ActionRow> interactionsToRegister = new ArrayList<>();
+        List<String> interactions = new ArrayList<>();
+        BiConsumer<GenericComponentInteractionCreateEvent, List<DiscordMessageContent>> interactionConsumer = (event, discordMessageContents) -> {};
         int i = -1;
         for (DiscordDisplayData data : dataList) {
             i++;
@@ -144,13 +157,13 @@ public class DiscordContentUtils {
                             byte[][] cachedImages = new byte[images.size()][];
                             cachedImages[0] = ImageUtils.toArray(images.get(0).get());
                             if (!images.isEmpty()) {
-                                reactions.add(LEFT_EMOJI);
-                                reactions.add(RIGHT_EMOJI);
-                                AtomicInteger currentPage = new AtomicInteger(0);
-                                reactionConsumer = reactionConsumer.andThen(getBookHandler(images, cachedImages));
-                                DiscordMessageContent bookContent = new DiscordMessageContent(null, null, null, "attachment://Page.png", color);
-                                bookContent.addAttachment("Page.png", cachedImages[0]);
-                                contents.add(bookContent);
+                                UUID interactionUuid = UUID.randomUUID();
+                                interactionsToRegister.add(ActionRow.of(Button.secondary("open_book_" + interactionUuid, BOOK_EMOJI)));
+                                interactions.add("open_book_" + interactionUuid);
+                                interactions.add("left_book_" + interactionUuid);
+                                interactions.add("right_book_" + interactionUuid);
+                                interactions.add("selection_book_" + interactionUuid);
+                                interactionConsumer = interactionConsumer.andThen(getBookHandler(interactionUuid, color, images, cachedImages));
                             }
                         }
                     } catch (Exception e) {
@@ -258,132 +271,122 @@ public class DiscordContentUtils {
                 }
             }
         }
-        return new ValuePairs<>(contents, new ReactionsHandler(reactions, InteractiveChat.itemDisplayTimeout, reactionConsumer));
+        return new ValuePairs<>(contents, new InteractionHandler(interactionsToRegister, interactions, InteractiveChat.itemDisplayTimeout, interactionConsumer));
     }
 
-    private static BiConsumer<GuildMessageReactionAddEvent, List<DiscordMessageContent>> getBookHandler(List<Supplier<BufferedImage>> imageSuppliers, byte[][] cachedImages) {
-        AtomicInteger currentPage = new AtomicInteger(0);
+    private static BiConsumer<GenericComponentInteractionCreateEvent, List<DiscordMessageContent>> getBookHandler(UUID interactionUuid, Color color, List<Supplier<BufferedImage>> imageSuppliers, byte[][] cachedImages) {
+        Map<String, AtomicInteger> currentPages = new ConcurrentHashMap<>();
+        List<SelectOption> selectOptions = IntStream.range(1, cachedImages.length + 1).mapToObj(i -> {
+            String asText = String.valueOf(i);
+            return SelectOption.of(ComponentStringUtils.convertFormattedString(LanguageUtils.getTranslation(TranslationKeyUtils.getBookPageIndicator(), InteractiveChatDiscordSrvAddon.plugin.language), i, cachedImages.length), asText);
+        }).collect(Collectors.toList());
         return (event, discordMessageContents) -> {
-            if (!event.getReactionEmote().isEmoji()) {
-                return;
-            }
             User self = DiscordSRV.getPlugin().getJda().getSelfUser();
             User user = event.getUser();
             if (self.equals(user)) {
                 return;
             }
-            String reaction = event.getReactionEmote().getEmoji();
-            event.retrieveMessage().queue(message -> {
-                synchronized (currentPage) {
-                    if (reaction.equals(LEFT_EMOJI)) {
-                        if (currentPage.get() > 0) {
-                            int pageNumber = currentPage.decrementAndGet();
-                            byte[] pageFile = cachedImages[pageNumber];
-                            if (pageFile == null) {
-                                try {
-                                    cachedImages[pageNumber] = pageFile = ImageUtils.toArray(imageSuppliers.get(pageNumber).get());
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                            if (message.getAuthor().equals(self)) {
-                                MessageAction action = message.editMessage(message.getContentRaw()).retainFilesById(Collections.emptyList());
-                                List<MessageEmbed> embeds = new ArrayList<>();
-                                int u = 0;
-                                for (DiscordMessageContent discordMessageContent : discordMessageContents) {
-                                    u += discordMessageContent.getAttachments().size();
-                                    if (u <= 10) {
-                                        embeds.addAll(discordMessageContent.toJDAMessageEmbeds());
-                                        for (Entry<String, byte[]> attachment : discordMessageContent.getAttachments().entrySet()) {
-                                            if (attachment.getKey().equals("Page.png")) {
-                                                action = action.addFile(pageFile, "Page.png");
-                                            } else {
-                                                action = action.addFile(attachment.getValue(), attachment.getKey());
-                                            }
-                                        }
-                                    }
-                                }
-                                action.setEmbeds(embeds).queue();
-                            } else if (message.isWebhookMessage()) {
-                                String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(message.getTextChannel());
-                                WebhookClient client = WebhookClient.withUrl(webHookUrl);
-                                WebhookMessageBuilder builder = new WebhookMessageBuilder().setContent(message.getContentRaw());
-                                int u = 0;
-                                for (DiscordMessageContent discordMessageContent : discordMessageContents) {
-                                    u += discordMessageContent.getAttachments().size();
-                                    if (u <= 10) {
-                                        builder.addEmbeds(discordMessageContent.toWebhookEmbeds());
-                                        for (Entry<String, byte[]> attachment : discordMessageContent.getAttachments().entrySet()) {
-                                            if (attachment.getKey().equals("Page.png")) {
-                                                builder.addFile("Page.png", pageFile);
-                                            } else {
-                                                builder.addFile(attachment.getKey(), attachment.getValue());
-                                            }
-                                        }
-                                    }
-                                }
-                                WebhookMessageUtils.retainAttachments(client, message.getId(), Collections.emptyList());
-                                client.edit(message.getId(), builder.build());
-                                client.close();
+            String id = event.getComponent().getId();
+            Message message = event.getMessage();
+
+            if (id.equals("open_book_" + interactionUuid)) {
+                AtomicInteger currentPage = new AtomicInteger(0);
+                currentPages.put(user.getId(), currentPage);
+                DiscordMessageContent bookContent = new DiscordMessageContent(null, null, null, "attachment://Page.png", color);
+                bookContent.addAttachment("Page.png", cachedImages[0]);
+                ValuePairs<List<MessageEmbed>, Set<String>> pair = bookContent.toJDAMessageEmbeds();
+                ReplyAction action = event.replyEmbeds(pair.getFirst()).setEphemeral(true);
+                for (String name : pair.getSecond()) {
+                    action = action.addFile(bookContent.getAttachments().get(name), name);
+                }
+                Button leftButton = Button.danger("left_book_" + interactionUuid, LEFT_EMOJI).asDisabled();
+                Button rightButton = Button.success("right_book_" + interactionUuid, RIGHT_EMOJI);
+                if (cachedImages.length <= 1) {
+                    rightButton = rightButton.asDisabled();
+                }
+                SelectionMenu selectionMenu = SelectionMenu.create("selection_book_" + interactionUuid).setRequiredRange(1, 1).addOptions(selectOptions).setDefaultValues(Arrays.asList("1")).build();
+                action.addActionRows(ActionRow.of(leftButton, rightButton), ActionRow.of(selectionMenu)).queue(h -> h.retrieveOriginal().queue(m -> DiscordInteractionEvents.getInteractionData(id).getMessageIds().add(m.getTextChannel().getId() + "/" + m.getId())));
+                return;
+            }
+            AtomicInteger currentPage = currentPages.get(user.getId());
+            if (currentPage == null) {
+                currentPages.put(user.getId(), currentPage = new AtomicInteger(0));
+            }
+            event.deferEdit().queue();
+            //noinspection SynchronizationOnLocalVariableOrMethodParameter
+            synchronized (currentPage) {
+                if (id.equals("selection_book_" + interactionUuid) && event.getInteraction() instanceof SelectionMenuInteraction) {
+                    int pageNumber = currentPage.updateAndGet(i -> Integer.parseInt(((SelectionMenuInteraction) event.getInteraction()).getValues().get(0)) - 1);
+                    byte[] pageFile = cachedImages[pageNumber];
+                    if (pageFile == null) {
+                        try {
+                            cachedImages[pageNumber] = pageFile = ImageUtils.toArray(imageSuppliers.get(pageNumber).get());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(message.getContentRaw()).retainFiles(Collections.emptyList()).addFile(pageFile, "Page.png");
+                    Button leftButton = Button.danger("left_book_" + interactionUuid, LEFT_EMOJI);
+                    if (currentPage.get() <= 0) {
+                        leftButton = leftButton.asDisabled();
+                    }
+                    Button rightButton = Button.success("right_book_" + interactionUuid, RIGHT_EMOJI);
+                    if (currentPage.get() >= cachedImages.length - 1) {
+                        rightButton = rightButton.asDisabled();
+                    }
+                    SelectionMenu selectionMenu = SelectionMenu.create("selection_book_" + interactionUuid).setRequiredRange(1, 1).addOptions(selectOptions).setDefaultValues(Arrays.asList(String.valueOf(currentPage.get() + 1))).build();
+                    action.setActionRows(ActionRow.of(leftButton, rightButton), ActionRow.of(selectionMenu)).queue();
+                } else if (id.equals("left_book_" + interactionUuid)) {
+                    if (currentPage.get() > 0) {
+                        int pageNumber = currentPage.decrementAndGet();
+                        byte[] pageFile = cachedImages[pageNumber];
+                        if (pageFile == null) {
+                            try {
+                                cachedImages[pageNumber] = pageFile = ImageUtils.toArray(imageSuppliers.get(pageNumber).get());
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
                             }
                         }
-                        message.removeReaction(reaction, user).queue();
-                    } else if (reaction.equals(RIGHT_EMOJI)) {
-                        if (currentPage.get() < cachedImages.length - 1) {
-                            int pageNumber = currentPage.incrementAndGet();
-                            byte[] pageFile = cachedImages[pageNumber];
-                            if (pageFile == null) {
-                                try {
-                                    cachedImages[pageNumber] = pageFile = ImageUtils.toArray(imageSuppliers.get(pageNumber).get());
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                            if (message.getAuthor().equals(self)) {
-                                MessageAction action = message.editMessage(message.getContentRaw()).retainFilesById(Collections.emptyList());
-                                List<MessageEmbed> embeds = new ArrayList<>();
-                                int u = 0;
-                                for (DiscordMessageContent discordMessageContent : discordMessageContents) {
-                                    u += discordMessageContent.getAttachments().size();
-                                    if (u <= 10) {
-                                        embeds.addAll(discordMessageContent.toJDAMessageEmbeds());
-                                        for (Entry<String, byte[]> attachment : discordMessageContent.getAttachments().entrySet()) {
-                                            if (attachment.getKey().equals("Page.png")) {
-                                                action = action.addFile(pageFile, "Page.png");
-                                            } else {
-                                                action = action.addFile(attachment.getValue(), attachment.getKey());
-                                            }
-                                        }
-                                    }
-                                }
-                                action.setEmbeds(embeds).queue();
-                            } else {
-                                String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(message.getTextChannel());
-                                WebhookClient client = WebhookClient.withUrl(webHookUrl);
-                                WebhookMessageBuilder builder = new WebhookMessageBuilder().setContent(message.getContentRaw());
-                                int u = 0;
-                                for (DiscordMessageContent discordMessageContent : discordMessageContents) {
-                                    u += discordMessageContent.getAttachments().size();
-                                    if (u <= 10) {
-                                        builder.addEmbeds(discordMessageContent.toWebhookEmbeds());
-                                        for (Entry<String, byte[]> attachment : discordMessageContent.getAttachments().entrySet()) {
-                                            if (attachment.getKey().equals("Page.png")) {
-                                                builder.addFile("Page.png", pageFile);
-                                            } else {
-                                                builder.addFile(attachment.getKey(), attachment.getValue());
-                                            }
-                                        }
-                                    }
-                                }
-                                WebhookMessageUtils.retainAttachments(client, message.getId(), Collections.emptyList());
-                                client.edit(message.getId(), builder.build());
-                                client.close();
+
+                        WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(message.getContentRaw()).retainFiles(Collections.emptyList()).addFile(pageFile, "Page.png");
+                        Button leftButton = Button.danger("left_book_" + interactionUuid, LEFT_EMOJI);
+                        if (currentPage.get() <= 0) {
+                            leftButton = leftButton.asDisabled();
+                        }
+                        Button rightButton = Button.success("right_book_" + interactionUuid, RIGHT_EMOJI);
+                        if (currentPage.get() >= cachedImages.length - 1) {
+                            rightButton = rightButton.asDisabled();
+                        }
+                        SelectionMenu selectionMenu = SelectionMenu.create("selection_book_" + interactionUuid).setRequiredRange(1, 1).addOptions(selectOptions).setDefaultValues(Arrays.asList(String.valueOf(currentPage.get() + 1))).build();
+                        action.setActionRows(ActionRow.of(leftButton, rightButton), ActionRow.of(selectionMenu)).queue();
+                    }
+                } else if (id.equals("right_book_" + interactionUuid)) {
+                    if (currentPage.get() < cachedImages.length - 1) {
+                        int pageNumber = currentPage.incrementAndGet();
+                        byte[] pageFile = cachedImages[pageNumber];
+                        if (pageFile == null) {
+                            try {
+                                cachedImages[pageNumber] = pageFile = ImageUtils.toArray(imageSuppliers.get(pageNumber).get());
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
                             }
                         }
-                        message.removeReaction(reaction, user).queue();
+
+                        WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(message.getContentRaw()).retainFiles(Collections.emptyList()).addFile(pageFile, "Page.png");
+                        Button leftButton = Button.danger("left_book_" + interactionUuid, LEFT_EMOJI);
+                        if (currentPage.get() <= 0) {
+                            leftButton = leftButton.asDisabled();
+                        }
+                        Button rightButton = Button.success("right_book_" + interactionUuid, RIGHT_EMOJI);
+                        if (currentPage.get() >= cachedImages.length - 1) {
+                            rightButton = rightButton.asDisabled();
+                        }
+                        SelectionMenu selectionMenu = SelectionMenu.create("selection_book_" + interactionUuid).setRequiredRange(1, 1).addOptions(selectOptions).setDefaultValues(Arrays.asList(String.valueOf(currentPage.get() + 1))).build();
+                        action.setActionRows(ActionRow.of(leftButton, rightButton), ActionRow.of(selectionMenu)).queue();
                     }
                 }
-            });
+            }
         };
     }
 

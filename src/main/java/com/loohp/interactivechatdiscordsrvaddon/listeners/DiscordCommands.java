@@ -68,7 +68,7 @@ import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordMessageContent;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayType;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.ReactionsHandler;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.InteractionHandler;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
@@ -79,6 +79,7 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackInfoUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.TitledInventoryWrapper;
 import github.scarsz.discordsrv.DiscordSRV;
+import github.scarsz.discordsrv.api.SlashCommandManager;
 import github.scarsz.discordsrv.dependencies.jda.api.EmbedBuilder;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Guild;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
@@ -87,9 +88,9 @@ import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.SlashCommandEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.exceptions.ErrorResponseException;
 import github.scarsz.discordsrv.dependencies.jda.api.hooks.ListenerAdapter;
-import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.Command;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.OptionMapping;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.OptionType;
+import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.CommandData;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.OptionData;
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.commands.build.SubcommandData;
 import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.WebhookMessageUpdateAction;
@@ -497,33 +498,18 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
             String slotLabel = InteractiveChatDiscordSrvAddon.plugin.discordSlotLabel;
             String slotDescription = InteractiveChatDiscordSrvAddon.plugin.discordSlotDescription;
 
-            Map<String, Command> existingCommands = guild.retrieveCommands().complete().stream().collect(Collectors.toMap(each -> each.getName(), each -> each));
+            SlashCommandManager slashCommandManager = DiscordSRV.api.getSlashCommandManager();
+
+            List<CommandData> commandDataList = new ArrayList<>();
+
             if (InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandIsMainServer) {
                 if (InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandEnabled) {
-                    if (existingCommands.containsKey(RESOURCEPACK_LABEL)) {
-                        existingCommands.get(RESOURCEPACK_LABEL).editCommand().setDescription(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandDescription)).queue();
-                    } else {
-                        guild.upsertCommand(RESOURCEPACK_LABEL, ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandDescription)).queue();
-                    }
-                } else {
-                    existingCommands.computeIfPresent(RESOURCEPACK_LABEL, (name, command) -> {
-                        command.delete().queue();
-                        return null;
-                    });
+                    commandDataList.add(new CommandData(RESOURCEPACK_LABEL, ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandDescription)));
                 }
             }
             if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandIsMainServer) {
                 if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandEnabled) {
-                    if (existingCommands.containsKey(PLAYERLIST_LABEL)) {
-                        existingCommands.get(PLAYERLIST_LABEL).editCommand().setDescription(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandDescription)).queue();
-                    } else {
-                        guild.upsertCommand(PLAYERLIST_LABEL, ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandDescription)).queue();
-                    }
-                } else {
-                    existingCommands.computeIfPresent(PLAYERLIST_LABEL, (name, command) -> {
-                        command.delete().queue();
-                        return null;
-                    });
+                    commandDataList.add(new CommandData(PLAYERLIST_LABEL, ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandDescription)));
                 }
             }
             if (InteractiveChatDiscordSrvAddon.plugin.shareItemCommandIsMainServer) {
@@ -538,11 +524,7 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     SubcommandData armorSubcommand = new SubcommandData("armor", itemDescription).addOptions(new OptionData(OptionType.STRING, slotLabel, slotDescription, true).addChoice("head", "head").addChoice("chest", "chest").addChoice("legs", "legs").addChoice("feet", "feet"));
                     SubcommandData enderSubcommand = new SubcommandData("ender", itemDescription).addOptions(new OptionData(OptionType.INTEGER, slotLabel, slotDescription, true).setRequiredRange(1, 27));
 
-                    if (existingCommands.containsKey(ITEM_LABEL)) {
-                        existingCommands.get(ITEM_LABEL).editCommand().setDescription(ChatColorUtils.stripColor(optItemPlaceholder.get().getDescription())).addSubcommands(mainhandSubcommand).addSubcommands(offhandSubcommand).addSubcommands(hotbarSubcommand).addSubcommands(inventorySubcommand).addSubcommands(armorSubcommand).addSubcommands(enderSubcommand).queue();
-                    } else {
-                        guild.upsertCommand(ITEM_LABEL, ChatColorUtils.stripColor(optItemPlaceholder.get().getDescription())).addSubcommands(mainhandSubcommand).addSubcommands(offhandSubcommand).addSubcommands(hotbarSubcommand).addSubcommands(inventorySubcommand).addSubcommands(armorSubcommand).addSubcommands(enderSubcommand).queue();
-                    }
+                    commandDataList.add(new CommandData(ITEM_LABEL, ChatColorUtils.stripColor(optItemPlaceholder.get().getDescription())).addSubcommands(mainhandSubcommand).addSubcommands(offhandSubcommand).addSubcommands(hotbarSubcommand).addSubcommands(inventorySubcommand).addSubcommands(armorSubcommand).addSubcommands(enderSubcommand));
 
                     if (InteractiveChatDiscordSrvAddon.plugin.shareItemCommandAsOthers) {
                         SubcommandData mainhandOtherSubcommand = new SubcommandData("mainhand", itemDescription).addOption(OptionType.USER, memberLabel, memberDescription, true);
@@ -552,90 +534,33 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                         SubcommandData armorOtherSubcommand = new SubcommandData("armor", itemDescription).addOptions(new OptionData(OptionType.STRING, slotLabel, slotDescription, true).addChoice("head", "head").addChoice("chest", "chest").addChoice("legs", "legs").addChoice("feet", "feet")).addOption(OptionType.USER, memberLabel, memberDescription, true);
                         SubcommandData enderOtherSubcommand = new SubcommandData("ender", itemDescription).addOptions(new OptionData(OptionType.INTEGER, slotLabel, slotDescription, true).setRequiredRange(1, 27)).addOption(OptionType.USER, memberLabel, memberDescription, true);
 
-                        if (existingCommands.containsKey(ITEM_OTHER_LABEL)) {
-                            existingCommands.get(ITEM_OTHER_LABEL).editCommand().setDescription(ChatColorUtils.stripColor(optItemPlaceholder.get().getDescription())).addSubcommands(mainhandOtherSubcommand).addSubcommands(offhandOtherSubcommand).addSubcommands(hotbarOtherSubcommand).addSubcommands(inventoryOtherSubcommand).addSubcommands(armorOtherSubcommand).addSubcommands(enderOtherSubcommand).queue();
-                        } else {
-                            guild.upsertCommand(ITEM_OTHER_LABEL, ChatColorUtils.stripColor(optItemPlaceholder.get().getDescription())).addSubcommands(mainhandOtherSubcommand).addSubcommands(offhandOtherSubcommand).addSubcommands(hotbarOtherSubcommand).addSubcommands(inventoryOtherSubcommand).addSubcommands(armorOtherSubcommand).addSubcommands(enderOtherSubcommand).queue();
-                        }
-                    } else {
-                        existingCommands.computeIfPresent(ITEM_OTHER_LABEL, (name, command) -> {
-                            command.delete().queue();
-                            return null;
-                        });
+                        commandDataList.add(new CommandData(ITEM_OTHER_LABEL, ChatColorUtils.stripColor(optItemPlaceholder.get().getDescription())).addSubcommands(mainhandOtherSubcommand).addSubcommands(offhandOtherSubcommand).addSubcommands(hotbarOtherSubcommand).addSubcommands(inventoryOtherSubcommand).addSubcommands(armorOtherSubcommand).addSubcommands(enderOtherSubcommand));
                     }
-                } else {
-                    existingCommands.computeIfPresent(ITEM_LABEL, (name, command) -> {
-                        command.delete().queue();
-                        return null;
-                    });
-                    existingCommands.computeIfPresent(ITEM_OTHER_LABEL, (name, command) -> {
-                        command.delete().queue();
-                        return null;
-                    });
                 }
             }
             if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandIsMainServer) {
                 Optional<ICPlaceholder> optInvPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.invPlaceholder)).findFirst();
                 if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandEnabled && optInvPlaceholder.isPresent()) {
-                    if (existingCommands.containsKey(INVENTORY_LABEL)) {
-                        existingCommands.get(INVENTORY_LABEL).editCommand().setDescription(ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())).queue();
-                    } else {
-                        guild.upsertCommand(INVENTORY_LABEL, ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())).queue();
-                    }
+                    commandDataList.add(new CommandData(INVENTORY_LABEL, ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())));
+
                     if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandAsOthers) {
-                        if (existingCommands.containsKey(INVENTORY_OTHER_LABEL)) {
-                            existingCommands.get(INVENTORY_OTHER_LABEL).editCommand().setDescription(ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())).clearOptions().addOption(OptionType.USER, memberLabel, memberDescription, true).queue();
-                        } else {
-                            guild.upsertCommand(INVENTORY_OTHER_LABEL, ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())).addOption(OptionType.USER, memberLabel, memberDescription, true).queue();
-                        }
-                    } else {
-                        existingCommands.computeIfPresent(INVENTORY_OTHER_LABEL, (name, command) -> {
-                            command.delete().queue();
-                            return null;
-                        });
+                        commandDataList.add(new CommandData(INVENTORY_OTHER_LABEL, ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())).addOption(OptionType.USER, memberLabel, memberDescription, true));
                     }
-                } else {
-                    existingCommands.computeIfPresent(INVENTORY_LABEL, (name, command) -> {
-                        command.delete().queue();
-                        return null;
-                    });
-                    existingCommands.computeIfPresent(INVENTORY_OTHER_LABEL, (name, command) -> {
-                        command.delete().queue();
-                        return null;
-                    });
                 }
             }
             if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandIsMainServer) {
                 Optional<ICPlaceholder> optEnderPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.enderPlaceholder)).findFirst();
                 if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandEnabled && optEnderPlaceholder.isPresent()) {
-                    if (existingCommands.containsKey(ENDERCHEST_LABEL)) {
-                        existingCommands.get(ENDERCHEST_LABEL).editCommand().setDescription(ChatColorUtils.stripColor(optEnderPlaceholder.get().getDescription())).queue();
-                    } else {
-                        guild.upsertCommand(ENDERCHEST_LABEL, ChatColorUtils.stripColor(optEnderPlaceholder.get().getDescription())).queue();
-                    }
+                    commandDataList.add(new CommandData(ENDERCHEST_LABEL, ChatColorUtils.stripColor(optEnderPlaceholder.get().getDescription())));
+
                     if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandAsOthers) {
-                        if (existingCommands.containsKey(ENDERCHEST_OTHER_LABEL)) {
-                            existingCommands.get(ENDERCHEST_OTHER_LABEL).editCommand().setDescription(ChatColorUtils.stripColor(optEnderPlaceholder.get().getDescription())).clearOptions().addOption(OptionType.USER, memberLabel, memberDescription, true).queue();
-                        } else {
-                            guild.upsertCommand(ENDERCHEST_OTHER_LABEL, ChatColorUtils.stripColor(optEnderPlaceholder.get().getDescription())).addOption(OptionType.USER, memberLabel, memberDescription, true).queue();
-                        }
-                    } else {
-                        existingCommands.computeIfPresent(ENDERCHEST_OTHER_LABEL, (name, command) -> {
-                            command.delete().queue();
-                            return null;
-                        });
+                        commandDataList.add(new CommandData(ENDERCHEST_OTHER_LABEL, ChatColorUtils.stripColor(optEnderPlaceholder.get().getDescription())).addOption(OptionType.USER, memberLabel, memberDescription, true));
                     }
-                } else {
-                    existingCommands.computeIfPresent(ENDERCHEST_LABEL, (name, command) -> {
-                        command.delete().queue();
-                        return null;
-                    });
-                    existingCommands.computeIfPresent(ENDERCHEST_OTHER_LABEL, (name, command) -> {
-                        command.delete().queue();
-                        return null;
-                    });
                 }
             }
+
+            slashCommandManager.setCommands(InteractiveChatDiscordSrvAddon.plugin, commandDataList.toArray(new CommandData[commandDataList.size()]));
+            slashCommandManager.reloadSlashCommands();
         } catch (ErrorResponseException e) {
             if (e.getErrorCode() == 50001) {
                 throw new DiscordCommandRegistrationException("Scope \"applications.commands\" missing in discord bot application.\nCheck the Q&A section in https://www.spigotmc.org/resources/83917/ for more information", e);
@@ -897,9 +822,9 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     } else {
                         data = new ImageDisplayData(offlineICPlayer, 0, title, ImageDisplayType.ITEM, itemStack.clone());
                     }
-                    ValuePairs<List<DiscordMessageContent>, ReactionsHandler> pair = DiscordContentUtils.createContents(Collections.singletonList(data), offlineICPlayer);
+                    ValuePairs<List<DiscordMessageContent>, InteractionHandler> pair = DiscordContentUtils.createContents(Collections.singletonList(data), offlineICPlayer);
                     List<DiscordMessageContent> contents = pair.getFirst();
-                    ReactionsHandler reactionsHandler = pair.getSecond();
+                    InteractionHandler interactionHandler = pair.getSecond();
                     errorCode--;
 
                     WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(ComponentStringUtils.stripColorAndConvertMagic(LegacyComponentSerializer.legacySection().serialize(resolvedComponent)));
@@ -908,16 +833,20 @@ public class DiscordCommands extends ListenerAdapter implements Listener {
                     for (DiscordMessageContent content : contents) {
                         i += content.getAttachments().size();
                         if (i <= 10) {
-                            embeds.addAll(content.toJDAMessageEmbeds());
+                            ValuePairs<List<MessageEmbed>, Set<String>> valuePair = content.toJDAMessageEmbeds();
+                            embeds.addAll(valuePair.getFirst());
                             for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
-                                action = action.addFile(attachment.getValue(), attachment.getKey());
+                                if (valuePair.getSecond().contains(attachment.getKey())) {
+                                    action = action.addFile(attachment.getValue(), attachment.getKey());
+                                }
                             }
                         }
                     }
-                    action.setEmbeds(embeds).queue();
-                    if (!reactionsHandler.getEmojis().isEmpty()) {
-                        event.getHook().retrieveOriginal().queue(message -> DiscordReactionEvents.register(message, reactionsHandler, contents));
-                    }
+                    action.setEmbeds(embeds).setActionRows(interactionHandler.getInteractionToRegister()).queue(message -> {
+                        if (!interactionHandler.getInteractions().isEmpty()) {
+                            DiscordInteractionEvents.register(message, interactionHandler, contents);
+                        }
+                    });
                 }
             } catch (Exception e) {
                 e.printStackTrace();
