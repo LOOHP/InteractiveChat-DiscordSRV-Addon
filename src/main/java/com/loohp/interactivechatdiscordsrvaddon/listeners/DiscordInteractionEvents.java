@@ -79,7 +79,9 @@ public class DiscordInteractionEvents extends ListenerAdapter {
             data.getInteractionHandler().getReactionConsumer().accept(event, data.getContents());
             return;
         }
-        event.reply(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.interactionExpire)).setEphemeral(true).queue();
+        if (InteractiveChatDiscordSrvAddon.plugin.respondToInvalidInteractions) {
+            event.reply(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.interactionExpire)).setEphemeral(true).queue();
+        }
     }
 
     public static class InteractionData {

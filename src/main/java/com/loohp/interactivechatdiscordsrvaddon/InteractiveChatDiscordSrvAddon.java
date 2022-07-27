@@ -187,6 +187,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public Color playbackBarEmptyColor;
     public String language = "en_us";
     public boolean respondToCommandsInInvalidChannels = true;
+    public boolean respondToInvalidInteractions = true;
     public String discordMemberLabel = "";
     public String discordMemberDescription = "";
     public String discordSlotLabel = "";
@@ -479,6 +480,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         playbackBarEmptyColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordAttachments.PlaybackBar.EmptyColor"));
 
         respondToCommandsInInvalidChannels = config.getConfiguration().getBoolean("DiscordCommands.GlobalSettings.RespondToCommandsInInvalidChannels");
+        respondToInvalidInteractions = config.getConfiguration().getBoolean("DiscordCommands.GlobalSettings.RespondToInvalidInteractions");
 
         discordMemberLabel = config.getConfiguration().getString("DiscordCommands.GlobalSettings.Messages.MemberLabel").toLowerCase();
         discordMemberDescription = config.getConfiguration().getString("DiscordCommands.GlobalSettings.Messages.MemberDescription");

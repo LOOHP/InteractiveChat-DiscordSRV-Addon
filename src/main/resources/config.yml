@@ -93,9 +93,11 @@ DiscordAttachments:
 DiscordCommands:
   #These settings apply to all discord commands below 
   GlobalSettings:
-    #Set this to true ONLY IF you use have multiple servers with interactivechatdiscordsrvaddon AND
+    #Set this to true ONLY IF you have multiple servers with interactivechatdiscordsrvaddon AND
     #you use a DIFFERENT channel for each server (i.e. not one shared channel for all servers)
     RespondToCommandsInInvalidChannels: true
+    #Set this to false ONLY IF you have multiple servers with interactivechatdiscordsrvaddon WITH THE SAME BOT
+    RespondToInvalidInteractions: true
     Messages:
       #Labels must be lowercase
       MemberLabel: "member"
