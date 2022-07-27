@@ -280,6 +280,7 @@ Messages:
   AccountNotLinked: "&cA Minecraft account must be linked to this Discord account in order to use this command!"
   UnableToRetrieveData: "&cUnable to retrieve data."
   InvalidDiscordChannel: "&cYou cannot do that in this channel."
+  InteractionExpired: "&cThis interaction had expired."
   TrueLabel: "&aTrue"
   FalseLabel: "&cFalse"
   StatusCommand:
