@@ -241,7 +241,11 @@ public class DiscordItemStackUtils {
                     patterns = meta.getPatterns();
                 }
 
+                int count = 0;
                 for (Pattern pattern : patterns) {
+                    if (++count > 6) {
+                        break;
+                    }
                     PatternTypeWrapper type = PatternTypeWrapper.fromPatternType(pattern.getPattern());
                     prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getBannerPatternName(type, pattern.getColor())).color(NamedTextColor.GRAY)));
                 }
@@ -261,7 +265,11 @@ public class DiscordItemStackUtils {
                 patterns = meta.getPatterns();
             }
 
+            int count = 0;
             for (Pattern pattern : patterns) {
+                if (++count > 6) {
+                    break;
+                }
                 PatternTypeWrapper type = PatternTypeWrapper.fromPatternType(pattern.getPattern());
                 prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getBannerPatternName(type, pattern.getColor())).color(NamedTextColor.GRAY)));
             }
