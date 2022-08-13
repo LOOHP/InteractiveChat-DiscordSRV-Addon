@@ -59,10 +59,13 @@ public class DiscordReadyEvents {
         DiscordSRV discordsrv = InteractiveChatDiscordSrvAddon.discordsrv;
         JDA jda = discordsrv.getJda();
         jda.addEventListener(new OutboundToDiscordEvents.JDAEvents());
-        DiscordCommands discordCommands = new DiscordCommands(discordsrv);
-        jda.addEventListener(discordCommands);
         jda.addEventListener(new DiscordInteractionEvents());
+
+        DiscordCommands discordCommands = new DiscordCommands(discordsrv);
+        discordCommands.init();
         Bukkit.getPluginManager().registerEvents(discordCommands, InteractiveChatDiscordSrvAddon.plugin);
+        DiscordSRV.api.addSlashCommandProvider(discordCommands);
+        discordCommands.reload();
 
         for (String channelId : discordsrv.getChannels().values()) {
             if (channelId != null) {
