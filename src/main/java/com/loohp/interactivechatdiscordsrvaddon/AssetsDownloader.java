@@ -242,16 +242,22 @@ public class AssetsDownloader {
 
             LibraryDownloadManager downloadManager = new LibraryDownloadManager(libsFolder);
 
-            String hash = downloadManager.getHash();
+            String hash = "N/A";
+            try {
+                hash = downloadManager.getHash();
 
-            if (!hash.equals(oldHash) || !InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion().equals(oldVersion)) {
-                downloadManager.downloadLibraries((result, jarName) -> {
-                    if (result) {
-                        Bukkit.getConsoleSender().sendMessage("[ICDiscordSrvAddon] Downloaded library \"" + jarName + "\"");
-                    } else {
-                        Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to download library \"" + jarName + "\"");
-                    }
-                });
+                if (!hash.equals(oldHash) || !InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion().equals(oldVersion)) {
+                    downloadManager.downloadLibraries((result, jarName) -> {
+                        if (result) {
+                            Bukkit.getConsoleSender().sendMessage("[ICDiscordSrvAddon] Downloaded library \"" + jarName + "\"");
+                        } else {
+                            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to download library \"" + jarName + "\"");
+                        }
+                    });
+                }
+            } catch (Throwable e) {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Error while downloading libraries");
+                e.printStackTrace();
             }
 
             LibraryLoader.loadLibraries(libsFolder, (file, e) -> {
