@@ -112,6 +112,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
@@ -886,12 +888,43 @@ public class ImageGeneration {
         return itemImage;
     }
 
-    public static BufferedImage getMapImage(ItemStack item, Player player) {
+    public static Future<BufferedImage> getMapImage(ItemStack item, Player player) {
         if (!FilledMapUtils.isFilledMap(item)) {
             throw new IllegalArgumentException("Provided item is not a filled map");
         }
+        Debug.debug("ImageGeneration creating map image with item");
+        if (Bukkit.isPrimaryThread()) {
+            ItemMapWrapper data = new ItemMapWrapper(item, player);
+            return CompletableFuture.completedFuture(getMapImage(data.getColors(), data.getMapCursors(), player));
+        } else {
+            CompletableFuture<BufferedImage> future = new CompletableFuture<>();
+            ItemStack finalItem = item.clone();
+            Bukkit.getScheduler().runTask(InteractiveChatDiscordSrvAddon.plugin, () -> {
+                ItemMapWrapper data;
+                try {
+                    data = new ItemMapWrapper(finalItem, player);
+                } catch (Throwable e) {
+                    future.completeExceptionally(e);
+                    return;
+                }
+                Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+                    try {
+                        future.complete(getMapImage(data.getColors(), data.getMapCursors(), player));
+                    } catch (Throwable e) {
+                        future.completeExceptionally(e);
+                    }
+                });
+            });
+            return future;
+        }
+    }
+
+    public static BufferedImage getMapImage(byte[] colors, List<MapCursor> mapCursors, Player player) {
+        if (colors != null && colors.length != 16384) {
+            throw new IllegalArgumentException("Map color array is not null or of length 16384");
+        }
         InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
-        Debug.debug("ImageGeneration creating map image");
+        Debug.debug("ImageGeneration creating map image with color and cursors");
 
         BufferedImage background = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.MAP_TEXTURE_LOCATION + "map_background").getTexture();
 
@@ -904,9 +937,6 @@ public class ImageGeneration {
         int borderOffset = (int) (image.getWidth() / 23.3333333333333333333);
         int ratio = (image.getWidth() - borderOffset * 2) / 128;
 
-        ItemMapWrapper data = new ItemMapWrapper(item, player);
-
-        byte[] colors = data.getColors();
         if (colors != null) {
             for (int widthOffset = 0; widthOffset < 128; widthOffset++) {
                 for (int heightOffset = 0; heightOffset < 128; heightOffset++) {
@@ -929,7 +959,6 @@ public class ImageGeneration {
         BufferedImage asset = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.MAP_TEXTURE_LOCATION + "map_icons").getTexture();
         int iconWidth = asset.getWidth() / MAP_ICON_PER_ROLE;
 
-        List<MapCursor> mapCursors = data.getMapCursors();
         if (mapCursors != null) {
             for (MapCursor icon : mapCursors) {
                 int x = icon.getX() + 128;

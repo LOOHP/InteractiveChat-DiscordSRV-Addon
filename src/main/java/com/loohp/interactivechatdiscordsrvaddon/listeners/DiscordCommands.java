@@ -347,7 +347,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
         }
     }
 
-    private static ItemStack resolveItemStack(SlashCommandEvent event, OfflineICPlayer player) {
+    public static ItemStack resolveItemStack(SlashCommandEvent event, OfflineICPlayer player) {
         String subCommand = event.getSubcommandName();
         switch (subCommand) {
             case "mainhand":
@@ -365,13 +365,13 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
         return null;
     }
 
-    private static List<String> getPlayerGroups(OfflinePlayer player) {
+    public static List<String> getPlayerGroups(OfflinePlayer player) {
         RegisteredServiceProvider<Permission> rsp = Bukkit.getServicesManager().getRegistration(Permission.class);
         return Arrays.asList(rsp.getProvider().getPlayerGroups(Bukkit.getWorlds().get(0).getName(), player));
     }
 
     @SuppressWarnings("deprecation")
-    private static List<ValueTrios<UUID, Component, Integer>> sortPlayers(List<String> orderTypes, List<ValueTrios<UUID, Component, Integer>> players, Map<UUID, ValuePairs<List<String>, String>> playerInfo) {
+    public static List<ValueTrios<UUID, Component, Integer>> sortPlayers(List<String> orderTypes, List<ValueTrios<UUID, Component, Integer>> players, Map<UUID, ValuePairs<List<String>, String>> playerInfo) {
         if (players.size() <= 1) {
             return players;
         }

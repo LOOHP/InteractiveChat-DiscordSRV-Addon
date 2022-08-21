@@ -112,7 +112,7 @@ public class DiscordContentUtils {
                         byte[] imageData = ImageUtils.toArray(image);
 
                         DiscordMessageContent content = new DiscordMessageContent(title, null, color);
-                        content.setTitle(DiscordItemStackUtils.getItemNameForDiscord(item, player));
+                        content.setTitle(DiscordItemStackUtils.getItemNameForDiscord(item, player, InteractiveChatDiscordSrvAddon.plugin.language));
                         content.setThumbnail("attachment://Item_" + i + ".png");
 
                         content.addAttachment("Item_" + i + ".png", imageData);
@@ -140,7 +140,7 @@ public class DiscordContentUtils {
                                 ICPlayer icPlayer = iData.getPlayer().getPlayer();
                                 boolean isPlayerLocal = icPlayer != null && icPlayer.isLocal();
                                 if (!isContextual || isPlayerLocal) {
-                                    BufferedImage map = ImageGeneration.getMapImage(item, isPlayerLocal ? icPlayer.getLocalPlayer() : null);
+                                    BufferedImage map = ImageGeneration.getMapImage(item, isPlayerLocal ? icPlayer.getLocalPlayer() : null).get();
                                     tooltip = ImageUtils.resizeImage(tooltip, 5);
                                     tooltip = ImageUtils.appendImageBottom(tooltip, map, 10, 0);
                                 }

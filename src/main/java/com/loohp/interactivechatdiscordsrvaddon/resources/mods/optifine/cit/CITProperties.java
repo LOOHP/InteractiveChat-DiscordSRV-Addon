@@ -49,9 +49,13 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -179,15 +183,11 @@ public abstract class CITProperties {
             if (models.isEmpty() && textures.isEmpty()) {
                 ResourcePackFile defModel = file.getParentFile().getChild(name + ".json");
                 if (defModel.exists()) {
-                    String defaultPath = defModel.getAbsolutePath();
-                    defaultPath = defaultPath.substring(defaultPath.indexOf("assets"));
-                    models.put("", defaultPath);
+                    models.put("", name + ".json");
                 } else {
                     ResourcePackFile defTexture = file.getParentFile().getChild(name + ".png");
                     if (defTexture.exists()) {
-                        String defaultPath = defTexture.getAbsolutePath();
-                        defaultPath = defaultPath.substring(defaultPath.indexOf("assets"));
-                        textures.put("", defaultPath);
+                        textures.put("", name + ".png");
                     }
                 }
             }
@@ -211,9 +211,7 @@ public abstract class CITProperties {
             if (texture == null) {
                 ResourcePackFile defTexture = file.getParentFile().getChild(name + ".png");
                 if (defTexture.exists()) {
-                    String defaultPath = defTexture.getAbsolutePath();
-                    defaultPath = defaultPath.substring(defaultPath.indexOf("assets"));
-                    texture = defaultPath;
+                    texture = name + ".png";
                 }
             } else {
                 if (!texture.endsWith(".png")) {
@@ -226,9 +224,7 @@ public abstract class CITProperties {
             if (texture == null) {
                 ResourcePackFile defTexture = file.getParentFile().getChild(name + ".png");
                 if (defTexture.exists()) {
-                    String defaultPath = defTexture.getAbsolutePath();
-                    defaultPath = defaultPath.substring(defaultPath.indexOf("assets"));
-                    texture = defaultPath;
+                    texture = name + ".png";
                 }
             } else {
                 if (!texture.endsWith(".png")) {
@@ -341,63 +337,89 @@ public abstract class CITProperties {
                     String key = entry.getKey();
                     CITValueMatcher nbtValueMatcher = entry.getValue();
                     String[] paths = key.split("\\.");
-                    Tag<?> subTag = tag;
+                    List<Tag<?>> subTags = new ArrayList<>(Collections.singletonList(tag));
                     try {
                         for (String path : paths) {
-                            if (subTag instanceof CompoundTag) {
-                                subTag = ((CompoundTag) subTag).get(path);
-                            } else if (subTag instanceof ListTag<?>) {
-                                subTag = ((ListTag<?>) subTag).get(Integer.parseInt(path));
+                            for (int i = 0; i < subTags.size(); i++) {
+                                Tag<?> subTag = subTags.get(i);
+                                if (path.equals("*")) {
+                                    Collection<Tag<?>> tags;
+                                    if (subTag instanceof CompoundTag) {
+                                        tags = ((CompoundTag) subTag).values();
+                                    } else if (subTag instanceof ListTag<?>) {
+                                        tags = new ArrayList<>();
+                                        for (Tag<?> t : (ListTag<?>) subTag) {
+                                            tags.add(t);
+                                        }
+                                    } else {
+                                        tags = Collections.emptyList();
+                                    }
+                                    subTags.remove(i);
+                                    subTags.addAll(i, tags);
+                                    i += tags.size() - 1;
+                                } else {
+                                    if (subTag instanceof CompoundTag) {
+                                        subTag = ((CompoundTag) subTag).get(path);
+                                    } else if (subTag instanceof ListTag<?>) {
+                                        subTag = ((ListTag<?>) subTag).get(Integer.parseInt(path));
+                                    }
+                                    subTags.set(i, subTag);
+                                }
                             }
                         }
                     } catch (Throwable e) {
                         return false;
                     }
-                    try {
-                        if (subTag instanceof StringTag) {
-                            String rawStringValue = ((StringTag) subTag).getValue();
-                            String jsonResultValue;
-                            try {
-                                Component component = InteractiveChatComponentSerializer.gson().deserialize(rawStringValue);
-                                jsonResultValue = OptifineUtils.componentToString(component, translateFunction);
-                            } catch (Throwable ignore) {
-                                jsonResultValue = null;
-                            }
-                            if (!nbtValueMatcher.matches(rawStringValue) && (jsonResultValue == null || !nbtValueMatcher.matches(jsonResultValue))) {
+                    if (subTags.stream().noneMatch(subTag -> {
+                        try {
+                            if (subTag instanceof StringTag) {
+                                String rawStringValue = ((StringTag) subTag).getValue();
+                                String jsonResultValue;
+                                try {
+                                    Component component = InteractiveChatComponentSerializer.gson().deserialize(rawStringValue);
+                                    jsonResultValue = OptifineUtils.componentToString(component, translateFunction);
+                                } catch (Throwable ignore) {
+                                    jsonResultValue = null;
+                                }
+                                if (!nbtValueMatcher.matches(rawStringValue) && (jsonResultValue == null || !nbtValueMatcher.matches(jsonResultValue))) {
+                                    return false;
+                                }
+                            } else if (subTag instanceof IntTag) {
+                                if (!nbtValueMatcher.intTag().equals(subTag)) {
+                                    return false;
+                                }
+                            } else if (subTag instanceof LongTag) {
+                                if (!nbtValueMatcher.longTag().equals(subTag)) {
+                                    return false;
+                                }
+                            } else if (subTag instanceof ByteTag) {
+                                if (!nbtValueMatcher.byteTag().equals(subTag)) {
+                                    return false;
+                                }
+                            } else if (subTag instanceof ShortTag) {
+                                if (!nbtValueMatcher.shortTag().equals(subTag)) {
+                                    return false;
+                                }
+                            } else if (subTag instanceof FloatTag) {
+                                if (!nbtValueMatcher.floatTag().equals(subTag)) {
+                                    return false;
+                                }
+                            } else if (subTag instanceof DoubleTag) {
+                                if (!nbtValueMatcher.doubleTag().equals(subTag)) {
+                                    return false;
+                                }
+                            } else if (subTag instanceof CompoundTag || subTag instanceof ListTag) {
+                                if (!nbtValueMatcher.tag().equals(subTag)) {
+                                    return false;
+                                }
+                            } else {
                                 return false;
                             }
-                        } else if (subTag instanceof IntTag) {
-                            if (!nbtValueMatcher.intTag().equals(subTag)) {
-                                return false;
-                            }
-                        } else if (subTag instanceof LongTag) {
-                            if (!nbtValueMatcher.longTag().equals(subTag)) {
-                                return false;
-                            }
-                        } else if (subTag instanceof ByteTag) {
-                            if (!nbtValueMatcher.byteTag().equals(subTag)) {
-                                return false;
-                            }
-                        } else if (subTag instanceof ShortTag) {
-                            if (!nbtValueMatcher.shortTag().equals(subTag)) {
-                                return false;
-                            }
-                        } else if (subTag instanceof FloatTag) {
-                            if (!nbtValueMatcher.floatTag().equals(subTag)) {
-                                return false;
-                            }
-                        } else if (subTag instanceof DoubleTag) {
-                            if (!nbtValueMatcher.doubleTag().equals(subTag)) {
-                                return false;
-                            }
-                        } else if (subTag instanceof CompoundTag || subTag instanceof ListTag) {
-                            if (!nbtValueMatcher.tag().equals(subTag)) {
-                                return false;
-                            }
-                        } else {
+                        } catch (Throwable e) {
                             return false;
                         }
-                    } catch (Throwable e) {
+                        return true;
+                    })) {
                         return false;
                     }
                 }
