@@ -35,6 +35,7 @@ import com.loohp.interactivechatdiscordsrvaddon.api.events.DiscordAttachmentConv
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.GifReader;
 import com.loohp.interactivechatdiscordsrvaddon.modules.DiscordToGameMention;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.PreviewableImageContainer;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ThrowingSupplier;
 import com.loohp.interactivechatdiscordsrvaddon.utils.URLRequestUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.GraphicsToPacketMapWrapper;
@@ -47,6 +48,7 @@ import github.scarsz.discordsrv.dependencies.jda.api.entities.Guild;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Member;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message.Attachment;
+import github.scarsz.discordsrv.dependencies.jda.api.entities.MessageSticker;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Role;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.TextChannel;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.User;
@@ -198,51 +200,14 @@ public class InboundToGameEvents implements Listener {
         if (InteractiveChatDiscordSrvAddon.plugin.convertDiscordAttachments) {
             Debug.debug("onReceiveMessageFromDiscordPost converting discord attachments");
             Set<String> processedUrl = new HashSet<>();
+            List<PreviewableImageContainer> previewableImageContainers = new ArrayList<>(message.getAttachments().size() + message.getStickers().size());
             for (Attachment attachment : message.getAttachments()) {
                 InteractiveChatDiscordSrvAddon.plugin.attachmentCounter.incrementAndGet();
                 String url = attachment.getUrl();
                 if (processedMessage.contains(url)) {
                     processedUrl.add(url);
                     if ((attachment.isImage() || attachment.isVideo()) && attachment.getSize() <= InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsPreviewLimit) {
-                        InteractiveChatDiscordSrvAddon.plugin.attachmentImageCounter.incrementAndGet();
-                        List<ThrowingSupplier<InputStream>> methods = new ArrayList<>();
-                        methods.add(() -> attachment.retrieveInputStream().get());
-                        if (URLRequestUtils.isAllowed(attachment.getUrl())) {
-                            methods.add(() -> URLRequestUtils.getInputStream0(attachment.getUrl()));
-                        }
-                        if (URLRequestUtils.isAllowed(attachment.getProxyUrl())) {
-                            methods.add(() -> URLRequestUtils.getInputStream0(attachment.getProxyUrl()));
-                        }
-                        try (InputStream stream = URLRequestUtils.retrieveInputStreamUntilSuccessful(methods)) {
-                            GraphicsToPacketMapWrapper map;
-                            boolean isVideo = false;
-                            if (url.toLowerCase().endsWith(".gif")) {
-                                map = new GraphicsToPacketMapWrapper(InteractiveChatDiscordSrvAddon.plugin.playbackBarEnabled, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
-                                GifReader.readGif(stream, InteractiveChatDiscordSrvAddon.plugin.mediaReadingService, (frames, e) -> {
-                                    if (e != null) {
-                                        e.printStackTrace();
-                                        map.completeFuture(null);
-                                    } else {
-                                        map.completeFuture(frames);
-                                    }
-                                });
-                            } else {
-                                BufferedImage image = ImageIO.read(stream);
-                                map = new GraphicsToPacketMapWrapper(image, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
-                            }
-                            DiscordAttachmentData data = new DiscordAttachmentData(attachment.getFileName(), url, map, isVideo);
-                            DiscordAttachmentConversionEvent dace = new DiscordAttachmentConversionEvent(url, data);
-                            Bukkit.getPluginManager().callEvent(dace);
-                            DATA.put(data.getUniqueId(), data);
-                            Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(data.getUniqueId()), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            DiscordAttachmentData data = new DiscordAttachmentData(attachment.getFileName(), url);
-                            DiscordAttachmentConversionEvent dace = new DiscordAttachmentConversionEvent(url, data);
-                            Bukkit.getPluginManager().callEvent(dace);
-                            DATA.put(data.getUniqueId(), data);
-                            Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(data.getUniqueId()), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
-                        }
+                        previewableImageContainers.add(PreviewableImageContainer.fromAttachment(attachment));
                     } else {
                         DiscordAttachmentData data = new DiscordAttachmentData(attachment.getFileName(), url);
                         DiscordAttachmentConversionEvent dace = new DiscordAttachmentConversionEvent(url, data);
@@ -250,6 +215,50 @@ public class InboundToGameEvents implements Listener {
                         DATA.put(data.getUniqueId(), data);
                         Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(data.getUniqueId()), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
                     }
+                }
+            }
+            for (MessageSticker sticker : message.getStickers()) {
+                previewableImageContainers.add(PreviewableImageContainer.fromSticker(sticker));
+            }
+            for (PreviewableImageContainer imageContainer : previewableImageContainers) {
+                InteractiveChatDiscordSrvAddon.plugin.attachmentImageCounter.incrementAndGet();
+                String url = imageContainer.getUrl();
+                List<ThrowingSupplier<InputStream>> methods = new ArrayList<>();
+                methods.add(() -> imageContainer.retrieveInputStream().get());
+                for (String url0 : imageContainer.getAllUrls()) {
+                    if (URLRequestUtils.isAllowed(url0)) {
+                        methods.add(() -> URLRequestUtils.getInputStream0(url0));
+                    }
+                }
+                try (InputStream stream = URLRequestUtils.retrieveInputStreamUntilSuccessful(methods)) {
+                    GraphicsToPacketMapWrapper map;
+                    boolean isVideo = false;
+                    if (url.toLowerCase().endsWith(".gif")) {
+                        map = new GraphicsToPacketMapWrapper(InteractiveChatDiscordSrvAddon.plugin.playbackBarEnabled, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
+                        GifReader.readGif(stream, InteractiveChatDiscordSrvAddon.plugin.mediaReadingService, (frames, e) -> {
+                            if (e != null) {
+                                e.printStackTrace();
+                                map.completeFuture(null);
+                            } else {
+                                map.completeFuture(frames);
+                            }
+                        });
+                    } else {
+                        BufferedImage image = ImageIO.read(stream);
+                        map = new GraphicsToPacketMapWrapper(image, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
+                    }
+                    DiscordAttachmentData data = new DiscordAttachmentData(imageContainer.getName(), url, map, isVideo);
+                    DiscordAttachmentConversionEvent dace = new DiscordAttachmentConversionEvent(url, data);
+                    Bukkit.getPluginManager().callEvent(dace);
+                    DATA.put(data.getUniqueId(), data);
+                    Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(data.getUniqueId()), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    DiscordAttachmentData data = new DiscordAttachmentData(imageContainer.getName(), url);
+                    DiscordAttachmentConversionEvent dace = new DiscordAttachmentConversionEvent(url, data);
+                    Bukkit.getPluginManager().callEvent(dace);
+                    DATA.put(data.getUniqueId(), data);
+                    Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(data.getUniqueId()), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
                 }
             }
 
