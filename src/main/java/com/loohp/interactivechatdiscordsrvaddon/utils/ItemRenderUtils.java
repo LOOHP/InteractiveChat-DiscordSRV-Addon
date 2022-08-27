@@ -30,6 +30,7 @@ import com.loohp.interactivechat.libs.net.querz.nbt.tag.StringTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.Tag;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
+import com.loohp.interactivechat.libs.org.json.simple.parser.ParseException;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 import com.loohp.interactivechat.objectholders.ValuePairs;
@@ -176,12 +177,17 @@ public class ItemRenderUtils {
                             if (texturesTag != null && texturesTag.size() > 0) {
                                 StringTag valueTag = (StringTag) ((CompoundTag) texturesTag.get(0)).get("Value");
                                 if (valueTag != null) {
-                                    JSONObject texturesJson = (JSONObject) ((JSONObject) new JSONParser().parse(new String(Base64.getDecoder().decode(valueTag.getValue())))).get("textures");
-                                    if (texturesJson != null) {
-                                        JSONObject skinJson = (JSONObject) texturesJson.get("SKIN");
-                                        if (skinJson != null) {
-                                            skinURL = (String) skinJson.get("url");
+                                    String json = new String(Base64.getDecoder().decode(valueTag.getValue()));
+                                    try {
+                                        JSONObject texturesJson = (JSONObject) ((JSONObject) new JSONParser().parse(json)).get("textures");
+                                        if (texturesJson != null) {
+                                            JSONObject skinJson = (JSONObject) texturesJson.get("SKIN");
+                                            if (skinJson != null) {
+                                                skinURL = (String) skinJson.get("url");
+                                            }
                                         }
+                                    } catch (ParseException e) {
+                                        throw new IllegalArgumentException("Skull contains illegal texture data: \n" + json, e);
                                     }
                                 }
                             }
@@ -208,7 +214,6 @@ public class ItemRenderUtils {
                             skinURL = SkinUtils.getSkinURLFromUUID(Bukkit.getOfflinePlayer(nameTag.getValue()).getUniqueId());
                         }
                     }
-                    System.out.println("Skin: " + skinURL);
                     if (skinURL != null) {
                         skinImage = ImageUtils.downloadImage(skinURL);
                     }
