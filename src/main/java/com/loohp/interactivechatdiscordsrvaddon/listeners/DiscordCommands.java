@@ -187,9 +187,11 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
             }
         }
         ItemStack frame = f1 > f2 ? InteractiveChat.invFrame2.clone() : InteractiveChat.invFrame1.clone();
-        ItemMeta frameMeta = frame.getItemMeta();
-        frameMeta.setDisplayName(ChatColor.YELLOW + "");
-        frame.setItemMeta(frameMeta);
+        if (frame.hasItemMeta()) {
+            ItemMeta frameMeta = frame.getItemMeta();
+            frameMeta.setDisplayName(ChatColor.YELLOW + "");
+            frame.setItemMeta(frameMeta);
+        }
         for (int j = 0; j < 18; j++) {
             inv.setItem(j, frame);
         }
@@ -260,9 +262,11 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
             }
         }
         ItemStack frame = f1 > f2 ? InteractiveChat.invFrame2.clone() : InteractiveChat.invFrame1.clone();
-        ItemMeta frameMeta = frame.getItemMeta();
-        frameMeta.setDisplayName(ChatColor.YELLOW + "");
-        frame.setItemMeta(frameMeta);
+        if (frame.hasItemMeta()) {
+            ItemMeta frameMeta = frame.getItemMeta();
+            frameMeta.setDisplayName(ChatColor.YELLOW + "");
+            frame.setItemMeta(frameMeta);
+        }
         for (int j = 0; j < 54; j++) {
             inv.setItem(j, frame);
         }
