@@ -240,6 +240,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public String alternateResourcePackHash = "";
     public boolean optifineCustomTextures = true;
     public boolean chimeOverrideModels = true;
+    public int embedDeleteAfter = 0;
     public ResourceManager resourceManager;
     public ModelRenderer modelRenderer;
     public ExecutorService mediaReadingService;
@@ -462,6 +463,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         escapePlaceholdersFromDiscord = config.getConfiguration().getBoolean("Settings.EscapePlaceholdersSentFromDiscord");
         escapeDiscordMarkdownInItems = config.getConfiguration().getBoolean("Settings.EscapeDiscordMarkdownFormattingInItems");
         reducedAssetsDownloadInfo = config.getConfiguration().getBoolean("Settings.ReducedAssetsDownloadInfo");
+
+        embedDeleteAfter = config.getConfiguration().getInt("Settings.EmbedDeleteAfter");
 
         itemDisplaySingle = config.getConfiguration().getString("InventoryImage.Item.EmbedDisplay.Single");
         itemDisplayMultiple = config.getConfiguration().getString("InventoryImage.Item.EmbedDisplay.Multiple");
