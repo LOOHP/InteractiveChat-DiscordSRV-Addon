@@ -370,8 +370,15 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
     }
 
     public static List<String> getPlayerGroups(OfflinePlayer player) {
-        RegisteredServiceProvider<Permission> rsp = Bukkit.getServicesManager().getRegistration(Permission.class);
-        return Arrays.asList(rsp.getProvider().getPlayerGroups(Bukkit.getWorlds().get(0).getName(), player));
+        try {
+            RegisteredServiceProvider<Permission> rsp = Bukkit.getServicesManager().getRegistration(Permission.class);
+            if (!rsp.getProvider().hasGroupSupport()) {
+                return Collections.emptyList();
+            }
+            return Arrays.asList(rsp.getProvider().getPlayerGroups(Bukkit.getWorlds().get(0).getName(), player));
+        } catch (UnsupportedOperationException e) {
+            return Collections.emptyList();
+        }
     }
 
     @SuppressWarnings("deprecation")
