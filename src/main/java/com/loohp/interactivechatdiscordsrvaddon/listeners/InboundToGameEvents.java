@@ -72,7 +72,6 @@ import org.bukkit.inventory.ItemStack;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -233,7 +232,9 @@ public class InboundToGameEvents implements Listener {
                 try (InputStream stream = URLRequestUtils.retrieveInputStreamUntilSuccessful(methods)) {
                     GraphicsToPacketMapWrapper map;
                     boolean isVideo = false;
-                    if (url.toLowerCase().endsWith(".gif")) {
+                    if (url.toLowerCase().endsWith(".gif.png") || url.toLowerCase().endsWith(".apng")) {
+                        throw new UnsupportedOperationException("Animated PNG not yet supported, this error can be ignored");
+                    } else if (url.toLowerCase().endsWith(".gif")) {
                         map = new GraphicsToPacketMapWrapper(InteractiveChatDiscordSrvAddon.plugin.playbackBarEnabled, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
                         GifReader.readGif(stream, InteractiveChatDiscordSrvAddon.plugin.mediaReadingService, (frames, e) -> {
                             if (e != null) {
@@ -252,7 +253,7 @@ public class InboundToGameEvents implements Listener {
                     Bukkit.getPluginManager().callEvent(dace);
                     DATA.put(data.getUniqueId(), data);
                     Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(data.getUniqueId()), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
-                } catch (IOException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                     DiscordAttachmentData data = new DiscordAttachmentData(imageContainer.getName(), url);
                     DiscordAttachmentConversionEvent dace = new DiscordAttachmentConversionEvent(url, data);
@@ -273,7 +274,9 @@ public class InboundToGameEvents implements Listener {
                         try (InputStream stream = URLRequestUtils.getInputStream(url)) {
                             GraphicsToPacketMapWrapper map;
                             boolean isVideo = false;
-                            if (extension.equals("gif")) {
+                            if (extension.equals("gif.png") || extension.equals("apng")) {
+                                throw new UnsupportedOperationException("Animated PNG not yet supported, this error can be ignored");
+                            } else if (extension.equals("gif")) {
                                 map = new GraphicsToPacketMapWrapper(InteractiveChatDiscordSrvAddon.plugin.playbackBarEnabled, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
                                 GifReader.readGif(stream, InteractiveChatDiscordSrvAddon.plugin.mediaReadingService, (frames, e) -> {
                                     if (e != null) {
@@ -295,7 +298,7 @@ public class InboundToGameEvents implements Listener {
                             DATA.put(data.getUniqueId(), data);
                             Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> DATA.remove(data.getUniqueId()), InteractiveChatDiscordSrvAddon.plugin.discordAttachmentTimeout);
                         } catch (FileNotFoundException ignore) {
-                        } catch (IOException e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }

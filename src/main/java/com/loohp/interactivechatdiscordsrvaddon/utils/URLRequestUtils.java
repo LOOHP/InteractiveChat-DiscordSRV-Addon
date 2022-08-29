@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 
 public class URLRequestUtils {
 
-    public static final Pattern IMAGE_URL_PATTERN = Pattern.compile("https?:/(?:/[^/]+)+\\.(jpg|jpeg|gif|png)(?:\\?.*)*");
+    public static final Pattern IMAGE_URL_PATTERN = Pattern.compile("https?:/(?:/[^/]+?)+\\.(gif\\.png|jpg|jpeg|gif|png|apng)(?:\\?.*)*");
 
     public static InputStream getInputStream(String link) throws IOException {
         InputStream stream = getInputStream0(link);
