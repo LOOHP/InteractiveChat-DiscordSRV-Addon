@@ -716,15 +716,20 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                         errorCode--;
                         byte[] data = ImageUtils.toArray(image);
                         errorCode--;
-                        event.getHook().editOriginalEmbeds(new EmbedBuilder().setImage("attachment://Tablist.png").setColor(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandColor).build()).addFile(data, "Tablist.png").queue(success -> {
+                        event.getHook().editOriginalEmbeds(new EmbedBuilder().setImage("attachment://Tablist.png").setColor(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandColor).build()).addFile(data, "Tablist.png").queue(message -> {
                             if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandDeleteAfter > 0) {
                                 deleted.set(true);
-                                success.delete().queueAfter(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandDeleteAfter, TimeUnit.SECONDS);
+                                message.delete().queueAfter(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandDeleteAfter, TimeUnit.SECONDS);
                             }
                         });
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         e.printStackTrace();
-                        event.getHook().editOriginal(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.unableToRetrieveData) + " (" + errorCode + ")").queue();
+                        event.getHook().editOriginal(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.unableToRetrieveData) + " (" + errorCode + ")").queue(message -> {
+                            if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandDeleteAfter > 0) {
+                                deleted.set(true);
+                                message.delete().queueAfter(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandDeleteAfter, TimeUnit.SECONDS);
+                            }
+                        });
                         return;
                     }
                 }
@@ -853,11 +858,18 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                         if (!interactionHandler.getInteractions().isEmpty()) {
                             DiscordInteractionEvents.register(message, interactionHandler, contents);
                         }
+                        if (InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter > 0) {
+                            message.delete().queueAfter(InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter, TimeUnit.SECONDS);
+                        }
                     });
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 e.printStackTrace();
-                event.getHook().editOriginal(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.unableToRetrieveData) + " (" + errorCode + ")").queue();
+                event.getHook().editOriginal(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.unableToRetrieveData) + " (" + errorCode + ")").queue(message -> {
+                    if (InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter > 0) {
+                        message.delete().queueAfter(InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter, TimeUnit.SECONDS);
+                    }
+                });
                 return;
             }
         } else if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandEnabled && (label.equalsIgnoreCase(INVENTORY_LABEL) || label.equalsIgnoreCase(INVENTORY_OTHER_LABEL))) {
@@ -938,11 +950,19 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                         action.addFile(bottleData, "Level.png");
                     }
                     errorCode--;
-                    action.setEmbeds(embedBuilder.build()).queue();
+                    action.setEmbeds(embedBuilder.build()).queue(message -> {
+                        if (InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter > 0) {
+                            message.delete().queueAfter(InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter, TimeUnit.SECONDS);
+                        }
+                    });
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 e.printStackTrace();
-                event.getHook().editOriginal(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.unableToRetrieveData) + " (" + errorCode + ")").queue();
+                event.getHook().editOriginal(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.unableToRetrieveData) + " (" + errorCode + ")").queue(message -> {
+                    if (InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter > 0) {
+                        message.delete().queueAfter(InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter, TimeUnit.SECONDS);
+                    }
+                });
                 return;
             }
         } else if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandEnabled && (label.equals(ENDERCHEST_LABEL) || label.equals(ENDERCHEST_OTHER_LABEL))) {
@@ -1010,11 +1030,19 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                     errorCode--;
                     byte[] data = ImageUtils.toArray(image);
                     errorCode--;
-                    event.getHook().editOriginal(ComponentStringUtils.stripColorAndConvertMagic(LegacyComponentSerializer.legacySection().serialize(component))).setEmbeds(new EmbedBuilder().setAuthor(title).setImage("attachment://Inventory.png").setColor(InteractiveChatDiscordSrvAddon.plugin.enderColor).build()).addFile(data, "Inventory.png").queue();
+                    event.getHook().editOriginal(ComponentStringUtils.stripColorAndConvertMagic(LegacyComponentSerializer.legacySection().serialize(component))).setEmbeds(new EmbedBuilder().setAuthor(title).setImage("attachment://Inventory.png").setColor(InteractiveChatDiscordSrvAddon.plugin.enderColor).build()).addFile(data, "Inventory.png").queue(message -> {
+                        if (InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter > 0) {
+                            message.delete().queueAfter(InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter, TimeUnit.SECONDS);
+                        }
+                    });
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 e.printStackTrace();
-                event.getHook().editOriginal(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.unableToRetrieveData) + " (" + errorCode + ")").queue();
+                event.getHook().editOriginal(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.unableToRetrieveData) + " (" + errorCode + ")").queue(message -> {
+                    if (InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter > 0) {
+                        message.delete().queueAfter(InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter, TimeUnit.SECONDS);
+                    }
+                });
                 return;
             }
         }

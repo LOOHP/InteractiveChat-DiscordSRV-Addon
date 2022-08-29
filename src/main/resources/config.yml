@@ -296,6 +296,9 @@ Settings:
   EscapePlaceholdersSentFromDiscord: true
   EscapeDiscordMarkdownFormattingInItems: true
   ReducedAssetsDownloadInfo: true
+  #Delete the embed messages sent by InteractiveChatDiscordSRVAddon after X seconds (Set to 0 to not have it automatically deleted)
+  #This does not include ones that have their own config option, such as /playerlist
+  EmbedDeleteAfter: 0
 
 Debug:
   PrintInfoToConsole: false

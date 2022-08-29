@@ -134,6 +134,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 
@@ -821,7 +822,11 @@ public class OutboundToDiscordEvents implements Listener {
                         }
                     }
                 }
-                action.setEmbeds(embeds).setActionRows(interactionHandler.getInteractionToRegister()).queue();
+                action.setEmbeds(embeds).setActionRows(interactionHandler.getInteractionToRegister()).queue(m -> {
+                    if (InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter > 0) {
+                        m.editMessageEmbeds().setActionRows().retainFiles(Collections.emptyList()).queueAfter(InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter, TimeUnit.SECONDS);
+                    }
+                });
                 if (!interactionHandler.getInteractions().isEmpty()) {
                     DiscordInteractionEvents.register(message, interactionHandler, contents);
                 }
@@ -920,6 +925,12 @@ public class OutboundToDiscordEvents implements Listener {
                     WebhookUtil.editMessage(channel, String.valueOf(messageId), text, embeds, attachments, interactionHandler.getInteractionToRegister());
                     if (!interactionHandler.getInteractions().isEmpty()) {
                         DiscordInteractionEvents.register(message, interactionHandler, contents);
+                    }
+                    if (InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter > 0) {
+                        String finalText = text;
+                        Bukkit.getScheduler().runTaskLaterAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+                            WebhookUtil.editMessage(channel, String.valueOf(messageId), finalText, Collections.emptyList(), Collections.emptyMap(), Collections.emptyList());
+                        }, InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter * 20L);
                     }
                 }
             });
