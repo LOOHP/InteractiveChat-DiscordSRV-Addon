@@ -30,12 +30,10 @@ import com.loohp.interactivechat.objectholders.CustomPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.ICPlayerFactory;
-import com.loohp.interactivechat.objectholders.MentionPair;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 import com.loohp.interactivechat.objectholders.PlaceholderCooldownManager;
 import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechat.objectholders.WebData;
-import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
 import com.loohp.interactivechat.utils.ComponentFlattening;
@@ -124,6 +122,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -486,39 +485,36 @@ public class OutboundToDiscordEvents implements Listener {
         DiscordSRV srv = InteractiveChatDiscordSrvAddon.discordsrv;
         if (InteractiveChatDiscordSrvAddon.plugin.translateMentions) {
             Debug.debug("onGameToDiscord processing mentions");
-            List<MentionPair> distinctMentionPairs = new ArrayList<>();
-            Set<UUID> processedReceivers = new HashSet<>();
-            synchronized (InteractiveChat.mentionPair) {
-                for (MentionPair pair : InteractiveChat.mentionPair) {
-                    if (!processedReceivers.contains(pair.getReciever())) {
-                        distinctMentionPairs.add(pair);
-                        processedReceivers.add(pair.getReciever());
+            boolean hasMentionPermission = PlayerUtils.hasPermission(icSender.getUniqueId(), "interactivechat.mention.player", true, 200);
+            if (hasMentionPermission) {
+                Map<String, UUID> names = new HashMap<>();
+                for (ICPlayer icPlayer : ICPlayerFactory.getOnlineICPlayers()) {
+                    UUID uuid = icPlayer.getUniqueId();
+                    names.put(ChatColorUtils.stripColor(icPlayer.getName()), uuid);
+                    names.put(ChatColorUtils.stripColor(icPlayer.getDisplayName()), uuid);
+                    for (String nickname : InteractiveChatAPI.getNicknames(uuid)) {
+                        names.put(ChatColorUtils.stripColor(nickname), uuid);
                     }
                 }
-            }
-            for (MentionPair pair : distinctMentionPairs) {
-                if (pair.getSender().equals(icSender.getUniqueId())) {
-                    UUID receiverUUID = pair.getReciever();
-                    Set<String> names = new HashSet<>();
-                    ICPlayer receiver = ICPlayerFactory.getICPlayer(receiverUUID);
-                    if (receiver != null) {
-                        names.add(ChatColorUtils.stripColor(receiver.getName()));
-                        List<String> list = InteractiveChatAPI.getNicknames(receiver.getUniqueId());
-                        for (String name : list) {
-                            names.add(ChatColorUtils.stripColor(name));
-                        }
-                    }
-                    String userId = srv.getAccountLinkManager().getDiscordId(receiverUUID);
+                Set<UUID> processedReceivers = new HashSet<>();
+                for (Entry<String, UUID> entry : names.entrySet()) {
+                    String name = entry.getKey();
+                    UUID uuid = entry.getValue();
+                    String userId = srv.getAccountLinkManager().getDiscordId(uuid);
                     if (userId != null) {
                         User user = srv.getJda().getUserById(userId);
                         if (user != null) {
                             String discordMention = user.getAsMention();
-                            for (String name : names) {
-                                component = ComponentReplacing.replace(component, CustomStringUtils.escapeMetaCharacters(Registry.MENTION_TAG_CONVERTER.getTagStyle(InteractiveChat.mentionPrefix + name)), true, LegacyComponentSerializer.legacySection().deserialize(discordMention));
-                            }
+                            component = ComponentReplacing.replace(component, CustomStringUtils.escapeMetaCharacters(InteractiveChat.mentionPrefix + name), true, PlainTextComponentSerializer.plainText().deserialize(discordMention));
                         }
                     }
                 }
+            }
+            if (!hasMentionPermission || !PlayerUtils.hasPermission(icSender.getUniqueId(), "interactivechat.mention.here", false, 200)) {
+                component = ComponentReplacing.replace(component, CustomStringUtils.escapeMetaCharacters(InteractiveChat.mentionPrefix + "here"), false, Component.text("`" + InteractiveChat.mentionPrefix + "here`"));
+            }
+            if (! hasMentionPermission || !PlayerUtils.hasPermission(icSender.getUniqueId(), "interactivechat.mention.everyone", false, 200)) {
+                component = ComponentReplacing.replace(component, CustomStringUtils.escapeMetaCharacters(InteractiveChat.mentionPrefix + "everyone"), false, Component.text("`" + InteractiveChat.mentionPrefix + "everyone`"));
             }
         }
 
