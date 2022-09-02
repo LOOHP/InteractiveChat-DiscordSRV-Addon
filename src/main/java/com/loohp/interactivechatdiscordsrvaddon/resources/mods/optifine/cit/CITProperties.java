@@ -322,7 +322,7 @@ public abstract class CITProperties {
         if (!this.damage.test(damage & damageMask, maxDurability)) {
             return false;
         }
-        if (hand != null && !heldSlot.equals(hand)) {
+        if (hand != null && !hand.equals(heldSlot)) {
             return false;
         }
         if (!enchantments.isEmpty() && enchantments.entrySet().stream().noneMatch(entry -> entry.getValue().test(itemStack.getEnchantmentLevel(entry.getKey())))) {
