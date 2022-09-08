@@ -81,6 +81,7 @@ public class OptifineManager extends ModManager implements IOptifineManager {
     public static final String MOD_NAME = "Optifine";
     public static final List<String> ASSETS_FOLDERS = Collections.unmodifiableList(Arrays.asList("optifine", "mcpatcher"));
     public static final CITGlobalProperties DEFAULT_CIT_GLOBAL_PROPERTIES = new CITGlobalProperties(true, Integer.MAX_VALUE, EnchantmentVisibilityMethod.AVERAGE, 0.5);
+    public static final List<String> ASSET_EXTENSIONS = Collections.unmodifiableList(Arrays.asList("png", "json"));
     private static final BufferedImage BLANK_ENCHANTMENT = new BufferedImage(512, 512, BufferedImage.TYPE_INT_ARGB);
 
     private Map<String, ValuePairs<ResourcePackFile, ?>> assets;
@@ -199,7 +200,7 @@ public class OptifineManager extends ModManager implements IOptifineManager {
                         modelName = modelName.substring(modelName.lastIndexOf("/") + 1);
                     }
                 }
-                for (String type : Arrays.asList("png", "json")) {
+                for (String type : ASSET_EXTENSIONS) {
                     String rootPath = citProperties.getOverrideAsset("", type);
                     if (rootPath != null) {
                         String extension = rootPath.substring(rootPath.lastIndexOf(".") + 1);
@@ -224,6 +225,9 @@ public class OptifineManager extends ModManager implements IOptifineManager {
                         }
                     }
                 }
+                if (blockModel == null) {
+                    return new ValuePairs<>(null, overrideTextures);
+                }
                 for (Entry<String, String> entry : blockModel.getTextures().entrySet()) {
                     String key = entry.getKey();
                     String pathK = citProperties.getOverrideAsset(entry.getKey(), "png");
@@ -247,6 +251,12 @@ public class OptifineManager extends ModManager implements IOptifineManager {
                             String resourceLocation = resolveAsset(citOverride.getFirst(), pathV, extension);
                             if (extension.equalsIgnoreCase("png")) {
                                 overrideTextures.put(key, getTexture(resourceLocation));
+                            }
+                        } else {
+                            String resourceLocation = resolveAsset(citOverride.getFirst(), entry.getValue(), "png");
+                            TextureResource textureResource = getTexture(resourceLocation, false);
+                            if (textureResource != null) {
+                                overrideTextures.put(key, textureResource);
                             }
                         }
                     }
@@ -406,6 +416,9 @@ public class OptifineManager extends ModManager implements IOptifineManager {
     }
 
     public static String resolveAsset(ResourcePackFile currentFile, String path, String extension) {
+        if (path.startsWith("./")) {
+            path = path.substring(2);
+        }
         if (!path.toLowerCase().endsWith(extension.toLowerCase())) {
             path += "." + extension;
         }
@@ -536,7 +549,7 @@ public class OptifineManager extends ModManager implements IOptifineManager {
             }
             model = model.resolve(parent, is1_8);
         }
-        return model.resolve( is1_8);
+        return model.resolve(is1_8);
     }
 
 }

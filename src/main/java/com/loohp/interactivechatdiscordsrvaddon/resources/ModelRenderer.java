@@ -63,11 +63,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -472,7 +474,10 @@ public class ModelRenderer implements AutoCloseable {
                             }
                         }
                         TextureUV uv = faceData.getUV();
-                        TextureResource resource = providedTextures.get(faceData.getTexture());
+                        TextureResource resource = findKey(blockModel.getTextures(), faceData.getRawTexture()).stream().findFirst().map(each -> overrideTextures.get(each)).orElse(null);
+                        if (resource == null) {
+                            resource = providedTextures.get(faceData.getTexture());
+                        }
                         if (resource == null) {
                             resource = manager.getTextureManager().getTexture(faceData.getTexture(), false);
                         }
@@ -728,6 +733,16 @@ public class ModelRenderer implements AutoCloseable {
             PlayerModelItem resource = entry.getKey();
             return entry.getKey() + ":[" + resource.getPosition() + ", " + resource.getModelKey() + ", " + cacheKeyMap(resource.getPredicate()) + ", " + resource.isEnchanted() + ", " + cacheKeyProvidedTextures(resource.getProvidedTextures()) + ", " + resource.getPostResolveFunction().hashCode() + ", " + cacheKeyProvidedTextures(entry.getValue().getSecond()) + "]";
         }).collect(Collectors.joining(", ", "{", "}"));
+    }
+
+    private <K, V> Set<K> findKey(Map<K, V> map, V value) {
+        Set<K> result = new HashSet<>();
+        for (Entry<K, V> entry : map.entrySet()) {
+            if (entry.getValue().equals(value)) {
+                result.add(entry.getKey());
+            }
+        }
+        return result;
     }
 
     public enum PlayerModelItemPosition {

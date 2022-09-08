@@ -45,9 +45,10 @@ public class InteractiveChatDiscordSrvAddonAPI {
 
     /**
      * Get the current active resource manager<br>
-     * A new instance is created whenever the plugin is reloaded
+     * A new instance is created whenever the plugin is reloaded<br>
+     * Null will be returned if the plugin had yet to finish setting up, or when there is an error.
      *
-     * @return the current resource manager
+     * @return the current resource manager or null
      */
     public static ResourceManager getCurrentResourceManager() {
         return InteractiveChatDiscordSrvAddon.plugin.resourceManager;

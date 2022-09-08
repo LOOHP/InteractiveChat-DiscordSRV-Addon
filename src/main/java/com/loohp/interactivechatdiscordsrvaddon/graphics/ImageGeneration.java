@@ -1467,6 +1467,13 @@ public class ImageGeneration {
         return image;
     }
 
+    public static Future<List<BufferedImage>> getBookInterface(List<Component> pages) {
+        CompletableFuture<List<BufferedImage>> future = new CompletableFuture<>();
+        List<Supplier<BufferedImage>> suppliers = getBookInterfaceSuppliers(pages);
+        Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> future.complete(suppliers.stream().map(each -> each.get()).collect(Collectors.toList())));
+        return future;
+    }
+
     public static List<Supplier<BufferedImage>> getBookInterfaceSuppliers(List<Component> pages) {
         BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "book").getTexture(512, 512);
         BufferedImage background = ImageUtils.copyAndGetSubImage(icons, 38, 0, 296, 364);
@@ -1517,10 +1524,6 @@ public class ImageGeneration {
         }
 
         return result;
-    }
-
-    public static List<BufferedImage> getBookInterface(List<Component> pages) {
-        return getBookInterfaceSuppliers(pages).stream().map(each -> each.get()).collect(Collectors.toList());
     }
 
     public static class GenericContainerBackgroundResult {

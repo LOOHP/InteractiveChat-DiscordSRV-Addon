@@ -145,8 +145,49 @@ public class OutboundToDiscordEvents implements Listener {
     private static final IDProvider DATA_ID_PROVIDER = new IDProvider();
     private static final Map<UUID, ItemStack> DEATH_BY = new ConcurrentHashMap<>();
 
+    @Subscribe(priority = ListenerPriority.LOWEST)
+    public void onGameToDiscordLowest(GameChatMessagePreProcessEvent event) {
+        if (InteractiveChatDiscordSrvAddon.plugin.gameToDiscordPriority.equals(ListenerPriority.LOWEST)) {
+            handleGameToDiscord(event);
+        }
+    }
+
+    @Subscribe(priority = ListenerPriority.LOW)
+    public void onGameToDiscordLow(GameChatMessagePreProcessEvent event) {
+        if (InteractiveChatDiscordSrvAddon.plugin.gameToDiscordPriority.equals(ListenerPriority.LOW)) {
+            handleGameToDiscord(event);
+        }
+    }
+
+    @Subscribe(priority = ListenerPriority.NORMAL)
+    public void onGameToDiscordNormal(GameChatMessagePreProcessEvent event) {
+        if (InteractiveChatDiscordSrvAddon.plugin.gameToDiscordPriority.equals(ListenerPriority.NORMAL)) {
+            handleGameToDiscord(event);
+        }
+    }
+
+    @Subscribe(priority = ListenerPriority.HIGH)
+    public void onGameToDiscordHigh(GameChatMessagePreProcessEvent event) {
+        if (InteractiveChatDiscordSrvAddon.plugin.gameToDiscordPriority.equals(ListenerPriority.HIGH)) {
+            handleGameToDiscord(event);
+        }
+    }
+
     @Subscribe(priority = ListenerPriority.HIGHEST)
-    public void onGameToDiscord(GameChatMessagePreProcessEvent event) {
+    public void onGameToDiscordHighest(GameChatMessagePreProcessEvent event) {
+        if (InteractiveChatDiscordSrvAddon.plugin.gameToDiscordPriority.equals(ListenerPriority.HIGHEST)) {
+            handleGameToDiscord(event);
+        }
+    }
+
+    @Subscribe(priority = ListenerPriority.MONITOR)
+    public void onGameToDiscordMonitor(GameChatMessagePreProcessEvent event) {
+        if (InteractiveChatDiscordSrvAddon.plugin.gameToDiscordPriority.equals(ListenerPriority.MONITOR)) {
+            handleGameToDiscord(event);
+        }
+    }
+
+    public void handleGameToDiscord(GameChatMessagePreProcessEvent event) {
         Debug.debug("Triggering onGameToDiscord");
         if (event.isCancelled()) {
             Debug.debug("onGameToDiscord already cancelled");
@@ -168,8 +209,49 @@ public class OutboundToDiscordEvents implements Listener {
         event.setMessageComponent(ComponentStringUtils.toDiscordSRVComponent(message));
     }
 
+    @Subscribe(priority = ListenerPriority.LOWEST)
+    public void onVentureChatHookToDiscordLowest(VentureChatMessagePreProcessEvent event) {
+        if (InteractiveChatDiscordSrvAddon.plugin.ventureChatToDiscordPriority.equals(ListenerPriority.LOWEST)) {
+            handleVentureChatHookToDiscord(event);
+        }
+    }
+
+    @Subscribe(priority = ListenerPriority.LOW)
+    public void onVentureChatHookToDiscordLow(VentureChatMessagePreProcessEvent event) {
+        if (InteractiveChatDiscordSrvAddon.plugin.ventureChatToDiscordPriority.equals(ListenerPriority.LOW)) {
+            handleVentureChatHookToDiscord(event);
+        }
+    }
+
+    @Subscribe(priority = ListenerPriority.NORMAL)
+    public void onVentureChatHookToDiscordNormal(VentureChatMessagePreProcessEvent event) {
+        if (InteractiveChatDiscordSrvAddon.plugin.ventureChatToDiscordPriority.equals(ListenerPriority.NORMAL)) {
+            handleVentureChatHookToDiscord(event);
+        }
+    }
+
+    @Subscribe(priority = ListenerPriority.HIGH)
+    public void onVentureChatHookToDiscordHigh(VentureChatMessagePreProcessEvent event) {
+        if (InteractiveChatDiscordSrvAddon.plugin.ventureChatToDiscordPriority.equals(ListenerPriority.HIGH)) {
+            handleVentureChatHookToDiscord(event);
+        }
+    }
+
     @Subscribe(priority = ListenerPriority.HIGHEST)
-    public void onVentureChatHookToDiscord(VentureChatMessagePreProcessEvent event) {
+    public void onVentureChatHookToDiscordHighest(VentureChatMessagePreProcessEvent event) {
+        if (InteractiveChatDiscordSrvAddon.plugin.ventureChatToDiscordPriority.equals(ListenerPriority.HIGHEST)) {
+            handleVentureChatHookToDiscord(event);
+        }
+    }
+
+    @Subscribe(priority = ListenerPriority.MONITOR)
+    public void onVentureChatHookToDiscordMonitor(VentureChatMessagePreProcessEvent event) {
+        if (InteractiveChatDiscordSrvAddon.plugin.ventureChatToDiscordPriority.equals(ListenerPriority.MONITOR)) {
+            handleVentureChatHookToDiscord(event);
+        }
+    }
+
+    public void handleVentureChatHookToDiscord(VentureChatMessagePreProcessEvent event) {
         Debug.debug("Triggering onVentureChatHookToDiscord");
         if (event.isCancelled()) {
             Debug.debug("onVentureChatHookToDiscord already cancelled");
@@ -834,102 +916,110 @@ public class OutboundToDiscordEvents implements Listener {
 
         @Override
         public void onMessageReceived(MessageReceivedEvent event) {
-            Debug.debug("Triggered onMessageReceived");
-            if (event.getAuthor().equals(event.getJDA().getSelfUser())) {
-                return;
-            }
-            if (!event.getChannelType().equals(ChannelType.TEXT)) {
-                return;
-            }
-            if (!event.isWebhookMessage()) {
-                return;
-            }
-            long messageId = event.getMessageIdLong();
-            Message message = event.getMessage();
-            TextChannel channel = event.getTextChannel();
-            String textOriginal = message.getContentRaw();
-
-            if (!InteractiveChatDiscordSrvAddon.plugin.isEnabled()) {
-                return;
-            }
-            Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
-                String text = textOriginal;
-                if (!text.contains("<ICD=")) {
+            try {
+                Debug.debug("Triggered onMessageReceived");
+                if (event.getAuthor().equals(event.getJDA().getSelfUser())) {
                     return;
                 }
-
-                Set<Integer> matches = new LinkedHashSet<>();
-
-                synchronized (DATA) {
-                    for (int key : DATA.keySet()) {
-                        if (text.contains("<ICD=" + key + ">")) {
-                            text = text.replace("<ICD=" + key + ">", "");
-                            matches.add(key);
-                        }
-                    }
-                }
-
-                if (matches.isEmpty()) {
-                    Debug.debug("onMessageReceived keys empty");
+                if (!event.getChannelType().equals(ChannelType.TEXT)) {
                     return;
                 }
-
-                String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(channel);
-                WebhookUtil.editMessage(channel, String.valueOf(messageId), text + " ...", (Collection<? extends MessageEmbed>) null);
-
-                OfflineICPlayer player = DATA.get(matches.iterator().next()).getPlayer();
-
-                List<DiscordDisplayData> dataList = new ArrayList<>();
-
-                for (int key : matches) {
-                    DiscordDisplayData data = DATA.remove(key);
-                    if (data != null) {
-                        dataList.add(data);
-                    }
+                if (!event.isWebhookMessage()) {
+                    return;
                 }
+                long messageId = event.getMessageIdLong();
+                Message message = event.getMessage();
+                TextChannel channel = event.getTextChannel();
+                String textOriginal = message.getContentRaw();
 
-                dataList.sort(DISPLAY_DATA_COMPARATOR);
+                if (!InteractiveChatDiscordSrvAddon.plugin.isEnabled()) {
+                    return;
+                }
+                Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+                    String text = textOriginal;
+                    if (!text.contains("<ICD=")) {
+                        return;
+                    }
 
-                Debug.debug("onMessageReceived creating contents");
-                ValuePairs<List<DiscordMessageContent>, InteractionHandler> pair = DiscordContentUtils.createContents(dataList, player);
-                List<DiscordMessageContent> contents = pair.getFirst();
-                InteractionHandler interactionHandler = pair.getSecond();
+                    Set<Integer> matches = new LinkedHashSet<>();
 
-                DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
-                Bukkit.getPluginManager().callEvent(discordImageEvent);
-
-                Debug.debug("onMessageReceived sending to discord, Cancelled: " + discordImageEvent.isCancelled());
-                if (discordImageEvent.isCancelled()) {
-                    WebhookUtil.editMessage(channel, String.valueOf(messageId), discordImageEvent.getOriginalMessage(), (Collection<? extends MessageEmbed>) null);
-                } else {
-                    text = discordImageEvent.getNewMessage();
-                    List<MessageEmbed> embeds = new ArrayList<>();
-                    Map<String, InputStream> attachments = new LinkedHashMap<>();
-                    int i = 0;
-                    for (DiscordMessageContent content : contents) {
-                        i += content.getAttachments().size();
-                        if (i <= 10) {
-                            ValuePairs<List<MessageEmbed>, Set<String>> valuePair = content.toJDAMessageEmbeds();
-                            embeds.addAll(valuePair.getFirst());
-                            for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
-                                if (valuePair.getSecond().contains(attachment.getKey())) {
-                                    attachments.put(attachment.getKey(), new ByteArrayInputStream(attachment.getValue()));
-                                }
+                    synchronized (DATA) {
+                        for (int key : DATA.keySet()) {
+                            if (text.contains("<ICD=" + key + ">")) {
+                                text = text.replace("<ICD=" + key + ">", "");
+                                matches.add(key);
                             }
                         }
                     }
-                    WebhookUtil.editMessage(channel, String.valueOf(messageId), text, embeds, attachments, interactionHandler.getInteractionToRegister());
-                    if (!interactionHandler.getInteractions().isEmpty()) {
-                        DiscordInteractionEvents.register(message, interactionHandler, contents);
+
+                    if (matches.isEmpty()) {
+                        Debug.debug("onMessageReceived keys empty");
+                        return;
                     }
-                    if (InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter > 0) {
-                        String finalText = text;
-                        Bukkit.getScheduler().runTaskLaterAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
-                            WebhookUtil.editMessage(channel, String.valueOf(messageId), finalText, Collections.emptyList(), Collections.emptyMap(), Collections.emptyList());
-                        }, InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter * 20L);
+
+                    String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(channel);
+                    WebhookUtil.editMessage(channel, String.valueOf(messageId), text + " ...", (Collection<? extends MessageEmbed>) null);
+
+                    OfflineICPlayer player = DATA.get(matches.iterator().next()).getPlayer();
+
+                    List<DiscordDisplayData> dataList = new ArrayList<>();
+
+                    for (int key : matches) {
+                        DiscordDisplayData data = DATA.remove(key);
+                        if (data != null) {
+                            dataList.add(data);
+                        }
                     }
+
+                    dataList.sort(DISPLAY_DATA_COMPARATOR);
+
+                    Debug.debug("onMessageReceived creating contents");
+                    ValuePairs<List<DiscordMessageContent>, InteractionHandler> pair = DiscordContentUtils.createContents(dataList, player);
+                    List<DiscordMessageContent> contents = pair.getFirst();
+                    InteractionHandler interactionHandler = pair.getSecond();
+
+                    DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
+                    Bukkit.getPluginManager().callEvent(discordImageEvent);
+
+                    Debug.debug("onMessageReceived sending to discord, Cancelled: " + discordImageEvent.isCancelled());
+                    if (discordImageEvent.isCancelled()) {
+                        WebhookUtil.editMessage(channel, String.valueOf(messageId), discordImageEvent.getOriginalMessage(), (Collection<? extends MessageEmbed>) null);
+                    } else {
+                        text = discordImageEvent.getNewMessage();
+                        List<MessageEmbed> embeds = new ArrayList<>();
+                        Map<String, InputStream> attachments = new LinkedHashMap<>();
+                        int i = 0;
+                        for (DiscordMessageContent content : contents) {
+                            i += content.getAttachments().size();
+                            if (i <= 10) {
+                                ValuePairs<List<MessageEmbed>, Set<String>> valuePair = content.toJDAMessageEmbeds();
+                                embeds.addAll(valuePair.getFirst());
+                                for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
+                                    if (valuePair.getSecond().contains(attachment.getKey())) {
+                                        attachments.put(attachment.getKey(), new ByteArrayInputStream(attachment.getValue()));
+                                    }
+                                }
+                            }
+                        }
+                        WebhookUtil.editMessage(channel, String.valueOf(messageId), text, embeds, attachments, interactionHandler.getInteractionToRegister());
+                        if (!interactionHandler.getInteractions().isEmpty()) {
+                            DiscordInteractionEvents.register(message, interactionHandler, contents);
+                        }
+                        if (InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter > 0) {
+                            String finalText = text;
+                            Bukkit.getScheduler().runTaskLaterAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+                                WebhookUtil.editMessage(channel, String.valueOf(messageId), finalText, Collections.emptyList(), Collections.emptyMap(), Collections.emptyList());
+                            }, InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter * 20L);
+                        }
+                    }
+                });
+            } catch (IllegalStateException e) {
+                if (e.getMessage().trim().equalsIgnoreCase("zip file closed")) {
+                    throw new RuntimeException("InteractiveChatDiscordSRVAddon didn't start properly due to an earlier error during startup, please look for that if you are asking for support. Remember to check the pinned messages first when you do so.", e);
+                } else {
+                    throw e;
                 }
-            });
+            }
         }
 
     }

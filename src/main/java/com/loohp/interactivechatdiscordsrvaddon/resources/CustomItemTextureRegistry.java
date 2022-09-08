@@ -73,7 +73,10 @@ public class CustomItemTextureRegistry implements IResourceRegistry {
     }
 
     public Optional<Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>>> getItemPostResolveFunction(String modelKey, EquipmentSlot heldSlot, ItemStack itemStack, boolean is1_8, Map<ModelOverrideType, Float> predicates, OfflineICPlayer player, World world, LivingEntity entity, UnaryOperator<String> translateFunction) {
-        return resolvers.stream().map(each -> (Function<ValuePairs<BlockModel, Map<String, TextureResource>>, ValuePairs<BlockModel, Map<String, TextureResource>>>) result -> each.getItemPostResolveFunction(result, modelKey, heldSlot, itemStack, is1_8, predicates, player, world, entity, translateFunction)).reduce(Function::andThen).map(each -> ((Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>>) blockModel -> new ValuePairs<>(blockModel, new HashMap<>())).andThen(each));
+        return resolvers.stream()
+                .map(each -> (Function<ValuePairs<BlockModel, Map<String, TextureResource>>, ValuePairs<BlockModel, Map<String, TextureResource>>>) result -> each.getItemPostResolveFunction(result, modelKey, heldSlot, itemStack, is1_8, predicates, player, world, entity, translateFunction))
+                .reduce(Function::andThen)
+                .map(each -> ((Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>>) blockModel -> new ValuePairs<>(blockModel, new HashMap<>())).andThen(each));
     }
 
     public Optional<TextureResource> getElytraOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction) {

@@ -115,8 +115,49 @@ public class InboundToGameEvents implements Listener {
         }
     }
 
+    @Subscribe(priority = ListenerPriority.LOWEST)
+    public void onReceiveMessageFromDiscordPostLowest(DiscordGuildMessagePostProcessEvent event) {
+        if (InteractiveChatDiscordSrvAddon.plugin.discordToGamePriority.equals(ListenerPriority.LOWEST)) {
+            handleReceiveMessageFromDiscordPost(event);
+        }
+    }
+
+    @Subscribe(priority = ListenerPriority.LOW)
+    public void onReceiveMessageFromDiscordPostLow(DiscordGuildMessagePostProcessEvent event) {
+        if (InteractiveChatDiscordSrvAddon.plugin.discordToGamePriority.equals(ListenerPriority.LOW)) {
+            handleReceiveMessageFromDiscordPost(event);
+        }
+    }
+
+    @Subscribe(priority = ListenerPriority.NORMAL)
+    public void onReceiveMessageFromDiscordPostNormal(DiscordGuildMessagePostProcessEvent event) {
+        if (InteractiveChatDiscordSrvAddon.plugin.discordToGamePriority.equals(ListenerPriority.NORMAL)) {
+            handleReceiveMessageFromDiscordPost(event);
+        }
+    }
+
     @Subscribe(priority = ListenerPriority.HIGH)
-    public void onReceiveMessageFromDiscordPost(DiscordGuildMessagePostProcessEvent event) {
+    public void onReceiveMessageFromDiscordPostHigh(DiscordGuildMessagePostProcessEvent event) {
+        if (InteractiveChatDiscordSrvAddon.plugin.discordToGamePriority.equals(ListenerPriority.HIGH)) {
+            handleReceiveMessageFromDiscordPost(event);
+        }
+    }
+
+    @Subscribe(priority = ListenerPriority.HIGHEST)
+    public void onReceiveMessageFromDiscordPostHighest(DiscordGuildMessagePostProcessEvent event) {
+        if (InteractiveChatDiscordSrvAddon.plugin.discordToGamePriority.equals(ListenerPriority.HIGHEST)) {
+            handleReceiveMessageFromDiscordPost(event);
+        }
+    }
+
+    @Subscribe(priority = ListenerPriority.MONITOR)
+    public void onReceiveMessageFromDiscordPostMonitor(DiscordGuildMessagePostProcessEvent event) {
+        if (InteractiveChatDiscordSrvAddon.plugin.discordToGamePriority.equals(ListenerPriority.MONITOR)) {
+            handleReceiveMessageFromDiscordPost(event);
+        }
+    }
+
+    public void handleReceiveMessageFromDiscordPost(DiscordGuildMessagePostProcessEvent event) {
         Debug.debug("Triggering onReceiveMessageFromDiscordPost");
         Message message = event.getMessage();
 

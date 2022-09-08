@@ -299,6 +299,17 @@ Settings:
   #Delete the embed messages sent by InteractiveChatDiscordSRVAddon after X seconds (Set to 0 to not have it automatically deleted)
   #This does not include ones that have their own config option, such as /playerlist
   EmbedDeleteAfter: 0
+  #You might want to adjust this option if you have other plugins listening to DiscordSRV's events
+  #And it is interfering with InteractiveChatDiscordSRVAddon's ability to modify and read game or discord messages
+  #Valid options are
+  #LOWEST, LOW, NORMAL, HIGH, HIGHEST, MONITOR
+  ListenerPriorities:
+    #Defaults to HIGHEST
+    GameToDiscord: HIGHEST
+    #Defaults to HIGHEST
+    VentureChatToDiscord: HIGHEST
+    #Defaults to HIGH
+    DiscordToGame: HIGH
 
 Debug:
   PrintInfoToConsole: false

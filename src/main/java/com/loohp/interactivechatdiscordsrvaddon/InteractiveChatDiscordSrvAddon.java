@@ -44,6 +44,7 @@ import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordInteractionEven
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordReadyEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.ICPlayerEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
+import com.loohp.interactivechatdiscordsrvaddon.listeners.LegacyDiscordCommandEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.OutboundToDiscordEvents;
 import com.loohp.interactivechatdiscordsrvaddon.metrics.Charts;
 import com.loohp.interactivechatdiscordsrvaddon.metrics.Metrics;
@@ -63,6 +64,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimeManage
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.OptifineManager;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
 import github.scarsz.discordsrv.DiscordSRV;
+import github.scarsz.discordsrv.api.ListenerPriority;
 import github.scarsz.discordsrv.dependencies.jda.api.Permission;
 import github.scarsz.discordsrv.dependencies.jda.api.requests.GatewayIntent;
 import net.md_5.bungee.api.ChatColor;
@@ -131,6 +133,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public AtomicLong attachmentImageCounter = new AtomicLong(0);
     public AtomicLong imagesViewedCounter = new AtomicLong(0);
     public Queue<Integer> playerModelRenderingTimes = new ConcurrentLinkedQueue<>();
+    public ListenerPriority gameToDiscordPriority = ListenerPriority.HIGHEST;
+    public ListenerPriority ventureChatToDiscordPriority = ListenerPriority.HIGHEST;
+    public ListenerPriority discordToGamePriority = ListenerPriority.HIGH;
     public boolean itemImage = true;
     public boolean invImage = true;
     public boolean enderImage = true;
@@ -278,6 +283,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         Charts.setup(metrics);
 
         DiscordSRV.api.subscribe(new DiscordReadyEvents());
+        DiscordSRV.api.subscribe(new LegacyDiscordCommandEvents());
         DiscordSRV.api.subscribe(new OutboundToDiscordEvents());
         DiscordSRV.api.subscribe(new InboundToGameEvents());
 
@@ -466,6 +472,10 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
         embedDeleteAfter = config.getConfiguration().getInt("Settings.EmbedDeleteAfter");
 
+        gameToDiscordPriority = ListenerPriority.valueOf(config.getConfiguration().getString("Settings.ListenerPriorities.GameToDiscord").toUpperCase());
+        ventureChatToDiscordPriority = ListenerPriority.valueOf(config.getConfiguration().getString("Settings.ListenerPriorities.VentureChatToDiscord").toUpperCase());
+        discordToGamePriority = ListenerPriority.valueOf(config.getConfiguration().getString("Settings.ListenerPriorities.DiscordToGame").toUpperCase());
+
         itemDisplaySingle = config.getConfiguration().getString("InventoryImage.Item.EmbedDisplay.Single");
         itemDisplayMultiple = config.getConfiguration().getString("InventoryImage.Item.EmbedDisplay.Multiple");
         invColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("InventoryImage.Inventory.EmbedColor"));
@@ -619,11 +629,11 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                 sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Reloading ResourceManager: " + ChatColor.YELLOW + String.join(", ", resourceList), senders);
 
                 List<ModManagerSupplier<?>> mods = new ArrayList<>();
-                if (optifineCustomTextures) {
-                    mods.add(manager -> new OptifineManager(manager));
-                }
                 if (chimeOverrideModels) {
                     mods.add(manager -> new ChimeManager(manager));
+                }
+                if (optifineCustomTextures) {
+                    mods.add(manager -> new OptifineManager(manager));
                 }
 
                 Bukkit.getPluginManager().callEvent(new ResourceManagerInitializeEvent(mods));
