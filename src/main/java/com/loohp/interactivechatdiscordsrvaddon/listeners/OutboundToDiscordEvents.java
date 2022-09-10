@@ -83,7 +83,6 @@ import github.scarsz.discordsrv.api.Subscribe;
 import github.scarsz.discordsrv.api.events.AchievementMessagePostProcessEvent;
 import github.scarsz.discordsrv.api.events.AchievementMessagePreProcessEvent;
 import github.scarsz.discordsrv.api.events.DeathMessagePostProcessEvent;
-import github.scarsz.discordsrv.api.events.DiscordGuildMessageSentEvent;
 import github.scarsz.discordsrv.api.events.GameChatMessagePreProcessEvent;
 import github.scarsz.discordsrv.api.events.VentureChatMessagePreProcessEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.ChannelType;
@@ -826,90 +825,158 @@ public class OutboundToDiscordEvents implements Listener {
 
     //=====
 
-    @Subscribe(priority = ListenerPriority.HIGHEST)
-    public void discordMessageSent(DiscordGuildMessageSentEvent event) {
-        Debug.debug("Triggered discordMessageSent");
-        Message message = event.getMessage();
-        String textOriginal = message.getContentRaw();
-        TextChannel channel = event.getChannel();
+    private static void handleSelfBotMessage(Message message, String textOriginal, TextChannel channel) {
+        String text = textOriginal;
 
-        if (!InteractiveChatDiscordSrvAddon.plugin.isEnabled()) {
+        if (!text.contains("<ICD=")) {
             return;
         }
-        Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
-            String text = textOriginal;
 
-            if (!text.contains("<ICD=")) {
-                return;
-            }
+        Set<Integer> matches = new LinkedHashSet<>();
 
-            Set<Integer> matches = new LinkedHashSet<>();
-
-            synchronized (DATA) {
-                for (int key : DATA.keySet()) {
-                    if (text.contains("<ICD=" + key + ">")) {
-                        text = text.replace("<ICD=" + key + ">", "");
-                        matches.add(key);
-                    }
+        synchronized (DATA) {
+            for (int key : DATA.keySet()) {
+                if (text.contains("<ICD=" + key + ">")) {
+                    text = text.replace("<ICD=" + key + ">", "");
+                    matches.add(key);
                 }
             }
+        }
 
-            if (matches.isEmpty()) {
-                Debug.debug("discordMessageSent keys empty");
-                return;
+        if (matches.isEmpty()) {
+            Debug.debug("discordMessageSent keys empty");
+            return;
+        }
+
+        message.editMessage(text + " ...").queue();
+        OfflineICPlayer player = DATA.get(matches.iterator().next()).getPlayer();
+
+        List<DiscordDisplayData> dataList = new ArrayList<>();
+
+        for (int key : matches) {
+            DiscordDisplayData data = DATA.remove(key);
+            if (data != null) {
+                dataList.add(data);
             }
+        }
 
-            message.editMessage(text + " ...").queue();
-            OfflineICPlayer player = DATA.get(matches.iterator().next()).getPlayer();
+        dataList.sort(DISPLAY_DATA_COMPARATOR);
 
-            List<DiscordDisplayData> dataList = new ArrayList<>();
+        Debug.debug("discordMessageSent creating contents");
+        ValuePairs<List<DiscordMessageContent>, InteractionHandler> pair = DiscordContentUtils.createContents(dataList, player);
+        List<DiscordMessageContent> contents = pair.getFirst();
+        InteractionHandler interactionHandler = pair.getSecond();
 
-            for (int key : matches) {
-                DiscordDisplayData data = DATA.remove(key);
-                if (data != null) {
-                    dataList.add(data);
-                }
-            }
-
-            dataList.sort(DISPLAY_DATA_COMPARATOR);
-
-            Debug.debug("discordMessageSent creating contents");
-            ValuePairs<List<DiscordMessageContent>, InteractionHandler> pair = DiscordContentUtils.createContents(dataList, player);
-            List<DiscordMessageContent> contents = pair.getFirst();
-            InteractionHandler interactionHandler = pair.getSecond();
-
-            DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
-            Bukkit.getPluginManager().callEvent(discordImageEvent);
-            Debug.debug("discordMessageSent sending to discord, Cancelled: " + discordImageEvent.isCancelled());
-            if (discordImageEvent.isCancelled()) {
-                message.editMessage(discordImageEvent.getOriginalMessage()).queue();
-            } else {
-                text = discordImageEvent.getNewMessage();
-                MessageAction action = message.editMessage(text);
-                List<MessageEmbed> embeds = new ArrayList<>();
-                int i = 0;
-                for (DiscordMessageContent content : contents) {
-                    i += content.getAttachments().size();
-                    if (i <= 10) {
-                        ValuePairs<List<MessageEmbed>, Set<String>> valuePair = content.toJDAMessageEmbeds();
-                        embeds.addAll(valuePair.getFirst());
-                        for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
-                            if (valuePair.getSecond().contains(attachment.getKey())) {
-                                action = action.addFile(attachment.getValue(), attachment.getKey());
-                            }
+        DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
+        Bukkit.getPluginManager().callEvent(discordImageEvent);
+        Debug.debug("discordMessageSent sending to discord, Cancelled: " + discordImageEvent.isCancelled());
+        if (discordImageEvent.isCancelled()) {
+            message.editMessage(discordImageEvent.getOriginalMessage()).queue();
+        } else {
+            text = discordImageEvent.getNewMessage();
+            MessageAction action = message.editMessage(text);
+            List<MessageEmbed> embeds = new ArrayList<>();
+            int i = 0;
+            for (DiscordMessageContent content : contents) {
+                i += content.getAttachments().size();
+                if (i <= 10) {
+                    ValuePairs<List<MessageEmbed>, Set<String>> valuePair = content.toJDAMessageEmbeds();
+                    embeds.addAll(valuePair.getFirst());
+                    for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
+                        if (valuePair.getSecond().contains(attachment.getKey())) {
+                            action = action.addFile(attachment.getValue(), attachment.getKey());
                         }
                     }
                 }
-                action.setEmbeds(embeds).setActionRows(interactionHandler.getInteractionToRegister()).queue(m -> {
-                    if (InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter > 0) {
-                        m.editMessageEmbeds().setActionRows().retainFiles(Collections.emptyList()).queueAfter(InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter, TimeUnit.SECONDS);
-                    }
-                });
-                if (!interactionHandler.getInteractions().isEmpty()) {
-                    DiscordInteractionEvents.register(message, interactionHandler, contents);
+            }
+            action.setEmbeds(embeds).setActionRows(interactionHandler.getInteractionToRegister()).queue(m -> {
+                if (InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter > 0) {
+                    m.editMessageEmbeds().setActionRows().retainFiles(Collections.emptyList()).queueAfter(InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter, TimeUnit.SECONDS);
+                }
+            });
+            if (!interactionHandler.getInteractions().isEmpty()) {
+                DiscordInteractionEvents.register(message, interactionHandler, contents);
+            }
+        }
+    }
+
+    private static void handleWebhook(long messageId, Message message, String textOriginal, TextChannel channel) {
+        String text = textOriginal;
+        if (!text.contains("<ICD=")) {
+            return;
+        }
+
+        Set<Integer> matches = new LinkedHashSet<>();
+
+        synchronized (DATA) {
+            for (int key : DATA.keySet()) {
+                if (text.contains("<ICD=" + key + ">")) {
+                    text = text.replace("<ICD=" + key + ">", "");
+                    matches.add(key);
                 }
             }
-        });
+        }
+
+        if (matches.isEmpty()) {
+            Debug.debug("onMessageReceived keys empty");
+            return;
+        }
+
+        String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(channel);
+        WebhookUtil.editMessage(channel, String.valueOf(messageId), text + " ...", (Collection<? extends MessageEmbed>) null);
+
+        OfflineICPlayer player = DATA.get(matches.iterator().next()).getPlayer();
+
+        List<DiscordDisplayData> dataList = new ArrayList<>();
+
+        for (int key : matches) {
+            DiscordDisplayData data = DATA.remove(key);
+            if (data != null) {
+                dataList.add(data);
+            }
+        }
+
+        dataList.sort(DISPLAY_DATA_COMPARATOR);
+
+        Debug.debug("onMessageReceived creating contents");
+        ValuePairs<List<DiscordMessageContent>, InteractionHandler> pair = DiscordContentUtils.createContents(dataList, player);
+        List<DiscordMessageContent> contents = pair.getFirst();
+        InteractionHandler interactionHandler = pair.getSecond();
+
+        DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
+        Bukkit.getPluginManager().callEvent(discordImageEvent);
+
+        Debug.debug("onMessageReceived sending to discord, Cancelled: " + discordImageEvent.isCancelled());
+        if (discordImageEvent.isCancelled()) {
+            WebhookUtil.editMessage(channel, String.valueOf(messageId), discordImageEvent.getOriginalMessage(), (Collection<? extends MessageEmbed>) null);
+        } else {
+            text = discordImageEvent.getNewMessage();
+            List<MessageEmbed> embeds = new ArrayList<>();
+            Map<String, InputStream> attachments = new LinkedHashMap<>();
+            int i = 0;
+            for (DiscordMessageContent content : contents) {
+                i += content.getAttachments().size();
+                if (i <= 10) {
+                    ValuePairs<List<MessageEmbed>, Set<String>> valuePair = content.toJDAMessageEmbeds();
+                    embeds.addAll(valuePair.getFirst());
+                    for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
+                        if (valuePair.getSecond().contains(attachment.getKey())) {
+                            attachments.put(attachment.getKey(), new ByteArrayInputStream(attachment.getValue()));
+                        }
+                    }
+                }
+            }
+            WebhookUtil.editMessage(channel, String.valueOf(messageId), text, embeds, attachments, interactionHandler.getInteractionToRegister());
+            if (!interactionHandler.getInteractions().isEmpty()) {
+                DiscordInteractionEvents.register(message, interactionHandler, contents);
+            }
+            if (InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter > 0) {
+                String finalText = text;
+                Bukkit.getScheduler().runTaskLaterAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+                    WebhookUtil.editMessage(channel, String.valueOf(messageId), finalText, Collections.emptyList(), Collections.emptyMap(), Collections.emptyList());
+                }, InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter * 20L);
+            }
+        }
     }
 
     public static class JDAEvents extends ListenerAdapter {
@@ -918,13 +985,10 @@ public class OutboundToDiscordEvents implements Listener {
         public void onMessageReceived(MessageReceivedEvent event) {
             try {
                 Debug.debug("Triggered onMessageReceived");
-                if (event.getAuthor().equals(event.getJDA().getSelfUser())) {
-                    return;
-                }
                 if (!event.getChannelType().equals(ChannelType.TEXT)) {
                     return;
                 }
-                if (!event.isWebhookMessage()) {
+                if (!event.isWebhookMessage() && !event.getAuthor().equals(event.getJDA().getSelfUser())) {
                     return;
                 }
                 long messageId = event.getMessageIdLong();
@@ -936,81 +1000,10 @@ public class OutboundToDiscordEvents implements Listener {
                     return;
                 }
                 Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
-                    String text = textOriginal;
-                    if (!text.contains("<ICD=")) {
-                        return;
-                    }
-
-                    Set<Integer> matches = new LinkedHashSet<>();
-
-                    synchronized (DATA) {
-                        for (int key : DATA.keySet()) {
-                            if (text.contains("<ICD=" + key + ">")) {
-                                text = text.replace("<ICD=" + key + ">", "");
-                                matches.add(key);
-                            }
-                        }
-                    }
-
-                    if (matches.isEmpty()) {
-                        Debug.debug("onMessageReceived keys empty");
-                        return;
-                    }
-
-                    String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(channel);
-                    WebhookUtil.editMessage(channel, String.valueOf(messageId), text + " ...", (Collection<? extends MessageEmbed>) null);
-
-                    OfflineICPlayer player = DATA.get(matches.iterator().next()).getPlayer();
-
-                    List<DiscordDisplayData> dataList = new ArrayList<>();
-
-                    for (int key : matches) {
-                        DiscordDisplayData data = DATA.remove(key);
-                        if (data != null) {
-                            dataList.add(data);
-                        }
-                    }
-
-                    dataList.sort(DISPLAY_DATA_COMPARATOR);
-
-                    Debug.debug("onMessageReceived creating contents");
-                    ValuePairs<List<DiscordMessageContent>, InteractionHandler> pair = DiscordContentUtils.createContents(dataList, player);
-                    List<DiscordMessageContent> contents = pair.getFirst();
-                    InteractionHandler interactionHandler = pair.getSecond();
-
-                    DiscordImageEvent discordImageEvent = new DiscordImageEvent(channel, textOriginal, text, contents, false, true);
-                    Bukkit.getPluginManager().callEvent(discordImageEvent);
-
-                    Debug.debug("onMessageReceived sending to discord, Cancelled: " + discordImageEvent.isCancelled());
-                    if (discordImageEvent.isCancelled()) {
-                        WebhookUtil.editMessage(channel, String.valueOf(messageId), discordImageEvent.getOriginalMessage(), (Collection<? extends MessageEmbed>) null);
+                    if (event.isWebhookMessage()) {
+                        handleWebhook(messageId, message, textOriginal, channel);
                     } else {
-                        text = discordImageEvent.getNewMessage();
-                        List<MessageEmbed> embeds = new ArrayList<>();
-                        Map<String, InputStream> attachments = new LinkedHashMap<>();
-                        int i = 0;
-                        for (DiscordMessageContent content : contents) {
-                            i += content.getAttachments().size();
-                            if (i <= 10) {
-                                ValuePairs<List<MessageEmbed>, Set<String>> valuePair = content.toJDAMessageEmbeds();
-                                embeds.addAll(valuePair.getFirst());
-                                for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
-                                    if (valuePair.getSecond().contains(attachment.getKey())) {
-                                        attachments.put(attachment.getKey(), new ByteArrayInputStream(attachment.getValue()));
-                                    }
-                                }
-                            }
-                        }
-                        WebhookUtil.editMessage(channel, String.valueOf(messageId), text, embeds, attachments, interactionHandler.getInteractionToRegister());
-                        if (!interactionHandler.getInteractions().isEmpty()) {
-                            DiscordInteractionEvents.register(message, interactionHandler, contents);
-                        }
-                        if (InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter > 0) {
-                            String finalText = text;
-                            Bukkit.getScheduler().runTaskLaterAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
-                                WebhookUtil.editMessage(channel, String.valueOf(messageId), finalText, Collections.emptyList(), Collections.emptyMap(), Collections.emptyList());
-                            }, InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter * 20L);
-                        }
+                        handleSelfBotMessage(message, textOriginal, channel);
                     }
                 });
             } catch (IllegalStateException e) {
