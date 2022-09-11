@@ -21,7 +21,7 @@
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.hooks.ecoenchants.EcoHook;
+import com.loohp.interactivechat.api.InteractiveChatAPI;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
@@ -153,13 +153,11 @@ public class DiscordItemStackUtils {
     public static String getItemNameForDiscord(ItemStack item, OfflineICPlayer player, String language) {
         UnaryOperator<String> translationFunction = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(language);
 
-        if (!item.getType().equals(Material.AIR) && InteractiveChat.ecoHook) {
-            Player bukkitPlayer = player.getPlayer() == null || !player.getPlayer().isLocal() ? null : player.getPlayer().getLocalPlayer();
-            if (bukkitPlayer == null && !Bukkit.getOnlinePlayers().isEmpty()) {
-                bukkitPlayer = Bukkit.getOnlinePlayers().iterator().next();
-            }
-            item = EcoHook.setEcoLores(item, bukkitPlayer);
+        Player bukkitPlayer = player.getPlayer() == null || !player.getPlayer().isLocal() ? null : player.getPlayer().getLocalPlayer();
+        if (bukkitPlayer == null && !Bukkit.getOnlinePlayers().isEmpty()) {
+            bukkitPlayer = Bukkit.getOnlinePlayers().iterator().next();
         }
+        item = InteractiveChatAPI.transformItemStack(item, bukkitPlayer == null ? null : bukkitPlayer.getUniqueId());
 
         if (item == null) {
             item = new ItemStack(Material.AIR);
@@ -179,13 +177,11 @@ public class DiscordItemStackUtils {
         String language = InteractiveChatDiscordSrvAddon.plugin.language;
         UnaryOperator<String> translationFunction = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(language);
 
-        if (!item.getType().equals(Material.AIR) && InteractiveChat.ecoHook) {
-            Player bukkitPlayer = player.getPlayer() == null || !player.getPlayer().isLocal() ? null : player.getPlayer().getLocalPlayer();
-            if (bukkitPlayer == null && !Bukkit.getOnlinePlayers().isEmpty()) {
-                bukkitPlayer = Bukkit.getOnlinePlayers().iterator().next();
-            }
-            item = EcoHook.setEcoLores(item, bukkitPlayer);
+        Player bukkitPlayer = player.getPlayer() == null || !player.getPlayer().isLocal() ? null : player.getPlayer().getLocalPlayer();
+        if (bukkitPlayer == null && !Bukkit.getOnlinePlayers().isEmpty()) {
+            bukkitPlayer = Bukkit.getOnlinePlayers().iterator().next();
         }
+        item = InteractiveChatAPI.transformItemStack(item, bukkitPlayer == null ? null : bukkitPlayer.getUniqueId());
 
         List<ToolTipComponent<?>> prints = new ArrayList<>();
         boolean hasCustomName = true;
