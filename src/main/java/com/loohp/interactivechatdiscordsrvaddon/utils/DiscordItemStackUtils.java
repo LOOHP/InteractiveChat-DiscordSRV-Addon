@@ -501,7 +501,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (hasMeta && item.getItemMeta() instanceof LeatherArmorMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_DYE)) {
+        if (hasMeta && item.getItemMeta() instanceof LeatherArmorMeta && item.getItemMeta().getItemFlags().stream().noneMatch(each -> each.name().equals("HIDE_DYE"))) {
             LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
             if (NBTEditor.contains(item, "display", "color")) {
                 Color color = new Color(meta.getColor().asRGB());
