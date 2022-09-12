@@ -153,7 +153,7 @@ public class DiscordItemStackUtils {
     public static String getItemNameForDiscord(ItemStack item, OfflineICPlayer player, String language) {
         UnaryOperator<String> translationFunction = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(language);
 
-        Player bukkitPlayer = player.getPlayer() == null || !player.getPlayer().isLocal() ? null : player.getPlayer().getLocalPlayer();
+        Player bukkitPlayer = player == null || player.getPlayer() == null || !player.getPlayer().isLocal() ? null : player.getPlayer().getLocalPlayer();
         if (bukkitPlayer == null && !Bukkit.getOnlinePlayers().isEmpty()) {
             bukkitPlayer = Bukkit.getOnlinePlayers().iterator().next();
         }
@@ -177,7 +177,7 @@ public class DiscordItemStackUtils {
         String language = InteractiveChatDiscordSrvAddon.plugin.language;
         UnaryOperator<String> translationFunction = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(language);
 
-        Player bukkitPlayer = player.getPlayer() == null || !player.getPlayer().isLocal() ? null : player.getPlayer().getLocalPlayer();
+        Player bukkitPlayer = player == null || player.getPlayer() == null || !player.getPlayer().isLocal() ? null : player.getPlayer().getLocalPlayer();
         if (bukkitPlayer == null && !Bukkit.getOnlinePlayers().isEmpty()) {
             bukkitPlayer = Bukkit.getOnlinePlayers().iterator().next();
         }
