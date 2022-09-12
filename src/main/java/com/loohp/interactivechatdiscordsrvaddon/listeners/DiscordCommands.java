@@ -60,7 +60,6 @@ import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.PlaceholderParser;
 import com.loohp.interactivechat.utils.PlayerUtils;
 import com.loohp.interactivechat.utils.SkinUtils;
-import com.loohp.interactivechat.utils.VanishUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.api.events.InteractiveChatDiscordSRVConfigReloadEvent;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
@@ -658,7 +657,8 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                         players = new LinkedHashMap<>(bungeePlayers.size());
                         for (ValueTrios<UUID, String, Integer> playerinfo : bungeePlayers) {
                             UUID uuid = playerinfo.getFirst();
-                            if (!VanishUtils.isVanished(uuid)) {
+                            ICPlayer icPlayer = ICPlayerFactory.getICPlayer(uuid);
+                            if (icPlayer == null || !icPlayer.isVanished()) {
                                 if (!InteractiveChatDiscordSrvAddon.plugin.playerlistCommandOnlyInteractiveChatServers || ICPlayerFactory.getICPlayer(uuid) != null) {
                                     players.put(Bukkit.getOfflinePlayer(uuid), playerinfo.getThird());
                                 }
@@ -670,7 +670,10 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                         return;
                     }
                 } else {
-                    players = Bukkit.getOnlinePlayers().stream().filter(each -> !VanishUtils.isVanished(each.getUniqueId())).collect(Collectors.toMap(each -> each, each -> PlayerUtils.getPing(each)));
+                    players = Bukkit.getOnlinePlayers().stream().filter(each -> {
+                        ICPlayer icPlayer = ICPlayerFactory.getICPlayer(each);
+                        return icPlayer == null || icPlayer.isVanished();
+                    }).collect(Collectors.toMap(each -> each, each -> PlayerUtils.getPing(each)));
                 }
                 if (players.isEmpty()) {
                     event.getHook().editOriginal(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandEmptyServer)).queue();
