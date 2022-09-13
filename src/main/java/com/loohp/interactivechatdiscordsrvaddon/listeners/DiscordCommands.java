@@ -672,7 +672,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                 } else {
                     players = Bukkit.getOnlinePlayers().stream().filter(each -> {
                         ICPlayer icPlayer = ICPlayerFactory.getICPlayer(each);
-                        return icPlayer == null || icPlayer.isVanished();
+                        return icPlayer == null || !icPlayer.isVanished();
                     }).collect(Collectors.toMap(each -> each, each -> PlayerUtils.getPing(each)));
                 }
                 if (players.isEmpty()) {
