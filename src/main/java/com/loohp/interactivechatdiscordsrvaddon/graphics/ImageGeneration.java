@@ -313,6 +313,13 @@ public class ImageGeneration {
     }
 
     public static BufferedImage getPlayerInventoryImage(Inventory inventory, OfflineICPlayer player) throws Exception {
+        EntityEquipment equipment = player.getEquipment();
+        ItemStack rightHand = player.isRightHanded() ? player.getMainHandItem() : player.getOffHandItem();
+        ItemStack leftHand = player.isRightHanded() ? player.getOffHandItem() : player.getMainHandItem();
+        return getPlayerInventoryImage(inventory, rightHand, leftHand, equipment.getHelmet(), equipment.getChestplate(), equipment.getLeggings(), equipment.getBoots(), player);
+    }
+
+    public static BufferedImage getPlayerInventoryImage(Inventory inventory, ItemStack puppetRightHand, ItemStack puppetLeftHand, ItemStack puppetHelmet, ItemStack puppetChestplate, ItemStack puppetLeggings, ItemStack puppetBoots, OfflineICPlayer player) throws Exception {
         InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
         InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();
         Debug.debug("ImageGeneration creating player inventory image of " + player.getName());
@@ -434,8 +441,7 @@ public class ImageGeneration {
         }
 
         //puppet
-        EntityEquipment equipment = player.getEquipment();
-        BufferedImage puppet = getFullBodyImage(player, equipment.getHelmet(), equipment.getChestplate(), equipment.getLeggings(), equipment.getBoots());
+        BufferedImage puppet = getFullBodyImage(player, puppetRightHand, puppetLeftHand, puppetHelmet, puppetChestplate, puppetLeggings, puppetBoots);
         g.drawImage(puppet, 45, -10, null);
 
         g.dispose();
@@ -445,7 +451,7 @@ public class ImageGeneration {
         return target;
     }
 
-    private static BufferedImage getFullBodyImage(OfflineICPlayer player, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots) throws IOException {
+    private static BufferedImage getFullBodyImage(OfflineICPlayer player, ItemStack rightHand, ItemStack leftHand, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots) throws IOException {
         InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
         Debug.debug("ImageGeneration creating puppet image of " + player.getName());
 
@@ -759,8 +765,7 @@ public class ImageGeneration {
         }
 
         if (InteractiveChatDiscordSrvAddon.plugin.renderHandHeldItems) {
-            ItemStack rightHand = player.isRightHanded() ? player.getMainHandItem() : player.getOffHandItem();
-            if (rightHand != null) {
+            if (rightHand != null && !rightHand.getType().equals(Material.AIR)) {
                 EquipmentSlot slot = player.isRightHanded() ? EquipmentSlot.HAND : EquipmentSlot.valueOf("OFF_HAND");
                 ItemStackProcessResult itemProcessResult = ItemRenderUtils.processItemForRendering(resourceManager.get(), player, rightHand, slot, version.get().isOld(), language.get());
                 boolean enchanted = itemProcessResult.requiresEnchantmentGlint();
@@ -773,8 +778,7 @@ public class ImageGeneration {
                 Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintFunction = img -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> getRawEnchantedImage(each.getFirst(), img)).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
                 modelItems.put(PlayerModelItemPosition.RIGHT_HAND, new PlayerModelItem(PlayerModelItemPosition.RIGHT_HAND, modelKey, resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, slot, rightHand, version.get().isOld(), predicate, player, world, livingEntity, translateFunction.get()).orElse(null), predicate, enchanted, itemProvidedTextures, tintIndexData, enchantmentGlintFunction, rawEnchantmentGlintFunction));
             }
-            ItemStack leftHand = player.isRightHanded() ? player.getOffHandItem() : player.getMainHandItem();
-            if (leftHand != null) {
+            if (leftHand != null && !leftHand.getType().equals(Material.AIR)) {
                 EquipmentSlot slot = player.isRightHanded() ? EquipmentSlot.valueOf("OFF_HAND") : EquipmentSlot.HAND;
                 ItemStackProcessResult itemProcessResult = ItemRenderUtils.processItemForRendering(resourceManager.get(), player, leftHand, slot, version.get().isOld(), language.get());
                 boolean enchanted = itemProcessResult.requiresEnchantmentGlint();
