@@ -401,7 +401,7 @@ public class ModelRenderer implements AutoCloseable {
         double z = depth / 2 - 0.5;
         List<Hexahedron> hexahedrons = new ArrayList<>();
         int[] colors = image.getRGB(0, 0, w, h, null, 0, w);
-        hexahedrons.add(Hexahedron.fromCorners(new Point3D(0, 0, z), new Point3D(width, height, z + 1), new BufferedImage[] {null, null, ImageUtils.copyImage(image), null, ImageUtils.copyImage(image), null}));
+        hexahedrons.add(Hexahedron.fromCorners(new Point3D(0, 0, z), new Point3D(width, height, z + 1), new BufferedImage[] {null, null, ImageUtils.flipHorizontal(image), null, ImageUtils.copyImage(image), null}));
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
                 int color = colors[y * w + x];
