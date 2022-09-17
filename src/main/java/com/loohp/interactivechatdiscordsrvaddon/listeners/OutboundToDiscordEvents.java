@@ -995,12 +995,13 @@ public class OutboundToDiscordEvents implements Listener {
                 Message message = event.getMessage();
                 TextChannel channel = event.getTextChannel();
                 String textOriginal = message.getContentRaw();
+                boolean isWebhookMessage = event.isWebhookMessage();
 
                 if (!InteractiveChatDiscordSrvAddon.plugin.isEnabled()) {
                     return;
                 }
                 Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
-                    if (event.isWebhookMessage()) {
+                    if (isWebhookMessage) {
                         handleWebhook(messageId, message, textOriginal, channel);
                     } else {
                         handleSelfBotMessage(message, textOriginal, channel);

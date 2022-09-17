@@ -22,6 +22,7 @@ package com.loohp.interactivechatdiscordsrvaddon;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechat.api.events.InteractiveChatConfigReloadEvent;
 import com.loohp.interactivechat.config.Config;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
@@ -236,7 +237,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public String shareEnderCommandInGameMessageText = "";
     public String shareEnderCommandInGameMessageHover = "";
     public String shareEnderCommandTitle = "";
-    public PlaceholderCooldownManager placeholderCooldownManager = new PlaceholderCooldownManager();
+    public PlaceholderCooldownManager placeholderCooldownManager;
     public String defaultResourceHash = "N/A";
     public List<String> resourceOrder = new ArrayList<>();
     public boolean forceUnicode = false;
@@ -338,11 +339,18 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
             }
             AssetsDownloader.loadExtras();
         }, 600, 6000);
+
+        Bukkit.getScheduler().runTask(this, () -> placeholderCooldownManager = new PlaceholderCooldownManager());
     }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Bukkit.getScheduler().runTaskLaterAsynchronously(this, () -> cachePlayerSkin(ICPlayerFactory.getICPlayer(event.getPlayer())), 40);
+    }
+
+    @EventHandler
+    public void onInteractiveChatReload(InteractiveChatConfigReloadEvent event) {
+        Bukkit.getScheduler().runTaskLater(this, () -> placeholderCooldownManager.reloadPlaceholders(), 5);
     }
 
     private void cachePlayerSkin(ICPlayer player) {
