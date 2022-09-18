@@ -302,7 +302,66 @@ public class OutboundToDiscordEvents implements Listener {
                 if (!InteractiveChat.useCustomPlaceholderPermissions || (InteractiveChat.useCustomPlaceholderPermissions && PlayerUtils.hasPermission(icSender.getUniqueId(), customP.getPermission(), true, 200))) {
                     boolean onCooldown = cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), customP, now);
                     Matcher matcher = customP.getKeyword().matcher(plain);
-                    if (matcher.find() && !onCooldown) {
+                    if (matcher.find()) {
+                        if (!onCooldown) {
+                            String replaceText;
+                            if (customP.getReplace().isEnabled()) {
+                                replaceText = ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(icSender, customP.getReplace().getReplaceText()));
+                            } else {
+                                replaceText = null;
+                            }
+                            List<Component> toAppend = new LinkedList<>();
+                            Set<String> shown = new HashSet<>();
+                            component = ComponentReplacing.replace(component, customP.getKeyword().pattern(), true, (result, matchedComponents) -> {
+                                String replaceString = replaceText == null ? result.group() : CustomStringUtils.applyReplacementRegex(replaceText, result, 1);
+                                if (!shown.contains(replaceString)) {
+                                    shown.add(replaceString);
+                                    int position = result.start();
+                                    if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && !InteractiveChatDiscordSrvAddon.plugin.hoverIgnore.contains(customP.getPosition())) {
+                                        HoverClickDisplayData.Builder hoverClick = new HoverClickDisplayData.Builder().player(icSender).postion(position).color(DiscordDataRegistry.DISCORD_HOVER_COLOR).displayText(ChatColorUtils.stripColor(replaceString));
+                                        boolean usingHoverClick = false;
+
+                                        if (customP.getHover().isEnabled()) {
+                                            usingHoverClick = true;
+                                            String hoverText = ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(icSender, CustomStringUtils.applyReplacementRegex(customP.getHover().getText(), result, 1)));
+                                            Color color = ColorUtils.getFirstColor(hoverText);
+                                            hoverClick.hoverText(LegacyComponentSerializer.legacySection().deserialize(hoverText));
+                                            if (color != null) {
+                                                hoverClick.color(color);
+                                            }
+                                        }
+
+                                        if (customP.getClick().isEnabled()) {
+                                            usingHoverClick = true;
+                                            hoverClick.clickAction(customP.getClick().getAction()).clickValue(CustomStringUtils.applyReplacementRegex(customP.getClick().getValue(), result, 1));
+                                        }
+
+                                        if (usingHoverClick) {
+                                            int hoverId = DATA_ID_PROVIDER.getNext();
+                                            DATA.put(hoverId, hoverClick.build());
+                                            toAppend.add(Component.text("<ICD=" + hoverId + ">"));
+                                        }
+                                    }
+                                }
+                                return replaceText == null ? Component.empty().children(matchedComponents) : LegacyComponentSerializer.legacySection().deserialize(replaceString);
+                            });
+                            for (Component componentToAppend : toAppend) {
+                                component = component.append(componentToAppend);
+                            }
+                        } else {
+                            return null;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (InteractiveChat.t && WebData.getInstance() != null) {
+            for (CustomPlaceholder customP : WebData.getInstance().getSpecialPlaceholders()) {
+                boolean onCooldown = cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), customP, now);
+                Matcher matcher = customP.getKeyword().matcher(plain);
+                if (matcher.find()) {
+                    if (!onCooldown) {
                         String replaceText;
                         if (customP.getReplace().isEnabled()) {
                             replaceText = ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(icSender, customP.getReplace().getReplaceText()));
@@ -347,59 +406,8 @@ public class OutboundToDiscordEvents implements Listener {
                         for (Component componentToAppend : toAppend) {
                             component = component.append(componentToAppend);
                         }
-                    }
-                }
-            }
-        }
-
-        if (InteractiveChat.t && WebData.getInstance() != null) {
-            for (CustomPlaceholder customP : WebData.getInstance().getSpecialPlaceholders()) {
-                boolean onCooldown = cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), customP, now);
-                Matcher matcher = customP.getKeyword().matcher(plain);
-                if (matcher.find() && !onCooldown) {
-                    String replaceText;
-                    if (customP.getReplace().isEnabled()) {
-                        replaceText = ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(icSender, customP.getReplace().getReplaceText()));
                     } else {
-                        replaceText = null;
-                    }
-                    List<Component> toAppend = new LinkedList<>();
-                    Set<String> shown = new HashSet<>();
-                    component = ComponentReplacing.replace(component, customP.getKeyword().pattern(), true, (result, matchedComponents) -> {
-                        String replaceString = replaceText == null ? result.group() : CustomStringUtils.applyReplacementRegex(replaceText, result, 1);
-                        if (!shown.contains(replaceString)) {
-                            shown.add(replaceString);
-                            int position = result.start();
-                            if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && !InteractiveChatDiscordSrvAddon.plugin.hoverIgnore.contains(customP.getPosition())) {
-                                HoverClickDisplayData.Builder hoverClick = new HoverClickDisplayData.Builder().player(icSender).postion(position).color(DiscordDataRegistry.DISCORD_HOVER_COLOR).displayText(ChatColorUtils.stripColor(replaceString));
-                                boolean usingHoverClick = false;
-
-                                if (customP.getHover().isEnabled()) {
-                                    usingHoverClick = true;
-                                    String hoverText = ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(icSender, CustomStringUtils.applyReplacementRegex(customP.getHover().getText(), result, 1)));
-                                    Color color = ColorUtils.getFirstColor(hoverText);
-                                    hoverClick.hoverText(LegacyComponentSerializer.legacySection().deserialize(hoverText));
-                                    if (color != null) {
-                                        hoverClick.color(color);
-                                    }
-                                }
-
-                                if (customP.getClick().isEnabled()) {
-                                    usingHoverClick = true;
-                                    hoverClick.clickAction(customP.getClick().getAction()).clickValue(CustomStringUtils.applyReplacementRegex(customP.getClick().getValue(), result, 1));
-                                }
-
-                                if (usingHoverClick) {
-                                    int hoverId = DATA_ID_PROVIDER.getNext();
-                                    DATA.put(hoverId, hoverClick.build());
-                                    toAppend.add(Component.text("<ICD=" + hoverId + ">"));
-                                }
-                            }
-                        }
-                        return replaceText == null ? Component.empty().children(matchedComponents) : LegacyComponentSerializer.legacySection().deserialize(replaceString);
-                    });
-                    for (Component componentToAppend : toAppend) {
-                        component = component.append(componentToAppend);
+                        return null;
                     }
                 }
             }
@@ -412,6 +420,9 @@ public class OutboundToDiscordEvents implements Listener {
                 if (matcher.find()) {
                     ItemStack item = PlayerUtils.getHeldItem(icSender);
                     boolean isAir = item.getType().equals(Material.AIR);
+                    if (!InteractiveChat.itemAirAllow && isAir) {
+                        return null;
+                    }
                     XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
                     String itemStr = PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(ComponentModernizing.modernize(ItemStackUtils.getDisplayName(item)), InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)));
                     itemStr = ComponentStringUtils.stripColorAndConvertMagic(itemStr);
@@ -470,6 +481,8 @@ public class OutboundToDiscordEvents implements Listener {
                         component = component.append(Component.text("<ICD=" + inventoryId + ">"));
                     }
                 }
+            } else {
+                return null;
             }
         }
 
@@ -515,6 +528,8 @@ public class OutboundToDiscordEvents implements Listener {
                         component = component.append(Component.text("<ICD=" + inventoryId + ">"));
                     }
                 }
+            } else {
+                return null;
             }
         }
 
@@ -560,6 +575,8 @@ public class OutboundToDiscordEvents implements Listener {
                         component = component.append(Component.text("<ICD=" + inventoryId + ">"));
                     }
                 }
+            } else {
+                return null;
             }
         }
 
