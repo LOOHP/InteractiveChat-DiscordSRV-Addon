@@ -300,10 +300,9 @@ public class OutboundToDiscordEvents implements Listener {
             if (!placeholder.isBuildIn()) {
                 CustomPlaceholder customP = (CustomPlaceholder) placeholder;
                 if (!InteractiveChat.useCustomPlaceholderPermissions || (InteractiveChat.useCustomPlaceholderPermissions && PlayerUtils.hasPermission(icSender.getUniqueId(), customP.getPermission(), true, 200))) {
-                    boolean onCooldown = cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), customP, now);
                     Matcher matcher = customP.getKeyword().matcher(plain);
                     if (matcher.find()) {
-                        if (!onCooldown) {
+                        if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), customP, now)) {
                             String replaceText;
                             if (customP.getReplace().isEnabled()) {
                                 replaceText = ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(icSender, customP.getReplace().getReplaceText()));
@@ -358,10 +357,9 @@ public class OutboundToDiscordEvents implements Listener {
 
         if (InteractiveChat.t && WebData.getInstance() != null) {
             for (CustomPlaceholder customP : WebData.getInstance().getSpecialPlaceholders()) {
-                boolean onCooldown = cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), customP, now);
                 Matcher matcher = customP.getKeyword().matcher(plain);
                 if (matcher.find()) {
-                    if (!onCooldown) {
+                    if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), customP, now)) {
                         String replaceText;
                         if (customP.getReplace().isEnabled()) {
                             replaceText = ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(icSender, customP.getReplace().getReplaceText()));
@@ -415,9 +413,9 @@ public class OutboundToDiscordEvents implements Listener {
 
         if (InteractiveChat.useItem && PlayerUtils.hasPermission(icSender.getUniqueId(), "interactivechat.module.item", true, 200)) {
             Debug.debug("onGameToDiscord processing item display");
-            if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.itemPlaceholder)).findFirst().get(), now)) {
-                Matcher matcher = InteractiveChat.itemPlaceholder.matcher(plain);
-                if (matcher.find()) {
+            Matcher matcher = InteractiveChat.itemPlaceholder.matcher(plain);
+            if (matcher.find()) {
+                if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.itemPlaceholder)).findFirst().get(), now)) {
                     ItemStack item = PlayerUtils.getHeldItem(icSender);
                     boolean isAir = item.getType().equals(Material.AIR);
                     if (!InteractiveChat.itemAirAllow && isAir) {
@@ -480,17 +478,17 @@ public class OutboundToDiscordEvents implements Listener {
                         }
                         component = component.append(Component.text("<ICD=" + inventoryId + ">"));
                     }
+                } else {
+                    return null;
                 }
-            } else {
-                return null;
             }
         }
 
         if (InteractiveChat.useInventory && PlayerUtils.hasPermission(icSender.getUniqueId(), "interactivechat.module.inventory", true, 200)) {
             Debug.debug("onGameToDiscord processing inventory display");
-            if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.invPlaceholder)).findFirst().get(), now)) {
-                Matcher matcher = InteractiveChat.invPlaceholder.matcher(plain);
-                if (matcher.find()) {
+            Matcher matcher = InteractiveChat.invPlaceholder.matcher(plain);
+            if (matcher.find()) {
+                if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.invPlaceholder)).findFirst().get(), now)) {
                     String replaceText = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.invReplaceText));
                     if (reserializer) {
                         replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
@@ -527,17 +525,17 @@ public class OutboundToDiscordEvents implements Listener {
 
                         component = component.append(Component.text("<ICD=" + inventoryId + ">"));
                     }
+                } else {
+                    return null;
                 }
-            } else {
-                return null;
             }
         }
 
         if (InteractiveChat.useEnder && PlayerUtils.hasPermission(icSender.getUniqueId(), "interactivechat.module.enderchest", true, 200)) {
             Debug.debug("onGameToDiscord processing enderchest display");
-            if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.enderPlaceholder)).findFirst().get(), now)) {
-                Matcher matcher = InteractiveChat.enderPlaceholder.matcher(plain);
-                if (matcher.find()) {
+            Matcher matcher = InteractiveChat.enderPlaceholder.matcher(plain);
+            if (matcher.find()) {
+                if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.enderPlaceholder)).findFirst().get(), now)) {
                     String replaceText = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.enderReplaceText));
                     if (reserializer) {
                         replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
@@ -574,9 +572,9 @@ public class OutboundToDiscordEvents implements Listener {
 
                         component = component.append(Component.text("<ICD=" + inventoryId + ">"));
                     }
+                } else {
+                    return null;
                 }
-            } else {
-                return null;
             }
         }
 
