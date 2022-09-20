@@ -348,6 +348,9 @@ public class DiscordMessageContent {
                     embed.setFooter(footer);
                 } else {
                     embed.setFooter(footer, footerImageUrl);
+                    if (footerImageUrl.startsWith("attachment://")) {
+                        embeddedAttachments.add(footerImageUrl.substring(13));
+                    }
                 }
             }
         }
@@ -372,6 +375,9 @@ public class DiscordMessageContent {
                         otherEmbed.setFooter(footer);
                     } else {
                         otherEmbed.setFooter(footer, footerImageUrl);
+                        if (footerImageUrl.startsWith("attachment://")) {
+                            embeddedAttachments.add(footerImageUrl.substring(13));
+                        }
                     }
                 }
             }

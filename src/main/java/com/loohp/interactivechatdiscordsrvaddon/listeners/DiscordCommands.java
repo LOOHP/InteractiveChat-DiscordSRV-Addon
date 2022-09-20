@@ -69,9 +69,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.InteractionHandler;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
-import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
-import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordContentUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackInfoUtils;
@@ -918,8 +916,6 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                     }
                 }
                 errorCode--;
-                BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.usePlayerInvView ? ImageGeneration.getPlayerInventoryImage(offlineICPlayer.getInventory(), offlineICPlayer) : ImageGeneration.getInventoryImage(offlineICPlayer.getInventory(), Component.translatable(TranslationKeyUtils.getDefaultContainerTitle()), offlineICPlayer);
-                errorCode--;
                 Component component = LegacyComponentSerializer.legacySection().deserialize(InteractiveChatDiscordSrvAddon.plugin.shareInvCommandInGameMessageText.replace("{Player}", offlineICPlayer.getName()));
                 errorCode--;
                 String title = ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.shareInvCommandTitle.replace("{Player}", offlineICPlayer.getName()));
@@ -939,21 +935,31 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                 errorCode--;
                 discordsrv.broadcastMessageToMinecraftServer(minecraftChannel, ComponentStringUtils.toDiscordSRVComponent(Component.text(key)), event.getUser());
                 if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandIsMainServer) {
+                    ImageDisplayData data = new ImageDisplayData(offlineICPlayer, 0, title, ImageDisplayType.INVENTORY, true, new TitledInventoryWrapper(Component.translatable(TranslationKeyUtils.getDefaultContainerTitle()), offlineICPlayer.getInventory()));
+                    ValuePairs<List<DiscordMessageContent>, InteractionHandler> pair = DiscordContentUtils.createContents(Collections.singletonList(data), offlineICPlayer);
+                    List<DiscordMessageContent> contents = pair.getFirst();
+                    InteractionHandler interactionHandler = pair.getSecond();
                     errorCode--;
-                    EmbedBuilder embedBuilder = new EmbedBuilder().setAuthor(title).setImage("attachment://Inventory.png").setColor(InteractiveChatDiscordSrvAddon.plugin.invColor);
+
                     WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(ComponentStringUtils.stripColorAndConvertMagic(LegacyComponentSerializer.legacySection().serialize(component)));
-                    errorCode--;
-                    byte[] data = ImageUtils.toArray(image);
-                    action.addFile(data, "Inventory.png");
-                    errorCode--;
-                    if (InteractiveChatDiscordSrvAddon.plugin.invShowLevel) {
-                        int level = offlineICPlayer.getExperienceLevel();
-                        byte[] bottleData = ImageUtils.toArray(InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction("minecraft:item/experience_bottle", null, XMaterial.EXPERIENCE_BOTTLE.parseItem(), InteractiveChat.version.isOld(), null, null, null, null, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)).orElse(null), InteractiveChat.version.isOld(), "minecraft:item/experience_bottle", ModelDisplayPosition.GUI, false, null, null).getImage());
-                        embedBuilder.setFooter(ComponentStringUtils.convertFormattedString(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language), level), "attachment://Level.png");
-                        action.addFile(bottleData, "Level.png");
+                    List<MessageEmbed> embeds = new ArrayList<>();
+                    int i = 0;
+                    for (DiscordMessageContent content : contents) {
+                        i += content.getAttachments().size();
+                        if (i <= 10) {
+                            ValuePairs<List<MessageEmbed>, Set<String>> valuePair = content.toJDAMessageEmbeds();
+                            embeds.addAll(valuePair.getFirst());
+                            for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
+                                if (valuePair.getSecond().contains(attachment.getKey())) {
+                                    action = action.addFile(attachment.getValue(), attachment.getKey());
+                                }
+                            }
+                        }
                     }
-                    errorCode--;
-                    action.setEmbeds(embedBuilder.build()).queue(message -> {
+                    action.setEmbeds(embeds).setActionRows(interactionHandler.getInteractionToRegister()).queue(message -> {
+                        if (!interactionHandler.getInteractions().isEmpty()) {
+                            DiscordInteractionEvents.register(message, interactionHandler, contents);
+                        }
                         if (InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter > 0) {
                             message.delete().queueAfter(InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter, TimeUnit.SECONDS);
                         }
@@ -1011,8 +1017,6 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                     }
                 }
                 errorCode--;
-                BufferedImage image = ImageGeneration.getInventoryImage(offlineICPlayer.getEnderChest(), Component.translatable(TranslationKeyUtils.getEnderChestContainerTitle()), offlineICPlayer);
-                errorCode--;
                 Component component = LegacyComponentSerializer.legacySection().deserialize(InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandInGameMessageText.replace("{Player}", offlineICPlayer.getName()));
                 errorCode--;
                 String title = ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandTitle.replace("{Player}", offlineICPlayer.getName()));
@@ -1030,10 +1034,31 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                 errorCode--;
                 discordsrv.broadcastMessageToMinecraftServer(minecraftChannel, ComponentStringUtils.toDiscordSRVComponent(Component.text(key)), event.getUser());
                 if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandIsMainServer) {
+                    ImageDisplayData data = new ImageDisplayData(offlineICPlayer, 0, title, ImageDisplayType.ENDERCHEST, new TitledInventoryWrapper(Component.translatable(TranslationKeyUtils.getEnderChestContainerTitle()), offlineICPlayer.getEnderChest()));
+                    ValuePairs<List<DiscordMessageContent>, InteractionHandler> pair = DiscordContentUtils.createContents(Collections.singletonList(data), offlineICPlayer);
+                    List<DiscordMessageContent> contents = pair.getFirst();
+                    InteractionHandler interactionHandler = pair.getSecond();
                     errorCode--;
-                    byte[] data = ImageUtils.toArray(image);
-                    errorCode--;
-                    event.getHook().editOriginal(ComponentStringUtils.stripColorAndConvertMagic(LegacyComponentSerializer.legacySection().serialize(component))).setEmbeds(new EmbedBuilder().setAuthor(title).setImage("attachment://Inventory.png").setColor(InteractiveChatDiscordSrvAddon.plugin.enderColor).build()).addFile(data, "Inventory.png").queue(message -> {
+
+                    WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(ComponentStringUtils.stripColorAndConvertMagic(LegacyComponentSerializer.legacySection().serialize(component)));
+                    List<MessageEmbed> embeds = new ArrayList<>();
+                    int i = 0;
+                    for (DiscordMessageContent content : contents) {
+                        i += content.getAttachments().size();
+                        if (i <= 10) {
+                            ValuePairs<List<MessageEmbed>, Set<String>> valuePair = content.toJDAMessageEmbeds();
+                            embeds.addAll(valuePair.getFirst());
+                            for (Entry<String, byte[]> attachment : content.getAttachments().entrySet()) {
+                                if (valuePair.getSecond().contains(attachment.getKey())) {
+                                    action = action.addFile(attachment.getValue(), attachment.getKey());
+                                }
+                            }
+                        }
+                    }
+                    action.setEmbeds(embeds).setActionRows(interactionHandler.getInteractionToRegister()).queue(message -> {
+                        if (!interactionHandler.getInteractions().isEmpty()) {
+                            DiscordInteractionEvents.register(message, interactionHandler, contents);
+                        }
                         if (InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter > 0) {
                             message.delete().queueAfter(InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter, TimeUnit.SECONDS);
                         }

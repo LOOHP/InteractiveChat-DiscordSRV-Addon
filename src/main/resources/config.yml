@@ -25,6 +25,8 @@ InventoryImage:
     EmbedColor: "#FF55FF"
 
 DeathMessage:
+  #Apply DiscordSRV's death message in %deathmessage% with the localized death message from Minecraft
+  TranslatedDeathMessage: true
   #Show the weapon inside the death message if there is one
   ShowItems: true
 
@@ -96,8 +98,6 @@ DiscordCommands:
     #Set this to true ONLY IF you have multiple servers with interactivechatdiscordsrvaddon AND
     #you use a DIFFERENT channel for each server (i.e. not one shared channel for all servers)
     RespondToCommandsInInvalidChannels: true
-    #Set this to false ONLY IF you have multiple servers with interactivechatdiscordsrvaddon WITH THE SAME BOT
-    RespondToInvalidInteractions: true
     Messages:
       #Labels must be lowercase
       MemberLabel: "member"

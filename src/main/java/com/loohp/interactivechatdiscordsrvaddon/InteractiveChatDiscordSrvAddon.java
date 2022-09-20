@@ -181,6 +181,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public boolean translateMentions = true;
     public String mentionHighlight = "";
     public boolean deathMessageItem = true;
+    public boolean deathMessageTranslated = true;
     public boolean advancementName = true;
     public boolean advancementItem = true;
     public boolean advancementDescription = true;
@@ -194,7 +195,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public Color playbackBarEmptyColor;
     public String language = "en_us";
     public boolean respondToCommandsInInvalidChannels = true;
-    public boolean respondToInvalidInteractions = true;
     public String discordMemberLabel = "";
     public String discordMemberDescription = "";
     public String discordSlotLabel = "";
@@ -490,6 +490,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         enderColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("InventoryImage.EnderChest.EmbedColor"));
 
         deathMessageItem = config.getConfiguration().getBoolean("DeathMessage.ShowItems");
+        deathMessageTranslated = config.getConfiguration().getBoolean("DeathMessage.TranslatedDeathMessage");
 
         advancementName = config.getConfiguration().getBoolean("Advancements.CorrectAdvancementName");
         advancementItem = config.getConfiguration().getBoolean("Advancements.ChangeToItemIcon");
@@ -503,7 +504,6 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         playbackBarEmptyColor = ColorUtils.hex2Rgb(config.getConfiguration().getString("DiscordAttachments.PlaybackBar.EmptyColor"));
 
         respondToCommandsInInvalidChannels = config.getConfiguration().getBoolean("DiscordCommands.GlobalSettings.RespondToCommandsInInvalidChannels");
-        respondToInvalidInteractions = config.getConfiguration().getBoolean("DiscordCommands.GlobalSettings.RespondToInvalidInteractions");
 
         discordMemberLabel = config.getConfiguration().getString("DiscordCommands.GlobalSettings.Messages.MemberLabel").toLowerCase();
         discordMemberDescription = config.getConfiguration().getString("DiscordCommands.GlobalSettings.Messages.MemberDescription");

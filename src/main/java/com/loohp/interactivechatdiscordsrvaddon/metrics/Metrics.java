@@ -238,6 +238,10 @@ public class Metrics {
         }
     }
 
+    public static String getServerUUID() {
+        return serverUUID;
+    }
+
     /**
      * Checks if bStats is enabled.
      *

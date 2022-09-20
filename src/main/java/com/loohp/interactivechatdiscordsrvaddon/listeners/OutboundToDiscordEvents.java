@@ -83,6 +83,7 @@ import github.scarsz.discordsrv.api.Subscribe;
 import github.scarsz.discordsrv.api.events.AchievementMessagePostProcessEvent;
 import github.scarsz.discordsrv.api.events.AchievementMessagePreProcessEvent;
 import github.scarsz.discordsrv.api.events.DeathMessagePostProcessEvent;
+import github.scarsz.discordsrv.api.events.DeathMessagePreProcessEvent;
 import github.scarsz.discordsrv.api.events.GameChatMessagePreProcessEvent;
 import github.scarsz.discordsrv.api.events.VentureChatMessagePreProcessEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.ChannelType;
@@ -142,7 +143,7 @@ public class OutboundToDiscordEvents implements Listener {
     public static final Map<Integer, DiscordDisplayData> DATA = Collections.synchronizedMap(new LinkedHashMap<>());
     public static final Map<Integer, AttachmentData> RESEND_WITH_ATTACHMENT = Collections.synchronizedMap(new LinkedHashMap<>());
     private static final IDProvider DATA_ID_PROVIDER = new IDProvider();
-    private static final Map<UUID, ItemStack> DEATH_BY = new ConcurrentHashMap<>();
+    private static final Map<UUID, Component> DEATH_MESSAGE = new ConcurrentHashMap<>();
 
     @Subscribe(priority = ListenerPriority.LOWEST)
     public void onGameToDiscordLowest(GameChatMessagePreProcessEvent event) {
@@ -633,20 +634,39 @@ public class OutboundToDiscordEvents implements Listener {
         Debug.debug("Triggered onDeath");
         Player player = event.getEntity();
         Component deathMessage = DeathMessageUtils.getDeathMessage(player);
-        ItemStack item = ComponentStringUtils.extractItemStack(deathMessage);
-        DEATH_BY.put(player.getUniqueId(), item == null ? new ItemStack(Material.AIR) : item);
+        DEATH_MESSAGE.put(player.getUniqueId(), deathMessage);
+    }
+
+    @Subscribe(priority = ListenerPriority.HIGH)
+    public void onDeathMessageSendPre(DeathMessagePreProcessEvent event) {
+        Debug.debug("Triggered onDeathMessageSendPre");
+        if (event.isCancelled()) {
+            return;
+        }
+        if (!InteractiveChatDiscordSrvAddon.plugin.deathMessageTranslated) {
+            return;
+        }
+        Component deathMessage = DEATH_MESSAGE.get(event.getPlayer().getUniqueId());
+        if (deathMessage == null) {
+            return;
+        }
+        event.setDeathMessage(PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(deathMessage, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language))));
     }
 
     @Subscribe(priority = ListenerPriority.HIGHEST)
-    public void onDeathMessageSend(DeathMessagePostProcessEvent event) {
+    public void onDeathMessageSendPost(DeathMessagePostProcessEvent event) {
+        Debug.debug("Triggered onDeathMessageSendPost");
+        Component deathMessage = DEATH_MESSAGE.remove(event.getPlayer().getUniqueId());
+        if (deathMessage == null) {
+            return;
+        }
         if (event.isCancelled()) {
             return;
         }
         if (!InteractiveChatDiscordSrvAddon.plugin.deathMessageItem) {
             return;
         }
-        Debug.debug("Triggered onDeathMessageSend");
-        ItemStack item = DEATH_BY.remove(event.getPlayer().getUniqueId());
+        ItemStack item = ComponentStringUtils.extractItemStack(deathMessage);
         if (item == null || item.getType().equals(Material.AIR)) {
             return;
         }
