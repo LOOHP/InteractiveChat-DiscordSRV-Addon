@@ -61,6 +61,7 @@ import github.scarsz.discordsrv.dependencies.jda.api.interactions.components.sel
 import github.scarsz.discordsrv.dependencies.jda.api.interactions.components.selections.SelectionMenuInteraction;
 import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.WebhookMessageUpdateAction;
 import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.interactions.ReplyAction;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -349,42 +350,44 @@ public class DiscordContentUtils {
                 int slot = Integer.parseInt(((SelectionMenuInteraction) event.getInteraction()).getValues().get(0));
                 if (slot >= 0 && slot < inventory.getSize()) {
                     event.deferReply().setEphemeral(true).queue();
-                    ItemStack item = inventory.getItem(slot);
-                    if (item == null) {
-                        item = new ItemStack(Material.AIR);
-                    }
-                    Color color = DiscordItemStackUtils.getDiscordColor(item);
-                    if (color == null || color.equals(Color.WHITE)) {
-                        color = OFFSET_WHITE;
-                    }
-                    try {
-                        BufferedImage image = ImageGeneration.getItemStackImage(item, player, InteractiveChatDiscordSrvAddon.plugin.itemAltAir, 48);
-                        byte[] imageData = ImageUtils.toArray(image);
-
-                        DiscordMessageContent content = new DiscordMessageContent(null, null, color);
-                        content.setTitle(DiscordItemStackUtils.getItemNameForDiscord(item, player, InteractiveChatDiscordSrvAddon.plugin.language));
-                        content.setThumbnail("attachment://Item.png");
-                        content.addAttachment("Item.png", imageData);
-
-                        DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, player);
-                        List<ToolTipComponent<?>> toolTipComponents = discordToolTip.getComponents();
-
-                        if (!discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
-                            BufferedImage tooltip = ImageGeneration.getToolTipImage(toolTipComponents);
-
-                            byte[] tooltipData = ImageUtils.toArray(tooltip);
-                            content.addAttachment("ToolTip.png", tooltipData);
-                            content.addImageUrl("attachment://ToolTip.png");
+                    Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+                        ItemStack item = inventory.getItem(slot);
+                        if (item == null) {
+                            item = new ItemStack(Material.AIR);
                         }
-
-                        WebhookMessageUpdateAction<Message> action = event.getHook().setEphemeral(true).editOriginalEmbeds(content.toJDAMessageEmbeds().getFirst());
-                        for (Map.Entry<String, byte[]> entry : content.getAttachments().entrySet()) {
-                            action.addFile(entry.getValue(), entry.getKey());
+                        Color color = DiscordItemStackUtils.getDiscordColor(item);
+                        if (color == null || color.equals(Color.WHITE)) {
+                            color = OFFSET_WHITE;
                         }
-                        action.queue();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                        try {
+                            BufferedImage image = ImageGeneration.getItemStackImage(item, player, InteractiveChatDiscordSrvAddon.plugin.itemAltAir, 48);
+                            byte[] imageData = ImageUtils.toArray(image);
+
+                            DiscordMessageContent content = new DiscordMessageContent(null, null, color);
+                            content.setTitle(DiscordItemStackUtils.getItemNameForDiscord(item, player, InteractiveChatDiscordSrvAddon.plugin.language));
+                            content.setThumbnail("attachment://Item.png");
+                            content.addAttachment("Item.png", imageData);
+
+                            DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, player);
+                            List<ToolTipComponent<?>> toolTipComponents = discordToolTip.getComponents();
+
+                            if (!discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
+                                BufferedImage tooltip = ImageGeneration.getToolTipImage(toolTipComponents);
+
+                                byte[] tooltipData = ImageUtils.toArray(tooltip);
+                                content.addAttachment("ToolTip.png", tooltipData);
+                                content.addImageUrl("attachment://ToolTip.png");
+                            }
+
+                            WebhookMessageUpdateAction<Message> action = event.getHook().setEphemeral(true).editOriginalEmbeds(content.toJDAMessageEmbeds().getFirst());
+                            for (Map.Entry<String, byte[]> entry : content.getAttachments().entrySet()) {
+                                action.addFile(entry.getValue(), entry.getKey());
+                            }
+                            action.queue();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    });
                 }
             }
         };
@@ -424,38 +427,16 @@ public class DiscordContentUtils {
                 action.addActionRows(ActionRow.of(leftButton, rightButton), ActionRow.of(selectionMenu)).queue(h -> h.retrieveOriginal().queue(m -> DiscordInteractionEvents.getInteractionData(id).getMessageIds().add(m.getTextChannel().getId() + "/" + m.getId())));
                 return;
             }
-            AtomicInteger currentPage = currentPages.get(user.getId());
-            if (currentPage == null) {
-                currentPages.put(user.getId(), currentPage = new AtomicInteger(0));
-            }
             event.deferEdit().queue();
-            //noinspection SynchronizationOnLocalVariableOrMethodParameter
-            synchronized (currentPage) {
-                if (id.equals(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "selection_book_" + interactionUuid) && event.getInteraction() instanceof SelectionMenuInteraction) {
-                    int pageNumber = currentPage.updateAndGet(i -> Integer.parseInt(((SelectionMenuInteraction) event.getInteraction()).getValues().get(0)) - 1);
-                    byte[] pageFile = cachedImages[pageNumber];
-                    if (pageFile == null) {
-                        try {
-                            cachedImages[pageNumber] = pageFile = ImageUtils.toArray(imageSuppliers.get(pageNumber).get());
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-
-                    WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(message.getContentRaw()).retainFiles(Collections.emptyList()).addFile(pageFile, "Page.png");
-                    Button leftButton = Button.danger(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "left_book_" + interactionUuid, LEFT_EMOJI);
-                    if (currentPage.get() <= 0) {
-                        leftButton = leftButton.asDisabled();
-                    }
-                    Button rightButton = Button.success(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "right_book_" + interactionUuid, RIGHT_EMOJI);
-                    if (currentPage.get() >= cachedImages.length - 1) {
-                        rightButton = rightButton.asDisabled();
-                    }
-                    SelectionMenu selectionMenu = SelectionMenu.create(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "selection_book_" + interactionUuid).setRequiredRange(1, 1).addOptions(selectOptions).setDefaultValues(Arrays.asList(String.valueOf(currentPage.get() + 1))).build();
-                    action.setActionRows(ActionRow.of(leftButton, rightButton), ActionRow.of(selectionMenu)).queue();
-                } else if (id.equals(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "left_book_" + interactionUuid)) {
-                    if (currentPage.get() > 0) {
-                        int pageNumber = currentPage.decrementAndGet();
+            Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+                AtomicInteger currentPage = currentPages.get(user.getId());
+                if (currentPage == null) {
+                    currentPages.put(user.getId(), currentPage = new AtomicInteger(0));
+                }
+                //noinspection SynchronizationOnLocalVariableOrMethodParameter
+                synchronized (currentPage) {
+                    if (id.equals(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "selection_book_" + interactionUuid) && event.getInteraction() instanceof SelectionMenuInteraction) {
+                        int pageNumber = currentPage.updateAndGet(i -> Integer.parseInt(((SelectionMenuInteraction) event.getInteraction()).getValues().get(0)) - 1);
                         byte[] pageFile = cachedImages[pageNumber];
                         if (pageFile == null) {
                             try {
@@ -476,33 +457,57 @@ public class DiscordContentUtils {
                         }
                         SelectionMenu selectionMenu = SelectionMenu.create(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "selection_book_" + interactionUuid).setRequiredRange(1, 1).addOptions(selectOptions).setDefaultValues(Arrays.asList(String.valueOf(currentPage.get() + 1))).build();
                         action.setActionRows(ActionRow.of(leftButton, rightButton), ActionRow.of(selectionMenu)).queue();
-                    }
-                } else if (id.equals(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "right_book_" + interactionUuid)) {
-                    if (currentPage.get() < cachedImages.length - 1) {
-                        int pageNumber = currentPage.incrementAndGet();
-                        byte[] pageFile = cachedImages[pageNumber];
-                        if (pageFile == null) {
-                            try {
-                                cachedImages[pageNumber] = pageFile = ImageUtils.toArray(imageSuppliers.get(pageNumber).get());
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
+                    } else if (id.equals(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "left_book_" + interactionUuid)) {
+                        if (currentPage.get() > 0) {
+                            int pageNumber = currentPage.decrementAndGet();
+                            byte[] pageFile = cachedImages[pageNumber];
+                            if (pageFile == null) {
+                                try {
+                                    cachedImages[pageNumber] = pageFile = ImageUtils.toArray(imageSuppliers.get(pageNumber).get());
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
                             }
-                        }
 
-                        WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(message.getContentRaw()).retainFiles(Collections.emptyList()).addFile(pageFile, "Page.png");
-                        Button leftButton = Button.danger(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "left_book_" + interactionUuid, LEFT_EMOJI);
-                        if (currentPage.get() <= 0) {
-                            leftButton = leftButton.asDisabled();
+                            WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(message.getContentRaw()).retainFiles(Collections.emptyList()).addFile(pageFile, "Page.png");
+                            Button leftButton = Button.danger(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "left_book_" + interactionUuid, LEFT_EMOJI);
+                            if (currentPage.get() <= 0) {
+                                leftButton = leftButton.asDisabled();
+                            }
+                            Button rightButton = Button.success(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "right_book_" + interactionUuid, RIGHT_EMOJI);
+                            if (currentPage.get() >= cachedImages.length - 1) {
+                                rightButton = rightButton.asDisabled();
+                            }
+                            SelectionMenu selectionMenu = SelectionMenu.create(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "selection_book_" + interactionUuid).setRequiredRange(1, 1).addOptions(selectOptions).setDefaultValues(Arrays.asList(String.valueOf(currentPage.get() + 1))).build();
+                            action.setActionRows(ActionRow.of(leftButton, rightButton), ActionRow.of(selectionMenu)).queue();
                         }
-                        Button rightButton = Button.success(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "right_book_" + interactionUuid, RIGHT_EMOJI);
-                        if (currentPage.get() >= cachedImages.length - 1) {
-                            rightButton = rightButton.asDisabled();
+                    } else if (id.equals(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "right_book_" + interactionUuid)) {
+                        if (currentPage.get() < cachedImages.length - 1) {
+                            int pageNumber = currentPage.incrementAndGet();
+                            byte[] pageFile = cachedImages[pageNumber];
+                            if (pageFile == null) {
+                                try {
+                                    cachedImages[pageNumber] = pageFile = ImageUtils.toArray(imageSuppliers.get(pageNumber).get());
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+
+                            WebhookMessageUpdateAction<Message> action = event.getHook().editOriginal(message.getContentRaw()).retainFiles(Collections.emptyList()).addFile(pageFile, "Page.png");
+                            Button leftButton = Button.danger(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "left_book_" + interactionUuid, LEFT_EMOJI);
+                            if (currentPage.get() <= 0) {
+                                leftButton = leftButton.asDisabled();
+                            }
+                            Button rightButton = Button.success(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "right_book_" + interactionUuid, RIGHT_EMOJI);
+                            if (currentPage.get() >= cachedImages.length - 1) {
+                                rightButton = rightButton.asDisabled();
+                            }
+                            SelectionMenu selectionMenu = SelectionMenu.create(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "selection_book_" + interactionUuid).setRequiredRange(1, 1).addOptions(selectOptions).setDefaultValues(Arrays.asList(String.valueOf(currentPage.get() + 1))).build();
+                            action.setActionRows(ActionRow.of(leftButton, rightButton), ActionRow.of(selectionMenu)).queue();
                         }
-                        SelectionMenu selectionMenu = SelectionMenu.create(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "selection_book_" + interactionUuid).setRequiredRange(1, 1).addOptions(selectOptions).setDefaultValues(Arrays.asList(String.valueOf(currentPage.get() + 1))).build();
-                        action.setActionRows(ActionRow.of(leftButton, rightButton), ActionRow.of(selectionMenu)).queue();
                     }
                 }
-            }
+            });
         };
     }
 
