@@ -46,8 +46,8 @@ HoverEventDisplay:
   #Show information in a tooltip image instead of text
   UseTooltipImage: true
   #Which custom placeholder should have their hover event text ignored
-  #This is a list of integer by indexes
-  IgnoredPlaceholderIndexes: []
+  #This is a list of CustomPlaceholder keys
+  IgnoredPlaceholderKeys: []
 
 DiscordAttachments:
   #Whether to convert discord attachments from disgusting urls into clickable text in chat

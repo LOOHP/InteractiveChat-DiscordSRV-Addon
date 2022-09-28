@@ -20,9 +20,9 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.main;
 
-import com.loohp.interactivechat.libs.com.loohp.yamlconfiguration.ConfigurationSection;
-import com.loohp.interactivechat.libs.com.loohp.yamlconfiguration.YamlConfiguration;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
+import com.loohp.interactivechat.libs.org.simpleyaml.configuration.ConfigurationSection;
+import com.loohp.interactivechat.libs.org.simpleyaml.configuration.file.YamlFile;
 import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.updater.Version;
 import com.loohp.interactivechat.utils.FileUtils;
@@ -32,11 +32,11 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceDownloadManage
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -53,12 +53,16 @@ public class CMLMain {
         try {
             Enumeration<URL> enumeration = GUIMain.class.getClassLoader().getResources("plugin.yml");
 
-            YamlConfiguration pluginYaml = new YamlConfiguration(enumeration.nextElement().openStream());
+            YamlFile pluginYaml = new YamlFile();
+            pluginYaml.options().useComments(true);
+            pluginYaml.load( enumeration.nextElement().openStream());
 
             String pluginName = pluginYaml.getString("name");
             String version = pluginYaml.getString("version");
 
-            YamlConfiguration icPluginYaml = new YamlConfiguration(enumeration.nextElement().openStream());
+            YamlFile icPluginYaml = new YamlFile();
+            pluginYaml.options().useComments(true);
+            pluginYaml.load( enumeration.nextElement().openStream());
 
             String icPluginName = icPluginYaml.getString("name");
             String icVersion = icPluginYaml.getString("version");
@@ -142,7 +146,9 @@ public class CMLMain {
         for (File file : folder.listFiles()) {
             String fileName = file.getName();
             if (fileName.endsWith(".yml")) {
-                YamlConfiguration yaml = new YamlConfiguration(new FileInputStream(file));
+                YamlFile yaml = new YamlFile();
+                yaml.options().useComments(true);
+                yaml.load( Files.newInputStream(file.toPath()));
                 results.put(file, validateConfigurationSection("", yaml));
             }
         }

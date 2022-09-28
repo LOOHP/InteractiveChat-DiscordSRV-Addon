@@ -317,7 +317,7 @@ public class OutboundToDiscordEvents implements Listener {
                                 if (!shown.contains(replaceString)) {
                                     shown.add(replaceString);
                                     int position = result.start();
-                                    if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && !InteractiveChatDiscordSrvAddon.plugin.hoverIgnore.contains(customP.getPosition())) {
+                                    if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && !InteractiveChatDiscordSrvAddon.plugin.hoverIgnore.contains(customP.getKey())) {
                                         HoverClickDisplayData.Builder hoverClick = new HoverClickDisplayData.Builder().player(icSender).postion(position).color(DiscordDataRegistry.DISCORD_HOVER_COLOR).displayText(ChatColorUtils.stripColor(replaceString));
                                         boolean usingHoverClick = false;
 
@@ -374,7 +374,7 @@ public class OutboundToDiscordEvents implements Listener {
                             if (!shown.contains(replaceString)) {
                                 shown.add(replaceString);
                                 int position = result.start();
-                                if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && !InteractiveChatDiscordSrvAddon.plugin.hoverIgnore.contains(customP.getPosition())) {
+                                if (InteractiveChatDiscordSrvAddon.plugin.hoverEnabled && !InteractiveChatDiscordSrvAddon.plugin.hoverIgnore.contains(customP.getKey())) {
                                     HoverClickDisplayData.Builder hoverClick = new HoverClickDisplayData.Builder().player(icSender).postion(position).color(DiscordDataRegistry.DISCORD_HOVER_COLOR).displayText(ChatColorUtils.stripColor(replaceString));
                                     boolean usingHoverClick = false;
 

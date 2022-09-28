@@ -20,9 +20,9 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.main;
 
-import com.loohp.interactivechat.libs.com.loohp.yamlconfiguration.ConfigurationSection;
-import com.loohp.interactivechat.libs.com.loohp.yamlconfiguration.YamlConfiguration;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
+import com.loohp.interactivechat.libs.org.simpleyaml.configuration.ConfigurationSection;
+import com.loohp.interactivechat.libs.org.simpleyaml.configuration.file.YamlFile;
 import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.updater.Version;
 import com.loohp.interactivechat.utils.FileUtils;
@@ -54,13 +54,13 @@ import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
@@ -80,12 +80,16 @@ public class GUIMain {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             Enumeration<URL> enumeration = GUIMain.class.getClassLoader().getResources("plugin.yml");
 
-            YamlConfiguration pluginYaml = new YamlConfiguration(enumeration.nextElement().openStream());
+            YamlFile pluginYaml = new YamlFile();
+            pluginYaml.options().useComments(true);
+            pluginYaml.load( enumeration.nextElement().openStream());
 
             String pluginName = pluginYaml.getString("name");
             String version = pluginYaml.getString("version");
 
-            YamlConfiguration icPluginYaml = new YamlConfiguration(enumeration.nextElement().openStream());
+            YamlFile icPluginYaml = new YamlFile();
+            icPluginYaml.options().useComments(true);
+            icPluginYaml.load( enumeration.nextElement().openStream());
 
             String icPluginName = icPluginYaml.getString("name");
             String icVersion = icPluginYaml.getString("version");
@@ -214,7 +218,9 @@ public class GUIMain {
         for (File file : folder.listFiles()) {
             String fileName = file.getName();
             if (fileName.endsWith(".yml")) {
-                YamlConfiguration yaml = new YamlConfiguration(new FileInputStream(file));
+                YamlFile yaml = new YamlFile();
+                yaml.options().useComments(true);
+                yaml.load( Files.newInputStream(file.toPath()));
                 results.put(file, validateConfigurationSection("", yaml));
             }
         }

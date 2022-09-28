@@ -157,6 +157,9 @@ public class LegacyDiscordCommandEvents {
                     return;
                 }
             }
+            if (event.getExpiration() > 0 && DiscordSRV.config().getBoolean("DiscordChatChannelListCommandExpirationDeleteRequest")) {
+                event.getTriggeringJDAEvent().getMessage().delete().queueAfter(event.getExpiration(), TimeUnit.MILLISECONDS);
+            }
         }
     }
 

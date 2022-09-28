@@ -20,7 +20,6 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.main;
 
-import com.loohp.interactivechat.libs.com.loohp.yamlconfiguration.YamlConfiguration;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
@@ -28,6 +27,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
+import com.loohp.interactivechat.libs.org.simpleyaml.configuration.file.YamlFile;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ComponentStyling;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
@@ -409,7 +409,9 @@ public class MinecraftFontRenderer extends JFrame {
         List<String> resourceOrder;
         int valuePerPack;
         try {
-            YamlConfiguration yaml = new YamlConfiguration(Files.newInputStream(Paths.get("InteractiveChatDiscordSrvAddon/config.yml")));
+            YamlFile yaml = new YamlFile();
+            yaml.options().useComments(true);
+            yaml.load( Files.newInputStream(Paths.get("InteractiveChatDiscordSrvAddon/config.yml")));
             resourceOrder = yaml.getStringList("Resources.Order");
             Collections.reverse(resourceOrder);
             valuePerPack = (int) ((1.0 / (double) (resourceOrder.size() + 1)) * 10000);

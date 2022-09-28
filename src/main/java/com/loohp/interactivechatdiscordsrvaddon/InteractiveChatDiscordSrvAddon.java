@@ -151,7 +151,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public boolean invShowLevel = true;
     public boolean hoverEnabled = true;
     public boolean hoverImage = true;
-    public Set<Integer> hoverIgnore = new HashSet<>();
+    public Set<String> hoverIgnore = new HashSet<>();
     public boolean hoverUseTooltipImage = true;
     public String reloadConfigMessage;
     public String reloadTextureMessage;
@@ -446,7 +446,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         hoverEnabled = config.getConfiguration().getBoolean("HoverEventDisplay.Enabled");
         hoverImage = config.getConfiguration().getBoolean("HoverEventDisplay.ShowCursorImage");
         hoverIgnore.clear();
-        hoverIgnore = new HashSet<>(config.getConfiguration().getIntegerList("HoverEventDisplay.IgnoredPlaceholderIndexes"));
+        hoverIgnore = new HashSet<>(config.getConfiguration().getStringList("HoverEventDisplay.IgnoredPlaceholderKeys"));
 
         hoverUseTooltipImage = config.getConfiguration().getBoolean("HoverEventDisplay.UseTooltipImage");
 
