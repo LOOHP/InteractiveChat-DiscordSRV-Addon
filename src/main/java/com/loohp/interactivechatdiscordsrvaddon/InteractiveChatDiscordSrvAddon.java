@@ -266,6 +266,10 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         return resourceManager;
     }
 
+    public boolean isResourceManagerReady() {
+        return resourceManager != null;
+    }
+
     @Override
     public void onLoad() {
         DiscordSRV.api.requireIntent(GatewayIntent.GUILD_MESSAGE_REACTIONS);
@@ -601,7 +605,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                     return;
                 }
                 isReady = false;
-                if (InteractiveChatDiscordSrvAddon.plugin.getResourceManager() != null) {
+                if (InteractiveChatDiscordSrvAddon.plugin.isResourceManagerReady()) {
                     Bukkit.getScheduler().callSyncMethod(plugin, () -> {
                         InteractiveChatDiscordSrvAddon.plugin.getResourceManager().close();
                         return null;
