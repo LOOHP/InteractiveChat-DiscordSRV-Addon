@@ -590,10 +590,10 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                 List<MessageEmbed> messageEmbeds = new ArrayList<>();
                 Map<String, byte[]> attachments = new HashMap<>();
                 int i = 0;
-                for (ResourcePackInfo packInfo : InteractiveChatDiscordSrvAddon.plugin.resourceManager.getResourcePackInfo()) {
+                for (ResourcePackInfo packInfo : InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getResourcePackInfo()) {
                     i++;
                     String packName = ResourcePackInfoUtils.resolveName(packInfo);
-                    Component description = ComponentStringUtils.resolve(ComponentModernizing.modernize(ResourcePackInfoUtils.resolveDescription(packInfo)), InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language));
+                    Component description = ComponentStringUtils.resolve(ComponentModernizing.modernize(ResourcePackInfoUtils.resolveDescription(packInfo)), InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language));
                     EmbedBuilder builder = new EmbedBuilder().setAuthor(packName).setThumbnail("attachment://" + i + ".png");
                     if (packInfo.getStatus()) {
                         builder.setDescription(PlainTextComponentSerializer.plainText().serialize(description));
@@ -799,7 +799,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                 String title = ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.shareItemCommandTitle.replace("{Player}", offlineICPlayer.getName()));
                 errorCode--;
                 Component itemTag = ItemDisplay.createItemDisplay(offlineICPlayer, itemStack, title, true, null, false);
-                Component resolvedItemTag = ComponentStringUtils.resolve(ComponentModernizing.modernize(itemTag), InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language));
+                Component resolvedItemTag = ComponentStringUtils.resolve(ComponentModernizing.modernize(itemTag), InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language));
                 Component component = LegacyComponentSerializer.legacySection().deserialize(InteractiveChatDiscordSrvAddon.plugin.shareItemCommandInGameMessageText.replace("{Player}", offlineICPlayer.getName())).replaceText(TextReplacementConfig.builder().matchLiteral("{ItemTag}").replacement(itemTag).build());
                 Component resolvedComponent = LegacyComponentSerializer.legacySection().deserialize(InteractiveChatDiscordSrvAddon.plugin.shareItemCommandInGameMessageText.replace("{Player}", offlineICPlayer.getName())).replaceText(TextReplacementConfig.builder().matchLiteral("{ItemTag}").replacement(resolvedItemTag).build());
                 errorCode--;

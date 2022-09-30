@@ -142,7 +142,7 @@ public class DiscordContentUtils {
                                     continue;
                                 }
                                 Component name = ItemStackUtils.getDisplayName(itemStack);
-                                String label = (u + 1) + " - " + PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(name, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)));
+                                String label = (u + 1) + " - " + PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(name, InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)));
                                 if (label.length() > 100) {
                                     ItemStack stripNameItem = itemStack.clone();
                                     if (stripNameItem.hasItemMeta()) {
@@ -151,7 +151,7 @@ public class DiscordContentUtils {
                                         stripNameItem.setItemMeta(meta);
                                     }
                                     name = ItemStackUtils.getDisplayName(stripNameItem);
-                                    label = (u + 1) + " - " + PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(name, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)));
+                                    label = (u + 1) + " - " + PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(name, InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)));
                                 }
                                 options.add(SelectOption.of(label, String.valueOf(u)));
                             }
@@ -235,7 +235,7 @@ public class DiscordContentUtils {
                         content.addAttachment("Inventory_" + i + ".png", imageData);
                         if (type.equals(ImageDisplayType.INVENTORY) && InteractiveChatDiscordSrvAddon.plugin.invShowLevel) {
                             int level = iData.getPlayer().getExperienceLevel();
-                            byte[] bottleData = ImageUtils.toArray(InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.resourceManager, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction("minecraft:item/experience_bottle", null, XMaterial.EXPERIENCE_BOTTLE.parseItem(), InteractiveChat.version.isOld(), null, null, null, null, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)).orElse(null), InteractiveChat.version.isOld(), "minecraft:item/experience_bottle", ModelDisplayPosition.GUI, false, null, null).getImage());
+                            byte[] bottleData = ImageUtils.toArray(InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.getResourceManager(), InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction("minecraft:item/experience_bottle", null, XMaterial.EXPERIENCE_BOTTLE.parseItem(), InteractiveChat.version.isOld(), null, null, null, null, InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)).orElse(null), InteractiveChat.version.isOld(), "minecraft:item/experience_bottle", ModelDisplayPosition.GUI, false, null, null).getImage());
                             content.addAttachment("Level_" + i + ".png", bottleData);
                             content.setFooter(ComponentStringUtils.convertFormattedString(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language), level));
                             content.setFooterImageUrl("attachment://Level_" + i + ".png");
@@ -250,7 +250,7 @@ public class DiscordContentUtils {
                                 continue;
                             }
                             Component name = ItemStackUtils.getDisplayName(itemStack);
-                            String label = (u + 1) + " - " + PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(name, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)));
+                            String label = (u + 1) + " - " + PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(name, InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)));
                             if (label.length() > 100) {
                                 ItemStack stripNameItem = itemStack.clone();
                                 if (stripNameItem.hasItemMeta()) {
@@ -259,7 +259,7 @@ public class DiscordContentUtils {
                                     stripNameItem.setItemMeta(meta);
                                 }
                                 name = ItemStackUtils.getDisplayName(stripNameItem);
-                                label = (u + 1) + " - " + PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(name, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)));
+                                label = (u + 1) + " - " + PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(name, InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)));
                             }
                             options.add(SelectOption.of(label, String.valueOf(u)));
                         }
@@ -321,7 +321,7 @@ public class DiscordContentUtils {
                         content.addDescription(body);
                     }
                     if (InteractiveChatDiscordSrvAddon.plugin.hoverImage) {
-                        BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getTextureManager().getTexture(ResourceRegistry.IC_MISC_TEXTURE_LOCATION + "hover_cursor").getTexture();
+                        BufferedImage image = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getTextureManager().getTexture(ResourceRegistry.IC_MISC_TEXTURE_LOCATION + "hover_cursor").getTexture();
                         byte[] imageData = ImageUtils.toArray(image);
                         content.setAuthorIconUrl("attachment://Hover_" + i + ".png");
                         content.addAttachment("Hover_" + i + ".png", imageData);

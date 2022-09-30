@@ -70,7 +70,7 @@ public class Commands implements CommandExecutor, TabCompleter {
             if (sender.hasPermission("interactivechatdiscordsrv.status")) {
                 sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.defaultResourceHashLang.replaceFirst("%s", InteractiveChatDiscordSrvAddon.plugin.defaultResourceHash + " (" + InteractiveChat.exactMinecraftVersion + ")"));
                 sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.loadedResourcesLang);
-                for (ResourcePackInfo info : InteractiveChatDiscordSrvAddon.plugin.resourceManager.getResourcePackInfo()) {
+                for (ResourcePackInfo info : InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getResourcePackInfo()) {
                     String name = ResourcePackInfoUtils.resolveName(info);
                     if (info.getStatus()) {
                         Component component = Component.text(" - " + name).color(info.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) == 0 ? NamedTextColor.GREEN : NamedTextColor.YELLOW);

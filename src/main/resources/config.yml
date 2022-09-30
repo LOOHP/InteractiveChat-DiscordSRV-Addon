@@ -24,6 +24,13 @@ InventoryImage:
     Enabled: true
     EmbedColor: "#FF55FF"
 
+#Choose what to include in item tooltips
+ToolTipSettings:
+  ShowDurability: true
+  ShowArmorColor: true
+  ShowMapScale: true
+  ShowFireworkRocketDetailsInCrossbow: true
+
 DeathMessage:
   #Apply DiscordSRV's death message in %deathmessage% with the localized death message from Minecraft
   TranslatedDeathMessage: true

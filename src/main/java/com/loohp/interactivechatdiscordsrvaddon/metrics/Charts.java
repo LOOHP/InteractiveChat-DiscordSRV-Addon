@@ -187,7 +187,7 @@ public class Charts {
             @Override
             public Integer call() throws Exception {
                 try {
-                    return Math.max(0, InteractiveChatDiscordSrvAddon.plugin.resourceManager.getResourcePackInfo().size() - 1);
+                    return Math.max(0, InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getResourcePackInfo().size() - 1);
                 } catch (Throwable e) {
                     return 0;
                 }

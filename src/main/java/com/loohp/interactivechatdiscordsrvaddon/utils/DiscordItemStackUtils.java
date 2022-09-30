@@ -151,7 +151,7 @@ public class DiscordItemStackUtils {
     }
 
     public static String getItemNameForDiscord(ItemStack item, OfflineICPlayer player, String language) {
-        UnaryOperator<String> translationFunction = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(language);
+        UnaryOperator<String> translationFunction = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(language);
 
         Player bukkitPlayer = player == null || player.getPlayer() == null || !player.getPlayer().isLocal() ? null : player.getPlayer().getLocalPlayer();
         if (bukkitPlayer == null && !Bukkit.getOnlinePlayers().isEmpty()) {
@@ -175,7 +175,7 @@ public class DiscordItemStackUtils {
 
     public static DiscordToolTip getToolTip(ItemStack item, OfflineICPlayer player) throws Exception {
         String language = InteractiveChatDiscordSrvAddon.plugin.language;
-        UnaryOperator<String> translationFunction = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(language);
+        UnaryOperator<String> translationFunction = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(language);
 
         Player bukkitPlayer = player == null || player.getPlayer() == null || !player.getPlayer().isLocal() ? null : player.getPlayer().getLocalPlayer();
         if (bukkitPlayer == null && !Bukkit.getOnlinePlayers().isEmpty()) {
@@ -348,7 +348,7 @@ public class DiscordItemStackUtils {
                 List<ToolTipComponent<?>> chargedItemInfo = getToolTip(charge, player).getComponents();
                 Component chargeItemName = (Component) chargedItemInfo.get(0).getToolTipComponent();
                 prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getCrossbowProjectile()).color(NamedTextColor.WHITE).append(Component.text(" [").color(NamedTextColor.WHITE)).append(chargeItemName).append(Component.text("]").color(NamedTextColor.WHITE))));
-                if (XMaterialUtils.matchXMaterial(charge).equals(XMaterial.FIREWORK_ROCKET)) {
+                if (InteractiveChatDiscordSrvAddon.plugin.showFireworkRocketDetailsInCrossbow && XMaterialUtils.matchXMaterial(charge).equals(XMaterial.FIREWORK_ROCKET)) {
                     chargedItemInfo.stream().skip(1).forEachOrdered(each -> {
                         if (each.getType().equals(ToolTipType.TEXT)) {
                             prints.add(ToolTipComponent.text(Component.text("  ").append((Component) each.getToolTipComponent())));
@@ -360,7 +360,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && FilledMapUtils.isFilledMap(item)) {
+        if (InteractiveChatDiscordSrvAddon.plugin.showMapScale && InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && FilledMapUtils.isFilledMap(item)) {
             MapMeta map = (MapMeta) item.getItemMeta();
             MapView mapView = FilledMapUtils.getMapView(item);
             int id = FilledMapUtils.getMapId(item);
@@ -501,7 +501,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (hasMeta && item.getItemMeta() instanceof LeatherArmorMeta && item.getItemMeta().getItemFlags().stream().noneMatch(each -> each.name().equals("HIDE_DYE"))) {
+        if (InteractiveChatDiscordSrvAddon.plugin.showArmorColor && hasMeta && item.getItemMeta() instanceof LeatherArmorMeta && item.getItemMeta().getItemFlags().stream().noneMatch(each -> each.name().equals("HIDE_DYE"))) {
             LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
             if (NBTEditor.contains(item, "display", "color")) {
                 Color color = new Color(meta.getColor().asRGB());
@@ -675,7 +675,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (item.getType().getMaxDurability() > 0) {
+        if (InteractiveChatDiscordSrvAddon.plugin.showDurability && item.getType().getMaxDurability() > 0) {
             int durability = item.getType().getMaxDurability() - (InteractiveChat.version.isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
             int maxDur = item.getType().getMaxDurability();
             if (durability < maxDur) {
@@ -701,7 +701,7 @@ public class DiscordItemStackUtils {
     }
 
     public static String toDiscordText(List<ToolTipComponent<?>> toolTipComponents, Function<ToolTipComponent<BufferedImage>, Component> imageToolTipHandler, String language, boolean embedLinks) {
-        UnaryOperator<String> translationFunction = InteractiveChatDiscordSrvAddon.plugin.resourceManager.getLanguageManager().getTranslateFunction().ofLanguage(language);
+        UnaryOperator<String> translationFunction = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(language);
         DiscordSerializer serializerSpecial = new DiscordSerializer(DiscordSerializerOptions.defaults().withEmbedLinks(embedLinks));
         Function<?, String> resolver = component -> serializerSpecial.serialize(ComponentStringUtils.toDiscordSRVComponent(ComponentStringUtils.resolve((Component) component, translationFunction)));
         DiscordSerializer serializerRegular = new DiscordSerializer(new DiscordSerializerOptions(embedLinks, true, (Function<KeybindComponent, String>) resolver, (Function<TranslatableComponent, String>) resolver));

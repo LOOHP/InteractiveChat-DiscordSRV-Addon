@@ -148,7 +148,7 @@ public class ImageGeneration {
     public static final String OPTIFINE_CAPE_URL = "https://optifine.net/capes/%s.png";
     public static final String PLAYER_INFO_URL = "https://sessionserver.mojang.com/session/minecraft/profile/%s";
 
-    private static Supplier<ResourceManager> resourceManager = () -> InteractiveChatDiscordSrvAddon.plugin.resourceManager;
+    private static Supplier<ResourceManager> resourceManager = () -> InteractiveChatDiscordSrvAddon.plugin.getResourceManager();
     private static Supplier<MCVersion> version = () -> InteractiveChat.version;
     private static Supplier<String> language = () -> InteractiveChatDiscordSrvAddon.plugin.language;
     private static Supplier<UnaryOperator<String>> translateFunction = () -> resourceManager.get().getLanguageManager().getTranslateFunction().ofLanguage(language.get());

@@ -54,6 +54,7 @@ import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ICacheManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager.ModManagerSupplier;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
@@ -247,11 +248,23 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public boolean optifineCustomTextures = true;
     public boolean chimeOverrideModels = true;
     public int embedDeleteAfter = 0;
-    public ResourceManager resourceManager;
+    public boolean showDurability = true;
+    public boolean showArmorColor = true;
+    public boolean showMapScale = true;
+    public boolean showFireworkRocketDetailsInCrossbow = true;
+
+    private ResourceManager resourceManager;
     public ModelRenderer modelRenderer;
     public ExecutorService mediaReadingService;
 
     protected Map<String, byte[]> extras = new ConcurrentHashMap<>();
+
+    public ResourceManager getResourceManager() {
+        if (resourceManager == null) {
+            throw new ResourceLoadingException("Resources are still being loaded, please wait!");
+        }
+        return resourceManager;
+    }
 
     @Override
     public void onLoad() {
@@ -553,6 +566,11 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         shareEnderCommandInGameMessageHover = ChatColorUtils.translateAlternateColorCodes('&', String.join("\n", config.getConfiguration().getStringList("DiscordCommands.ShareEnderChest.InGameMessage.Hover")));
         shareEnderCommandTitle = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.ShareEnderChest.InventoryTitle"));
 
+        showDurability = config.getConfiguration().getBoolean("ToolTipSettings.ShowDurability");
+        showArmorColor = config.getConfiguration().getBoolean("ToolTipSettings.ShowArmorColor");
+        showMapScale = config.getConfiguration().getBoolean("ToolTipSettings.ShowMapScale");
+        showFireworkRocketDetailsInCrossbow = config.getConfiguration().getBoolean("ToolTipSettings.ShowFireworkRocketDetailsInCrossbow");
+
         language = config.getConfiguration().getString("Resources.Language");
         LanguageUtils.loadTranslations(language);
         forceUnicode = config.getConfiguration().getBoolean("Resources.ForceUnicodeFont");
@@ -583,9 +601,9 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                     return;
                 }
                 isReady = false;
-                if (InteractiveChatDiscordSrvAddon.plugin.resourceManager != null) {
+                if (InteractiveChatDiscordSrvAddon.plugin.getResourceManager() != null) {
                     Bukkit.getScheduler().callSyncMethod(plugin, () -> {
-                        InteractiveChatDiscordSrvAddon.plugin.resourceManager.close();
+                        InteractiveChatDiscordSrvAddon.plugin.getResourceManager().close();
                         return null;
                     }).get();
                 }

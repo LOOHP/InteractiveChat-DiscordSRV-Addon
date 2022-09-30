@@ -51,7 +51,7 @@ public class InteractiveChatDiscordSrvAddonAPI {
      * @return the current resource manager or null
      */
     public static ResourceManager getCurrentResourceManager() {
-        return InteractiveChatDiscordSrvAddon.plugin.resourceManager;
+        return InteractiveChatDiscordSrvAddon.plugin.getResourceManager();
     }
 
     /**
