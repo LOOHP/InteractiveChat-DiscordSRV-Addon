@@ -81,6 +81,9 @@ public class ResourceDownloadManager {
     private void ensureData() {
         if (data == null || assetIndex == null) {
             data = HTTPRequestUtils.getJSONResponse(ASSETS_DATA_URL.replace("%s", minecraftVersion));
+            if (data == null) {
+                throw new RuntimeException("Unable to fetch assets from \"api.loohpjames.com\". This could be an internet issue or \"api.loohpjames.com\" is down. If the plugin functions correctly after this, this error can be ignored.");
+            }
             JSONObject client = (JSONObject) data.get("client-entries");
             assetIndex = HTTPRequestUtils.getJSONResponse(client.get("asset-index").toString());
         }

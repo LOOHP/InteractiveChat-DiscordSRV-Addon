@@ -61,6 +61,9 @@ public class LegacyDiscordCommandEvents {
 
     @Subscribe(priority = ListenerPriority.NORMAL)
     public void onListPlayers(DiscordChatChannelListCommandMessageEvent event) {
+        if (!InteractiveChatDiscordSrvAddon.plugin.playerlistCommandEnabled) {
+            return;
+        }
         DiscordSRV discordsrv = DiscordSRV.getPlugin();
         TextChannel channel = event.getChannel();
         if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandIsMainServer) {

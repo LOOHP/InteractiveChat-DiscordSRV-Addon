@@ -591,8 +591,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public void reloadTextures(boolean redownload, boolean clean, CommandSender... receivers) {
         CommandSender[] senders;
         if (Arrays.stream(receivers).noneMatch(each -> each.equals(Bukkit.getConsoleSender()))) {
-            senders = new CommandSender[receivers.length + 1];
-            System.arraycopy(receivers, 0, senders, 0, receivers.length);
+            senders = Arrays.copyOf(receivers, receivers.length + 1);
             senders[senders.length - 1] = Bukkit.getConsoleSender();
         } else {
             senders = receivers;
