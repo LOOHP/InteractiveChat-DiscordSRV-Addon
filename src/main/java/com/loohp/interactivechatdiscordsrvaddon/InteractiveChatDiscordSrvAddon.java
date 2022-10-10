@@ -252,6 +252,10 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public boolean showArmorColor = true;
     public boolean showMapScale = true;
     public boolean showFireworkRocketDetailsInCrossbow = true;
+    public boolean allowSlotSelection = true;
+    public boolean showMaps = true;
+    public boolean showBooks = true;
+    public boolean showContainers = true;
 
     private ResourceManager resourceManager;
     public ModelRenderer modelRenderer;
@@ -574,6 +578,11 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         showArmorColor = config.getConfiguration().getBoolean("ToolTipSettings.ShowArmorColor");
         showMapScale = config.getConfiguration().getBoolean("ToolTipSettings.ShowMapScale");
         showFireworkRocketDetailsInCrossbow = config.getConfiguration().getBoolean("ToolTipSettings.ShowFireworkRocketDetailsInCrossbow");
+
+        allowSlotSelection = config.getConfiguration().getBoolean("DiscordItemDetailsAndInteractions.AllowInventorySelection");
+        showMaps = config.getConfiguration().getBoolean("DiscordItemDetailsAndInteractions.ShowMaps");
+        showBooks = config.getConfiguration().getBoolean("DiscordItemDetailsAndInteractions.ShowBooks");
+        showContainers = config.getConfiguration().getBoolean("DiscordItemDetailsAndInteractions.ShowContainers");
 
         language = config.getConfiguration().getString("Resources.Language");
         LanguageUtils.loadTranslations(language);

@@ -264,18 +264,18 @@ public class InboundToGameEvents implements Listener {
                 InteractiveChatDiscordSrvAddon.plugin.attachmentImageCounter.incrementAndGet();
                 String url = imageContainer.getUrl();
                 List<ThrowingSupplier<InputStream>> methods = new ArrayList<>();
-                methods.add(() -> imageContainer.retrieveInputStream().get());
                 for (String url0 : imageContainer.getAllUrls()) {
                     if (URLRequestUtils.isAllowed(url0)) {
                         methods.add(() -> URLRequestUtils.getInputStream0(url0));
                     }
                 }
-                try (InputStream stream = URLRequestUtils.retrieveInputStreamUntilSuccessful(methods)) {
+                try (InputStream stream = URLRequestUtils.retrieveUntilSuccessful(methods)) {
+                    String type = imageContainer.getContentType();
                     GraphicsToPacketMapWrapper map;
                     boolean isVideo = false;
-                    if (url.toLowerCase().endsWith(".gif.png") || url.toLowerCase().endsWith(".apng")) {
+                    if (type.endsWith("gif.png") || type.endsWith("apng")) {
                         throw new UnsupportedOperationException("Animated PNG not yet supported, this error can be ignored");
-                    } else if (url.toLowerCase().endsWith(".gif")) {
+                    } else if (type.endsWith("gif")) {
                         map = new GraphicsToPacketMapWrapper(InteractiveChatDiscordSrvAddon.plugin.playbackBarEnabled, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
                         GifReader.readGif(stream, InteractiveChatDiscordSrvAddon.plugin.mediaReadingService, (frames, e) -> {
                             if (e != null) {
@@ -304,20 +304,23 @@ public class InboundToGameEvents implements Listener {
                 }
             }
 
-            Matcher matcher = URLRequestUtils.IMAGE_URL_PATTERN.matcher(message.getContentRaw());
+            Matcher matcher = URLRequestUtils.URL_PATTERN.matcher(message.getContentRaw());
             while (matcher.find()) {
                 String url = matcher.group();
-                String extension = matcher.group(1);
                 if (!processedUrl.contains(url) && URLRequestUtils.isAllowed(url)) {
                     long size = HTTPRequestUtils.getContentSize(url);
                     if (size >= 0 && size <= InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsPreviewLimit) {
                         InteractiveChatDiscordSrvAddon.plugin.attachmentImageCounter.incrementAndGet();
                         try (InputStream stream = URLRequestUtils.getInputStream(url)) {
+                            String type = HTTPRequestUtils.getContentType(url);
+                            if (!type.startsWith("image/")) {
+                                continue;
+                            }
                             GraphicsToPacketMapWrapper map;
                             boolean isVideo = false;
-                            if (extension.equals("gif.png") || extension.equals("apng")) {
+                            if (type.endsWith("gif.png") || type.endsWith("apng")) {
                                 throw new UnsupportedOperationException("Animated PNG not yet supported, this error can be ignored");
-                            } else if (extension.equals("gif")) {
+                            } else if (type.endsWith("gif")) {
                                 map = new GraphicsToPacketMapWrapper(InteractiveChatDiscordSrvAddon.plugin.playbackBarEnabled, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
                                 GifReader.readGif(stream, InteractiveChatDiscordSrvAddon.plugin.mediaReadingService, (frames, e) -> {
                                     if (e != null) {
@@ -331,8 +334,7 @@ public class InboundToGameEvents implements Listener {
                                 BufferedImage image = ImageIO.read(stream);
                                 map = new GraphicsToPacketMapWrapper(image, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
                             }
-                            int end = matcher.end(1);
-                            String name = url.lastIndexOf("/") < 0 ? url.substring(0, end) : url.substring(url.lastIndexOf("/") + 1, end);
+                            String name = matcher.group(1);
                             DiscordAttachmentData data = new DiscordAttachmentData(name, url, map, isVideo);
                             DiscordAttachmentConversionEvent dace = new DiscordAttachmentConversionEvent(url, data);
                             Bukkit.getPluginManager().callEvent(dace);

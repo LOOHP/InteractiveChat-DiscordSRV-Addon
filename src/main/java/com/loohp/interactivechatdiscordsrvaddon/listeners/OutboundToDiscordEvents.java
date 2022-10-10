@@ -448,23 +448,7 @@ public class OutboundToDiscordEvents implements Listener {
 
                         String title = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemTitle));
 
-                        Inventory inv = null;
-                        if (item.hasItemMeta() && item.getItemMeta() instanceof BlockStateMeta) {
-                            BlockState bsm = ((BlockStateMeta) item.getItemMeta()).getBlockState();
-                            if (bsm instanceof InventoryHolder) {
-                                Inventory container = ((InventoryHolder) bsm).getInventory();
-                                if (!container.isEmpty()) {
-                                    inv = Bukkit.createInventory(null, InventoryUtils.toMultipleOf9(container.getSize()));
-                                    for (int j = 0; j < container.getSize(); j++) {
-                                        if (container.getItem(j) != null) {
-                                            if (!container.getItem(j).getType().equals(Material.AIR)) {
-                                                inv.setItem(j, container.getItem(j).clone());
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        Inventory inv = DiscordContentUtils.getBlockInventory(item);
 
                         GameMessageProcessItemEvent gameMessageProcessItemEvent = new GameMessageProcessItemEvent(icSender, title, component, false, inventoryId, item.clone(), inv);
                         Bukkit.getPluginManager().callEvent(gameMessageProcessItemEvent);

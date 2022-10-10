@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
 
 public class URLRequestUtils {
 
+    public static final Pattern URL_PATTERN = Pattern.compile("(?:https?://)[^ ]*/([^ ?]*)[^ ]*");
     public static final Pattern IMAGE_URL_PATTERN = Pattern.compile("https?:/(?:/[^/]+?)+\\.(gif\\.png|jpg|jpeg|gif|png|apng)(?:\\?.*)*");
 
     public static InputStream getInputStream(String link) throws IOException {
@@ -49,21 +50,14 @@ public class URLRequestUtils {
         return connection.getInputStream();
     }
 
-    public static InputStream retrieveInputStreamUntilSuccessful(List<ThrowingSupplier<InputStream>> sources) {
-        InputStream stream = null;
-        boolean success = false;
-        int i = 0;
-        while (!success && i < sources.size()) {
+    public static <T> T retrieveUntilSuccessful(List<ThrowingSupplier<T>> sources) {
+        for (ThrowingSupplier<T> supplier : sources) {
             try {
-                stream = sources.get(i).get();
-                if (stream != null) {
-                    success = true;
-                }
-            } catch (Throwable e) {
+                return supplier.get();
+            } catch (Throwable ignore) {
             }
-            i++;
         }
-        return stream;
+        return null;
     }
 
     public static boolean isAllowed(String url) {

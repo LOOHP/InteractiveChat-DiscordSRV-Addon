@@ -31,6 +31,17 @@ ToolTipSettings:
   ShowMapScale: true
   ShowFireworkRocketDetailsInCrossbow: true
 
+#Choose what to include when sharing items and inventories to discord
+DiscordItemDetailsAndInteractions:
+  #Allow users to select items inside an inventory shared to discord
+  AllowInventorySelection: true
+  #Share filled map details as an image
+  ShowMaps: true
+  #Share book contents in an interactive book on discord
+  ShowBooks: true
+  #Show what is inside a container when sharing a container to discord
+  ShowContainers: true
+
 DeathMessage:
   #Apply DiscordSRV's death message in %deathmessage% with the localized death message from Minecraft
   TranslatedDeathMessage: true

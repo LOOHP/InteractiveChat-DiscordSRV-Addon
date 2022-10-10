@@ -33,22 +33,24 @@ import java.util.function.Supplier;
 public class PreviewableImageContainer {
 
     public static PreviewableImageContainer fromSticker(MessageSticker sticker) {
-        return new PreviewableImageContainer(sticker.getName(), sticker.getIconUrl(), Collections.emptyList(), null);
+        return new PreviewableImageContainer(sticker.getName(), sticker.getIconUrl(), Collections.emptyList(), sticker.getFormatType().getExtension(), null);
     }
 
     public static PreviewableImageContainer fromAttachment(Message.Attachment attachment) {
-        return new PreviewableImageContainer(attachment.getFileName(), attachment.getUrl(), Collections.singletonList(attachment.getProxyUrl()), () -> attachment.retrieveInputStream());
+        return new PreviewableImageContainer(attachment.getFileName(), attachment.getUrl(), Collections.singletonList(attachment.getProxyUrl()), attachment.getContentType(), () -> attachment.retrieveInputStream());
     }
 
     private String name;
     private String url;
     private List<String> altUrls;
+    private String contentType;
     private Supplier<CompletableFuture<InputStream>> retrieveInputStream;
 
-    public PreviewableImageContainer(String name, String url, List<String> altUrls, Supplier<CompletableFuture<InputStream>> retrieveInputStream) {
+    public PreviewableImageContainer(String name, String url, List<String> altUrls, String contentType, Supplier<CompletableFuture<InputStream>> retrieveInputStream) {
         this.name = name;
         this.url = url;
         this.altUrls = altUrls;
+        this.contentType = contentType;
         this.retrieveInputStream = retrieveInputStream;
     }
 
@@ -68,6 +70,10 @@ public class PreviewableImageContainer {
         List<String> urls = new ArrayList<>(altUrls);
         urls.add(0, url);
         return urls;
+    }
+
+    public String getContentType() {
+        return contentType;
     }
 
     public CompletableFuture<InputStream> retrieveInputStream() {
