@@ -20,11 +20,16 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonReader;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream;
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
+import com.loohp.interactivechat.libs.org.json.simple.parser.ParseException;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.AbstractManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
@@ -33,6 +38,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -48,6 +54,22 @@ public class FontManager extends AbstractManager implements IFontManager {
 
     public static final Key DEFAULT_FONT = Key.key("minecraft:default");
     public static final Key UNIFORM_FONT = Key.key("minecraft:uniform");
+
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+
+    public static JSONObject specialReadProvider(ResourcePackFile file) throws IOException, ParseException {
+        try (InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8)) {
+            return (JSONObject) new JSONParser().parse(reader);
+        } catch (ParseException e) {
+            try (InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8)) {
+                JsonReader jsonReader = new JsonReader(reader);
+                jsonReader.setLenient(false);
+                JsonObject jsonObject = GSON.getAdapter(JsonObject.class).read(jsonReader);
+                String json = GSON.toJson(jsonObject);
+                return (JSONObject) new JSONParser().parse(json);
+            }
+        }
+    }
 
     private Key defaultKey;
     private Map<String, FontProvider> fonts;
@@ -80,9 +102,7 @@ public class FontManager extends AbstractManager implements IFontManager {
                 try {
                     String key = namespace + ":" + file.getName();
                     key = key.substring(0, key.lastIndexOf("."));
-                    InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
-                    JSONObject rootJson = (JSONObject) parser.parse(reader);
-                    reader.close();
+                    JSONObject rootJson = specialReadProvider(file);
                     List<MinecraftFont> providedFonts = new ArrayList<>();
                     int index = -1;
                     for (Object obj : (JSONArray) rootJson.get("providers")) {
