@@ -671,7 +671,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                     players = Bukkit.getOnlinePlayers().stream().filter(each -> {
                         ICPlayer icPlayer = ICPlayerFactory.getICPlayer(each);
                         return icPlayer == null || !icPlayer.isVanished();
-                    }).collect(Collectors.toMap(each -> each, each -> PlayerUtils.getPing(each)));
+                    }).collect(Collectors.toMap(each -> each, each -> PlayerUtils.getPing(each), (a, b) -> a));
                 }
                 if (players.isEmpty()) {
                     event.getHook().editOriginal(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandEmptyServer)).queue();
