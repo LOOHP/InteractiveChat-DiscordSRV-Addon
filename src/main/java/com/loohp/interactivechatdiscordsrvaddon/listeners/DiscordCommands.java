@@ -690,7 +690,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                             if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandParsePlayerNamesWithMiniMessage) {
                                 nameComponent = MiniMessage.miniMessage().deserialize(name);
                             } else {
-                                nameComponent = LegacyComponentSerializer.legacySection().deserialize(name);
+                                nameComponent = InteractiveChatComponentSerializer.legacySection().deserialize(name);
                             }
                             player.add(new ValueTrios<>(offlinePlayer.getUniqueId(), nameComponent, entry.getValue()));
                         }

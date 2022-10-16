@@ -1385,17 +1385,17 @@ public class ImageGeneration {
         BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "icons").getTexture();
         int scale = icons.getWidth() / 256;
         if (ms < 0) {
-            return ImageUtils.copyAndGetSubImage(icons, 0, 56 * scale, 10 * scale, 7 * scale);
+            return icons.getSubimage(0, 56 * scale, 10 * scale, 7 * scale);
         } else if (ms < 150) {
-            return ImageUtils.copyAndGetSubImage(icons, 0, 16 * scale, 10 * scale, 7 * scale);
+            return icons.getSubimage(0, 16 * scale, 10 * scale, 7 * scale);
         } else if (ms < 300) {
-            return ImageUtils.copyAndGetSubImage(icons, 0, 24 * scale, 10 * scale, 7 * scale);
+            return icons.getSubimage(0, 24 * scale, 10 * scale, 7 * scale);
         } else if (ms < 600) {
-            return ImageUtils.copyAndGetSubImage(icons, 0, 32 * scale, 10 * scale, 7 * scale);
+            return icons.getSubimage(0, 32 * scale, 10 * scale, 7 * scale);
         } else if (!useNoConnectionIcon || ms < 1000) {
-            return ImageUtils.copyAndGetSubImage(icons, 0, 40 * scale, 10 * scale, 7 * scale);
+            return icons.getSubimage(0, 40 * scale, 10 * scale, 7 * scale);
         } else {
-            return ImageUtils.copyAndGetSubImage(icons, 0, 48 * scale, 10 * scale, 7 * scale);
+            return icons.getSubimage(0, 48 * scale, 10 * scale, 7 * scale);
         }
     }
 
@@ -1403,19 +1403,19 @@ public class ImageGeneration {
         if (advancementType.isLegacy()) {
             BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "achievement/achievement_background").getTexture();
             int scale = icons.getWidth() / 256;
-            return ImageUtils.copyAndGetSubImage(icons, 0, 202 * scale, 26 * scale, 26 * scale);
+            return icons.getSubimage(0, 202 * scale, 26 * scale, 26 * scale);
         } else {
             BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "advancements/widgets").getTexture();
             int scale = icons.getWidth() / 256;
             int offsetY = completed ? 0 : 26 * scale;
             switch (advancementType) {
                 case CHALLENGE:
-                    return ImageUtils.copyAndGetSubImage(icons, 26 * scale, 128 * scale + offsetY, 26 * scale, 26 * scale);
+                    return icons.getSubimage(26 * scale, 128 * scale + offsetY, 26 * scale, 26 * scale);
                 case GOAL:
-                    return ImageUtils.copyAndGetSubImage(icons, 52 * scale, 128 * scale + offsetY, 26 * scale, 26 * scale);
+                    return icons.getSubimage(52 * scale, 128 * scale + offsetY, 26 * scale, 26 * scale);
                 case TASK:
                 default:
-                    return ImageUtils.copyAndGetSubImage(icons, 0, 128 * scale + offsetY, 26 * scale, 26 * scale);
+                    return icons.getSubimage(0, 128 * scale + offsetY, 26 * scale, 26 * scale);
             }
         }
     }
@@ -1429,29 +1429,29 @@ public class ImageGeneration {
         BufferedImage image = new BufferedImage(36 * gridWidth + 4, 40 * gridHeight + 4, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
 
-        BufferedImage topCorner = ImageUtils.copyAndGetSubImage(icons, 0, 40, 2, 2);
+        BufferedImage topCorner = icons.getSubimage(0, 40, 2, 2);
         g.drawImage(topCorner, 0, 0, null);
         g.drawImage(topCorner, image.getWidth() - 2, 0, null);
 
-        BufferedImage horizontalTop = ImageUtils.copyAndGetSubImage(icons, 0, 40, 36, 2);
-        BufferedImage horizontalBottom = ImageUtils.copyAndGetSubImage(icons, 0, 120, 36, 2);
+        BufferedImage horizontalTop = icons.getSubimage(0, 40, 36, 2);
+        BufferedImage horizontalBottom = icons.getSubimage(0, 120, 36, 2);
         for (int x = 2; x < image.getWidth() - 2; x += horizontalTop.getWidth()) {
             g.drawImage(horizontalTop, x, 0, null);
             g.drawImage(horizontalBottom, x, image.getHeight() - 2, null);
         }
 
-        BufferedImage vertical = ImageUtils.copyAndGetSubImage(icons, 0, 36, 2, 40);
+        BufferedImage vertical = icons.getSubimage(0, 36, 2, 40);
         for (int y = 2; y < image.getHeight() - 2; y += vertical.getHeight()) {
             g.drawImage(vertical, 0, y, null);
             g.drawImage(vertical, image.getWidth() - 2, y, null);
         }
 
-        BufferedImage bottomCorner = ImageUtils.copyAndGetSubImage(icons, 0, 120, 2, 2);
+        BufferedImage bottomCorner = icons.getSubimage(0, 120, 2, 2);
         g.drawImage(bottomCorner, 0, image.getHeight() - 2, null);
         g.drawImage(bottomCorner, image.getWidth() - 2, image.getHeight() - 2, null);
 
-        BufferedImage slot = ImageUtils.copyAndGetSubImage(icons, 0, 0, 36, 40);
-        BufferedImage fullSlot = ImageUtils.copyAndGetSubImage(icons, 0, 80, 36, 40);
+        BufferedImage slot = icons.getSubimage(0, 0, 36, 40);
+        BufferedImage fullSlot = icons.getSubimage(0, 80, 36, 40);
 
         int i = -1;
         for (int y = 2; y < image.getHeight() - 2; y += vertical.getHeight()) {
