@@ -89,10 +89,34 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("deprecation")
 public class ItemRenderUtils {
+
+    public static final Pattern WEIRD_SKULL_TEXTURE_PATTERN = Pattern.compile("\\{(\\\"?textures\\\"?):\\{(?:(\\\"?SKIN\\\"?):\\{(?:(\\\"?url\\\"?):\\\".*:\\/\\/.*\\\")?})?}}");
+    public static final UnaryOperator<String> FIX_WEIRD_SKULL_TEXTURE = str -> {
+        str = str.trim();
+        StringBuilder sb = new StringBuilder(str);
+        Matcher matcher = WEIRD_SKULL_TEXTURE_PATTERN.matcher(str);
+        if (matcher.find()) {
+            int offset = 0;
+            for (int i = 1; i <= matcher.groupCount(); i++) {
+                String group = matcher.group(i);
+                if (group != null) {
+                    if (!group.startsWith("\"")) {
+                        sb.insert(matcher.start(i) + offset++, "\"");
+                    }
+                    if (!group.endsWith("\"")) {
+                        sb.insert(matcher.end(i) + offset++, "\"");
+                    }
+                }
+            }
+        }
+        return sb.toString();
+    };
 
     private static final Random RANDOM = new Random();
 
@@ -177,7 +201,7 @@ public class ItemRenderUtils {
                             if (texturesTag != null && texturesTag.size() > 0) {
                                 StringTag valueTag = (StringTag) ((CompoundTag) texturesTag.get(0)).get("Value");
                                 if (valueTag != null) {
-                                    String json = new String(Base64.getDecoder().decode(valueTag.getValue()));
+                                    String json = FIX_WEIRD_SKULL_TEXTURE.apply(new String(Base64.getDecoder().decode(valueTag.getValue())));
                                     try {
                                         JSONObject texturesJson = (JSONObject) ((JSONObject) new JSONParser().parse(json)).get("textures");
                                         if (texturesJson != null) {
@@ -187,7 +211,7 @@ public class ItemRenderUtils {
                                             }
                                         }
                                     } catch (ParseException e) {
-                                        throw new IllegalArgumentException("Skull contains illegal texture data: \n" + json, e);
+                                        new IllegalArgumentException("Skull contains illegal texture data: \n" + json, e).printStackTrace();
                                     }
                                 }
                             }
