@@ -24,6 +24,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.api.events.InteractiveChatConfigReloadEvent;
 import com.loohp.interactivechat.config.Config;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.objectholders.ICPlayer;
@@ -65,6 +66,8 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.mods.ModManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimeManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.OptifineManager;
 import com.loohp.interactivechatdiscordsrvaddon.updater.Updater;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.api.ListenerPriority;
 import github.scarsz.discordsrv.dependencies.jda.api.Permission;
@@ -677,7 +680,17 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                 Bukkit.getPluginManager().callEvent(new ResourceManagerInitializeEvent(mods));
 
                 @SuppressWarnings("resource")
-                ResourceManager resourceManager = new ResourceManager(InteractiveChat.version.isLegacy(), InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_18_2), mods, Arrays.asList(CustomItemTextureRegistry.getDefaultSupplier(), ICacheManager.getDefaultSupplier(new File(getDataFolder(), "cache"))));
+                ResourceManager resourceManager = new ResourceManager(
+                        InteractiveChat.version.isLegacy(),
+                        InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_18_2),
+                        mods,
+                        Arrays.asList(CustomItemTextureRegistry.getDefaultSupplier(), ICacheManager.getDefaultSupplier(new File(getDataFolder(), "cache"))),
+                        (resourcePackFile, type) -> new ResourceManager.DefaultResourcePackInfo(
+                                Component.translatable(TranslationKeyUtils.getResourcePackVanillaName()),
+                                ResourcePackUtils.getServerResourcePackVersion(),
+                                Component.translatable(TranslationKeyUtils.getResourcePackVanillaDescription()).append(Component.text(" (Modified by LOOHP)"))
+                        )
+                );
 
                 for (Entry<String, ModManager> entry : resourceManager.getModManagers().entrySet()) {
                     Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Registered ModManager \"" + entry.getKey() + "\" of class \"" + entry.getValue().getClass().getName() + "\"");
@@ -694,7 +707,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                 });
 
                 Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"Default\" resources...");
-                resourceManager.loadResources(new File(getDataFolder() + "/built-in", "Default"), ResourcePackType.BUILT_IN);
+                resourceManager.loadResources(new File(getDataFolder() + "/built-in", "Default"), ResourcePackType.BUILT_IN, true);
                 for (String resourceName : resourceOrder) {
                     try {
                         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"" + resourceName + "\" resources...");

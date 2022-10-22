@@ -20,7 +20,7 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
-import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
+import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 
 import java.awt.image.BufferedImage;
@@ -158,7 +158,7 @@ public class TintUtils {
         return TINT_DATA.getOrDefault(material.toUpperCase(), TintIndexData.EMPTY_INSTANCE);
     }
 
-    public static TintIndexData getTintData(XMaterial material) {
+    public static TintIndexData getTintData(ICMaterial material) {
         return TINT_DATA.getOrDefault(material.name(), TintIndexData.EMPTY_INSTANCE);
     }
 
@@ -166,7 +166,7 @@ public class TintUtils {
         return SPAWN_EGG_TINT_DATA.get(spawnEgg.toUpperCase());
     }
 
-    public static SpawnEggTintData getSpawnEggTint(XMaterial spawnEgg) {
+    public static SpawnEggTintData getSpawnEggTint(ICMaterial spawnEgg) {
         return SPAWN_EGG_TINT_DATA.get(spawnEgg.name());
     }
 

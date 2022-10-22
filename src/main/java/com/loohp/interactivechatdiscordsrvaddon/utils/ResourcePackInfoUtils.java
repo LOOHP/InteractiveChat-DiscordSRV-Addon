@@ -23,25 +23,23 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import com.loohp.interactivechat.utils.LanguageUtils;
-import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackType;
 
 public class ResourcePackInfoUtils {
 
-    public static String resolveName(ResourcePackInfo info) {
+    public static Component resolveName(ResourcePackInfo info) {
         return resolveName(info.getName(), info.getType());
     }
 
-    public static String resolveName(String name, ResourcePackType type) {
+    public static Component resolveName(Component name, ResourcePackType type) {
         switch (type) {
             case BUILT_IN:
             case LOCAL:
                 return name;
             case WORLD:
             case SERVER:
-                return LanguageUtils.getTranslation(TranslationKeyUtils.getWorldSpecificResources(), InteractiveChatDiscordSrvAddon.plugin.language);
+                return Component.translatable(TranslationKeyUtils.getWorldSpecificResources());
         }
         return name;
     }

@@ -33,6 +33,7 @@ import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.InventoryUtils;
 import com.loohp.interactivechat.utils.ItemStackUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
+import com.loohp.interactivechat.utils.PlaceholderParser;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
@@ -372,7 +373,7 @@ public class DiscordContentUtils {
                                 item = new ItemStack(Material.AIR);
                             }
 
-                            String title = DiscordItemStackUtils.getItemNameForDiscord(item, player, InteractiveChatDiscordSrvAddon.plugin.language);
+                            String title = PlaceholderParser.parse(player, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemTitle));
                             ImageDisplayData data;
                             Inventory inv = getBlockInventory(item);
                             if (inv != null) {

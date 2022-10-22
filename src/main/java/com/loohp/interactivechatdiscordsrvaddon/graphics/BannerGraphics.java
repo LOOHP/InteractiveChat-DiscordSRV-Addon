@@ -20,8 +20,7 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.graphics;
 
-import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
-import com.loohp.interactivechat.utils.XMaterialUtils;
+import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.PatternTypeWrapper;
@@ -43,8 +42,8 @@ public class BannerGraphics {
         BufferedImage baseImage = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "banner_base").getTexture(64, 64);
         BufferedImage patternsImage = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
 
-        XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
-        String colorName = xMaterial.name().replace("_BANNER", "");
+        ICMaterial icMaterial = ICMaterial.from(item);
+        String colorName = icMaterial.name().replace("_BANNER", "");
         Color baseColor = new Color(DyeColor.valueOf(colorName.toUpperCase()).getColor().asRGB());
 
         BufferedImage baseTint = new BufferedImage(42, 41, BufferedImage.TYPE_INT_ARGB);

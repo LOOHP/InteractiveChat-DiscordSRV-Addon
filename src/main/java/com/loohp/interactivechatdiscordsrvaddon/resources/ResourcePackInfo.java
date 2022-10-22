@@ -38,14 +38,14 @@ public class ResourcePackInfo {
     private boolean status;
     private boolean exist;
     private String rejectedReason;
-    private String name;
+    private Component name;
     private int packFormat;
     private Component description;
     private Map<String, LanguageMeta> languageMeta;
     private BufferedImage icon;
     private List<ResourceFilterBlock> resourceFilterBlocks;
 
-    private ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, String name, boolean status, boolean exist, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon, List<ResourceFilterBlock> resourceFilterBlocks) {
+    private ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, Component name, boolean status, boolean exist, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon, List<ResourceFilterBlock> resourceFilterBlocks) {
         this.manager = manager;
         this.file = file;
         this.type = type;
@@ -60,11 +60,11 @@ public class ResourcePackInfo {
         this.resourceFilterBlocks = resourceFilterBlocks;
     }
 
-    public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, String name, boolean status, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon, List<ResourceFilterBlock> resourceFilterBlocks) {
+    public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, Component name, boolean status, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon, List<ResourceFilterBlock> resourceFilterBlocks) {
         this(manager, file, type, name, status, true, rejectedReason, packFormat, description, languageMeta, icon, resourceFilterBlocks);
     }
 
-    public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, String name, String rejectedReason) {
+    public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, Component name, String rejectedReason) {
         this(manager, file, type, name, false, false, rejectedReason, -1, null, Collections.emptyMap(), null, Collections.emptyList());
     }
 
@@ -100,7 +100,7 @@ public class ResourcePackInfo {
         return exist;
     }
 
-    public String getName() {
+    public Component getName() {
         return name;
     }
 

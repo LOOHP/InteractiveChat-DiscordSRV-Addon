@@ -20,6 +20,7 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.main;
 
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import com.loohp.interactivechat.libs.org.simpleyaml.configuration.file.YamlFile;
 import com.loohp.interactivechat.objectholders.ValueTrios;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
@@ -580,7 +581,7 @@ public class BlockModelRenderer extends JFrame {
         PrintStream original = System.err;
         try {
             resourceManager = new ResourceManager(false, false, Collections.emptyList(), Collections.singletonList(ICacheManager.getDummySupplier()));
-            resourceManager.loadResources(new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN);
+            resourceManager.loadResources(new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN, true);
             resourceBar.setValue(valuePerPack);
             for (String resourceName : resourceOrder) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -608,7 +609,7 @@ public class BlockModelRenderer extends JFrame {
 
         textAreaResources.setText("Loaded Resources:\n");
         for (ResourcePackInfo info : resourceManager.getResourcePackInfo()) {
-            textAreaResources.append(" - " + ResourcePackInfoUtils.resolveName(info));
+            textAreaResources.append(" - " + PlainTextComponentSerializer.plainText().serialize(ResourcePackInfoUtils.resolveName(info)));
             if (!info.getStatus()) {
                 textAreaResources.append(" (Failed)");
             }

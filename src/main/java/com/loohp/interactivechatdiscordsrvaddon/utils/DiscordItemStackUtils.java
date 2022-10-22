@@ -34,6 +34,7 @@ import com.loohp.interactivechat.libs.net.querz.nbt.tag.CompoundTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.ListTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.StringTag;
 import com.loohp.interactivechat.libs.org.apache.commons.text.WordUtils;
+import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
@@ -43,7 +44,6 @@ import com.loohp.interactivechat.utils.ItemStackUtils;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NBTParsingUtils;
 import com.loohp.interactivechat.utils.RarityUtils;
-import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent;
@@ -162,7 +162,7 @@ public class DiscordItemStackUtils {
         if (item == null) {
             item = new ItemStack(Material.AIR);
         }
-        XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
+        ICMaterial icMaterial = ICMaterial.from(item);
         String name = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(ItemStackUtils.getDisplayName(item), language);
         if (item.getAmount() == 1 || item == null || item.getType().equals(Material.AIR)) {
             name = InteractiveChatDiscordSrvAddon.plugin.itemDisplaySingle.replace("{Item}", ComponentStringUtils.stripColorAndConvertMagic(name)).replace("{Amount}", String.valueOf(item.getAmount()));
@@ -189,21 +189,21 @@ public class DiscordItemStackUtils {
         if (item == null) {
             item = new ItemStack(Material.AIR);
         }
-        XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
+        ICMaterial icMaterial = ICMaterial.from(item);
 
         Component itemDisplayNameComponent = ItemStackUtils.getDisplayName(item);
         prints.add(ToolTipComponent.text(itemDisplayNameComponent));
 
         boolean hasMeta = item.hasItemMeta();
 
-        if (xMaterial.equals(XMaterial.GOAT_HORN)) {
+        if (icMaterial.isMaterial(XMaterial.GOAT_HORN)) {
             String instrument = NBTEditor.getString(item, "instrument");
             if (instrument != null) {
                 prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getGoatHornInstrument(NamespacedKey.fromString(instrument))).color(NamedTextColor.GRAY)));
             }
         }
 
-        if (xMaterial.equals(XMaterial.BUNDLE) && hasMeta && item.getItemMeta() instanceof BundleMeta) {
+        if (icMaterial.isMaterial(XMaterial.BUNDLE) && hasMeta && item.getItemMeta() instanceof BundleMeta) {
             BundleMeta meta = (BundleMeta) item.getItemMeta();
             List<ItemStack> items = meta.getItems();
             BufferedImage contentsImage = ImageGeneration.getBundleContainerInterface(player, items);
@@ -212,7 +212,7 @@ public class DiscordItemStackUtils {
             prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getBundleFullness()).args(Component.text(fullness), Component.text(64)).color(NamedTextColor.GRAY)));
         }
 
-        if (xMaterial.equals(XMaterial.WRITTEN_BOOK) && hasMeta && item.getItemMeta() instanceof BookMeta) {
+        if (icMaterial.isMaterial(XMaterial.WRITTEN_BOOK) && hasMeta && item.getItemMeta() instanceof BookMeta) {
             BookMeta meta = (BookMeta) item.getItemMeta();
             String author = meta.getAuthor();
             if (author != null) {
@@ -225,7 +225,7 @@ public class DiscordItemStackUtils {
             prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getBookGeneration(generation)).color(NamedTextColor.GRAY)));
         }
 
-        if (xMaterial.equals(XMaterial.SHIELD) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
+        if (icMaterial.isMaterial(XMaterial.SHIELD) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
             if (NBTEditor.contains(item, "BlockEntityTag")) {
                 List<Pattern> patterns = Collections.emptyList();
                 if (!(item.getItemMeta() instanceof BannerMeta)) {
@@ -252,7 +252,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:Banner")) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
+        if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:Banner")) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
             List<Pattern> patterns = Collections.emptyList();
             if (!(item.getItemMeta() instanceof BannerMeta)) {
                 if (item.getItemMeta() instanceof BlockStateMeta) {
@@ -275,7 +275,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (xMaterial.equals(XMaterial.TROPICAL_FISH_BUCKET)) {
+        if (icMaterial.isMaterial(XMaterial.TROPICAL_FISH_BUCKET)) {
             List<String> translations = TranslationKeyUtils.getTropicalFishBucketName(item);
             if (translations.size() > 0) {
                 prints.add(ToolTipComponent.text(Component.translatable(translations.get(0)).color(NamedTextColor.GRAY).decorate(TextDecoration.ITALIC)));
@@ -285,19 +285,19 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:music_disc"))) {
+        if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:music_disc"))) {
             prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getMusicDiscName(item)).color(NamedTextColor.GRAY)));
         }
 
-        if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:disc_fragment"))) {
+        if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:disc_fragment"))) {
             prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getDiscFragmentName(item)).color(NamedTextColor.GRAY)));
         }
 
-        if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:banner_pattern"))) {
-            prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getBannerPatternItemName(xMaterial)).color(NamedTextColor.GRAY)));
+        if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:banner_pattern"))) {
+            prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getBannerPatternItemName(icMaterial)).color(NamedTextColor.GRAY)));
         }
 
-        if (xMaterial.equals(XMaterial.FIREWORK_ROCKET)) {
+        if (icMaterial.isMaterial(XMaterial.FIREWORK_ROCKET)) {
             if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && NBTEditor.contains(item, "Fireworks", "Flight")) {
                 int flight = NBTEditor.getByte(item, "Fireworks", "Flight");
                 prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getRocketFlightDuration()).append(Component.text(" " + flight)).color(NamedTextColor.GRAY)));
@@ -322,7 +322,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (xMaterial.equals(XMaterial.FIREWORK_STAR) && hasMeta && item.getItemMeta() instanceof FireworkEffectMeta) {
+        if (icMaterial.isMaterial(XMaterial.FIREWORK_STAR) && hasMeta && item.getItemMeta() instanceof FireworkEffectMeta) {
             FireworkEffectMeta fireworkEffectMeta = (FireworkEffectMeta) item.getItemMeta();
             FireworkEffect fireworkEffect = fireworkEffectMeta.getEffect();
             prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getFireworkType(fireworkEffect.getType())).color(NamedTextColor.GRAY)));
@@ -340,7 +340,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (xMaterial.equals(XMaterial.CROSSBOW)) {
+        if (icMaterial.isMaterial(XMaterial.CROSSBOW)) {
             CrossbowMeta meta = (CrossbowMeta) item.getItemMeta();
             List<ItemStack> charged = meta.getChargedProjectiles();
             if (charged != null && !charged.isEmpty()) {
@@ -348,7 +348,7 @@ public class DiscordItemStackUtils {
                 List<ToolTipComponent<?>> chargedItemInfo = getToolTip(charge, player).getComponents();
                 Component chargeItemName = (Component) chargedItemInfo.get(0).getToolTipComponent();
                 prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getCrossbowProjectile()).color(NamedTextColor.WHITE).append(Component.text(" [").color(NamedTextColor.WHITE)).append(chargeItemName).append(Component.text("]").color(NamedTextColor.WHITE))));
-                if (InteractiveChatDiscordSrvAddon.plugin.showFireworkRocketDetailsInCrossbow && XMaterialUtils.matchXMaterial(charge).equals(XMaterial.FIREWORK_ROCKET)) {
+                if (InteractiveChatDiscordSrvAddon.plugin.showFireworkRocketDetailsInCrossbow && ICMaterial.from(charge).isMaterial(XMaterial.FIREWORK_ROCKET)) {
                     chargedItemInfo.stream().skip(1).forEachOrdered(each -> {
                         if (each.getType().equals(ToolTipType.TEXT)) {
                             prints.add(ToolTipComponent.text(Component.text("  ").append((Component) each.getToolTipComponent())));
@@ -404,7 +404,7 @@ public class DiscordItemStackUtils {
                                 description += " " + effectLevelTranslation;
                             }
                             if (!effect.getType().isInstant()) {
-                                if (xMaterial.equals(XMaterial.LINGERING_POTION)) {
+                                if (icMaterial.isMaterial(XMaterial.LINGERING_POTION)) {
                                     description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() / 4 * 50L, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true) + ")";
                                 } else {
                                     description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() * 50L, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true) + ")";
@@ -431,7 +431,7 @@ public class DiscordItemStackUtils {
                                 duration = 0;
                             } else {
                                 duration = effect.getDuration() * 50;
-                                if (xMaterial.equals(XMaterial.LINGERING_POTION)) {
+                                if (icMaterial.isMaterial(XMaterial.LINGERING_POTION)) {
                                     duration /= 4;
                                 }
                             }
@@ -645,11 +645,11 @@ public class DiscordItemStackUtils {
                     if (key.contains(":")) {
                         key = key.substring(key.lastIndexOf(":") + 1);
                     }
-                    XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(key.toUpperCase());
-                    if (parsedXMaterial == null) {
+                    ICMaterial parsedICMaterial = ICMaterial.from(key.toUpperCase());
+                    if (parsedICMaterial == null) {
                         prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase())).color(NamedTextColor.DARK_GRAY)));
                     } else {
-                        prints.add(ToolTipComponent.text(Component.translatable(getTranslationKey(parsedXMaterial.parseItem())).color(NamedTextColor.DARK_GRAY)));
+                        prints.add(ToolTipComponent.text(Component.translatable(getTranslationKey(parsedICMaterial.parseItem())).color(NamedTextColor.DARK_GRAY)));
                     }
                 }
             }
@@ -665,11 +665,11 @@ public class DiscordItemStackUtils {
                     if (key.contains(":")) {
                         key = key.substring(key.lastIndexOf(":") + 1);
                     }
-                    XMaterial parsedXMaterial = XMaterialUtils.matchXMaterial(key.toUpperCase());
-                    if (parsedXMaterial == null) {
+                    ICMaterial parsedICMaterial = ICMaterial.from(key.toUpperCase());
+                    if (parsedICMaterial == null) {
                         prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_GRAY + WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase()))));
                     } else {
-                        prints.add(ToolTipComponent.text(Component.translatable(getTranslationKey(parsedXMaterial.parseItem())).color(NamedTextColor.DARK_GRAY)));
+                        prints.add(ToolTipComponent.text(Component.translatable(getTranslationKey(parsedICMaterial.parseItem())).color(NamedTextColor.DARK_GRAY)));
                     }
                 }
             }

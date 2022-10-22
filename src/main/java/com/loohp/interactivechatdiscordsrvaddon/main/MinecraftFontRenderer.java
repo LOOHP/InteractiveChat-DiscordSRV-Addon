@@ -435,7 +435,7 @@ public class MinecraftFontRenderer extends JFrame {
             int packFormat = ((Number) ((JSONObject) json.get("pack")).get("pack_format")).intValue();
 
             resourceManager = new ResourceManager(false, packFormat < 9, Collections.emptyList(), Collections.singletonList(ICacheManager.getDummySupplier()));
-            resourceManager.loadResources(defaultPack, ResourcePackType.BUILT_IN);
+            resourceManager.loadResources(defaultPack, ResourcePackType.BUILT_IN, true);
             resourceBar.setValue(valuePerPack);
             for (String resourceName : resourceOrder) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -463,7 +463,7 @@ public class MinecraftFontRenderer extends JFrame {
 
         textAreaResources.setText("Loaded Resources:\n");
         for (ResourcePackInfo info : resourceManager.getResourcePackInfo()) {
-            textAreaResources.append(" - " + ResourcePackInfoUtils.resolveName(info));
+            textAreaResources.append(" - " + PlainTextComponentSerializer.plainText().serialize(ResourcePackInfoUtils.resolveName(info)));
             if (!info.getStatus()) {
                 textAreaResources.append(" (Failed)");
             }

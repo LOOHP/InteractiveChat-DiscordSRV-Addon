@@ -21,9 +21,9 @@
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
 import com.loohp.interactivechat.libs.org.apache.commons.text.WordUtils;
+import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NMSUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackType;
@@ -122,6 +122,14 @@ public class TranslationKeyUtils {
         } catch (SecurityException | ReflectiveOperationException e) {
             e.printStackTrace();
         }
+    }
+
+    public static String getResourcePackVanillaName() {
+        return "resourcePack.vanilla.name";
+    }
+
+    public static String getResourcePackVanillaDescription() {
+        return "resourcePack.vanilla.description";
     }
 
     public static String getOldIncompatiblePack() {
@@ -346,7 +354,7 @@ public class TranslationKeyUtils {
         return "item." + namespacedKey.getNamespace() + "." + namespacedKey.getKey() + ".desc";
     }
 
-    public static String getBannerPatternItemName(XMaterial material) {
+    public static String getBannerPatternItemName(ICMaterial material) {
         return "item.minecraft." + material.name().toLowerCase() + ".desc";
     }
 

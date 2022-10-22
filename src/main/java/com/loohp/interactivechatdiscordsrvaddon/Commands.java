@@ -71,9 +71,9 @@ public class Commands implements CommandExecutor, TabCompleter {
                 sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.defaultResourceHashLang.replaceFirst("%s", InteractiveChatDiscordSrvAddon.plugin.defaultResourceHash + " (" + InteractiveChat.exactMinecraftVersion + ")"));
                 sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.loadedResourcesLang);
                 for (ResourcePackInfo info : InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getResourcePackInfo()) {
-                    String name = ResourcePackInfoUtils.resolveName(info);
+                    Component name = ResourcePackInfoUtils.resolveName(info);
                     if (info.getStatus()) {
-                        Component component = Component.text(" - " + name).color(info.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) == 0 ? NamedTextColor.GREEN : NamedTextColor.YELLOW);
+                        Component component = Component.text(" - ").append(name).color(info.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) == 0 ? NamedTextColor.GREEN : NamedTextColor.YELLOW);
                         Component hoverComponent = ResourcePackInfoUtils.resolveDescription(info);
                         if (info.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) > 0) {
                             hoverComponent = hoverComponent.append(Component.text("\n")).append(Component.translatable(TranslationKeyUtils.getNewIncompatiblePack()).color(NamedTextColor.YELLOW));
@@ -93,7 +93,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                             }
                         }
                     } else {
-                        Component component = Component.text(" - " + name).color(NamedTextColor.RED);
+                        Component component = Component.text(" - ").append(name).color(NamedTextColor.RED);
                         if (info.getRejectedReason() != null) {
                             component = component.hoverEvent(HoverEvent.showText(Component.text(info.getRejectedReason()).color(NamedTextColor.RED)));
                         }

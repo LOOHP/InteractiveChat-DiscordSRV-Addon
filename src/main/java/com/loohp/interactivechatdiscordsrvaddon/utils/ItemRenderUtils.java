@@ -31,6 +31,7 @@ import com.loohp.interactivechat.libs.net.querz.nbt.tag.Tag;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.libs.org.json.simple.parser.ParseException;
+import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 import com.loohp.interactivechat.objectholders.ValuePairs;
@@ -40,7 +41,6 @@ import com.loohp.interactivechat.utils.ItemNBTUtils;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NBTParsingUtils;
 import com.loohp.interactivechat.utils.SkinUtils;
-import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.BannerGraphics;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.BannerGraphics.BannerAssetResult;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
@@ -129,15 +129,15 @@ public class ItemRenderUtils {
         }
 
         boolean requiresEnchantmentGlint = false;
-        XMaterial xMaterial = XMaterialUtils.matchXMaterial(item);
+        ICMaterial icMaterial = ICMaterial.from(item);
         String directLocation = null;
-        if (xMaterial.equals(XMaterial.DEBUG_STICK)) {
+        if (icMaterial.isMaterial(XMaterial.DEBUG_STICK)) {
             requiresEnchantmentGlint = true;
-        } else if (xMaterial.equals(XMaterial.ENCHANTED_GOLDEN_APPLE)) {
+        } else if (icMaterial.isMaterial(XMaterial.ENCHANTED_GOLDEN_APPLE)) {
             requiresEnchantmentGlint = true;
-        } else if (xMaterial.equals(XMaterial.WRITTEN_BOOK)) {
+        } else if (icMaterial.isMaterial(XMaterial.WRITTEN_BOOK)) {
             requiresEnchantmentGlint = true;
-        } else if (xMaterial.equals(XMaterial.ENCHANTED_BOOK)) {
+        } else if (icMaterial.isMaterial(XMaterial.ENCHANTED_BOOK)) {
             requiresEnchantmentGlint = true;
         } else if (item.getEnchantments().size() > 0) {
             requiresEnchantmentGlint = true;
@@ -147,7 +147,7 @@ public class ItemRenderUtils {
         UnaryOperator<BufferedImage> enchantmentGlintFunction = image -> ImageGeneration.getEnchantedImage(enchantmentGlintResource, image);
         Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintFunction = image -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> ImageGeneration.getRawEnchantedImage(each.getFirst(), image)).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
 
-        TintIndexData tintIndexData = TintUtils.getTintData(xMaterial);
+        TintIndexData tintIndexData = TintUtils.getTintData(icMaterial);
         Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
         Map<String, TextureResource> providedTextures = new HashMap<>();
 
@@ -165,18 +165,18 @@ public class ItemRenderUtils {
             predicates.put(ModelOverrideType.DAMAGED, DiscordItemStackUtils.isUnbreakable(item) || (damage <= 0) ? 0F : 1F);
         }
 
-        if (xMaterial.equals(XMaterial.CHEST) || xMaterial.equals(XMaterial.TRAPPED_CHEST)) {
+        if (icMaterial.isMaterial(XMaterial.CHEST) || icMaterial.isMaterial(XMaterial.TRAPPED_CHEST)) {
             LocalDate time = LocalDate.now();
             Month month = time.getMonth();
             int day = time.getDayOfMonth();
             if (month.equals(Month.DECEMBER) && (day == 24 || day == 25 || day == 26)) {
                 directLocation = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + "christmas_chest";
             }
-        } else if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:banner")) && !xMaterial.isOneOf(Collections.singletonList("CONTAINS:banner_pattern"))) {
+        } else if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:banner")) && !icMaterial.isOneOf(Collections.singletonList("CONTAINS:banner_pattern"))) {
             BannerAssetResult bannerAsset = BannerGraphics.generateBannerAssets(item);
             providedTextures.put(ResourceRegistry.BANNER_BASE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, bannerAsset.getBase()));
             providedTextures.put(ResourceRegistry.BANNER_PATTERNS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, bannerAsset.getPatterns()));
-        } else if (xMaterial.equals(XMaterial.SHIELD)) {
+        } else if (icMaterial.isMaterial(XMaterial.SHIELD)) {
             BannerAssetResult shieldAsset = BannerGraphics.generateShieldAssets(item);
             providedTextures.put(ResourceRegistry.SHIELD_BASE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, shieldAsset.getBase()));
             providedTextures.put(ResourceRegistry.SHIELD_PATTERNS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, shieldAsset.getPatterns()));
@@ -186,7 +186,7 @@ public class ItemRenderUtils {
                 int cooldown = icplayer.getLocalPlayer().getCooldown(item.getType());
                 predicates.put(ModelOverrideType.COOLDOWN, (float) cooldown / (float) ResourceRegistry.SHIELD_COOLDOWN);
             }
-        } else if (xMaterial.equals(XMaterial.PLAYER_HEAD)) {
+        } else if (icMaterial.isMaterial(XMaterial.PLAYER_HEAD)) {
             BufferedImage skinImage = manager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "steve").getTexture();
             if (item.hasItemMeta()) {
                 Tag<?> skullOwnerTag = ((CompoundTag) NBTParsingUtils.fromSNBT(ItemNBTUtils.getNMSItemStackJson(item))).getCompoundTag("tag").get("SkullOwner");
@@ -246,23 +246,23 @@ public class ItemRenderUtils {
                 }
             }
             providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, ModelUtils.convertToModernSkinTexture(skinImage)));
-        } else if (xMaterial.equals(XMaterial.ELYTRA)) {
+        } else if (icMaterial.isMaterial(XMaterial.ELYTRA)) {
             int durability = item.getType().getMaxDurability() - (InteractiveChat.version.isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
             if (durability <= 1) {
                 predicates.put(ModelOverrideType.BROKEN, 1F);
             }
-        } else if (xMaterial.equals(XMaterial.CROSSBOW)) {
+        } else if (icMaterial.isMaterial(XMaterial.CROSSBOW)) {
             CrossbowMeta meta = (CrossbowMeta) item.getItemMeta();
             List<ItemStack> charged = meta.getChargedProjectiles();
             if (charged != null && !charged.isEmpty()) {
                 predicates.put(ModelOverrideType.CHARGED, 1F);
                 ItemStack charge = charged.get(0);
-                XMaterial chargeType = XMaterialUtils.matchXMaterial(charge);
-                if (chargeType.equals(XMaterial.FIREWORK_ROCKET)) {
+                ICMaterial chargeType = ICMaterial.from(charge);
+                if (chargeType.isMaterial(XMaterial.FIREWORK_ROCKET)) {
                     predicates.put(ModelOverrideType.FIREWORK, 1F);
                 }
             }
-        } else if (xMaterial.equals(XMaterial.CLOCK)) {
+        } else if (icMaterial.isMaterial(XMaterial.CLOCK)) {
             long time;
             ICPlayer onlinePlayer = player.getPlayer();
             if (onlinePlayer != null && onlinePlayer.isLocal()) {
@@ -280,7 +280,7 @@ public class ItemRenderUtils {
             }
             double timePhase = (double) time / 24000;
             predicates.put(ModelOverrideType.TIME, (float) (timePhase - 0.0078125));
-        } else if (xMaterial.equals(XMaterial.COMPASS)) {
+        } else if (icMaterial.isMaterial(XMaterial.COMPASS)) {
             double angle;
             ICPlayer icplayer = player.getPlayer();
             if (icplayer != null && icplayer.isLocal()) {
@@ -338,7 +338,7 @@ public class ItemRenderUtils {
             }
 
             predicates.put(ModelOverrideType.ANGLE, (float) (angle - 0.015625));
-        } else if (xMaterial.equals(XMaterial.RECOVERY_COMPASS)) {
+        } else if (icMaterial.isMaterial(XMaterial.RECOVERY_COMPASS)) {
             double angle;
             ICPlayer icplayer = player.getPlayer();
             if (icplayer != null && icplayer.isLocal()) {
@@ -363,43 +363,46 @@ public class ItemRenderUtils {
             }
 
             predicates.put(ModelOverrideType.ANGLE, (float) (angle - 0.015625));
-        } else if (xMaterial.equals(XMaterial.LIGHT)) {
-            int level = 16;
-            Object blockStateObj = item.getItemMeta().serialize().get("BlockStateTag");
-            if (blockStateObj != null && blockStateObj instanceof Map) {
-                Object levelObj = ((Map<?, Object>) blockStateObj).get("level");
-                if (levelObj != null) {
-                    try {
-                        level = Integer.parseInt(levelObj.toString().replace("i", ""));
-                    } catch (NumberFormatException e) {
+        } else if (icMaterial.isMaterial(XMaterial.LIGHT)) {
+            float level = 1F;
+            CompoundTag itemTag = (CompoundTag) NBTParsingUtils.fromSNBT(ItemNBTUtils.getNMSItemStackJson(item));
+            if (itemTag != null && itemTag.containsKey("tag")) {
+                CompoundTag itemTagTag = itemTag.getCompoundTag("tag");
+                if (itemTagTag.containsKey("BlockStateTag")) {
+                    CompoundTag blockStateTag = itemTagTag.getCompoundTag("BlockStateTag");
+                    if (blockStateTag.containsKey("level")) {
+                        try {
+                            level = (float) Integer.parseInt(tagToString(blockStateTag.get("level"))) / 16F;
+                        } catch (NumberFormatException e) {
+                        }
                     }
                 }
             }
-            predicates.put(ModelOverrideType.LEVEL, (float) level / 16F);
+            predicates.put(ModelOverrideType.LEVEL, level);
         } else if (item.getItemMeta() instanceof LeatherArmorMeta) {
             LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
             Color color = new Color(meta.getColor().asRGB());
-            if (xMaterial.equals(XMaterial.LEATHER_HORSE_ARMOR)) {
-                BufferedImage itemImage = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + xMaterial.name().toLowerCase()).getTexture(32, 32);
+            if (icMaterial.isMaterial(XMaterial.LEATHER_HORSE_ARMOR)) {
+                BufferedImage itemImage = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + icMaterial.name().toLowerCase()).getTexture(32, 32);
                 BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
                 itemImage = ImageUtils.multiply(itemImage, colorOverlay);
                 providedTextures.put(ResourceRegistry.LEATHER_HORSE_ARMOR_PLACEHOLDER, new GeneratedTextureResource(manager, itemImage));
             } else {
-                BufferedImage itemImage = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + xMaterial.name().toLowerCase()).getTexture(32, 32);
+                BufferedImage itemImage = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + icMaterial.name().toLowerCase()).getTexture(32, 32);
                 BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
                 itemImage = ImageUtils.multiply(itemImage, colorOverlay);
-                if (xMaterial.name().contains("HELMET")) {
+                if (icMaterial.name().contains("HELMET")) {
                     providedTextures.put(ResourceRegistry.LEATHER_HELMET_PLACEHOLDER, new GeneratedTextureResource(manager, itemImage));
-                } else if (xMaterial.name().contains("CHESTPLATE")) {
+                } else if (icMaterial.name().contains("CHESTPLATE")) {
                     providedTextures.put(ResourceRegistry.LEATHER_CHESTPLATE_PLACEHOLDER, new GeneratedTextureResource(manager, itemImage));
-                } else if (xMaterial.name().contains("LEGGINGS")) {
+                } else if (icMaterial.name().contains("LEGGINGS")) {
                     providedTextures.put(ResourceRegistry.LEATHER_LEGGINGS_PLACEHOLDER, new GeneratedTextureResource(manager, itemImage));
-                } else if (xMaterial.name().contains("BOOTS")) {
+                } else if (icMaterial.name().contains("BOOTS")) {
                     providedTextures.put(ResourceRegistry.LEATHER_BOOTS_PLACEHOLDER, new GeneratedTextureResource(manager, itemImage));
                 }
             }
         } else if (item.getItemMeta() instanceof PotionMeta) {
-            if (xMaterial.equals(XMaterial.TIPPED_ARROW)) {
+            if (icMaterial.isMaterial(XMaterial.TIPPED_ARROW)) {
                 PotionMeta meta = (PotionMeta) item.getItemMeta();
                 PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
                 BufferedImage tippedArrowHead = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "tipped_arrow_head").getTexture(32, 32);
@@ -445,8 +448,8 @@ public class ItemRenderUtils {
                     }
                 }
             }
-        } else if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:spawn_egg"))) {
-            SpawnEggTintData tintData = TintUtils.getSpawnEggTint(xMaterial);
+        } else if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:spawn_egg"))) {
+            SpawnEggTintData tintData = TintUtils.getSpawnEggTint(icMaterial);
             if (tintData != null) {
                 BufferedImage baseImage = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg").getTexture();
                 BufferedImage overlayImage = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg_overlay").getTexture(baseImage.getWidth(), baseImage.getHeight());
@@ -460,7 +463,7 @@ public class ItemRenderUtils {
                 providedTextures.put(ResourceRegistry.SPAWN_EGG_PLACEHOLDER, new GeneratedTextureResource(manager, baseImage));
                 providedTextures.put(ResourceRegistry.SPAWN_EGG_OVERLAY_PLACEHOLDER, new GeneratedTextureResource(manager, overlayImage));
             }
-        } else if (xMaterial.equals(XMaterial.FIREWORK_STAR)) {
+        } else if (icMaterial.isMaterial(XMaterial.FIREWORK_STAR)) {
             int overlayColor;
 
             int[] is;
@@ -486,23 +489,23 @@ public class ItemRenderUtils {
             fireworkStarOverlay = ImageUtils.multiply(fireworkStarOverlay, tint);
 
             providedTextures.put(ResourceRegistry.FIREWORK_STAR_OVERLAY_LOCATION, new GeneratedTextureResource(manager, fireworkStarOverlay));
-        } else if (InteractiveChat.version.isLegacy() && xMaterial.isOneOf(Collections.singletonList("CONTAINS:bed"))) {
-            String colorName = xMaterial.name().replace("_BED", "").toLowerCase();
+        } else if (InteractiveChat.version.isLegacy() && icMaterial.isOneOf(Collections.singletonList("CONTAINS:bed"))) {
+            String colorName = icMaterial.name().replace("_BED", "").toLowerCase();
             BufferedImage bedTexture = manager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "bed/" + colorName).getTexture();
             providedTextures.put(ResourceRegistry.LEGACY_BED_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, bedTexture));
-        } else if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_9) && xMaterial.equals(XMaterial.ENDER_PEARL)) {
+        } else if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_9) && icMaterial.isMaterial(XMaterial.ENDER_PEARL)) {
             ICPlayer icplayer = player.getPlayer();
             if (icplayer != null && icplayer.isLocal()) {
                 int cooldown = icplayer.getLocalPlayer().getCooldown(item.getType());
                 predicates.put(ModelOverrideType.COOLDOWN, (float) cooldown / (float) ResourceRegistry.ENDER_PEARL_COOLDOWN);
             }
-        } else if (xMaterial.equals(XMaterial.CHORUS_FRUIT)) {
+        } else if (icMaterial.isMaterial(XMaterial.CHORUS_FRUIT)) {
             ICPlayer icplayer = player.getPlayer();
             if (icplayer != null && icplayer.isLocal()) {
                 int cooldown = icplayer.getLocalPlayer().getCooldown(item.getType());
                 predicates.put(ModelOverrideType.COOLDOWN, (float) cooldown / (float) ResourceRegistry.CHORUS_FRUIT_COOLDOWN);
             }
-        } else if (xMaterial.equals(XMaterial.FISHING_ROD)) {
+        } else if (icMaterial.isMaterial(XMaterial.FISHING_ROD)) {
             predicates.put(ModelOverrideType.CAST, 0F);
             ICPlayer icplayer = player.getPlayer();
             if (icplayer != null && icplayer.isLocal()) {
@@ -521,7 +524,7 @@ public class ItemRenderUtils {
                     }
                 }
             }
-        } else if (xMaterial.equals(XMaterial.BUNDLE)) {
+        } else if (icMaterial.isMaterial(XMaterial.BUNDLE)) {
             float fullness = BundleUtils.getFullnessPercentage(((BundleMeta) item.getItemMeta()).getItems());
             predicates.put(ModelOverrideType.FILLED, fullness);
         } else if (FilledMapUtils.isFilledMap(item)) {
@@ -538,7 +541,7 @@ public class ItemRenderUtils {
             providedTextures.put(ResourceRegistry.MAP_MARKINGS_LOCATION, new GeneratedTextureResource(manager, filledMapMarkings));
         }
 
-        String modelKey = directLocation == null ? ResourceRegistry.ITEM_MODEL_LOCATION + ModelUtils.getItemModelKey(xMaterial) : directLocation;
+        String modelKey = directLocation == null ? ResourceRegistry.ITEM_MODEL_LOCATION + ModelUtils.getItemModelKey(icMaterial) : directLocation;
 
         Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction = manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, slot, item, is1_8, predicates, player, world, livingEntity, manager.getLanguageManager().getTranslateFunction().ofLanguage(language)).map(function -> {
             return function.andThen(result -> {
@@ -558,7 +561,7 @@ public class ItemRenderUtils {
                         overriddenResource = namespace + ":" + overriddenResource;
                     }
                     if (item.getItemMeta() instanceof PotionMeta) {
-                        if (xMaterial.equals(XMaterial.TIPPED_ARROW)) {
+                        if (icMaterial.isMaterial(XMaterial.TIPPED_ARROW)) {
                             if (overriddenResource.equalsIgnoreCase(ResourceRegistry.TIPPED_ARROW_HEAD_PLACEHOLDER)) {
                                 PotionMeta meta = (PotionMeta) item.getItemMeta();
                                 PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
@@ -603,9 +606,9 @@ public class ItemRenderUtils {
                                 entry.setValue(new GeneratedTextureResource(manager, potionOverlay));
                             }
                         }
-                    } else if (xMaterial.isOneOf(Collections.singletonList("CONTAINS:spawn_egg"))) {
+                    } else if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:spawn_egg"))) {
                         if (overriddenResource.equalsIgnoreCase(ResourceRegistry.SPAWN_EGG_PLACEHOLDER)) {
-                            SpawnEggTintData tintData = TintUtils.getSpawnEggTint(xMaterial);
+                            SpawnEggTintData tintData = TintUtils.getSpawnEggTint(icMaterial);
                             if (tintData != null) {
                                 BufferedImage baseImage = entry.getValue().getTexture();
                                 BufferedImage colorBase = ImageUtils.changeColorTo(ImageUtils.copyImage(baseImage), tintData.getBase());
@@ -613,7 +616,7 @@ public class ItemRenderUtils {
                                 entry.setValue(new GeneratedTextureResource(manager, baseImage));
                             }
                         } else if (overriddenResource.equalsIgnoreCase(ResourceRegistry.SPAWN_EGG_OVERLAY_PLACEHOLDER)) {
-                            SpawnEggTintData tintData = TintUtils.getSpawnEggTint(xMaterial);
+                            SpawnEggTintData tintData = TintUtils.getSpawnEggTint(icMaterial);
                             if (tintData != null) {
                                 BufferedImage overlayImage = entry.getValue().getTexture();
                                 BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(overlayImage), tintData.getOverlay());
@@ -624,7 +627,7 @@ public class ItemRenderUtils {
                     } else if (item.getItemMeta() instanceof LeatherArmorMeta) {
                         LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
                         Color color = new Color(meta.getColor().asRGB());
-                        if (xMaterial.equals(XMaterial.LEATHER_HORSE_ARMOR)) {
+                        if (icMaterial.isMaterial(XMaterial.LEATHER_HORSE_ARMOR)) {
                             if (overriddenResource.equalsIgnoreCase(ResourceRegistry.LEATHER_HORSE_ARMOR_PLACEHOLDER)) {
                                 BufferedImage itemImage = entry.getValue().getTexture(32, 32);
                                 BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
@@ -647,6 +650,14 @@ public class ItemRenderUtils {
         }).orElse(null);
 
         return new ItemStackProcessResult(requiresEnchantmentGlint, predicates, providedTextures, tintIndexData, modelKey, postResolveFunction, enchantmentGlintFunction, rawEnchantmentGlintFunction);
+    }
+
+    private static String tagToString(Tag<?> tag) {
+        if (tag instanceof StringTag) {
+            return ((StringTag) tag).getValue();
+        } else {
+            return tag.valueToString();
+        }
     }
 
     public static class ItemStackProcessResult {

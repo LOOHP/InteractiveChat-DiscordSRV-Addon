@@ -20,6 +20,8 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -28,6 +30,7 @@ import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
+import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageMeta;
@@ -50,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -69,11 +73,13 @@ public class ResourceManager implements AutoCloseable {
     private boolean flattenLegacy;
     private boolean fontLegacy;
 
+    private BiFunction<File, ResourcePackType, DefaultResourcePackInfo> defaultResourcePackInfoFunction;
     private AtomicBoolean isValid;
     private UUID uuid;
 
-    public ResourceManager(boolean flattenLegacy, boolean fontLegacy, Collection<ModManagerSupplier<?>> modManagerProviders, Collection<ResourceRegistrySupplier<?>> resourceManagerUtilsProviders) {
+    public ResourceManager(boolean flattenLegacy, boolean fontLegacy, Collection<ModManagerSupplier<?>> modManagerProviders, Collection<ResourceRegistrySupplier<?>> resourceManagerUtilsProviders, BiFunction<File, ResourcePackType, DefaultResourcePackInfo> defaultResourcePackInfoFunction) {
         this.resourcePackInfo = new ArrayList<>();
+        this.defaultResourcePackInfoFunction = defaultResourcePackInfoFunction;
 
         this.flattenLegacy = flattenLegacy;
         this.fontLegacy = fontLegacy;
@@ -99,11 +105,24 @@ public class ResourceManager implements AutoCloseable {
         }
     }
 
-    public synchronized ResourcePackInfo loadResources(File resourcePackFile, ResourcePackType type) {
+    public ResourceManager(boolean flattenLegacy, boolean fontLegacy, Collection<ModManagerSupplier<?>> modManagerProviders, Collection<ResourceRegistrySupplier<?>> resourceManagerUtilsProviders) {
+        this(flattenLegacy, fontLegacy, modManagerProviders, resourceManagerUtilsProviders, (resourcePackFile, type) -> {
+            return new ResourceManager.DefaultResourcePackInfo(Component.text(resourcePackFile.getName()), ResourceRegistry.RESOURCE_PACK_VERSION, Component.text("The default look and feel of Minecraft (Modified by LOOHP)"));
+        });
+    }
+
+    public ResourcePackInfo loadResources(File resourcePackFile, ResourcePackType type) {
+        return loadResources(resourcePackFile, type, false);
+    }
+
+    public synchronized ResourcePackInfo loadResources(File resourcePackFile, ResourcePackType type, boolean defaultResource) {
         if (!isValid()) {
             throw new IllegalStateException("ResourceManager already closed!");
         }
-        String resourcePackName = resourcePackFile.getName();
+        DefaultResourcePackInfo defaultResourcePackInfo = defaultResource ? defaultResourcePackInfoFunction.apply(resourcePackFile, type) : null;
+
+        String resourcePackNameStr = resourcePackFile.getName();
+        Component resourcePackName = Component.text(resourcePackNameStr);
         if (!resourcePackFile.exists()) {
             new IllegalArgumentException(resourcePackFile.getAbsolutePath() + " is not a directory nor is a zip file.").printStackTrace();
             ResourcePackInfo info = new ResourcePackInfo(this, null, type, resourcePackName, "Resource Pack is not a directory nor a zip file.");
@@ -125,7 +144,7 @@ public class ResourceManager implements AutoCloseable {
         }
         ResourcePackFile packMcmeta = resourcePack.getChild("pack.mcmeta");
         if (!packMcmeta.exists()) {
-            new ResourceLoadingException(resourcePackName + " does not have a pack.mcmeta").printStackTrace();
+            new ResourceLoadingException(resourcePackNameStr + " does not have a pack.mcmeta").printStackTrace();
             ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, "pack.mcmeta not found");
             resourcePackInfo.add(0, info);
             return info;
@@ -135,7 +154,7 @@ public class ResourceManager implements AutoCloseable {
         try (InputStreamReader reader = new InputStreamReader(new BOMInputStream(packMcmeta.getInputStream()), StandardCharsets.UTF_8)) {
             json = (JSONObject) new JSONParser().parse(reader);
         } catch (Throwable e) {
-            new ResourceLoadingException("Unable to read pack.mcmeta for " + resourcePackName, e).printStackTrace();
+            new ResourceLoadingException("Unable to read pack.mcmeta for " + resourcePackNameStr, e).printStackTrace();
             ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, "Unable to read pack.mcmeta");
             resourcePackInfo.add(0, info);
             return info;
@@ -147,19 +166,34 @@ public class ResourceManager implements AutoCloseable {
         List<ResourceFilterBlock> resourceFilterBlocks;
         try {
             JSONObject packJson = (JSONObject) json.get("pack");
-            format = ((Number) packJson.get("pack_format")).intValue();
-            String rawDescription = packJson.get("description").toString();
-            try {
-                description = InteractiveChatComponentSerializer.gson().deserialize(rawDescription);
-            } catch (Exception e) {
-                description = null;
+            if (packJson == null && defaultResource) {
+                resourcePackName = defaultResourcePackInfo.getName();
+                format = defaultResourcePackInfo.getVersion();
+                description = defaultResourcePackInfo.getDescription();
+            } else {
+                format = ((Number) packJson.get("pack_format")).intValue();
+                Object descriptionObj = packJson.get("description");
+                if (descriptionObj instanceof JSONObject) {
+                    String descriptionJson = new GsonBuilder().create().toJson(descriptionObj);
+                    try {
+                        description = InteractiveChatComponentSerializer.gson().deserialize(descriptionJson);
+                    } catch (Exception e) {
+                        description = null;
+                    }
+                }
+                if (description == null) {
+                    String rawDescription = packJson.get("description").toString();
+                    try {
+                        description = InteractiveChatComponentSerializer.gson().deserialize(rawDescription);
+                    } catch (Exception e) {
+                        description = null;
+                    }
+                    if (description == null) {
+                        description = LegacyComponentSerializer.legacySection().deserialize(rawDescription);
+                    }
+                }
             }
-            if (description == null) {
-                description = LegacyComponentSerializer.legacySection().deserialize(rawDescription);
-            }
-            if (description.color() == null) {
-                description = description.color(NamedTextColor.GRAY);
-            }
+            description = description.applyFallbackStyle(NamedTextColor.GRAY);
 
             JSONObject languageJson = (JSONObject) json.get("language");
             if (languageJson != null) {
@@ -181,7 +215,7 @@ public class ResourceManager implements AutoCloseable {
                 resourceFilterBlocks = Collections.emptyList();
             }
         } catch (Exception e) {
-            new ResourceLoadingException("Invalid pack.mcmeta for " + resourcePackName, e).printStackTrace();
+            new ResourceLoadingException("Invalid pack.mcmeta for " + resourcePackNameStr, e).printStackTrace();
             ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, "Invalid pack.mcmeta");
             resourcePackInfo.add(0, info);
             return info;
@@ -201,7 +235,7 @@ public class ResourceManager implements AutoCloseable {
             filterResources(resourceFilterBlocks);
             loadAssets(assetsFolder, languageMeta);
         } catch (Exception e) {
-            new ResourceLoadingException("Unable to load assets for " + resourcePackName, e).printStackTrace();
+            new ResourceLoadingException("Unable to load assets for " + resourcePackNameStr, e).printStackTrace();
             ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, false, "Unable to load assets", format, description, languageMeta, icon, resourceFilterBlocks);
             resourcePackInfo.add(0, info);
             return info;
@@ -417,6 +451,32 @@ public class ResourceManager implements AutoCloseable {
         @Override
         default T apply(ResourceManager resourceManager) {
             return init(resourceManager);
+        }
+
+    }
+
+    public static class DefaultResourcePackInfo {
+
+        private Component name;
+        private int version;
+        private Component description;
+
+        public DefaultResourcePackInfo(Component name, int version, Component description) {
+            this.name = name;
+            this.version = version;
+            this.description = description;
+        }
+
+        public Component getName() {
+            return name;
+        }
+
+        public int getVersion() {
+            return version;
+        }
+
+        public Component getDescription() {
+            return description;
         }
 
     }

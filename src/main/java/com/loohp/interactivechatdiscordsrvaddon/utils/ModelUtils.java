@@ -24,9 +24,9 @@ import com.loohp.blockmodelrenderer.render.Face;
 import com.loohp.blockmodelrenderer.render.Point3D;
 import com.loohp.blockmodelrenderer.utils.MathUtils;
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelFace.ModelFaceSide;
@@ -251,14 +251,14 @@ public class ModelUtils {
         LEGACY_MODEL_NAME.put("ZOMBIE_VILLAGER_SPAWN_EGG", "spawn_egg");
     }
 
-    public static String getItemModelKey(XMaterial xMaterial) {
+    public static String getItemModelKey(ICMaterial icMaterial) {
         if (InteractiveChat.version.isLegacy()) {
-            String legacyKey = LEGACY_MODEL_NAME.get(xMaterial.name());
+            String legacyKey = LEGACY_MODEL_NAME.get(icMaterial.name());
             if (legacyKey != null) {
                 return legacyKey.toLowerCase();
             }
         }
-        return xMaterial.name().toLowerCase();
+        return icMaterial.name().toLowerCase();
     }
 
     public static BufferedImage convertToModernSkinTexture(BufferedImage skin) {

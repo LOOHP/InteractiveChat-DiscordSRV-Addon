@@ -30,7 +30,10 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.TriConsumer;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -94,6 +97,21 @@ public class ResourceDownloadManager {
         return data.get("hash").toString();
     }
 
+    public synchronized void applyRename() {
+        JSONObject renameEntries = (JSONObject) data.get("rename-entries");
+        for (Object obj : renameEntries.keySet()) {
+            try {
+                String from = (String) obj;
+                String target = renameEntries.get(from).toString();
+                File fromFile = new File(packFolder + from);
+                File targetFile = new File(packFolder + target);
+                Files.move(fromFile.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public synchronized void downloadResources(TriConsumer<TaskType, String, Double> progressListener) {
         ensureData();
         JSONObject client = (JSONObject) data.get("client-entries");
@@ -154,6 +172,8 @@ public class ResourceDownloadManager {
             }
             HTTPRequestUtils.download(file, key);
         }
+
+        applyRename();
         progressListener.accept(TaskType.DONE, "", 100.0);
     }
 
@@ -183,6 +203,8 @@ public class ResourceDownloadManager {
             }
             HTTPRequestUtils.download(file, MOJANG_RESOURCES_URL + hash.substring(0, 2) + "/" + hash);
         }
+
+        applyRename();
         progressListener.accept(TaskType.DONE, "", 100.0);
     }
 
@@ -204,6 +226,7 @@ public class ResourceDownloadManager {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        applyRename();
     }
 
     private String getEntryName(String name) {

@@ -21,7 +21,6 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit;
 
 import com.loohp.interactivechat.InteractiveChat;
-import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.ByteTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.CompoundTag;
@@ -33,10 +32,10 @@ import com.loohp.interactivechat.libs.net.querz.nbt.tag.LongTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.ShortTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.StringTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.Tag;
+import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.ItemNBTUtils;
 import com.loohp.interactivechat.utils.NBTParsingUtils;
-import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.IntegerRange;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PercentageOrIntegerRange;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
@@ -58,7 +57,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.UnaryOperator;
@@ -72,7 +70,7 @@ public abstract class CITProperties {
             name = name.substring(0, name.lastIndexOf("."));
         }
         int weight = Integer.parseInt(properties.getProperty("weight", "0"));
-        Set<XMaterial> items = new HashSet<>();
+        Set<ICMaterial> items = new HashSet<>();
         String itemsStr = properties.getProperty("items");
         if (itemsStr == null) {
             itemsStr = properties.getProperty("matchItems");
@@ -82,11 +80,14 @@ public abstract class CITProperties {
                 if (section.contains(":")) {
                     section = section.substring(section.indexOf(":") + 1);
                 }
-                Optional<XMaterial> optMaterial = XMaterial.matchXMaterial(section);
-                if (optMaterial.isPresent()) {
-                    items.add(optMaterial.get());
+                ICMaterial icMaterial = ICMaterial.from(section.toUpperCase());
+                if (icMaterial != null) {
+                    items.add(icMaterial);
                 } else {
-                    XMaterial.matchXMaterial(name).ifPresent(items::add);
+                    icMaterial = ICMaterial.from(name.toUpperCase());
+                    if (icMaterial != null) {
+                        items.add(icMaterial);
+                    }
                 }
             }
         }
@@ -248,7 +249,7 @@ public abstract class CITProperties {
     }
 
     protected int weight;
-    protected Set<XMaterial> items;
+    protected Set<ICMaterial> items;
     protected IntegerRange stackSize;
     protected PercentageOrIntegerRange damage;
     protected int damageMask;
@@ -256,7 +257,7 @@ public abstract class CITProperties {
     protected Map<Enchantment, IntegerRange> enchantments;
     protected Map<String, CITValueMatcher> nbtMatch;
 
-    public CITProperties(int weight, Set<XMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, CITValueMatcher> nbtMatch) {
+    public CITProperties(int weight, Set<ICMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, CITValueMatcher> nbtMatch) {
         this.weight = weight;
         this.items = items;
         this.stackSize = stackSize;
@@ -271,7 +272,7 @@ public abstract class CITProperties {
         return weight;
     }
 
-    public Set<XMaterial> getItems() {
+    public Set<ICMaterial> getItems() {
         return items;
     }
 
@@ -304,7 +305,7 @@ public abstract class CITProperties {
         if (itemStack == null || itemStack.getType().equals(Material.AIR)) {
             return false;
         }
-        if (!items.contains(XMaterialUtils.matchXMaterial(itemStack))) {
+        if (!items.contains(ICMaterial.from(itemStack))) {
             return false;
         }
         if (!stackSize.test(itemStack.getAmount())) {
