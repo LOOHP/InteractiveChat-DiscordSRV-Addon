@@ -25,6 +25,7 @@ import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import com.loohp.interactivechat.objectholders.ICPlayer;
+import com.loohp.interactivechat.objectholders.ICPlayerFactory;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechat.utils.BookUtils;
@@ -86,6 +87,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -355,6 +357,7 @@ public class DiscordContentUtils {
             }
             return itemStack.clone();
         }).toArray(ItemStack[]::new);
+        AtomicReference<OfflineICPlayer> offlineICPlayerAtomicRef = new AtomicReference<>(player);
         return (event, discordMessageContents) -> {
             User self = DiscordSRV.getPlugin().getJda().getSelfUser();
             User user = event.getUser();
@@ -367,21 +370,22 @@ public class DiscordContentUtils {
                 if (slot >= 0 && slot < items.length) {
                     event.deferReply().setEphemeral(true).queue();
                     Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+                        OfflineICPlayer offlineICPlayer = offlineICPlayerAtomicRef.updateAndGet(p -> p instanceof ICPlayer ? (p.isOnline() ? p : ICPlayerFactory.getOfflineICPlayer(p.getUniqueId())) : p);
                         try {
                             ItemStack item = items[slot];
                             if (item == null) {
                                 item = new ItemStack(Material.AIR);
                             }
 
-                            String title = PlaceholderParser.parse(player, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemTitle));
+                            String title = PlaceholderParser.parse(offlineICPlayer, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemTitle));
                             ImageDisplayData data;
                             Inventory inv = getBlockInventory(item);
                             if (inv != null) {
-                                data = new ImageDisplayData(player, 0, title, ImageDisplayType.ITEM_CONTAINER, item.clone(), new TitledInventoryWrapper(ItemStackUtils.getDisplayName(item, null), inv));
+                                data = new ImageDisplayData(offlineICPlayer, 0, title, ImageDisplayType.ITEM_CONTAINER, item.clone(), new TitledInventoryWrapper(ItemStackUtils.getDisplayName(item, null), inv));
                             } else {
-                                data = new ImageDisplayData(player, 0, title, ImageDisplayType.ITEM, item.clone());
+                                data = new ImageDisplayData(offlineICPlayer, 0, title, ImageDisplayType.ITEM, item.clone());
                             }
-                            ValuePairs<List<DiscordMessageContent>, InteractionHandler> result = createContents(Collections.singletonList(data), player);
+                            ValuePairs<List<DiscordMessageContent>, InteractionHandler> result = createContents(Collections.singletonList(data), offlineICPlayer);
                             DiscordMessageContent content = result.getFirst().get(0);
                             InteractionHandler interactionHandler = result.getSecond();
 
