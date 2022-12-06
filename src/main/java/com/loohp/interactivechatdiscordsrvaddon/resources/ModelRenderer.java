@@ -568,19 +568,29 @@ public class ModelRenderer implements AutoCloseable {
                                 }
                                 uv = new TextureUV(x1, y1, x2, y2);
                             }
-                            uv = uv.getScaled(1, (double) images[i].getHeight() / (double) images[i].getWidth());
-                            uv = uv.getScaled((double) images[i].getWidth() / 16.0);
-                            int x1 = (int) Math.ceil(uv.getX1());
-                            int y1 = (int) Math.ceil(uv.getY1());
-                            int dX = Math.abs((int) Math.floor(uv.getX2()) - x1);
-                            int dY = Math.abs((int) Math.floor(uv.getY2()) - y1);
+                            int width = images[i].getWidth();
+                            int height = images[i].getHeight();
+                            uv = uv.getScaled(1, (double) height / (double) width);
+                            uv = uv.getScaled((double) width / 16.0);
+                            int x1;
+                            int y1;
+                            int dX;
+                            int dY;
                             if (uv.isVerticallyFlipped()) {
                                 images[i] = ImageUtils.flipVertically(images[i]);
-                                y1 = images[i].getHeight() - y1;
+                                y1 = (int) Math.ceil(height - uv.getY1());
+                                dY = Math.abs((int) Math.floor(height - uv.getY2()) - y1);
+                            } else {
+                                y1 = (int) Math.ceil(uv.getY1());
+                                dY = Math.abs((int) Math.floor(uv.getY2()) - y1);
                             }
                             if (uv.isHorizontallyFlipped()) {
                                 images[i] = ImageUtils.flipHorizontal(images[i]);
-                                x1 = images[i].getWidth() - x1;
+                                x1 = (int) Math.ceil(width - uv.getX1());
+                                dX = Math.abs((int) Math.floor(width - uv.getX2()) - x1);
+                            } else {
+                                x1 = (int) Math.ceil(uv.getX1());
+                                dX = Math.abs((int) Math.floor(uv.getX2()) - x1);
                             }
                             images[i] = ImageUtils.copyAndGetSubImage(images[i], x1, y1, Math.max(1, dX), Math.max(1, dY));
                             int rotationAngle = faceData.getRotation();
