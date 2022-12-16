@@ -29,6 +29,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -36,34 +37,48 @@ import java.nio.charset.StandardCharsets;
 
 public class CacheObject<T> {
 
-    protected static CacheObject<?> deserialize(byte[] data) throws IOException, ClassNotFoundException {
+    protected static CacheObject<?> deserialize(byte[] data) throws Exception {
         try (DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(data))) {
             long timeCreated = inputStream.readLong();
             byte type = inputStream.readByte();
-            if (type == 0) {
-                byte[] dataArray = new byte[data.length - 9];
-                inputStream.readFully(dataArray);
-                return new CacheObject<>(timeCreated, new String(dataArray, StandardCharsets.UTF_8));
-            } else if (type == 1) {
-                byte[] dataArray = new byte[data.length - 9];
-                inputStream.readFully(dataArray);
-                return new CacheObject<>(timeCreated, ImageUtils.fromArray(dataArray));
-            } else if (type == 2) {
-                byte[] dataArray = new byte[data.length - 10];
-                inputStream.readFully(dataArray);
-                if (inputStream.readBoolean()) {
-                    return new CacheObject<>(timeCreated, new RenderResult(ImageUtils.fromArray(dataArray)));
-                } else {
-                    return new CacheObject<>(timeCreated, new RenderResult(new String(dataArray, StandardCharsets.UTF_8)));
+            switch (type) {
+                case 0: {
+                    byte[] dataArray = new byte[data.length - 9];
+                    inputStream.readFully(dataArray);
+                    return new CacheObject<>(timeCreated, new String(dataArray, StandardCharsets.UTF_8));
                 }
-            } else if (type == 3) {
-                byte[] dataArray = new byte[data.length - 9];
-                inputStream.readFully(dataArray);
-                try (ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(dataArray))) {
-                    return new CacheObject<>(timeCreated, objectInputStream.readObject());
+                case 1: {
+                    byte[] dataArray = new byte[data.length - 9];
+                    inputStream.readFully(dataArray);
+                    return new CacheObject<>(timeCreated, ImageUtils.fromArray(dataArray));
+                }
+                case 2: {
+                    byte[] dataArray = new byte[data.length - 10];
+                    inputStream.readFully(dataArray);
+                    if (inputStream.readBoolean()) {
+                        return new CacheObject<>(timeCreated, new RenderResult(ImageUtils.fromArray(dataArray)));
+                    } else {
+                        return new CacheObject<>(timeCreated, new RenderResult(new String(dataArray, StandardCharsets.UTF_8)));
+                    }
+                }
+                case 3: {
+                    byte[] dataArray = new byte[data.length - 9];
+                    inputStream.readFully(dataArray);
+                    try (ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(dataArray))) {
+                        return new CacheObject<>(timeCreated, objectInputStream.readObject());
+                    }
+                }
+                case 4: {
+                    int length = inputStream.readInt();
+                    byte[] name = new byte[length];
+                    inputStream.readFully(name);
+                    Class<?> clazz = Class.forName(new String(name, StandardCharsets.UTF_8));
+                    return new CacheObject<>(timeCreated, clazz.getConstructor(InputStream.class).newInstance(inputStream));
+                }
+                default: {
+                    throw new IllegalArgumentException("Illegal class type " + type);
                 }
             }
-            throw new IllegalArgumentException("Illegal class type " + type);
         }
     }
 
@@ -109,6 +124,12 @@ public class CacheObject<T> {
                     outputStream.writeObject(object);
                     outputStream.flush();
                 }
+            } else if (object instanceof com.loohp.blockmodelrenderer.serialize.Serializable) {
+                dataOutputStream.writeByte(4);
+                byte[] name = object.getClass().getName().getBytes(StandardCharsets.UTF_8);
+                dataOutputStream.writeInt(name.length);
+                dataOutputStream.write(name);
+                ((com.loohp.blockmodelrenderer.serialize.Serializable) object).serialize(dataOutputStream);
             } else {
                 throw new IllegalArgumentException("Illegal object class: " + object.getClass());
             }

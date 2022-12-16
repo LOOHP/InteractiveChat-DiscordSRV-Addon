@@ -95,6 +95,9 @@ import github.scarsz.discordsrv.dependencies.jda.api.requests.restaction.Message
 import github.scarsz.discordsrv.objects.MessageFormat;
 import github.scarsz.discordsrv.util.MessageUtil;
 import github.scarsz.discordsrv.util.WebhookUtil;
+import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import mineverse.Aust1n46.chat.api.MineverseChatPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -135,8 +138,8 @@ import java.util.regex.Matcher;
 public class OutboundToDiscordEvents implements Listener {
 
     public static final Comparator<DiscordDisplayData> DISPLAY_DATA_COMPARATOR = Comparator.comparing(each -> each.getPosition());
-    public static final Map<Integer, DiscordDisplayData> DATA = Collections.synchronizedMap(new LinkedHashMap<>());
-    public static final Map<Integer, AttachmentData> RESEND_WITH_ATTACHMENT = Collections.synchronizedMap(new LinkedHashMap<>());
+    public static final Int2ObjectMap<DiscordDisplayData> DATA = Int2ObjectMaps.synchronize(new Int2ObjectLinkedOpenHashMap<>());
+    public static final Int2ObjectMap<AttachmentData> RESEND_WITH_ATTACHMENT = Int2ObjectMaps.synchronize(new Int2ObjectLinkedOpenHashMap<>());
     private static final IDProvider DATA_ID_PROVIDER = new IDProvider();
     private static final Map<UUID, Component> DEATH_MESSAGE = new ConcurrentHashMap<>();
 
@@ -424,7 +427,7 @@ public class OutboundToDiscordEvents implements Listener {
                         amount = 1;
                     }
 
-                    String replaceText = PlaceholderParser.parse(icSender, (amount == 1 ? ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemSingularReplaceText) : ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemReplaceText).replace("{Amount}", String.valueOf(amount))).replace("{Item}", itemStr));
+                    String replaceText = ComponentStringUtils.stripColorAndConvertMagic(PlaceholderParser.parse(icSender, (amount == 1 ? InteractiveChat.itemSingularReplaceText : InteractiveChat.itemReplaceText.replace("{Amount}", String.valueOf(amount))).replace("{Item}", itemStr)));
                     if (reserializer) {
                         replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
                     }
@@ -439,7 +442,7 @@ public class OutboundToDiscordEvents implements Listener {
                         int inventoryId = DATA_ID_PROVIDER.getNext();
                         int position = matcher.start();
 
-                        String title = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.itemTitle));
+                        String title = ComponentStringUtils.stripColorAndConvertMagic(PlaceholderParser.parse(icSender, InteractiveChat.itemTitle));
 
                         Inventory inv = DiscordContentUtils.getBlockInventory(item);
 
@@ -467,7 +470,7 @@ public class OutboundToDiscordEvents implements Listener {
             Matcher matcher = InteractiveChat.invPlaceholder.matcher(plain);
             if (matcher.find()) {
                 if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.invPlaceholder)).findFirst().get(), now)) {
-                    String replaceText = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.invReplaceText));
+                    String replaceText = ComponentStringUtils.stripColorAndConvertMagic(PlaceholderParser.parse(icSender, InteractiveChat.invReplaceText));
                     if (reserializer) {
                         replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
                     }
@@ -491,7 +494,7 @@ public class OutboundToDiscordEvents implements Listener {
                                 }
                             }
                         }
-                        String title = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.invTitle));
+                        String title = ComponentStringUtils.stripColorAndConvertMagic(PlaceholderParser.parse(icSender, InteractiveChat.invTitle));
 
                         GameMessageProcessPlayerInventoryEvent gameMessageProcessPlayerInventoryEvent = new GameMessageProcessPlayerInventoryEvent(icSender, title, component, false, inventoryId, inv);
                         Bukkit.getPluginManager().callEvent(gameMessageProcessPlayerInventoryEvent);
@@ -514,7 +517,7 @@ public class OutboundToDiscordEvents implements Listener {
             Matcher matcher = InteractiveChat.enderPlaceholder.matcher(plain);
             if (matcher.find()) {
                 if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.enderPlaceholder)).findFirst().get(), now)) {
-                    String replaceText = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.enderReplaceText));
+                    String replaceText = ComponentStringUtils.stripColorAndConvertMagic(PlaceholderParser.parse(icSender, InteractiveChat.enderReplaceText));
                     if (reserializer) {
                         replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
                     }
@@ -538,7 +541,7 @@ public class OutboundToDiscordEvents implements Listener {
                                 }
                             }
                         }
-                        String title = PlaceholderParser.parse(icSender, ComponentStringUtils.stripColorAndConvertMagic(InteractiveChat.enderTitle));
+                        String title = ComponentStringUtils.stripColorAndConvertMagic(PlaceholderParser.parse(icSender, InteractiveChat.enderTitle));
 
                         GameMessageProcessInventoryEvent gameMessageProcessInventoryEvent = new GameMessageProcessInventoryEvent(icSender, title, component, false, inventoryId, inv);
                         Bukkit.getPluginManager().callEvent(gameMessageProcessInventoryEvent);

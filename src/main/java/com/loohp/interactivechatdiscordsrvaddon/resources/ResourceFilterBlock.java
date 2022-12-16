@@ -29,11 +29,11 @@ import java.util.regex.Pattern;
 
 public class ResourceFilterBlock {
 
-    public static final Pattern MATCH_ALL = Pattern.compile(".*");
+    public static final String MATCH_ALL = ".*";
 
     public static ResourceFilterBlock fromJson(JSONObject json) {
-        Pattern namespace = (Pattern) json.getOrDefault("namespace", MATCH_ALL);
-        Pattern path = (Pattern) json.getOrDefault("path", MATCH_ALL);
+        Pattern namespace = Pattern.compile((String) json.getOrDefault("namespace", MATCH_ALL));
+        Pattern path = Pattern.compile((String) json.getOrDefault("path", MATCH_ALL));
         return new ResourceFilterBlock(namespace, path);
     }
 

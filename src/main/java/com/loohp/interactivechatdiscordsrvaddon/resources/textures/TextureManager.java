@@ -28,6 +28,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.AbstractManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
+import com.loohp.interactivechatdiscordsrvaddon.resources.TextureAtlases;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils;
 
 import java.awt.Color;
@@ -39,8 +40,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class TextureManager extends AbstractManager implements ITextureManager {
 
@@ -76,33 +80,96 @@ public class TextureManager extends AbstractManager implements ITextureManager {
         if (!root.exists() || !root.isDirectory()) {
             throw new IllegalArgumentException(root.getAbsolutePath() + " is not a directory.");
         }
+        TextureAtlases textureAtlases = null;
+        if (meta.length > 0 && meta[0] instanceof Map) {
+            textureAtlases = (TextureAtlases) meta[0];
+        }
         JSONParser parser = new JSONParser();
         Map<String, TextureResource> textures = new HashMap<>();
         Collection<ResourcePackFile> files = root.listFilesRecursively();
         for (ResourcePackFile file : files) {
             try {
-                String key = namespace + ":" + file.getRelativePathFrom(root);
+                String relativePath = file.getRelativePathFrom(root);
+                String key = namespace + ":" + relativePath;
                 String extension = "";
                 if (key.lastIndexOf(".") >= 0) {
                     extension = key.substring(key.lastIndexOf(".") + 1);
                     key = key.substring(0, key.lastIndexOf("."));
                 }
-                if (extension.equalsIgnoreCase("png")) {
-                    textures.put(key, new TextureResource(this, key, file, true));
-                } else if (extension.equalsIgnoreCase("mcmeta")) {
-                    InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
-                    JSONObject rootJson = (JSONObject) parser.parse(reader);
-                    reader.close();
-                    TextureMeta textureMeta = TextureMeta.fromJson(this, key + "." + extension, file, rootJson);
-                    textures.put(key + "." + extension, textureMeta);
-                } else {
-                    textures.put(key + "." + extension, new TextureResource(this, key, file));
+                TextureAtlases.TextureAtlasSource atlasSource = null;
+                if (textureAtlases == null || (atlasSource = checkAtlasInclusion(textureAtlases, namespace, relativePath)) != null) {
+                    Map<String, UnaryOperator<BufferedImage>> imageTransformFunctions = null;
+                    if (atlasSource != null) {
+                        TextureAtlases.TextureAtlasSourceType<?> sourceType = atlasSource.getType();
+                        if (sourceType.equals(TextureAtlases.TextureAtlasSourceType.DIRECTORY)) {
+                            String fileName = file.getName();
+                            fileName = fileName.substring(0, fileName.lastIndexOf("."));
+                            key = ((TextureAtlases.TextureAtlasDirectorySource) atlasSource).getPrefix() + fileName;
+                        } else if (sourceType.equals(TextureAtlases.TextureAtlasSourceType.UNSTITCH)) {
+                            imageTransformFunctions = ((TextureAtlases.TextureAtlasUnstitchSource) atlasSource).getRegions().stream().collect(Collectors.toMap(each -> each.getSpriteName(), each -> each.getImageTransformFunction(), (a, b) -> b));
+                        }
+                    }
+                    if (extension.equalsIgnoreCase("png")) {
+                        if (imageTransformFunctions == null) {
+                            textures.put(key, new TextureResource(this, key, file, true, null));
+                        } else {
+                            for (Map.Entry<String, UnaryOperator<BufferedImage>> entry : imageTransformFunctions.entrySet()) {
+                                String spriteName = entry.getKey();
+                                textures.put(spriteName, new TextureResource(this, spriteName, file, true, entry.getValue()));
+                            }
+                        }
+                    } else if (extension.equalsIgnoreCase("mcmeta")) {
+                        InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
+                        JSONObject rootJson = (JSONObject) parser.parse(reader);
+                        reader.close();
+                        TextureMeta textureMeta = TextureMeta.fromJson(this, key + "." + extension, file, rootJson);
+                        textures.put(key + "." + extension, textureMeta);
+                    } else {
+                        textures.put(key + "." + extension, new TextureResource(this, key, file));
+                    }
                 }
             } catch (Exception e) {
                 new ResourceLoadingException("Unable to load block model " + file.getAbsolutePath(), e).printStackTrace();
             }
         }
         this.textures.putAll(textures);
+    }
+
+    protected TextureAtlases.TextureAtlasSource checkAtlasInclusion(TextureAtlases textureAtlases, String namespace, String relativePath) {
+        for (List<TextureAtlases.TextureAtlasSource> textureAtlasesLists : textureAtlases.getTextureAtlases().values()) {
+            TextureAtlases.TextureAtlasSource result = null;
+            for (TextureAtlases.TextureAtlasSource source : textureAtlasesLists) {
+                if (!source.getType().equals(TextureAtlases.TextureAtlasSourceType.FILTER) && source.isIncluded(namespace, relativePath)) {
+                    result = source;
+                    break;
+                }
+            }
+            if (result == null) {
+                break;
+            }
+            for (TextureAtlases.TextureAtlasSource source : textureAtlasesLists) {
+                if (source.getType().equals(TextureAtlases.TextureAtlasSourceType.FILTER) && !source.isIncluded(namespace, relativePath)) {
+                    return null;
+                }
+            }
+            return result;
+        }
+        TextureAtlases.TextureAtlasSource result = null;
+        for (TextureAtlases.TextureAtlasSource source : TextureAtlases.DEFAULT_BLOCK_ATLASES) {
+            if (!source.getType().equals(TextureAtlases.TextureAtlasSourceType.FILTER) && source.isIncluded(namespace, relativePath)) {
+                result = source;
+                break;
+            }
+        }
+        if (result == null) {
+            return null;
+        }
+        for (TextureAtlases.TextureAtlasSource source : TextureAtlases.DEFAULT_BLOCK_ATLASES) {
+            if (source.getType().equals(TextureAtlases.TextureAtlasSourceType.FILTER) && !source.isIncluded(namespace, relativePath)) {
+                return null;
+            }
+        }
+        return null;
     }
 
     @Override

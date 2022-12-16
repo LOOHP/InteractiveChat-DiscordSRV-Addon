@@ -313,7 +313,7 @@ public class InboundToGameEvents implements Listener {
                         InteractiveChatDiscordSrvAddon.plugin.attachmentImageCounter.incrementAndGet();
                         try (InputStream stream = URLRequestUtils.getInputStream(url)) {
                             String type = HTTPRequestUtils.getContentType(url);
-                            if (!type.startsWith("image/")) {
+                            if (type == null || !type.startsWith("image/")) {
                                 continue;
                             }
                             GraphicsToPacketMapWrapper map;

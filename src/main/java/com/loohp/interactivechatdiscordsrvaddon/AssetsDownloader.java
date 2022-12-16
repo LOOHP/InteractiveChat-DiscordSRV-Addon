@@ -111,13 +111,13 @@ public class AssetsDownloader {
                 downloadManager.downloadResources((type, fileName, percentage) -> {
                     switch (type) {
                         case CLIENT_DOWNLOAD:
-                            if (!InteractiveChatDiscordSrvAddon.plugin.reducedAssetsDownloadInfo) {
+                            if (!InteractiveChatDiscordSrvAddon.plugin.reducedAssetsDownloadInfo && percentage == 0.0) {
                                 Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Downloading client jar");
                             }
                             break;
                         case EXTRACT:
                             if (!InteractiveChatDiscordSrvAddon.plugin.reducedAssetsDownloadInfo) {
-                                Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Extracting " + fileName);
+                                Bukkit.getConsoleSender().sendMessage(ChatColor.GRAY + "[ICDiscordSrvAddon] Extracting " + fileName + " (" + FORMAT.format(percentage) + "%)");
                             }
                             break;
                         case DOWNLOAD:
@@ -247,7 +247,7 @@ public class AssetsDownloader {
                 hash = downloadManager.getHash();
 
                 if (!hash.equals(oldHash) || !InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion().equals(oldVersion)) {
-                    downloadManager.downloadLibraries((result, jarName) -> {
+                    downloadManager.downloadLibraries((result, jarName, percentage) -> {
                         if (result) {
                             Bukkit.getConsoleSender().sendMessage("[ICDiscordSrvAddon] Downloaded library \"" + jarName + "\"");
                         } else {

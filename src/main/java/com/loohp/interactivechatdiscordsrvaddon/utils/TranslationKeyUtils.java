@@ -33,6 +33,7 @@ import org.bukkit.DyeColor;
 import org.bukkit.FireworkEffect;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta.Generation;
@@ -61,6 +62,8 @@ public class TranslationKeyUtils {
     private static Method nmsGetItemMethod;
     private static Class<?> nmsItemRecordClass;
     private static Field nmsItemRecordTranslationKeyField;
+    private static Class<?> nmsEntityTypesClass;
+    private static Method getEntityKeyMethod;
 
     static {
         if (InteractiveChat.version.isLegacy()) {
@@ -88,6 +91,9 @@ public class TranslationKeyUtils {
                 }, () -> {
                     return nmsItemRecordClass.getDeclaredField("a");
                 });
+
+                nmsEntityTypesClass = NMSUtils.getNMSClass("net.minecraft.server.%s.EntityTypes");
+                getEntityKeyMethod = nmsEntityTypesClass.getMethod("b", int.class);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -121,6 +127,48 @@ public class TranslationKeyUtils {
             });
         } catch (SecurityException | ReflectiveOperationException e) {
             e.printStackTrace();
+        }
+    }
+
+    public static String getSpawnerDescription1() {
+        return "block.minecraft.spawner.desc1";
+    }
+
+    public static String getSpawnerDescription2() {
+        return "block.minecraft.spawner.desc2";
+    }
+
+    @SuppressWarnings("deprecation")
+    public static String getEntityTypeName(EntityType type) {
+        if (InteractiveChat.version.isLegacy()) {
+            int typeId = type.getTypeId();
+            if (typeId < 0) {
+                return "";
+            }
+            try {
+                String str = getEntityKeyMethod.invoke(null, typeId).toString();
+                if (str == null) {
+                    return "";
+                } else {
+                    return "entity." + str + ".name";
+                }
+            } catch (NullPointerException ignore) {
+                //do nothing
+            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+            return "";
+        } else {
+            String path = "";
+            if (InteractiveChat.version.equals(MCVersion.V1_13) || InteractiveChat.version.equals(MCVersion.V1_13_1)) {
+                path = "entity.minecraft." + type.name().toLowerCase();
+                if (type.name().equalsIgnoreCase("PIG_ZOMBIE")) {
+                    path = "entity.minecraft.zombie_pigman";
+                }
+            } else {
+                path = "entity." + type.getKey().getNamespace() + "." + type.getKey().getKey();
+            }
+            return path;
         }
     }
 

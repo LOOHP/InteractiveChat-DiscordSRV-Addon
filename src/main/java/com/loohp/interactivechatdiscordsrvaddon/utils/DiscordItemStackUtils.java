@@ -60,8 +60,11 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Banner;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.CreatureSpawner;
 import org.bukkit.block.banner.Pattern;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
@@ -195,6 +198,24 @@ public class DiscordItemStackUtils {
         prints.add(ToolTipComponent.text(itemDisplayNameComponent));
 
         boolean hasMeta = item.hasItemMeta();
+
+        if (InteractiveChat.version.isNewerThan(MCVersion.V1_19) && icMaterial.isMaterial(XMaterial.SPAWNER) && hasMeta && item.getItemMeta() instanceof BlockStateMeta) {
+            BlockStateMeta meta = (BlockStateMeta) item.getItemMeta();
+            if (meta.hasBlockState()) {
+                BlockState blockState = meta.getBlockState();
+                if (blockState instanceof CreatureSpawner) {
+                    CreatureSpawner spawner = (CreatureSpawner) meta.getBlockState();
+                    EntityType entityType = spawner.getSpawnedType();
+                    if (entityType == null) {
+                        prints.add(ToolTipComponent.text(Component.empty()));
+                        prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getSpawnerDescription1()).color(NamedTextColor.GRAY)));
+                        prints.add(ToolTipComponent.text(Component.text(" ").append(Component.translatable(TranslationKeyUtils.getSpawnerDescription2()).color(NamedTextColor.BLUE))));
+                    } else {
+                        prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getEntityTypeName(entityType)).color(NamedTextColor.GRAY)));
+                    }
+                }
+            }
+        }
 
         if (icMaterial.isMaterial(XMaterial.GOAT_HORN)) {
             String instrument = NBTEditor.getString(item, "instrument");

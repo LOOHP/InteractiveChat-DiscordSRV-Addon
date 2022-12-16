@@ -22,11 +22,11 @@ package com.loohp.interactivechatdiscordsrvaddon.libs;
 
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.utils.HTTPRequestUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.TriConsumer;
 
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.BiConsumer;
 
 public class LibraryDownloadManager {
 
@@ -51,21 +51,24 @@ public class LibraryDownloadManager {
         return data.get("hash").toString();
     }
 
-    public synchronized void downloadLibraries(BiConsumer<Boolean, String> progressListener) {
+    public synchronized void downloadLibraries(TriConsumer<Boolean, String, Double> progressListener) {
         ensureData();
         try {
             JSONObject libs = (JSONObject) data.get("libs");
             Set<String> jarNames = new HashSet<>();
+            double total = libs.keySet().size();
+            double current = 0.0;
             for (Object key : libs.keySet()) {
                 String jarName = (String) key;
                 jarNames.add(jarName);
                 JSONObject details = (JSONObject) libs.get(jarName);
                 String url = (String) details.get("url");
                 File jarFile = new File(libsFolder, jarName);
+                current += 1.0;
                 if (HTTPRequestUtils.download(jarFile, url)) {
-                    progressListener.accept(true, jarName);
+                    progressListener.accept(true, jarName, (current / total) * 100);
                 } else {
-                    progressListener.accept(false, jarName);
+                    progressListener.accept(false, jarName, (current / total) * 100);
                 }
             }
             for (File jarFile : libsFolder.listFiles()) {

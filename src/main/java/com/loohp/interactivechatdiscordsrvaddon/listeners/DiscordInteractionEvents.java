@@ -38,6 +38,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DiscordInteractionEvents extends ListenerAdapter {
@@ -46,7 +47,11 @@ public class DiscordInteractionEvents extends ListenerAdapter {
 
     static {
         try {
-            INTERACTION_ID_PREFIX = "ICD_" + HashUtils.createSha1String(new ByteArrayInputStream(Metrics.getServerUUID().getBytes(StandardCharsets.UTF_8))) + "_";
+            String uuid = Metrics.getServerUUID();
+            if (uuid == null) {
+                uuid = UUID.randomUUID().toString();
+            }
+            INTERACTION_ID_PREFIX = "ICD_" + HashUtils.createSha1String(new ByteArrayInputStream(uuid.getBytes(StandardCharsets.UTF_8))) + "_";
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

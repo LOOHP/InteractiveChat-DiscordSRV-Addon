@@ -125,7 +125,7 @@ public class OptifineManager extends ModManager implements IOptifineManager {
                         reader.close();
                         assets.put(key, new ValuePairs<>(file, BlockModel.fromJson(this, key.substring(0, key.length() - (extension.isEmpty() ? 0 : extension.length() + 1)), rootJson)));
                     } else if (extension.equalsIgnoreCase("png")) {
-                        assets.put(key, new ValuePairs<>(file, new TextureResource(this, key, file, true)));
+                        assets.put(key, new ValuePairs<>(file, new TextureResource(this, key, file, true, null)));
                     } else if (extension.equalsIgnoreCase("mcmeta")) {
                         InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
                         JSONObject rootJson = (JSONObject) parser.parse(reader);

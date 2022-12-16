@@ -20,7 +20,6 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources;
 
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
@@ -105,9 +104,9 @@ public class ResourceManager implements AutoCloseable {
         }
     }
 
-    public ResourceManager(boolean flattenLegacy, boolean fontLegacy, Collection<ModManagerSupplier<?>> modManagerProviders, Collection<ResourceRegistrySupplier<?>> resourceManagerUtilsProviders) {
+    public ResourceManager(boolean flattenLegacy, boolean fontLegacy, Collection<ModManagerSupplier<?>> modManagerProviders, Collection<ResourceRegistrySupplier<?>> resourceManagerUtilsProviders, int defaultResourcePackVersion) {
         this(flattenLegacy, fontLegacy, modManagerProviders, resourceManagerUtilsProviders, (resourcePackFile, type) -> {
-            return new ResourceManager.DefaultResourcePackInfo(Component.text(resourcePackFile.getName()), ResourceRegistry.RESOURCE_PACK_VERSION, Component.text("The default look and feel of Minecraft (Modified by LOOHP)"));
+            return new ResourceManager.DefaultResourcePackInfo(Component.text(resourcePackFile.getName()), defaultResourcePackVersion, Component.text("The default look and feel of Minecraft (Modified by LOOHP)"));
         });
     }
 
@@ -231,17 +230,18 @@ public class ResourceManager implements AutoCloseable {
         }
 
         ResourcePackFile assetsFolder = resourcePack.getChild("assets");
+        Map<String, TextureAtlases> textureAtlases = loadAtlases(assetsFolder);
         try {
             filterResources(resourceFilterBlocks);
-            loadAssets(assetsFolder, languageMeta);
+            loadAssets(assetsFolder, languageMeta, textureAtlases);
         } catch (Exception e) {
             new ResourceLoadingException("Unable to load assets for " + resourcePackNameStr, e).printStackTrace();
-            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, false, "Unable to load assets", format, description, languageMeta, icon, resourceFilterBlocks);
+            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, false, "Unable to load assets", format, description, languageMeta, icon, resourceFilterBlocks, textureAtlases);
             resourcePackInfo.add(0, info);
             return info;
         }
 
-        ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, true, null, format, description, languageMeta, icon, resourceFilterBlocks);
+        ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, true, null, format, description, languageMeta, icon, resourceFilterBlocks, textureAtlases);
         resourcePackInfo.add(0, info);
         return info;
     }
@@ -269,7 +269,25 @@ public class ResourceManager implements AutoCloseable {
         }
     }
 
-    private void loadAssets(ResourcePackFile assetsFolder, Map<String, LanguageMeta> languageMeta) {
+    private Map<String, TextureAtlases> loadAtlases(ResourcePackFile assetsFolder) {
+        if (!assetsFolder.exists() || !assetsFolder.isDirectory()) {
+            throw new IllegalArgumentException(assetsFolder.getAbsolutePath() + " is not a directory.");
+        }
+        Collection<ResourcePackFile> folders = assetsFolder.listFilesAndFolders();
+        Map<String, TextureAtlases> atlasesByNamespace = new HashMap<>();
+        for (ResourcePackFile folder : folders) {
+            if (folder.isDirectory()) {
+                String namespace = folder.getName();
+                ResourcePackFile atlases = folder.getChild("atlases");
+                if (atlases.exists() && atlases.isDirectory()) {
+                    atlasesByNamespace.put(namespace, TextureAtlases.fromAtlasesFolder(atlases));
+                }
+            }
+        }
+        return Collections.unmodifiableMap(atlasesByNamespace);
+    }
+
+    private void loadAssets(ResourcePackFile assetsFolder, Map<String, LanguageMeta> languageMeta, Map<String, TextureAtlases> textureAtlases) {
         if (!assetsFolder.exists() || !assetsFolder.isDirectory()) {
             throw new IllegalArgumentException(assetsFolder.getAbsolutePath() + " is not a directory.");
         }
@@ -288,7 +306,11 @@ public class ResourceManager implements AutoCloseable {
                 String namespace = folder.getName();
                 ResourcePackFile textures = folder.getChild("textures");
                 if (textures.exists() && textures.isDirectory()) {
-                    ((AbstractManager) textureManager).loadDirectory(namespace, textures);
+                    if (ResourceRegistry.RESOURCE_PACK_VERSION <= 9) {
+                        ((AbstractManager) textureManager).loadDirectory(namespace, textures);
+                    } else {
+                        ((AbstractManager) textureManager).loadDirectory(namespace, textures, textureAtlases.getOrDefault(namespace, TextureAtlases.EMPTY_ATLAS));
+                    }
                 }
             }
         }

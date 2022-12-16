@@ -44,8 +44,9 @@ public class ResourcePackInfo {
     private Map<String, LanguageMeta> languageMeta;
     private BufferedImage icon;
     private List<ResourceFilterBlock> resourceFilterBlocks;
+    private Map<String, TextureAtlases> textureAtlases;
 
-    private ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, Component name, boolean status, boolean exist, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon, List<ResourceFilterBlock> resourceFilterBlocks) {
+    private ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, Component name, boolean status, boolean exist, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon, List<ResourceFilterBlock> resourceFilterBlocks, Map<String, TextureAtlases> textureAtlases) {
         this.manager = manager;
         this.file = file;
         this.type = type;
@@ -58,14 +59,15 @@ public class ResourcePackInfo {
         this.languageMeta = Collections.unmodifiableMap(languageMeta);
         this.icon = icon;
         this.resourceFilterBlocks = resourceFilterBlocks;
+        this.textureAtlases = Collections.unmodifiableMap(textureAtlases);
     }
 
-    public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, Component name, boolean status, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon, List<ResourceFilterBlock> resourceFilterBlocks) {
-        this(manager, file, type, name, status, true, rejectedReason, packFormat, description, languageMeta, icon, resourceFilterBlocks);
+    public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, Component name, boolean status, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon, List<ResourceFilterBlock> resourceFilterBlocks, Map<String, TextureAtlases> textureAtlases) {
+        this(manager, file, type, name, status, true, rejectedReason, packFormat, description, languageMeta, icon, resourceFilterBlocks, textureAtlases);
     }
 
     public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, Component name, String rejectedReason) {
-        this(manager, file, type, name, false, false, rejectedReason, -1, null, Collections.emptyMap(), null, Collections.emptyList());
+        this(manager, file, type, name, false, false, rejectedReason, -1, null, Collections.emptyMap(), null, Collections.emptyList(), Collections.emptyMap());
     }
 
     public ResourceManager getManager() {
@@ -132,4 +134,7 @@ public class ResourcePackInfo {
         return resourceFilterBlocks;
     }
 
+    public Map<String, TextureAtlases> getTextureAtlases() {
+        return textureAtlases;
+    }
 }

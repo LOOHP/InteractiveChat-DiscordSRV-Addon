@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
+import java.util.function.UnaryOperator;
 
 public class TextureResource {
 
@@ -41,29 +42,32 @@ public class TextureResource {
     private ResourcePackFile file;
     private boolean isTexture;
     private Reference<BufferedImage> texture;
+    private UnaryOperator<BufferedImage> imageTransformFunction;
 
     private Unsafe unsafe;
 
-    public TextureResource(ITextureManager manager, String resourceKey, ResourcePackFile file, boolean isTexture) {
+    public TextureResource(ITextureManager manager, String resourceKey, ResourcePackFile file, boolean isTexture, UnaryOperator<BufferedImage> imageTransformFunction) {
         this.manager = manager;
         this.resourceKey = resourceKey;
         this.file = file;
         this.isTexture = isTexture;
         this.texture = null;
+        this.imageTransformFunction = imageTransformFunction;
         this.unsafe = null;
     }
 
-    protected TextureResource(ITextureManager manager, String resourceKey, ResourcePackFile file, BufferedImage image) {
+    protected TextureResource(ITextureManager manager, String resourceKey, ResourcePackFile file, BufferedImage image, UnaryOperator<BufferedImage> imageTransformFunction) {
         this.manager = manager;
         this.resourceKey = resourceKey;
         this.file = file;
         this.isTexture = true;
         this.texture = new WeakReference<>(image);
+        this.imageTransformFunction = imageTransformFunction;
         this.unsafe = null;
     }
 
     public TextureResource(TextureManager manager, String resourceKey, ResourcePackFile file) {
-        this(manager, resourceKey, file, false);
+        this(manager, resourceKey, file, false, null);
     }
 
     public ITextureManager getManager() {
@@ -100,6 +104,9 @@ public class TextureResource {
 
     public BufferedImage getTexture(int w, int h) {
         BufferedImage image = loadImage();
+        if (imageTransformFunction != null) {
+            image = imageTransformFunction.apply(image);
+        }
         if (image.getWidth() != w || image.getHeight() != h) {
             image = ImageUtils.resizeImageAbs(image, w, h);
         } else {
@@ -109,7 +116,11 @@ public class TextureResource {
     }
 
     public BufferedImage getTexture() {
-        return ImageUtils.copyImage(loadImage());
+        BufferedImage image = loadImage();
+        if (imageTransformFunction != null) {
+            image = imageTransformFunction.apply(image);
+        }
+        return ImageUtils.copyImage(image);
     }
 
     public boolean hasFile() {
@@ -126,6 +137,14 @@ public class TextureResource {
 
     public boolean hasTextureMeta() {
         return getTextureMeta() != null;
+    }
+
+    public boolean hasImageTransformFunction() {
+        return imageTransformFunction != null;
+    }
+
+    public UnaryOperator<BufferedImage> getImageTransformFunction() {
+        return imageTransformFunction;
     }
 
     public TextureMeta getTextureMeta() {

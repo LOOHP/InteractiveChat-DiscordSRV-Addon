@@ -65,7 +65,7 @@ public class TextureMeta extends TextureResource {
     private TextureProperties properties;
 
     public TextureMeta(ITextureManager manager, String resourceKey, ResourcePackFile file, TextureAnimation animation, TextureProperties properties) {
-        super(manager, resourceKey, file, false);
+        super(manager, resourceKey, file, false, null);
         this.animation = animation;
         this.properties = properties;
     }

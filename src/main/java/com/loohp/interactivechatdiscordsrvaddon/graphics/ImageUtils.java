@@ -426,6 +426,17 @@ public class ImageUtils {
         return b;
     }
 
+    public static void copyRect(BufferedImage src, BufferedImage dst, int x, int y, int destX, int destY, int width, int height, boolean flipX, boolean flipY) {
+        for (int i = 0; i < height; ++i) {
+            for (int j = 0; j < width; ++j) {
+                int k = flipX ? width - 1 - j : j;
+                int l = flipY ? height - 1 - i : i;
+                int m = src.getRGB(x + j, y + i);
+                dst.setRGB(destX + k, destY + l, m);
+            }
+        }
+    }
+
     public static BufferedImage copyImage(BufferedImage source) {
         BufferedImage b = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = b.createGraphics();

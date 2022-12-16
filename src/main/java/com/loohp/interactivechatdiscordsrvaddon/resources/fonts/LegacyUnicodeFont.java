@@ -191,7 +191,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
                         underlineStrikethroughExpanded = true;
                         g = charImage.createGraphics();
                         g.setColor(awtColor);
-                        g.fillRect(0, (int) (fontSize / 2), w + pixelSize + 1, strikeSize);
+                        g.fillRect(0, Math.round((fontSize / 2) - ((float) strikeSize / 2)), w + pixelSize + 1, strikeSize);
                         g.dispose();
                         break;
                     case UNDERLINED:
@@ -199,7 +199,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
                         underlineStrikethroughExpanded = true;
                         g = charImage.createGraphics();
                         g.setColor(awtColor);
-                        g.fillRect(0, (int) (fontSize), w + pixelSize + 1, strikeSize);
+                        g.fillRect(0, Math.round(fontSize), w + pixelSize + 1, strikeSize);
                         g.dispose();
                         break;
                     default:

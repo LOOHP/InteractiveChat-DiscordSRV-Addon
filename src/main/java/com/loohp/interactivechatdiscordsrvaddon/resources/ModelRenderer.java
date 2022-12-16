@@ -104,6 +104,7 @@ public class ModelRenderer implements AutoCloseable {
     public static final String CACHE_KEY = "ModelRender";
     public static final String MODEL_NOT_FOUND = "notfound";
 
+    private static final BufferedImage[] EMPTY_IMAGE_ARRAY = new BufferedImage[0];
     private static final double[] OVERLAY_ADDITION_FACTORS = new double[6];
 
     private static final String PLAYER_MODEL_RESOURCELOCATION = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + "player_model";
@@ -570,8 +571,8 @@ public class ModelRenderer implements AutoCloseable {
                             }
                             int width = images[i].getWidth();
                             int height = images[i].getHeight();
-                            uv = uv.getScaled(1, (double) height / (double) width);
-                            uv = uv.getScaled((double) width / 16.0);
+                            double scale = (double) width / 16.0;
+                            uv = uv.getScaled(scale, ((double) height / (double) width) * scale);
                             int x1;
                             int y1;
                             int dX;
@@ -600,7 +601,7 @@ public class ModelRenderer implements AutoCloseable {
                             images[i] = tintIndexData.applyTint(images[i], faceData.getTintindex());
                             if (enchanted) {
                                 RawEnchantmentGlintData overlayResult = rawEnchantmentGlintProvider.apply(images[i]);
-                                overlayImages[i] = overlayResult.getOverlay().toArray(new BufferedImage[0]);
+                                overlayImages[i] = overlayResult.getOverlay().toArray(EMPTY_IMAGE_ARRAY);
                                 overlayBlendMode[i] = overlayResult.getBlending().stream().map(each -> BlendingUtils.convert(each)).toArray(BlendingModes[]::new);
                             }
                         }

@@ -71,7 +71,7 @@ public class CacheManager implements ICacheManager {
         }
         try {
             return CacheObject.deserialize(data);
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
@@ -100,7 +100,7 @@ public class CacheManager implements ICacheManager {
         }
         try {
             return CacheObject.deserialize(data);
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }

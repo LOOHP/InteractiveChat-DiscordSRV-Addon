@@ -21,6 +21,8 @@
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import com.loohp.interactivechat.utils.NMSUtils;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import org.bukkit.DyeColor;
 import org.bukkit.entity.FishHook;
 import org.bukkit.entity.Player;
@@ -31,13 +33,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
 public class FishUtils {
 
-    private static final Map<Integer, Integer> PREDEFINED_TROPICAL_FISH = new HashMap<>();
+    private static final Int2IntMap PREDEFINED_TROPICAL_FISH = new Int2IntOpenHashMap();
 
     private static Class<?> craftPlayerClass;
     private static Class<?> nmsEntityHumanClass;

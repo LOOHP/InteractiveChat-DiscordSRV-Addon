@@ -29,6 +29,8 @@ import it.unimi.dsi.fastutil.ints.Int2IntMaps;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.Optional;
@@ -75,20 +77,56 @@ public class SpaceFont extends MinecraftFont {
             int boldSize = (int) (fontSize / 16.0 * 2);
             int italicExtraWidth = 0;
             boolean italic = false;
+            Color awtColor = new Color(color.value());
+            BufferedImage charImage = null;
+            boolean underlineStrikethroughExpanded = false;
             for (TextDecoration decoration : decorations) {
                 switch (decoration) {
                     case BOLD:
                         w += boldSize - 1;
                         break;
                     case ITALIC:
+                        int extraWidth = (int) ((double) h * (4.0 / 14.0));
+                        charImage = new BufferedImage(w + extraWidth * 2, h, BufferedImage.TYPE_INT_ARGB);
                         italicExtraWidth = (int) Math.round(-ITALIC_SHEAR_X * h);
                         italic = true;
+                        break;
+                    case STRIKETHROUGH:
+                        if (charImage == null) {
+                            charImage = new BufferedImage(w + (underlineStrikethroughExpanded ? 0 : pixelSize), h, BufferedImage.TYPE_INT_ARGB);
+                        } else {
+                            charImage = ImageUtils.expandCenterAligned(charImage, 0, 0, 0, underlineStrikethroughExpanded ? 0 : pixelSize);
+                        }
+                        Graphics2D g = charImage.createGraphics();
+                        g.setColor(awtColor);
+                        g.fillRect(0, Math.round((fontSize / 2) - ((float) strikeSize / 2)), w + pixelSize, strikeSize);
+                        g.dispose();
+                        break;
+                    case UNDERLINED:
+                        if (charImage == null) {
+                            charImage = new BufferedImage(w + (underlineStrikethroughExpanded ? 0 : pixelSize), h + (strikeSize * 2), BufferedImage.TYPE_INT_ARGB);
+                        } else {
+                            charImage = ImageUtils.expandCenterAligned(charImage, 0, strikeSize * 2, 0, underlineStrikethroughExpanded ? 0 : pixelSize);
+                        }
+                        g = charImage.createGraphics();
+                        g.setColor(awtColor);
+                        g.fillRect(0, Math.round(fontSize), w + pixelSize, strikeSize);
+                        g.dispose();
                         break;
                     default:
                         break;
                 }
             }
             int extraWidth = italic ? 0 : lastItalicExtraWidth;
+            if (charImage != null) {
+                Graphics2D g = image.createGraphics();
+                if (sign > 0) {
+                    g.drawImage(charImage, x + extraWidth, y, null);
+                } else {
+                    g.drawImage(charImage, x, y, -w, h, null);
+                }
+                g.dispose();
+            }
             return new FontRenderResult(image, w * sign + extraWidth, h, pixelSize, italicExtraWidth);
         } else {
             return new FontRenderResult(image, 0, 0, 0, lastItalicExtraWidth);

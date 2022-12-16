@@ -142,6 +142,7 @@ public class ImageGeneration {
     public static final Color BUNDLE_FULLNESS_BAR_COLOR = new Color(6711039);
     public static final TextColor INVENTORY_DEFAULT_FONT_COLOR = TextColor.color(4210752);
     public static final int BOOK_LINE_LIMIT = 230;
+    public static final int BOOK_MAX_LINES = 14;
     public static final Color TOOLTIP_BACKGROUND_COLOR = new Color(-267386864, true);
     public static final Color TOOLTIP_OUTLINE_TOP_COLOR = new Color(1347420415, true);
     public static final Color TOOLTIP_OUTLINE_BOTTOM_COLOR = new Color(1344798847, true);
@@ -526,9 +527,9 @@ public class ImageGeneration {
 
         if (skin == null) {
             if (slim) {
-                skin = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "alex").getTexture();
+                skin = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_SLIM_SKIN_LOCATION).getTexture();
             } else {
-                skin = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "steve").getTexture();
+                skin = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_WIDE_SKIN_LOCATION).getTexture();
             }
         }
 
@@ -1181,7 +1182,7 @@ public class ImageGeneration {
                         }
                     }
                 } catch (Exception e) {
-                    skin = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "steve").getTexture(64, 64);
+                    skin = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_WIDE_SKIN_LOCATION).getTexture(64, 64);
                 }
                 BufferedImage avatar = ImageUtils.copyAndGetSubImage(skin, 8, 8, 8, 8);
                 BufferedImage avatarOverlay = ImageUtils.copyAndGetSubImage(skin, 40, 8, 8, 8);
@@ -1528,7 +1529,7 @@ public class ImageGeneration {
                 }));
 
                 int y = 58;
-                for (Component each : lines) {
+                for (Component each : lines.subList(0, Math.min(lines.size(), BOOK_MAX_LINES))) {
                     each = each.colorIfAbsent(NamedTextColor.BLACK);
                     ImageUtils.printComponent(resourceManager.get(), page, each, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), 34, y, 16, 0);
                     y += 18;

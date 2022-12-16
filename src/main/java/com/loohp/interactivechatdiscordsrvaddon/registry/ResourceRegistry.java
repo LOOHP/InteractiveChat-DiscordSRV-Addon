@@ -32,7 +32,7 @@ public class ResourceRegistry {
             itemTextureLocation = com.loohp.interactivechat.InteractiveChat.version.isLegacy() ? "minecraft:items/" : "minecraft:item/";
             blockTextureLocation = com.loohp.interactivechat.InteractiveChat.version.isLegacy() ? "minecraft:blocks/" : "minecraft:block/";
         } catch (ClassNotFoundException | NoClassDefFoundError e) {
-            resourcePackVersion = 9;
+            resourcePackVersion = 12;
             itemTextureLocation = "minecraft:item/";
             blockTextureLocation = "minecraft:block/";
         }
@@ -97,6 +97,9 @@ public class ResourceRegistry {
 
     public static final String GRASS_COLORMAP_LOCATION = COLORMAP_TEXTURE_LOCATION + "grass";
     public static final String FOLIAGE_COLORMAP_LOCATION = COLORMAP_TEXTURE_LOCATION + "foliage";
+
+    public static final String DEFAULT_WIDE_SKIN_LOCATION = ENTITY_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION < 12 ? "steve" : "player/wide/steve");
+    public static final String DEFAULT_SLIM_SKIN_LOCATION = ENTITY_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION < 12 ? "alex" : "player/slim/alex");
 
     public static final double ENCHANTMENT_GLINT_FACTOR = 190.0 / 255.0;
 

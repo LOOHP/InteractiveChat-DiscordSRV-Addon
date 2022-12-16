@@ -22,6 +22,9 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.ints.IntSets;
 
 import java.awt.image.BufferedImage;
 import java.util.Collections;
@@ -82,6 +85,7 @@ public class TintUtils {
         SPAWN_EGG_TINT_DATA.put("BEE_SPAWN_EGG", new SpawnEggTintData(15582019, 4400155));
         SPAWN_EGG_TINT_DATA.put("BLAZE_SPAWN_EGG", new SpawnEggTintData(16167425, 16775294));
         SPAWN_EGG_TINT_DATA.put("CAT_SPAWN_EGG", new SpawnEggTintData(15714446, 9794134));
+        SPAWN_EGG_TINT_DATA.put("CAMEL_SPAWN_EGG", new SpawnEggTintData(16565097, 13341495));
         SPAWN_EGG_TINT_DATA.put("CAVE_SPIDER_SPAWN_EGG", new SpawnEggTintData(803406, 11013646));
         SPAWN_EGG_TINT_DATA.put("CHICKEN_SPAWN_EGG", new SpawnEggTintData(10592673, 16711680));
         SPAWN_EGG_TINT_DATA.put("COD_SPAWN_EGG", new SpawnEggTintData(12691306, 15058059));
@@ -91,6 +95,7 @@ public class TintUtils {
         SPAWN_EGG_TINT_DATA.put("DONKEY_SPAWN_EGG", new SpawnEggTintData(5457209, 8811878));
         SPAWN_EGG_TINT_DATA.put("DROWNED_SPAWN_EGG", new SpawnEggTintData(9433559, 7969893));
         SPAWN_EGG_TINT_DATA.put("ELDER_GUARDIAN_SPAWN_EGG", new SpawnEggTintData(13552826, 7632531));
+        SPAWN_EGG_TINT_DATA.put("ENDER_DRAGON_SPAWN_EGG", new SpawnEggTintData(1842204, 14711290));
         SPAWN_EGG_TINT_DATA.put("ENDERMAN_SPAWN_EGG", new SpawnEggTintData(1447446, 0));
         SPAWN_EGG_TINT_DATA.put("ENDERMITE_SPAWN_EGG", new SpawnEggTintData(1447446, 7237230));
         SPAWN_EGG_TINT_DATA.put("EVOKER_SPAWN_EGG", new SpawnEggTintData(9804699, 1973274));
@@ -103,6 +108,7 @@ public class TintUtils {
         SPAWN_EGG_TINT_DATA.put("HOGLIN_SPAWN_EGG", new SpawnEggTintData(13004373, 6251620));
         SPAWN_EGG_TINT_DATA.put("HORSE_SPAWN_EGG", new SpawnEggTintData(12623485, 15656192));
         SPAWN_EGG_TINT_DATA.put("HUSK_SPAWN_EGG", new SpawnEggTintData(7958625, 15125652));
+        SPAWN_EGG_TINT_DATA.put("IRON_GOLEM_SPAWN_EGG", new SpawnEggTintData(14405058, 7643954));
         SPAWN_EGG_TINT_DATA.put("LLAMA_SPAWN_EGG", new SpawnEggTintData(12623485, 10051392));
         SPAWN_EGG_TINT_DATA.put("MAGMA_CUBE_SPAWN_EGG", new SpawnEggTintData(3407872, 16579584));
         SPAWN_EGG_TINT_DATA.put("MOOSHROOM_SPAWN_EGG", new SpawnEggTintData(10489616, 12040119));
@@ -115,7 +121,7 @@ public class TintUtils {
         SPAWN_EGG_TINT_DATA.put("PIGLIN_SPAWN_EGG", new SpawnEggTintData(10051392, 16380836));
         SPAWN_EGG_TINT_DATA.put("PIGLIN_BRUTE_SPAWN_EGG", new SpawnEggTintData(5843472, 16380836));
         SPAWN_EGG_TINT_DATA.put("PILLAGER_SPAWN_EGG", new SpawnEggTintData(5451574, 9804699));
-        SPAWN_EGG_TINT_DATA.put("POLAR_BEAR_SPAWN_EGG", new SpawnEggTintData(15921906, 9803152));
+        SPAWN_EGG_TINT_DATA.put("POLAR_BEAR_SPAWN_EGG", new SpawnEggTintData(15658718, 14014157));
         SPAWN_EGG_TINT_DATA.put("PUFFERFISH_SPAWN_EGG", new SpawnEggTintData(16167425, 3654642));
         SPAWN_EGG_TINT_DATA.put("RABBIT_SPAWN_EGG", new SpawnEggTintData(10051392, 7555121));
         SPAWN_EGG_TINT_DATA.put("RAVAGER_SPAWN_EGG", new SpawnEggTintData(7697520, 5984329));
@@ -126,6 +132,7 @@ public class TintUtils {
         SPAWN_EGG_TINT_DATA.put("SKELETON_SPAWN_EGG", new SpawnEggTintData(12698049, 4802889));
         SPAWN_EGG_TINT_DATA.put("SKELETON_HORSE_SPAWN_EGG", new SpawnEggTintData(6842447, 15066584));
         SPAWN_EGG_TINT_DATA.put("SLIME_SPAWN_EGG", new SpawnEggTintData(5349438, 8306542));
+        SPAWN_EGG_TINT_DATA.put("SNOW_GOLEM_SPAWN_EGG", new SpawnEggTintData(14283506, 8496292));
         SPAWN_EGG_TINT_DATA.put("SPIDER_SPAWN_EGG", new SpawnEggTintData(3419431, 11013646));
         SPAWN_EGG_TINT_DATA.put("SQUID_SPAWN_EGG", new SpawnEggTintData(2243405, 7375001));
         SPAWN_EGG_TINT_DATA.put("STRAY_SPAWN_EGG", new SpawnEggTintData(6387319, 14543594));
@@ -140,6 +147,7 @@ public class TintUtils {
         SPAWN_EGG_TINT_DATA.put("WANDERING_TRADER_SPAWN_EGG", new SpawnEggTintData(4547222, 15377456));
         SPAWN_EGG_TINT_DATA.put("WARDEN_SPAWN_EGG", new SpawnEggTintData(1001033, 3790560));
         SPAWN_EGG_TINT_DATA.put("WITCH_SPAWN_EGG", new SpawnEggTintData(3407872, 5349438));
+        SPAWN_EGG_TINT_DATA.put("WITHER_SPAWN_EGG", new SpawnEggTintData(1315860, 5075616));
         SPAWN_EGG_TINT_DATA.put("WITHER_SKELETON_SPAWN_EGG", new SpawnEggTintData(1315860, 4672845));
         SPAWN_EGG_TINT_DATA.put("WOLF_SPAWN_EGG", new SpawnEggTintData(14144467, 13545366));
         SPAWN_EGG_TINT_DATA.put("ZOGLIN_SPAWN_EGG", new SpawnEggTintData(13004373, 15132390));
@@ -195,9 +203,13 @@ public class TintUtils {
         public static final TintIndexData EMPTY_INSTANCE = new TintIndexData(Collections.emptyList());
 
         private List<IntSupplier> data;
+        private IntSet availableTintIndex;
 
         public TintIndexData(List<IntSupplier> data) {
             this.data = data;
+            IntSet availableTintIndex = new IntArraySet();
+            IntStream.range(0, data.size()).filter(i -> data.get(i) != null).forEach(i -> availableTintIndex.add(i));
+            this.availableTintIndex = IntSets.unmodifiable(availableTintIndex);
         }
 
         public BufferedImage applyTint(BufferedImage image, int tintIndex) {
@@ -222,8 +234,8 @@ public class TintUtils {
             return 0xFFFFFF;
         }
 
-        public int[] getAvailableTintIndexes() {
-            return IntStream.range(0, data.size()).filter(i -> data.get(i) != null).toArray();
+        public IntSet getAvailableTintIndexes() {
+            return availableTintIndex;
         }
 
     }

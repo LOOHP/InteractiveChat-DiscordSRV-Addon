@@ -32,7 +32,7 @@ public class GeneratedTextureResource extends TextureResource {
     private BufferedImage image;
 
     public GeneratedTextureResource(ResourceManager manager, String resourceKey, BufferedImage image) {
-        super(new GeneratedTextureManager(manager), resourceKey, null, image);
+        super(new GeneratedTextureManager(manager), resourceKey, null, image, null);
         this.image = image;
     }
 
@@ -41,7 +41,7 @@ public class GeneratedTextureResource extends TextureResource {
     }
 
     public GeneratedTextureResource(ResourceManager manager, String resourceKey, ResourcePackFile file) {
-        super(new GeneratedTextureManager(manager), resourceKey, file, false);
+        super(new GeneratedTextureManager(manager), resourceKey, file, false, null);
     }
 
     public GeneratedTextureResource(ResourceManager manager, ResourcePackFile file) {

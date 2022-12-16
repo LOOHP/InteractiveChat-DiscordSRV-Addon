@@ -103,7 +103,7 @@ public class ChimeManager extends ModManager implements IChimeManager {
                     ChimeBlockModel model = CHIME_MODEL_PARSING_FUNCTION.apply(this, key, rootJson);
                     models.put(key, model);
                 } else if (name.endsWith(".png")) {
-                    textures.put(key, new TextureResource(this, key, file, true));
+                    textures.put(key, new TextureResource(this, key, file, true, null));
                 }
             } catch (Exception e) {
                 new ResourceLoadingException("Unable to load block model " + file.getAbsolutePath(), e).printStackTrace();

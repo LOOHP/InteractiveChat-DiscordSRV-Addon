@@ -27,6 +27,7 @@ import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.updater.Version;
 import com.loohp.interactivechat.utils.FileUtils;
 import com.loohp.interactivechat.utils.HTTPRequestUtils;
+import com.loohp.interactivechatdiscordsrvaddon.libs.LibraryDownloadManager;
 import com.loohp.interactivechatdiscordsrvaddon.registry.InteractiveChatRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceDownloadManager;
 
@@ -203,6 +204,8 @@ public class CMLMain {
     protected static void downloadAssets() throws IOException {
         File defaultAssetsFolder = new File("InteractiveChatDiscordSrvAddon/built-in", "Default");
         defaultAssetsFolder.mkdirs();
+        File libsFolder = new File("InteractiveChatDiscordSrvAddon", "libs");
+        libsFolder.mkdirs();
 
         System.out.println("Available Minecraft Versions:");
         for (String version : ResourceDownloadManager.getMinecraftVersions()) {
@@ -221,13 +224,16 @@ public class CMLMain {
         }
 
         ResourceDownloadManager downloadManager = new ResourceDownloadManager(input, defaultAssetsFolder);
+        LibraryDownloadManager libraryDownloadManager = new LibraryDownloadManager(libsFolder);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
         new Thread(() -> {
             downloadManager.downloadResources((type, fileName, percentage) -> {
                 switch (type) {
                     case CLIENT_DOWNLOAD:
-                        System.out.println("Downloading client jar");
+                        if (percentage == 0.0) {
+                            System.out.println("Downloading client jar");
+                        }
                         break;
                     case EXTRACT:
                         System.out.println("Extracting " + fileName);
@@ -238,6 +244,11 @@ public class CMLMain {
                     case DONE:
                         System.out.println("Done!");
                         break;
+                }
+            });
+            libraryDownloadManager.downloadLibraries((downloadResult, jarName, percentage) -> {
+                if (downloadResult) {
+                    System.out.println("Downloaded library \"" + jarName + "\"");
                 }
             });
             future.complete(null);

@@ -21,6 +21,8 @@
 package com.loohp.interactivechatdiscordsrvaddon.main;
 
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
+import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
+import com.loohp.interactivechat.libs.org.json.simple.parser.ParseException;
 import com.loohp.interactivechat.libs.org.simpleyaml.configuration.ConfigurationSection;
 import com.loohp.interactivechat.libs.org.simpleyaml.configuration.file.YamlFile;
 import com.loohp.interactivechat.registry.Registry;
@@ -53,6 +55,7 @@ import java.awt.GridLayout;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -60,6 +63,7 @@ import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
 import java.util.Enumeration;
@@ -134,7 +138,7 @@ public class GUIMain {
                         break;
                     case 3:
                         downloadAssets(title, resizedIcon, icon);
-                        break;
+                        break main;
                     case 4:
                         blockModelRenderer(title, resizedIcon, icon);
                         break main;
@@ -273,11 +277,6 @@ public class GUIMain {
     }
 
     protected static void downloadAssets(String title, BufferedImage image, Icon icon) {
-        File defaultAssetsFolder = new File("InteractiveChatDiscordSrvAddon/built-in", "Default");
-        defaultAssetsFolder.mkdirs();
-        File libsFolder = new File("InteractiveChatDiscordSrvAddon", "libs");
-        libsFolder.mkdirs();
-
         JPanel panel = new JPanel();
         panel.add(GUIMain.createLabel("Select Minecraft Version: ", 13));
         JComboBox<String> options = new JComboBox<>();
@@ -289,6 +288,17 @@ public class GUIMain {
         if (result < 0) {
             return;
         }
+
+        File defaultAssetsFolder = new File("InteractiveChatDiscordSrvAddon/built-in", "Default");
+        if (defaultAssetsFolder.exists()) {
+            FileUtils.removeFolderRecursively(defaultAssetsFolder);
+        }
+        defaultAssetsFolder.mkdirs();
+        File libsFolder = new File("InteractiveChatDiscordSrvAddon", "libs");
+        if (libsFolder.exists()) {
+            FileUtils.removeFolderRecursively(libsFolder);
+        }
+        libsFolder.mkdirs();
 
         ResourceDownloadManager resourceDownloadManager = new ResourceDownloadManager((String) options.getSelectedItem(), defaultAssetsFolder);
         LibraryDownloadManager libraryDownloadManager = new LibraryDownloadManager(libsFolder);
@@ -318,25 +328,28 @@ public class GUIMain {
             resourceDownloadManager.downloadResources((type, fileName, percentage) -> {
                 switch (type) {
                     case CLIENT_DOWNLOAD:
-                        label.setText("<html>Downloading Assets:<br>Downloading client jar<html/>");
+                        label.setText("<html>Downloading Assets: (1 of 4)<br>Downloading client jar<html/>");
+                        progressBar.setValue((int) (percentage * 100));
                         break;
                     case EXTRACT:
-                        label.setText("<html>Downloading Assets:<br>Extracting " + fileName + "<html/>");
+                        label.setText("<html>Downloading Assets: (2 of 4)<br>Extracting " + fileName + "<html/>");
+                        progressBar.setValue((int) (percentage * 100));
                         break;
                     case DOWNLOAD:
-                        label.setText("<html>Downloading Assets:<br>Downloading " + fileName + "<html/>");
-                        progressBar.setValue(Math.min(9999, (int) (percentage * 100)));
+                        label.setText("<html>Downloading Assets: (3 of 4)<br>Downloading " + fileName + "<html/>");
+                        progressBar.setValue((int) (percentage * 100));
                         break;
                     case DONE:
-                        label.setText("<html>Done!<html/>");
                         break;
                 }
             });
-            libraryDownloadManager.downloadLibraries((downloadResult, jarName) -> {
+            libraryDownloadManager.downloadLibraries((downloadResult, jarName, percentage) -> {
                 if (downloadResult) {
-                    label.setText("<html>Downloaded library \"" + jarName + "\"<html/>");
+                    label.setText("<html>Downloading libraries: (4 of 4)<br>Downloaded library \"" + jarName + "\"<html/>");
                 }
+                progressBar.setValue((int) (percentage * 100));
             });
+            label.setText("<html>Done!<html/>");
             future.complete(null);
         }).start();
         future.join();
@@ -374,6 +387,33 @@ public class GUIMain {
             e.printStackTrace();
             return false;
         }
+    }
+
+    protected static int getDefaultPackVersion(int fallback) throws IOException, ParseException {
+        int result = -1;
+        File defaultPack = new File("InteractiveChatDiscordSrvAddon/built-in", "Default");
+        File defaultPackMeta = new File(defaultPack, "pack.mcmeta");
+        try (BufferedReader reader = Files.newBufferedReader(defaultPackMeta.toPath(), StandardCharsets.UTF_8)) {
+            JSONObject json = (JSONObject) new JSONParser().parse(reader);
+            try {
+                result = ((Number) ((JSONObject) json.get("pack")).get("pack_format")).intValue();
+            } catch (Exception ignore) {
+            }
+        }
+        if (result < 0) {
+            File versionData = new File(defaultPack, "version.json");
+            if (versionData.exists()) {
+                try (BufferedReader reader = Files.newBufferedReader(versionData.toPath(), StandardCharsets.UTF_8)) {
+                    JSONObject json = (JSONObject) new JSONParser().parse(reader);
+                    try {
+                        result = ((Number) ((JSONObject) json.get("pack_version")).get("resource")).intValue();
+                    } catch (Exception ignore) {
+                    }
+                }
+            }
+        }
+        System.out.println(result);
+        return result < 0 ? fallback : result;
     }
 
 }

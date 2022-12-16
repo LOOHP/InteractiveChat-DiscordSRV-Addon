@@ -40,6 +40,10 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.zip.ZipEntry;
 
@@ -103,9 +107,11 @@ public class ResourceDownloadManager {
             try {
                 String from = (String) obj;
                 String target = renameEntries.get(from).toString();
-                File fromFile = new File(packFolder + from);
-                File targetFile = new File(packFolder + target);
-                Files.move(fromFile.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                File fromFile = new File(packFolder, from);
+                File targetFile = new File(packFolder, target);
+                if (fromFile.exists()) {
+                    Files.move(fromFile.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -119,16 +125,30 @@ public class ResourceDownloadManager {
         String clientUrl = client.get("url").toString();
 
         progressListener.accept(TaskType.CLIENT_DOWNLOAD, "", 0.0);
-        try (ZipArchiveInputStream zip = new ZipArchiveInputStream(new ByteArrayInputStream(HTTPRequestUtils.download(clientUrl)), StandardCharsets.UTF_8.toString(), false, true, true)) {
-            while (true) {
-                ZipEntry entry = zip.getNextZipEntry();
-                if (entry == null) {
-                    break;
+        double totalSize = HTTPRequestUtils.getContentSize(clientUrl);
+        AtomicLong downloadedCount = new AtomicLong(0);
+        AtomicBoolean hasFinished = new AtomicBoolean(false);
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (hasFinished.get()) {
+                    this.cancel();
+                    return;
                 }
+                progressListener.accept(TaskType.CLIENT_DOWNLOAD, "", ((double) downloadedCount.get() / totalSize) * 100);
+            }
+        }, 0, 200);
+        byte[] clientBytes = HTTPRequestUtils.download(clientUrl, downloadedCount);
+        hasFinished.set(true);
+        progressListener.accept(TaskType.CLIENT_DOWNLOAD, "", 1.0);
+
+        try (ZipArchiveInputStream zip = new ZipArchiveInputStream(new ByteArrayInputStream(clientBytes), StandardCharsets.UTF_8.toString(), false, true, true)) {
+            ZipEntry entry;
+            while ((entry = zip.getNextZipEntry()) != null) {
                 String name = entry.getName();
-                if ((name.startsWith("assets") || name.equals("pack.png")) && !entry.isDirectory()) {
+                if ((name.startsWith("assets") || name.equals("pack.png") || name.equals("version.json")) && !entry.isDirectory()) {
                     String fileName = getEntryName(name);
-                    progressListener.accept(TaskType.EXTRACT, name, 0.0);
+                    progressListener.accept(TaskType.EXTRACT, name, (zip.getBytesRead() / totalSize) * 100);
 
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     byte[] byteChunk = new byte[4096];
