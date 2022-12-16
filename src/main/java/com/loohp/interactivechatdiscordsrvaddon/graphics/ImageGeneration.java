@@ -1134,16 +1134,17 @@ public class ImageGeneration {
         return output;
     }
 
-    public static BufferedImage getTabListImage(List<Component> header, List<Component> footer, List<ValueTrios<UUID, Component, Integer>> players, boolean showAvatar, boolean showPing) {
+    public static BufferedImage getTabListImage(List<Component> header, List<Component> footer, List<ValueTrios<OfflineICPlayer, Component, Integer>> players, boolean showAvatar, boolean showPing) {
         return getTabListImage(header, footer, players, showAvatar, showPing, TABLIST_PLAYER_DISPLAY_LIMIT);
     }
 
-    public static BufferedImage getTabListImage(List<Component> header, List<Component> footer, List<ValueTrios<UUID, Component, Integer>> players, boolean showAvatar, boolean showPing, int maxPlayerDisplayed) {
+    public static BufferedImage getTabListImage(List<Component> header, List<Component> footer, List<ValueTrios<OfflineICPlayer, Component, Integer>> players, boolean showAvatar, boolean showPing, int maxPlayerDisplayed) {
         players = players.subList(0, Math.min(players.size(), maxPlayerDisplayed));
-        List<ValuePairs<BufferedImage, Integer>> playerImages = new ArrayList<>(players.size());
+        List<ValueTrios<BufferedImage, Integer, Color>> playerImages = new ArrayList<>(players.size());
         int masterOffsetX = 0;
-        for (ValueTrios<UUID, Component, Integer> trio : players) {
-            UUID uuid = trio.getFirst();
+        for (ValueTrios<OfflineICPlayer, Component, Integer> trio : players) {
+            OfflineICPlayer player = trio.getFirst();
+            UUID uuid = player.getUniqueId();
             Component name = trio.getSecond();
             int ping = trio.getThird();
             BufferedImage image = new BufferedImage(2048, TABLIST_INTERNAL_HEIGHT, BufferedImage.TYPE_INT_ARGB);
@@ -1210,7 +1211,15 @@ public class ImageGeneration {
             if (lastX > masterOffsetX) {
                 masterOffsetX = lastX;
             }
-            playerImages.add(new ValuePairs<>(image, ping));
+            Color color = null;
+            Object hex = player.getProperties().get("tab_background_color");
+            if (hex instanceof String) {
+                try {
+                    color = Color.decode((String) hex);
+                } catch (NumberFormatException ignore) {
+                }
+            }
+            playerImages.add(new ValueTrios<>(image, ping, color));
         }
         List<BufferedImage> playerRows = new ArrayList<>(playerImages.size());
         if (showPing) {
@@ -1218,10 +1227,10 @@ public class ImageGeneration {
         } else {
             masterOffsetX += 2;
         }
-        for (ValuePairs<BufferedImage, Integer> pair : playerImages) {
-            BufferedImage image = pair.getFirst();
+        for (ValueTrios<BufferedImage, Integer, Color> trio : playerImages) {
+            BufferedImage image = trio.getFirst();
             if (showPing) {
-                BufferedImage ping = getPingIcon(pair.getSecond(), false);
+                BufferedImage ping = getPingIcon(trio.getSecond(), false);
                 Graphics2D g = image.createGraphics();
                 g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
                 g.drawImage(ImageUtils.resizeImageAbs(ping, 20, 14), masterOffsetX - 22, (TABLIST_INTERNAL_HEIGHT - 18) / 2 + 2, null);
@@ -1230,7 +1239,11 @@ public class ImageGeneration {
             BufferedImage cropped = new BufferedImage(masterOffsetX, TABLIST_INTERNAL_HEIGHT, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = cropped.createGraphics();
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-            g.setColor(TABLIST_PLAYER_BACKGROUND);
+            if (trio.getThird() == null) {
+                g.setColor(TABLIST_PLAYER_BACKGROUND);
+            } else {
+                g.setColor(trio.getThird());
+            }
             g.fillRect(0, (TABLIST_INTERNAL_HEIGHT - 18) / 2, cropped.getWidth(), 16);
             g.drawImage(image, 0, 0, null);
             g.dispose();

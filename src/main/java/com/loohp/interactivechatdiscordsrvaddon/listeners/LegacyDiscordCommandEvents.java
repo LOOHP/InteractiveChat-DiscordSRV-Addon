@@ -109,7 +109,7 @@ public class LegacyDiscordCommandEvents {
             } else {
                 int errorCode = -2;
                 try {
-                    List<ValueTrios<UUID, Component, Integer>> player = new ArrayList<>();
+                    List<ValueTrios<OfflineICPlayer, Component, Integer>> player = new ArrayList<>();
                     Map<UUID, ValuePairs<List<String>, String>> playerInfo = new HashMap<>();
                     for (Map.Entry<OfflinePlayer, Integer> entry : players.entrySet()) {
                         OfflinePlayer bukkitOfflinePlayer = entry.getKey();
@@ -123,7 +123,7 @@ public class LegacyDiscordCommandEvents {
                         } else {
                             nameComponent = LegacyComponentSerializer.legacySection().deserialize(name);
                         }
-                        player.add(new ValueTrios<>(offlinePlayer.getUniqueId(), nameComponent, entry.getValue()));
+                        player.add(new ValueTrios<>(offlinePlayer, nameComponent, entry.getValue()));
                     }
                     errorCode--;
                     DiscordCommands.sortPlayers(InteractiveChatDiscordSrvAddon.plugin.playerlistOrderingTypes, player, playerInfo);

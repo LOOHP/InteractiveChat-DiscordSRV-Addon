@@ -379,11 +379,11 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
     }
 
     @SuppressWarnings("deprecation")
-    public static List<ValueTrios<UUID, Component, Integer>> sortPlayers(List<String> orderTypes, List<ValueTrios<UUID, Component, Integer>> players, Map<UUID, ValuePairs<List<String>, String>> playerInfo) {
+    public static List<ValueTrios<OfflineICPlayer, Component, Integer>> sortPlayers(List<String> orderTypes, List<ValueTrios<OfflineICPlayer, Component, Integer>> players, Map<UUID, ValuePairs<List<String>, String>> playerInfo) {
         if (players.size() <= 1) {
             return players;
         }
-        Comparator<ValueTrios<UUID, Component, Integer>> comparator = Comparator.comparing(each -> 0);
+        Comparator<ValueTrios<OfflineICPlayer, Component, Integer>> comparator = Comparator.comparing(each -> 0);
         for (String str : orderTypes) {
             String[] sections = str.split(":", 2);
             switch (sections[0].toUpperCase()) {
@@ -453,7 +453,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                     break;
             }
         }
-        comparator = comparator.thenComparing(each -> PlainTextComponentSerializer.plainText().serialize(each.getSecond())).thenComparing(each -> each.getFirst());
+        comparator = comparator.thenComparing(each -> PlainTextComponentSerializer.plainText().serialize(each.getSecond())).thenComparing(each -> each.getFirst().getUniqueId());
         players.sort(comparator);
         return players;
     }
@@ -678,7 +678,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                 } else {
                     int errorCode = -2;
                     try {
-                        List<ValueTrios<UUID, Component, Integer>> player = new ArrayList<>();
+                        List<ValueTrios<OfflineICPlayer, Component, Integer>> player = new ArrayList<>();
                         Map<UUID, ValuePairs<List<String>, String>> playerInfo = new HashMap<>();
                         for (Entry<OfflinePlayer, Integer> entry : players.entrySet()) {
                             OfflinePlayer bukkitOfflinePlayer = entry.getKey();
@@ -692,7 +692,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                             } else {
                                 nameComponent = InteractiveChatComponentSerializer.legacySection().deserialize(name);
                             }
-                            player.add(new ValueTrios<>(offlinePlayer.getUniqueId(), nameComponent, entry.getValue()));
+                            player.add(new ValueTrios<>(offlinePlayer, nameComponent, entry.getValue()));
                         }
                         errorCode--;
                         sortPlayers(InteractiveChatDiscordSrvAddon.plugin.playerlistOrderingTypes, player, playerInfo);
