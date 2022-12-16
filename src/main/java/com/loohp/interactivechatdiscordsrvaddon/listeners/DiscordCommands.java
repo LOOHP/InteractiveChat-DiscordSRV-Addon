@@ -391,7 +391,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                     if (sections.length > 1) {
                         List<String> groupOrder = Arrays.stream(sections[1].split(",")).map(each -> each.trim()).collect(Collectors.toList());
                         comparator = comparator.thenComparing(each -> {
-                            ValuePairs<List<String>, String> info = playerInfo.get(each.getFirst());
+                            ValuePairs<List<String>, String> info = playerInfo.get(each.getFirst().getUniqueId());
                             if (info == null) {
                                 return Integer.MAX_VALUE;
                             }
@@ -401,7 +401,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                     break;
                 case "PLAYERNAME":
                     comparator = comparator.thenComparing(each -> {
-                        ValuePairs<List<String>, String> info = playerInfo.get(each.getFirst());
+                        ValuePairs<List<String>, String> info = playerInfo.get(each.getFirst().getUniqueId());
                         if (info == null) {
                             return "";
                         }
@@ -410,7 +410,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                     break;
                 case "PLAYERNAME_REVERSE":
                     comparator = comparator.thenComparing(Comparator.comparing(each -> {
-                        ValuePairs<List<String>, String> info = playerInfo.get(((ValueTrios<UUID, Component, Integer>) each).getFirst());
+                        ValuePairs<List<String>, String> info = playerInfo.get(((ValueTrios<OfflineICPlayer, Component, Integer>) each).getFirst().getUniqueId());
                         if (info == null) {
                             return "";
                         }
@@ -421,7 +421,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                     if (sections.length > 1) {
                         String placeholder = sections[1];
                         comparator = comparator.thenComparing(Comparator.comparing(each -> {
-                            String parsedString = PlaceholderParser.parse(ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(((ValueTrios<UUID, Component, Integer>) each).getFirst()), placeholder);
+                            String parsedString = PlaceholderParser.parse(ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(((ValueTrios<OfflineICPlayer, Component, Integer>) each).getFirst().getUniqueId()), placeholder);
                             double value = Double.MAX_VALUE;
                             try {
                                 value = Double.parseDouble(parsedString);
@@ -429,7 +429,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                             }
                             return value;
                         }).thenComparing(each -> {
-                            return PlaceholderParser.parse(ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(((ValueTrios<UUID, Component, Integer>) each).getFirst()), placeholder);
+                            return PlaceholderParser.parse(ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(((ValueTrios<OfflineICPlayer, Component, Integer>) each).getFirst().getUniqueId()), placeholder);
                         }));
                     }
                     break;
@@ -437,7 +437,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                     if (sections.length > 1) {
                         String placeholder = sections[1];
                         comparator = comparator.thenComparing(Comparator.comparing(each -> {
-                            String parsedString = PlaceholderParser.parse(ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(((ValueTrios<UUID, Component, Integer>) each).getFirst()), placeholder);
+                            String parsedString = PlaceholderParser.parse(ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(((ValueTrios<OfflineICPlayer, Component, Integer>) each).getFirst().getUniqueId()), placeholder);
                             double value = Double.MAX_VALUE;
                             try {
                                 value = Double.parseDouble(parsedString);
@@ -445,7 +445,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                             }
                             return value;
                         }).thenComparing(each -> {
-                            return PlaceholderParser.parse(ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(((ValueTrios<UUID, Component, Integer>) each).getFirst()), placeholder);
+                            return PlaceholderParser.parse(ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(((ValueTrios<OfflineICPlayer, Component, Integer>) each).getFirst().getUniqueId()), placeholder);
                         }).reversed());
                     }
                     break;
