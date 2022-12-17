@@ -51,7 +51,7 @@ public class ResourceDownloadManager {
 
     public static final String ASSETS_DATA_URL = "https://api.loohpjames.com/spigot/plugins/interactivechatdiscordsrvaddon?minecraftVersion=%s";
     public static final String VERSIONS_URL = "https://api.loohpjames.com/spigot/plugins/interactivechatdiscordsrvaddon/versions";
-    public static final String MOJANG_RESOURCES_URL = "http://resources.download.minecraft.net/";
+    public static final String MOJANG_RESOURCES_URL = "https://resources.download.minecraft.net/";
 
     private static Set<String> MINECRAFT_VERSIONS = null;
 
