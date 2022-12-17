@@ -98,6 +98,8 @@ import github.scarsz.discordsrv.util.WebhookUtil;
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
+import it.unimi.dsi.fastutil.ints.IntLinkedOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import mineverse.Aust1n46.chat.api.MineverseChatPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -133,12 +135,15 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.IntFunction;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class OutboundToDiscordEvents implements Listener {
 
     public static final Comparator<DiscordDisplayData> DISPLAY_DATA_COMPARATOR = Comparator.comparing(each -> each.getPosition());
     public static final Int2ObjectMap<DiscordDisplayData> DATA = Int2ObjectMaps.synchronize(new Int2ObjectLinkedOpenHashMap<>());
+    public static final IntFunction<Pattern> DATA_PATTERN = i -> Pattern.compile("<ICD=" + i + "\\\\?>");
     public static final Int2ObjectMap<AttachmentData> RESEND_WITH_ATTACHMENT = Int2ObjectMaps.synchronize(new Int2ObjectLinkedOpenHashMap<>());
     private static final IDProvider DATA_ID_PROVIDER = new IDProvider();
     private static final Map<UUID, Component> DEATH_MESSAGE = new ConcurrentHashMap<>();
@@ -847,12 +852,13 @@ public class OutboundToDiscordEvents implements Listener {
             return;
         }
 
-        Set<Integer> matches = new LinkedHashSet<>();
+        IntSet matches = new IntLinkedOpenHashSet();
 
         synchronized (DATA) {
             for (int key : DATA.keySet()) {
-                if (text.contains("<ICD=" + key + ">")) {
-                    text = text.replace("<ICD=" + key + ">", "");
+                Matcher matcher = OutboundToDiscordEvents.DATA_PATTERN.apply(key).matcher(text);
+                if (matcher.find()) {
+                    text = matcher.replaceAll("");
                     matches.add(key);
                 }
             }
@@ -864,7 +870,7 @@ public class OutboundToDiscordEvents implements Listener {
         }
 
         message.editMessage(text + " ...").queue();
-        OfflineICPlayer player = DATA.get(matches.iterator().next()).getPlayer();
+        OfflineICPlayer player = DATA.get(matches.iterator().nextInt()).getPlayer();
 
         List<DiscordDisplayData> dataList = new ArrayList<>();
 
@@ -921,12 +927,13 @@ public class OutboundToDiscordEvents implements Listener {
             return;
         }
 
-        Set<Integer> matches = new LinkedHashSet<>();
+        IntSet matches = new IntLinkedOpenHashSet();
 
         synchronized (DATA) {
             for (int key : DATA.keySet()) {
-                if (text.contains("<ICD=" + key + ">")) {
-                    text = text.replace("<ICD=" + key + ">", "");
+                Matcher matcher = OutboundToDiscordEvents.DATA_PATTERN.apply(key).matcher(text);
+                if (matcher.find()) {
+                    text = matcher.replaceAll("");
                     matches.add(key);
                 }
             }
@@ -940,7 +947,7 @@ public class OutboundToDiscordEvents implements Listener {
         String webHookUrl = WebhookUtil.getWebhookUrlToUseForChannel(channel);
         WebhookUtil.editMessage(channel, String.valueOf(messageId), text + " ...", (Collection<? extends MessageEmbed>) null);
 
-        OfflineICPlayer player = DATA.get(matches.iterator().next()).getPlayer();
+        OfflineICPlayer player = DATA.get(matches.iterator().nextInt()).getPlayer();
 
         List<DiscordDisplayData> dataList = new ArrayList<>();
 
