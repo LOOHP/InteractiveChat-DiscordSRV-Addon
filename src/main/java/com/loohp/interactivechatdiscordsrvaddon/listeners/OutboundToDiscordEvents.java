@@ -416,9 +416,9 @@ public class OutboundToDiscordEvents implements Listener {
 
         if (InteractiveChat.useItem && PlayerUtils.hasPermission(icSender.getUniqueId(), "interactivechat.module.item", true, 200)) {
             Debug.debug("onGameToDiscord processing item display");
-            Matcher matcher = InteractiveChat.itemPlaceholder.matcher(plain);
+            Matcher matcher = InteractiveChat.itemPlaceholder.getKeyword().matcher(plain);
             if (matcher.find()) {
-                if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.itemPlaceholder)).findFirst().get(), now)) {
+                if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.equals(InteractiveChat.itemPlaceholder)).findFirst().get(), now)) {
                     ItemStack item = PlayerUtils.getHeldItem(icSender);
                     boolean isAir = item.getType().equals(Material.AIR);
                     if (!InteractiveChat.itemAirAllow && isAir) {
@@ -439,7 +439,7 @@ public class OutboundToDiscordEvents implements Listener {
 
                     AtomicBoolean replaced = new AtomicBoolean(false);
                     Component replaceComponent = LegacyComponentSerializer.legacySection().deserialize(replaceText);
-                    component = ComponentReplacing.replace(component, InteractiveChat.itemPlaceholder.pattern(), true, (groups) -> {
+                    component = ComponentReplacing.replace(component, InteractiveChat.itemPlaceholder.getKeyword().pattern(), true, (groups) -> {
                         replaced.set(true);
                         return replaceComponent;
                     });
@@ -472,9 +472,9 @@ public class OutboundToDiscordEvents implements Listener {
 
         if (InteractiveChat.useInventory && PlayerUtils.hasPermission(icSender.getUniqueId(), "interactivechat.module.inventory", true, 200)) {
             Debug.debug("onGameToDiscord processing inventory display");
-            Matcher matcher = InteractiveChat.invPlaceholder.matcher(plain);
+            Matcher matcher = InteractiveChat.invPlaceholder.getKeyword().matcher(plain);
             if (matcher.find()) {
-                if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.invPlaceholder)).findFirst().get(), now)) {
+                if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.equals(InteractiveChat.invPlaceholder)).findFirst().get(), now)) {
                     String replaceText = ComponentStringUtils.stripColorAndConvertMagic(PlaceholderParser.parse(icSender, InteractiveChat.invReplaceText));
                     if (reserializer) {
                         replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
@@ -482,7 +482,7 @@ public class OutboundToDiscordEvents implements Listener {
 
                     AtomicBoolean replaced = new AtomicBoolean(false);
                     Component replaceComponent = LegacyComponentSerializer.legacySection().deserialize(replaceText);
-                    component = ComponentReplacing.replace(component, InteractiveChat.invPlaceholder.pattern(), true, (groups) -> {
+                    component = ComponentReplacing.replace(component, InteractiveChat.invPlaceholder.getKeyword().pattern(), true, (groups) -> {
                         replaced.set(true);
                         return replaceComponent;
                     });
@@ -519,9 +519,9 @@ public class OutboundToDiscordEvents implements Listener {
 
         if (InteractiveChat.useEnder && PlayerUtils.hasPermission(icSender.getUniqueId(), "interactivechat.module.enderchest", true, 200)) {
             Debug.debug("onGameToDiscord processing enderchest display");
-            Matcher matcher = InteractiveChat.enderPlaceholder.matcher(plain);
+            Matcher matcher = InteractiveChat.enderPlaceholder.getKeyword().matcher(plain);
             if (matcher.find()) {
-                if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.enderPlaceholder)).findFirst().get(), now)) {
+                if (!cooldownManager.isPlaceholderOnCooldownAt(icSender.getUniqueId(), InteractiveChat.placeholderList.values().stream().filter(each -> each.equals(InteractiveChat.enderPlaceholder)).findFirst().get(), now)) {
                     String replaceText = ComponentStringUtils.stripColorAndConvertMagic(PlaceholderParser.parse(icSender, InteractiveChat.enderReplaceText));
                     if (reserializer) {
                         replaceText = MessageUtil.reserializeToDiscord(github.scarsz.discordsrv.dependencies.kyori.adventure.text.Component.text(replaceText));
@@ -529,7 +529,7 @@ public class OutboundToDiscordEvents implements Listener {
 
                     AtomicBoolean replaced = new AtomicBoolean(false);
                     Component replaceComponent = LegacyComponentSerializer.legacySection().deserialize(replaceText);
-                    component = ComponentReplacing.replace(component, InteractiveChat.enderPlaceholder.pattern(), true, (groups) -> {
+                    component = ComponentReplacing.replace(component, InteractiveChat.enderPlaceholder.getKeyword().pattern(), true, (groups) -> {
                         replaced.set(true);
                         return replaceComponent;
                     });

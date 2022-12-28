@@ -520,7 +520,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
             }
         }
         if (InteractiveChatDiscordSrvAddon.plugin.shareItemCommandIsMainServer) {
-            Optional<ICPlaceholder> optItemPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.itemPlaceholder)).findFirst();
+            Optional<ICPlaceholder> optItemPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.equals(InteractiveChat.itemPlaceholder)).findFirst();
             if (InteractiveChatDiscordSrvAddon.plugin.shareItemCommandEnabled && optItemPlaceholder.isPresent()) {
                 String itemDescription = ChatColorUtils.stripColor(optItemPlaceholder.get().getDescription());
 
@@ -546,7 +546,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
             }
         }
         if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandIsMainServer) {
-            Optional<ICPlaceholder> optInvPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.invPlaceholder)).findFirst();
+            Optional<ICPlaceholder> optInvPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.equals(InteractiveChat.invPlaceholder)).findFirst();
             if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandEnabled && optInvPlaceholder.isPresent()) {
                 commandDataList.add(new CommandData(INVENTORY_LABEL, ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())));
 
@@ -556,7 +556,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
             }
         }
         if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandIsMainServer) {
-            Optional<ICPlaceholder> optEnderPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.getKeyword().equals(InteractiveChat.enderPlaceholder)).findFirst();
+            Optional<ICPlaceholder> optEnderPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.equals(InteractiveChat.enderPlaceholder)).findFirst();
             if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandEnabled && optEnderPlaceholder.isPresent()) {
                 commandDataList.add(new CommandData(ENDERCHEST_LABEL, ChatColorUtils.stripColor(optEnderPlaceholder.get().getDescription())));
 
