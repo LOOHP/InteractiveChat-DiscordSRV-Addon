@@ -807,7 +807,9 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                 components.put(key, component);
                 Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> components.remove(key), 100);
                 errorCode--;
-                discordsrv.broadcastMessageToMinecraftServer(minecraftChannel, ComponentStringUtils.toDiscordSRVComponent(Component.text(key)), event.getUser());
+                if (DiscordSRV.config().getBoolean("DiscordChatChannelDiscordToMinecraft")) {
+                    discordsrv.broadcastMessageToMinecraftServer(minecraftChannel, ComponentStringUtils.toDiscordSRVComponent(Component.text(key)), event.getUser());
+                }
                 if (InteractiveChatDiscordSrvAddon.plugin.shareItemCommandIsMainServer) {
                     errorCode--;
 
@@ -933,7 +935,9 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                 components.put(key, component);
                 Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> components.remove(key), 100);
                 errorCode--;
-                discordsrv.broadcastMessageToMinecraftServer(minecraftChannel, ComponentStringUtils.toDiscordSRVComponent(Component.text(key)), event.getUser());
+                if (DiscordSRV.config().getBoolean("DiscordChatChannelDiscordToMinecraft")) {
+                    discordsrv.broadcastMessageToMinecraftServer(minecraftChannel, ComponentStringUtils.toDiscordSRVComponent(Component.text(key)), event.getUser());
+                }
                 if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandIsMainServer) {
                     ImageDisplayData data = new ImageDisplayData(offlineICPlayer, 0, title, ImageDisplayType.INVENTORY, true, new TitledInventoryWrapper(Component.translatable(TranslationKeyUtils.getDefaultContainerTitle()), offlineICPlayer.getInventory()));
                     ValuePairs<List<DiscordMessageContent>, InteractionHandler> pair = DiscordContentUtils.createContents(Collections.singletonList(data), offlineICPlayer);
@@ -1032,7 +1036,9 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                 components.put(key, component);
                 Bukkit.getScheduler().runTaskLater(InteractiveChatDiscordSrvAddon.plugin, () -> components.remove(key), 100);
                 errorCode--;
-                discordsrv.broadcastMessageToMinecraftServer(minecraftChannel, ComponentStringUtils.toDiscordSRVComponent(Component.text(key)), event.getUser());
+                if (DiscordSRV.config().getBoolean("DiscordChatChannelDiscordToMinecraft")) {
+                    discordsrv.broadcastMessageToMinecraftServer(minecraftChannel, ComponentStringUtils.toDiscordSRVComponent(Component.text(key)), event.getUser());
+                }
                 if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandIsMainServer) {
                     ImageDisplayData data = new ImageDisplayData(offlineICPlayer, 0, title, ImageDisplayType.ENDERCHEST, new TitledInventoryWrapper(Component.translatable(TranslationKeyUtils.getEnderChestContainerTitle()), offlineICPlayer.getEnderChest()));
                     ValuePairs<List<DiscordMessageContent>, InteractionHandler> pair = DiscordContentUtils.createContents(Collections.singletonList(data), offlineICPlayer);
