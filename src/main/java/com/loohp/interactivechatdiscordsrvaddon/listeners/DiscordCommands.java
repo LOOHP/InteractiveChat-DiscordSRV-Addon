@@ -589,8 +589,10 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                 event.deferReply().setEphemeral(true).queue();
                 List<MessageEmbed> messageEmbeds = new ArrayList<>();
                 Map<String, byte[]> attachments = new HashMap<>();
+                String footer = "InteractiveChatDiscordSRVAddon v" + InteractiveChatDiscordSrvAddon.plugin.getDescription().getVersion();
                 int i = 0;
-                for (ResourcePackInfo packInfo : InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getResourcePackInfo()) {
+                List<ResourcePackInfo> packs = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getResourcePackInfo();
+                for (ResourcePackInfo packInfo : packs) {
                     i++;
                     Component packName = ComponentStringUtils.resolve(ComponentModernizing.modernize(ResourcePackInfoUtils.resolveName(packInfo)), InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language));
                     Component description = ComponentStringUtils.resolve(ComponentModernizing.modernize(ResourcePackInfoUtils.resolveDescription(packInfo)), InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language));
@@ -615,6 +617,9 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                         }
                     } else {
                         builder.setColor(0xFF0000).setDescription(packInfo.getRejectedReason());
+                    }
+                    if (i >= packs.size()) {
+                        builder.setFooter(footer, "https://resources.loohpjames.com/images/InteractiveChat-DiscordSRV-Addon.png");
                     }
                     messageEmbeds.add(builder.build());
                     try {
