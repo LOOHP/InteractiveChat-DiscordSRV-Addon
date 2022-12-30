@@ -281,12 +281,21 @@ public class ItemRenderUtils {
             double timePhase = (double) time / 24000;
             predicates.put(ModelOverrideType.TIME, (float) (timePhase - 0.0078125));
         } else if (icMaterial.isMaterial(XMaterial.COMPASS)) {
+            ItemStack compass = item;
+
+            if (CompassUtils.isLodestoneCompass(compass)) {
+                requiresEnchantmentGlint = true;
+                if (InteractiveChat.hideLodestoneCompassPos) {
+                    compass = CompassUtils.hideLodestoneCompassPosition(compass);
+                }
+            }
+
             double angle;
             ICPlayer icplayer = player.getPlayer();
             if (icplayer != null && icplayer.isLocal()) {
                 Player bukkitPlayer = icplayer.getLocalPlayer();
                 if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
-                    CompassMeta meta = (CompassMeta) item.getItemMeta();
+                    CompassMeta meta = (CompassMeta) compass.getItemMeta();
                     Location target;
                     if (meta.hasLodestone()) {
                         Location lodestone = meta.getLodestone();
@@ -331,10 +340,6 @@ public class ItemRenderUtils {
                 }
             } else {
                 angle = 0;
-            }
-
-            if (CompassUtils.isLodestoneCompass(item)) {
-                requiresEnchantmentGlint = true;
             }
 
             predicates.put(ModelOverrideType.ANGLE, (float) (angle - 0.015625));

@@ -47,6 +47,7 @@ import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechat.objectholders.ValueTrios;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
+import com.loohp.interactivechat.utils.CompassUtils;
 import com.loohp.interactivechat.utils.ComponentModernizing;
 import com.loohp.interactivechat.utils.ComponentReplacing;
 import com.loohp.interactivechat.utils.ComponentStyling;
@@ -227,6 +228,10 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
             inv.setItem(0, skull);
         });
 
+        if (InteractiveChat.hideLodestoneCompassPos) {
+            CompassUtils.hideLodestoneCompassesPosition(inv);
+        }
+
         InteractiveChatAPI.addInventoryToItemShareList(SharedType.INVENTORY, sha1, inv);
 
         if (InteractiveChat.bungeecordMode) {
@@ -311,6 +316,13 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
             inv.setItem(10, skull);
         });
 
+        if (InteractiveChat.hideLodestoneCompassPos) {
+            CompassUtils.hideLodestoneCompassesPosition(inv);
+        }
+        if (InteractiveChat.hideLodestoneCompassPos) {
+            CompassUtils.hideLodestoneCompassesPosition(inv2);
+        }
+
         InteractiveChatAPI.addInventoryToItemShareList(SharedType.INVENTORY1_UPPER, sha1, inv);
         InteractiveChatAPI.addInventoryToItemShareList(SharedType.INVENTORY1_LOWER, sha1, inv2);
 
@@ -334,6 +346,10 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                     inv.setItem(j, player.getEnderChest().getItem(j).clone());
                 }
             }
+        }
+
+        if (InteractiveChat.hideLodestoneCompassPos) {
+            CompassUtils.hideLodestoneCompassesPosition(inv);
         }
 
         InteractiveChatAPI.addInventoryToItemShareList(SharedType.ENDERCHEST, sha1, inv);
