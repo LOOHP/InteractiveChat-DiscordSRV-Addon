@@ -815,8 +815,6 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                     itemStack = new ItemStack(Material.AIR);
                 }
                 errorCode--;
-                BufferedImage itemImage = ImageGeneration.getItemStackImage(itemStack, offlineICPlayer, true);
-                errorCode--;
                 String title = ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.shareItemCommandTitle.replace("{Player}", offlineICPlayer.getName()));
                 errorCode--;
                 Component itemTag = ItemDisplay.createItemDisplay(offlineICPlayer, itemStack, title, true, null, false);

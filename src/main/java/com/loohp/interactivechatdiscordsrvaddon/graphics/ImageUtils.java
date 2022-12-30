@@ -453,6 +453,18 @@ public class ImageUtils {
         return copyOfImage;
     }
 
+    public static BufferedImage copyAndGetSubImage(BufferedImage source, int x, int y, int w, int h, boolean flipHorizontal, boolean flipVertically) {
+        int calW = source.getWidth() * (flipHorizontal ? -1 : 1);
+        int calH = source.getHeight() * (flipVertically ? -1 : 1);
+        int offsetX = flipHorizontal ? source.getWidth() : 0;
+        int offsetY = flipVertically ? source.getHeight() : 0;
+        BufferedImage copyOfImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = copyOfImage.createGraphics();
+        g.drawImage(source, offsetX - x, offsetY - y, calW, calH, null);
+        g.dispose();
+        return copyOfImage;
+    }
+
     public static BufferedImage resizeImage(BufferedImage source, double factor) {
         int w = (int) Math.round(source.getWidth() * factor);
         int h = (int) Math.round(source.getHeight() * factor);

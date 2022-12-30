@@ -97,6 +97,7 @@ public class ModelRenderer implements AutoCloseable {
     public static final float RESCALE_45 = 1.0F / (float) Math.cos(((float) Math.PI / 4F)) - 1.0F;
 
     public static final int QUALITY_THRESHOLD = 70;
+    public static final int RENDER_HELD_ITEM_THRESHOLD = 2500;
 
     public static final int SKIN_RESOLUTION = 1600;
     public static final int TEXTURE_RESOLUTION = 800;
@@ -198,7 +199,9 @@ public class ModelRenderer implements AutoCloseable {
             Model itemRenderModel = null;
             if (itemBlockModel != null) {
                 if (itemBlockModel.getRawParent() == null || !itemBlockModel.getRawParent().contains("/")) {
-                    itemRenderModel = generateStandardRenderModel(itemBlockModel, manager, playerModelItem.getProvidedTextures(), overrideTextures, playerModelItem.getTintIndexData(), playerModelItem.isEnchanted(), false, playerModelItem.getRawEnchantmentGlintProvider());
+                    if (itemBlockModel.getElements().size() <= RENDER_HELD_ITEM_THRESHOLD) {
+                        itemRenderModel = generateStandardRenderModel(itemBlockModel, manager, playerModelItem.getProvidedTextures(), overrideTextures, playerModelItem.getTintIndexData(), playerModelItem.isEnchanted(), false, playerModelItem.getRawEnchantmentGlintProvider());
+                    }
                 } else if (itemBlockModel.getRawParent().equals(ModelManager.ITEM_BASE)) {
                     BufferedImage image = new BufferedImage(INTERNAL_W, INTERNAL_H, BufferedImage.TYPE_INT_ARGB);
                     Graphics2D g = image.createGraphics();
@@ -476,18 +479,19 @@ public class ModelRenderer implements AutoCloseable {
                         }
                         TextureUV uv = faceData.getUV();
                         TextureResource resource = findKey(blockModel.getTextures(), faceData.getRawTexture()).stream().findFirst().map(each -> overrideTextures.get(each)).orElse(null);
+                        String texture = faceData.getTexture();
                         if (resource == null) {
-                            resource = providedTextures.get(faceData.getTexture());
+                            resource = providedTextures.get(texture);
                         }
                         if (resource == null) {
-                            resource = manager.getTextureManager().getTexture(faceData.getTexture(), false);
+                            resource = manager.getTextureManager().getTexture(texture, false);
                         }
                         if (resource == null || !resource.isTexture()) {
                             images[i] = null;
                         } else if (uv != null && (uv.getXDiff() == 0 || uv.getYDiff() == 0)) {
                             images[i] = null;
                         } else {
-                            BufferedImage cached = cachedResize.get(faceData.getTexture());
+                            BufferedImage cached = cachedResize.get(texture);
                             if (cached == null) {
                                 cached = resource.getTexture();
                                 if (resource.hasTextureMeta()) {
@@ -512,9 +516,9 @@ public class ModelRenderer implements AutoCloseable {
                                 } else {
                                     cached = ImageUtils.resizeImageFillHeight(cached, skin ? SKIN_RESOLUTION : TEXTURE_RESOLUTION);
                                 }
-                                cachedResize.put(faceData.getTexture(), cached);
+                                cachedResize.put(texture, cached);
                             }
-                            images[i] = ImageUtils.copyImage(cached);
+                            BufferedImage image = cached;
 
                             if (uv == null) {
                                 Point3D[] points;
@@ -569,8 +573,8 @@ public class ModelRenderer implements AutoCloseable {
                                 }
                                 uv = new TextureUV(x1, y1, x2, y2);
                             }
-                            int width = images[i].getWidth();
-                            int height = images[i].getHeight();
+                            int width = image.getWidth();
+                            int height = image.getHeight();
                             double scale = (double) width / 16.0;
                             uv = uv.getScaled(scale, ((double) height / (double) width) * scale);
                             int x1;
@@ -578,7 +582,6 @@ public class ModelRenderer implements AutoCloseable {
                             int dX;
                             int dY;
                             if (uv.isVerticallyFlipped()) {
-                                images[i] = ImageUtils.flipVertically(images[i]);
                                 y1 = (int) Math.ceil(height - uv.getY1());
                                 dY = Math.abs((int) Math.floor(height - uv.getY2()) - y1);
                             } else {
@@ -586,24 +589,25 @@ public class ModelRenderer implements AutoCloseable {
                                 dY = Math.abs((int) Math.floor(uv.getY2()) - y1);
                             }
                             if (uv.isHorizontallyFlipped()) {
-                                images[i] = ImageUtils.flipHorizontal(images[i]);
                                 x1 = (int) Math.ceil(width - uv.getX1());
                                 dX = Math.abs((int) Math.floor(width - uv.getX2()) - x1);
                             } else {
                                 x1 = (int) Math.ceil(uv.getX1());
                                 dX = Math.abs((int) Math.floor(uv.getX2()) - x1);
                             }
-                            images[i] = ImageUtils.copyAndGetSubImage(images[i], x1, y1, Math.max(1, dX), Math.max(1, dY));
+                            image = ImageUtils.copyAndGetSubImage(image, x1, y1, Math.max(1, dX), Math.max(1, dY), uv.isHorizontallyFlipped(), uv.isVerticallyFlipped());
                             int rotationAngle = faceData.getRotation();
                             if (rotationAngle % 360 != 0) {
-                                images[i] = ImageUtils.rotateImageByDegrees(images[i], rotationAngle);
+                                image = ImageUtils.rotateImageByDegrees(image, rotationAngle);
                             }
-                            images[i] = tintIndexData.applyTint(images[i], faceData.getTintindex());
+                            image = tintIndexData.applyTint(image, faceData.getTintindex());
                             if (enchanted) {
-                                RawEnchantmentGlintData overlayResult = rawEnchantmentGlintProvider.apply(images[i]);
+                                RawEnchantmentGlintData overlayResult = rawEnchantmentGlintProvider.apply(image);
                                 overlayImages[i] = overlayResult.getOverlay().toArray(EMPTY_IMAGE_ARRAY);
                                 overlayBlendMode[i] = overlayResult.getBlending().stream().map(each -> BlendingUtils.convert(each)).toArray(BlendingModes[]::new);
                             }
+
+                            images[i] = image;
                         }
                     }
                     i++;
@@ -863,7 +867,7 @@ public class ModelRenderer implements AutoCloseable {
         }
 
     }
-    
+
     public static class RawEnchantmentGlintData {
 
         private List<BufferedImage> overlay;
