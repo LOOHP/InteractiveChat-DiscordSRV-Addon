@@ -206,6 +206,13 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public boolean resourcepackCommandEnabled = true;
     public String resourcepackCommandDescription = "";
     public boolean resourcepackCommandIsMainServer = true;
+    public boolean playerinfoCommandEnabled = true;
+    public String playerinfoCommandDescription = "";
+    public boolean playerinfoCommandIsMainServer = true;
+    public String playerinfoCommandFormatTitle = "";
+    public String playerinfoCommandFormatSubTitle = "";
+    public List<String> playerinfoCommandFormatOnline = new ArrayList<>();
+    public List<String> playerinfoCommandFormatOffline = new ArrayList<>();
     public boolean playerlistCommandEnabled = true;
     public String playerlistCommandDescription = "";
     public boolean playerlistCommandIsMainServer = true;
@@ -537,6 +544,14 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         resourcepackCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.ResourcePack.Enabled");
         resourcepackCommandDescription = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.ResourcePack.Description"));
         resourcepackCommandIsMainServer = config.getConfiguration().getBoolean("DiscordCommands.ResourcePack.IsMainServer");
+
+        playerinfoCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.PlayerInfo.Enabled");
+        playerinfoCommandDescription = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.PlayerInfo.Description"));
+        playerinfoCommandIsMainServer = config.getConfiguration().getBoolean("DiscordCommands.PlayerInfo.IsMainServer");
+        playerinfoCommandFormatTitle = config.getConfiguration().getString("DiscordCommands.PlayerInfo.InfoFormatting.Title");
+        playerinfoCommandFormatSubTitle = config.getConfiguration().getString("DiscordCommands.PlayerInfo.InfoFormatting.SubTitle");
+        playerinfoCommandFormatOnline = config.getConfiguration().getStringList("DiscordCommands.PlayerInfo.InfoFormatting.WhenOnline");
+        playerinfoCommandFormatOffline = config.getConfiguration().getStringList("DiscordCommands.PlayerInfo.InfoFormatting.WhenOffline");
 
         playerlistCommandEnabled = config.getConfiguration().getBoolean("DiscordCommands.PlayerList.Enabled");
         playerlistCommandDescription = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordCommands.PlayerList.Description"));

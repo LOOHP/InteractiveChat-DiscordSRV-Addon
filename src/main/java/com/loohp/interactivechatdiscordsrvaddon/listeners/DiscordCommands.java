@@ -69,6 +69,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordMessageCont
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.InteractionHandler;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
@@ -135,6 +136,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
 
     public static final String CUSTOM_CHANNEL = "icdsrva:discord_commands";
     public static final String RESOURCEPACK_LABEL = "resourcepack";
+    public static final String PLAYERINFO_LABEL = "playerinfo";
     public static final String PLAYERLIST_LABEL = "playerlist";
     public static final String ITEM_LABEL = "item";
     public static final String ITEM_OTHER_LABEL = "itemasuser";
@@ -490,7 +492,8 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                         if (!player.isLocal()) {
                             StringBuilder text = new StringBuilder(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandPlayerFormat +
                                     " " + InteractiveChatDiscordSrvAddon.plugin.playerlistCommandHeader +
-                                    " " + InteractiveChatDiscordSrvAddon.plugin.playerlistCommandFooter);
+                                    " " + InteractiveChatDiscordSrvAddon.plugin.playerlistCommandFooter +
+                                    " " + InteractiveChatDiscordSrvAddon.plugin.playerinfoCommandFormatOnline);
                             for (String type : InteractiveChatDiscordSrvAddon.plugin.playerlistOrderingTypes) {
                                 if (type.startsWith("PLACEHOLDER") && type.contains(":")) {
                                     String placeholder = type.split(":")[1];
@@ -528,6 +531,11 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
         if (InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandIsMainServer) {
             if (InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandEnabled) {
                 commandDataList.add(new CommandData(RESOURCEPACK_LABEL, ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.resourcepackCommandDescription)));
+            }
+        }
+        if (InteractiveChatDiscordSrvAddon.plugin.playerinfoCommandIsMainServer) {
+            if (InteractiveChatDiscordSrvAddon.plugin.playerinfoCommandEnabled) {
+                commandDataList.add(new CommandData(PLAYERINFO_LABEL, ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.playerinfoCommandDescription)).addOptions(new OptionData(OptionType.USER, memberLabel, memberDescription, false)));
             }
         }
         if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandIsMainServer) {
@@ -649,6 +657,58 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                     action = action.addFile(entry.getValue(), entry.getKey());
                 }
                 action.queue();
+            }
+        } else if (InteractiveChatDiscordSrvAddon.plugin.playerinfoCommandEnabled && label.equalsIgnoreCase(PLAYERINFO_LABEL)) {
+            if (InteractiveChatDiscordSrvAddon.plugin.playerinfoCommandIsMainServer) {
+                String minecraftChannel = discordsrv.getChannels().entrySet().stream().filter(entry -> channel.getId().equals(entry.getValue())).map(Map.Entry::getKey).findFirst().orElse(null);
+                if (minecraftChannel == null) {
+                    if (InteractiveChatDiscordSrvAddon.plugin.respondToCommandsInInvalidChannels) {
+                        event.reply(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.invalidDiscordChannel)).setEphemeral(true).queue();
+                    }
+                    return;
+                }
+
+                String discordUserId = event.getUser().getId();
+                List<OptionMapping> options = event.getOptionsByType(OptionType.USER);
+                if (options.size() > 0) {
+                    discordUserId = options.get(0).getAsUser().getId();
+                }
+                UUID uuid = discordsrv.getAccountLinkManager().getUuid(discordUserId);
+                if (uuid == null) {
+                    event.reply(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.accountNotLinked)).setEphemeral(true).queue();
+                    return;
+                }
+                event.deferReply().queue();
+
+                int errorCode = -1;
+                try {
+                    OfflineICPlayer offlineICPlayer = ICPlayerFactory.getOfflineICPlayer(uuid);
+                    errorCode--;
+                    List<ToolTipComponent<?>> playerInfoComponents;
+                    if (offlineICPlayer.isOnline()) {
+                        playerInfoComponents = InteractiveChatDiscordSrvAddon.plugin.playerinfoCommandFormatOnline.stream().map(each -> {
+                            each = ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(offlineICPlayer, each));
+                            return ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(each));
+                        }).collect(Collectors.toList());
+                    } else {
+                        playerInfoComponents = InteractiveChatDiscordSrvAddon.plugin.playerinfoCommandFormatOffline.stream().map(each -> {
+                            each = ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(offlineICPlayer, each));
+                            return ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(each));
+                        }).collect(Collectors.toList());
+                    }
+                    errorCode--;
+                    String title = ChatColorUtils.stripColor(ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(offlineICPlayer, InteractiveChatDiscordSrvAddon.plugin.playerinfoCommandFormatTitle)));
+                    String subtitle = ChatColorUtils.stripColor(ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(offlineICPlayer, InteractiveChatDiscordSrvAddon.plugin.playerinfoCommandFormatSubTitle)));
+                    BufferedImage image = ImageGeneration.getToolTipImage(playerInfoComponents);
+                    errorCode--;
+                    byte[] data = ImageUtils.toArray(image);
+                    errorCode--;
+                    event.getHook().editOriginalEmbeds(new EmbedBuilder().setTitle(title).setDescription(subtitle).setThumbnail(DiscordSRV.getAvatarUrl(offlineICPlayer.getName(), offlineICPlayer.getUniqueId())).setImage("attachment://PlayerInfo.png").setColor(InteractiveChatDiscordSrvAddon.plugin.playerlistCommandColor).build()).addFile(data, "PlayerInfo.png").queue();
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                    event.getHook().editOriginal(ChatColorUtils.stripColor(InteractiveChatDiscordSrvAddon.plugin.unableToRetrieveData) + " (" + errorCode + ")").queue();
+                    return;
+                }
             }
         } else if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandEnabled && label.equalsIgnoreCase(PLAYERLIST_LABEL)) {
             if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandIsMainServer) {

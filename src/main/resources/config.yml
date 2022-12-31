@@ -122,6 +122,26 @@ DiscordCommands:
       MemberDescription: "Member to set"
       SlotLabel: "slot"
       SlotDescription: "Slot to choose"
+  #Settings for /playerinfo
+  PlayerInfo:
+    #Enable the /playerinfo command to show player information
+    Enabled: true
+    #If you do NOT use a shared discord channel for multiple servers, this should ALWAYS be true
+    #If you do, set this option on ONE of the servers connected to the discord channel to true,
+    #With all others servers to false.
+    IsMainServer: true
+    #The description of this command on discord
+    Description: "Show player information on discord!"
+    #The player information to display
+    InfoFormatting:
+      Title: "%player_name%'s Player Info"
+      SubTitle: "%discordsrv_user_tag%"
+      WhenOnline:
+        - "%vault_prefix%%player_name%"
+        - "&7Status: &aOnline"
+      WhenOffline:
+        - "%vault_prefix%%player_name%"
+        - "&7Status: &cOffline"
   #Settings for /resourcepack
   ResourcePack:
     #Enable the /resourcepack command to show installed resource packs on interactivechatdiscordsrvaddon
