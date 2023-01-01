@@ -97,7 +97,7 @@ public class ModelRenderer implements AutoCloseable {
     public static final float RESCALE_45 = 1.0F / (float) Math.cos(((float) Math.PI / 4F)) - 1.0F;
 
     public static final int QUALITY_THRESHOLD = 70;
-    public static final int RENDER_HELD_ITEM_THRESHOLD = 2500;
+    public static final int RENDER_HELD_ITEM_THRESHOLD = Integer.MAX_VALUE;
 
     public static final int SKIN_RESOLUTION = 1600;
     public static final int TEXTURE_RESOLUTION = 800;
