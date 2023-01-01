@@ -96,9 +96,6 @@ public class ModelRenderer implements AutoCloseable {
     public static final float RESCALE_22_5 = 1.0F / (float) Math.cos(((float) Math.PI / 8F)) - 1.0F;
     public static final float RESCALE_45 = 1.0F / (float) Math.cos(((float) Math.PI / 4F)) - 1.0F;
 
-    public static final int QUALITY_THRESHOLD = 70;
-    public static final int RENDER_HELD_ITEM_THRESHOLD = Integer.MAX_VALUE;
-
     public static final int SKIN_RESOLUTION = 1600;
     public static final int TEXTURE_RESOLUTION = 800;
 
@@ -199,9 +196,7 @@ public class ModelRenderer implements AutoCloseable {
             Model itemRenderModel = null;
             if (itemBlockModel != null) {
                 if (itemBlockModel.getRawParent() == null || !itemBlockModel.getRawParent().contains("/")) {
-                    if (itemBlockModel.getElements().size() <= RENDER_HELD_ITEM_THRESHOLD) {
-                        itemRenderModel = generateStandardRenderModel(itemBlockModel, manager, playerModelItem.getProvidedTextures(), overrideTextures, playerModelItem.getTintIndexData(), playerModelItem.isEnchanted(), false, playerModelItem.getRawEnchantmentGlintProvider());
-                    }
+                    itemRenderModel = generateStandardRenderModel(itemBlockModel, manager, playerModelItem.getProvidedTextures(), overrideTextures, playerModelItem.getTintIndexData(), playerModelItem.isEnchanted(), false, playerModelItem.getRawEnchantmentGlintProvider());
                 } else if (itemBlockModel.getRawParent().equals(ModelManager.ITEM_BASE)) {
                     BufferedImage image = new BufferedImage(INTERNAL_W, INTERNAL_H, BufferedImage.TYPE_INT_ARGB);
                     Graphics2D g = image.createGraphics();
@@ -709,7 +704,7 @@ public class ModelRenderer implements AutoCloseable {
             renderModel.translate(transform.getX(), transform.getY(), transform.getZ());
         }
         renderModel.updateLighting(lightData.getLightVector(), lightData.getAmbientLevel(), lightData.getMaxLevel());
-        renderModel.render(image, renderModel.getComponents().size() <= QUALITY_THRESHOLD, baseTransform, BlendingModes.NORMAL, renderingService).join();
+        renderModel.render(image, true, baseTransform, BlendingModes.NORMAL, renderingService).join();
     }
 
     private String cacheKey(Object... obj) {

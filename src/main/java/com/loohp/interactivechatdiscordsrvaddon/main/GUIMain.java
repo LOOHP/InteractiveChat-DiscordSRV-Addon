@@ -412,7 +412,6 @@ public class GUIMain {
                 }
             }
         }
-        System.out.println(result);
         return result < 0 ? fallback : result;
     }
 
