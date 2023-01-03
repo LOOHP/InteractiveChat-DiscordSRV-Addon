@@ -20,9 +20,14 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.models;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonReader;
 import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
+import com.loohp.interactivechat.libs.org.json.simple.parser.ParseException;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.AbstractManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
@@ -31,6 +36,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TriFunction;
 
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -44,10 +50,26 @@ public class ModelManager extends AbstractManager implements IModelManager {
 
     public static final TriFunction<IModelManager, String, JSONObject, BlockModel> DEFAULT_MODEL_PARSING_FUNCTION = (manager, key, json) -> BlockModel.fromJson(manager, key, json);
 
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+
     public static final String CACHE_KEY = "ModelManager";
     public static final String BLOCK_ENTITY_BASE = "builtin/entity";
     public static final String ITEM_BASE = "builtin/generated";
     public static final String ITEM_BASE_LAYER = "layer";
+
+    public static JSONObject specialReadProvider(ResourcePackFile file) throws IOException, ParseException {
+        try (InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8)) {
+            return (JSONObject) new JSONParser().parse(reader);
+        } catch (ParseException e) {
+            try (InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8)) {
+                JsonReader jsonReader = new JsonReader(reader);
+                jsonReader.setLenient(false);
+                JsonObject jsonObject = GSON.getAdapter(JsonObject.class).read(jsonReader);
+                String json = GSON.toJson(jsonObject);
+                return (JSONObject) new JSONParser().parse(json);
+            }
+        }
+    }
 
     private Map<String, BlockModel> models;
     private TriFunction<IModelManager, String, JSONObject, ? extends BlockModel> modelParsingFunction;
@@ -63,16 +85,13 @@ public class ModelManager extends AbstractManager implements IModelManager {
         if (!root.exists() || !root.isDirectory()) {
             throw new IllegalArgumentException(root.getAbsolutePath() + " is not a directory.");
         }
-        JSONParser parser = new JSONParser();
         Map<String, BlockModel> models = new HashMap<>();
         Collection<ResourcePackFile> files = root.listFilesRecursively(new String[] {"json"});
         for (ResourcePackFile file : files) {
             try {
                 String key = namespace + ":" + file.getRelativePathFrom(root);
                 key = key.substring(0, key.lastIndexOf("."));
-                InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
-                JSONObject rootJson = (JSONObject) parser.parse(reader);
-                reader.close();
+                JSONObject rootJson = specialReadProvider(file);
                 BlockModel model = modelParsingFunction.apply(this, key, rootJson);
                 models.put(key, model);
             } catch (Exception e) {

@@ -180,7 +180,7 @@ public class BlockModelRenderer extends JFrame {
         this.icon = icon;
         this.resourceManager = null;
         $$$setupUI$$$();
-        this.modelRenderer = new ModelRenderer(() -> 0, () -> 8, () -> (int) spinnerThreads.getValue());
+        this.modelRenderer = new ModelRenderer(() -> 8, () -> (int) spinnerThreads.getValue());
         this.overrideSettings = new EnumMap<>(ModelOverrideType.class);
         this.providedTextureSettings = new LinkedHashMap<>();
         this.executorService = Executors.newSingleThreadExecutor();

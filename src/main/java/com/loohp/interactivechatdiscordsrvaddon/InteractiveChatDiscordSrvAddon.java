@@ -266,6 +266,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public boolean showMaps = true;
     public boolean showBooks = true;
     public boolean showContainers = true;
+    public int rendererThreads = -1;
 
     private ResourceManager resourceManager;
     public ModelRenderer modelRenderer;
@@ -359,7 +360,12 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         }
 
         reloadTextures(false, false);
-        modelRenderer = new ModelRenderer(str -> new ThreadFactoryBuilder().setNameFormat(str).build(), () -> InteractiveChatDiscordSrvAddon.plugin.cacheTimeout, () -> 8, () -> Runtime.getRuntime().availableProcessors());
+        modelRenderer = new ModelRenderer(str -> new ThreadFactoryBuilder().setNameFormat(str).build(), () -> InteractiveChatDiscordSrvAddon.plugin.cacheTimeout, () -> {
+            if (rendererThreads > 0) {
+                return rendererThreads;
+            }
+            return Runtime.getRuntime().availableProcessors() + rendererThreads;
+        });
 
         ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat("InteractiveChatDiscordSRVAddon Async Media Reading Thread #%d").build();
         mediaReadingService = Executors.newFixedThreadPool(4, factory);
@@ -601,6 +607,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         showMaps = config.getConfiguration().getBoolean("DiscordItemDetailsAndInteractions.ShowMaps");
         showBooks = config.getConfiguration().getBoolean("DiscordItemDetailsAndInteractions.ShowBooks");
         showContainers = config.getConfiguration().getBoolean("DiscordItemDetailsAndInteractions.ShowContainers");
+
+        rendererThreads = config.getConfiguration().getInt("Settings.RendererSettings.RendererThreads");
 
         language = config.getConfiguration().getString("Resources.Language");
         LanguageUtils.loadTranslations(language);

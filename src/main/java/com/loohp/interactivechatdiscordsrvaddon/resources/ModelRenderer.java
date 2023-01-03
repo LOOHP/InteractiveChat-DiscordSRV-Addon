@@ -114,26 +114,20 @@ public class ModelRenderer implements AutoCloseable {
 
     private Function<String, ThreadFactory> threadFactoryBuilder;
     private LongSupplier cacheTimeoutSupplier;
-    private IntSupplier modelThreads;
     private IntSupplier renderThreads;
-    private ThreadPoolExecutor modelResolvingService;
     private ThreadPoolExecutor renderingService;
     private ScheduledExecutorService controlService;
     private AtomicBoolean isValid;
 
-    public ModelRenderer(Function<String, ThreadFactory> threadFactoryBuilder, LongSupplier cacheTimeoutSupplier, IntSupplier modelThreads, IntSupplier renderThreads) {
+    public ModelRenderer(Function<String, ThreadFactory> threadFactoryBuilder, LongSupplier cacheTimeoutSupplier, IntSupplier renderThreads) {
         this.isValid = new AtomicBoolean(true);
         this.threadFactoryBuilder = threadFactoryBuilder;
         this.cacheTimeoutSupplier = cacheTimeoutSupplier;
-        this.modelThreads = modelThreads;
         this.renderThreads = renderThreads;
 
-        int modelThreadSize = modelThreads.getAsInt();
         int renderThreadSize = renderThreads.getAsInt();
 
-        ThreadFactory factory0 = threadFactoryBuilder.apply("InteractiveChatDiscordSRVAddon Async Model Resolving Thread #%d");
-        this.modelResolvingService = new ThreadPoolExecutor(modelThreadSize, modelThreadSize, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), factory0);
-        ThreadFactory factory1 = threadFactoryBuilder.apply("InteractiveChatDiscordSRVAddon Async Model Rendering Thread #%d");
+        ThreadFactory factory1 = threadFactoryBuilder.apply("InteractiveChatDiscordSRVAddon Async Model Renderer Thread #%d");
         this.renderingService = new ThreadPoolExecutor(renderThreadSize, renderThreadSize, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), factory1);
         ThreadFactory factory2 = threadFactoryBuilder.apply("InteractiveChatDiscordSRVAddon Async Model Renderer Control Thread");
         this.controlService = Executors.newSingleThreadScheduledExecutor(factory2);
@@ -141,23 +135,19 @@ public class ModelRenderer implements AutoCloseable {
         this.controlService.scheduleAtFixedRate(() -> reloadPoolSize(), 30, 30, TimeUnit.SECONDS);
     }
 
-    public ModelRenderer(LongSupplier cacheTimeoutSupplier, IntSupplier modelThreads, IntSupplier renderThreads) {
-        this(str -> Executors.defaultThreadFactory(), cacheTimeoutSupplier, modelThreads, renderThreads);
+    public ModelRenderer(LongSupplier cacheTimeoutSupplier, IntSupplier renderThreads) {
+        this(str -> Executors.defaultThreadFactory(), cacheTimeoutSupplier, renderThreads);
     }
 
     @Override
     public synchronized void close() {
         isValid.set(false);
         controlService.shutdown();
-        modelResolvingService.shutdown();
         renderingService.shutdown();
     }
 
     public synchronized void reloadPoolSize() {
-        int modelThreadSize = modelThreads.getAsInt();
         int renderThreadSize = renderThreads.getAsInt();
-        this.modelResolvingService.setMaximumPoolSize(modelThreadSize);
-        this.modelResolvingService.setCorePoolSize(modelThreadSize);
         this.renderingService.setMaximumPoolSize(renderThreadSize);
         this.renderingService.setCorePoolSize(renderThreadSize);
     }
@@ -428,13 +418,14 @@ public class ModelRenderer implements AutoCloseable {
     @SuppressWarnings("SuspiciousNameCombination")
     private Model generateStandardRenderModel(BlockModel blockModel, ResourceManager manager, Map<String, TextureResource> providedTextures, Map<String, TextureResource> overrideTextures, TintIndexData tintIndexData, boolean enchanted, boolean skin, Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
         Map<String, BufferedImage> cachedResize = new ConcurrentHashMap<>();
+        Map<String, RawEnchantmentGlintData> cachedEnchantmentGlint = new ConcurrentHashMap<>();
         List<ModelElement> elements = new ArrayList<>(blockModel.getElements());
         List<Hexahedron> hexahedrons = new ArrayList<>(elements.size());
         Queue<Future<Hexahedron>> tasks = new ConcurrentLinkedQueue<>();
         Iterator<ModelElement> itr = elements.iterator();
         while (itr.hasNext()) {
             ModelElement element = itr.next();
-            tasks.add(modelResolvingService.submit(() -> {
+            tasks.add(renderingService.submit(() -> {
                 ModelElementRotation rotation = element.getRotation();
                 BufferedImage[] images = new BufferedImage[6];
                 Hexahedron hexahedron = Hexahedron.fromCorners(new Point3D(element.getFrom().getX(), element.getFrom().getY(), element.getFrom().getZ()), new Point3D(element.getTo().getX(), element.getTo().getY(), element.getTo().getZ()), images);
@@ -597,7 +588,11 @@ public class ModelRenderer implements AutoCloseable {
                             }
                             image = tintIndexData.applyTint(image, faceData.getTintindex());
                             if (enchanted) {
-                                RawEnchantmentGlintData overlayResult = rawEnchantmentGlintProvider.apply(image);
+                                String key = image.getWidth() + "x" + image.getHeight();
+                                RawEnchantmentGlintData overlayResult = cachedEnchantmentGlint.get(key);
+                                if (overlayResult == null) {
+                                    cachedEnchantmentGlint.put(key, overlayResult = rawEnchantmentGlintProvider.apply(image));
+                                }
                                 overlayImages[i] = overlayResult.getOverlay().toArray(EMPTY_IMAGE_ARRAY);
                                 overlayBlendMode[i] = overlayResult.getBlending().stream().map(each -> BlendingUtils.convert(each)).toArray(BlendingModes[]::new);
                             }

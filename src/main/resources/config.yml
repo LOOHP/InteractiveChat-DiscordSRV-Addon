@@ -348,6 +348,12 @@ Settings:
     VentureChatToDiscord: HIGHEST
     #Defaults to HIGH
     DiscordToGame: HIGH
+  RendererSettings:
+    #Threads used to resolve and render block models
+    #A positive number sets the absolute number of threads to be used
+    #A negative number or 0 sets the number of thread to be used as the logical processor count of your system minus N
+    #Defaults to -1 (Number of logical processor in your system - 1)
+    RendererThreads: -1
 
 Debug:
   PrintInfoToConsole: false
