@@ -119,13 +119,13 @@ public class ModelRenderer implements AutoCloseable {
     private ScheduledExecutorService controlService;
     private AtomicBoolean isValid;
 
-    public ModelRenderer(Function<String, ThreadFactory> threadFactoryBuilder, LongSupplier cacheTimeoutSupplier, IntSupplier renderThreads) {
+    public ModelRenderer(Function<String, ThreadFactory> threadFactoryBuilder, LongSupplier cacheTimeoutSupplier, IntSupplier renderThreadsSupplier) {
         this.isValid = new AtomicBoolean(true);
         this.threadFactoryBuilder = threadFactoryBuilder;
         this.cacheTimeoutSupplier = cacheTimeoutSupplier;
-        this.renderThreads = renderThreads;
+        this.renderThreads = () -> Math.max(1, renderThreadsSupplier.getAsInt());
 
-        int renderThreadSize = renderThreads.getAsInt();
+        int renderThreadSize = this.renderThreads.getAsInt();
 
         ThreadFactory factory1 = threadFactoryBuilder.apply("InteractiveChatDiscordSRVAddon Async Model Renderer Thread #%d");
         this.renderingService = new ThreadPoolExecutor(renderThreadSize, renderThreadSize, 0L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), factory1);

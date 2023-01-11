@@ -78,7 +78,7 @@ public class CMLMain {
                 System.out.println("Links:");
                 System.out.println("SpigotMC: \"https://www.spigotmc.org/resources/83917/\"");
                 System.out.println("GitHub: \"https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon\"");
-                System.out.println("Discord: \"http://dev.discord.loohpjames.com\"");
+                System.out.println("Discord: \"https://loohpjames.com/dev-discord\"");
                 System.out.println("Build Server: \"https://ci.loohpjames.com\"");
                 if (Registry.INTERACTIVE_CHAT_DISCORD_SRV_ADDON_COMPATIBLE_VERSION != InteractiveChatRegistry.INTERACTIVE_CHAT_DISCORD_SRV_ADDON_COMPATIBLE_VERSION) {
                     System.out.println();

@@ -25,7 +25,7 @@
     <groupId>com.loohp</groupId>
     <artifactId>InteractiveChatDiscordSrvAddon</artifactId>
     <name>InteractiveChatDiscordSrvAddon</name>
-    <version>4.2.5.3</version>
+    <version>4.2.5.5</version>
 
     <description>Have InteractiveChat Placeholders translated on DiscordSRV discord messages.</description>
     <url>https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon</url>
@@ -65,7 +65,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
+                <version>3.3.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -310,7 +310,7 @@
         <dependency>
             <groupId>org.mapdb</groupId>
             <artifactId>mapdb</artifactId>
-            <version>3.0.8</version>
+            <version>3.0.9</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>
@@ -322,7 +322,7 @@
         <dependency>
             <groupId>com.ibm.icu</groupId>
             <artifactId>icu4j</artifactId>
-            <version>70.1</version>
+            <version>71.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -388,7 +388,7 @@
         <dependency>
             <groupId>com.loohp</groupId>
             <artifactId>InteractiveChat</artifactId>
-            <version>4.2.5.1</version>
+            <version>4.2.5.5</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -406,7 +406,7 @@
         <dependency>
             <groupId>me.lucko</groupId>
             <artifactId>jar-relocator</artifactId>
-            <version>1.5</version>
+            <version>1.6</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
