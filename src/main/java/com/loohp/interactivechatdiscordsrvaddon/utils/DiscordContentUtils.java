@@ -197,6 +197,9 @@ public class DiscordContentUtils {
 
                         if (iData.isBook() && InteractiveChatDiscordSrvAddon.plugin.showBooks) {
                             List<Component> pages = BookUtils.getPages((BookMeta) item.getItemMeta());
+                            if (pages.isEmpty()) {
+                                pages = Collections.singletonList(Component.empty());
+                            }
                             List<Supplier<BufferedImage>> images = ImageGeneration.getBookInterfaceSuppliers(pages);
                             byte[][] cachedImages = new byte[images.size()][];
                             cachedImages[0] = ImageUtils.toArray(images.get(0).get());
