@@ -188,7 +188,7 @@ public class ItemRenderUtils {
             }
         } else if (icMaterial.isMaterial(XMaterial.PLAYER_HEAD)) {
             BufferedImage skinImage = manager.getTextureManager().getTexture(ResourceRegistry.DEFAULT_WIDE_SKIN_LOCATION).getTexture();
-            if (item.hasItemMeta()) {
+            if (item.getItemMeta() != null) {
                 Tag<?> skullOwnerTag = ((CompoundTag) NBTParsingUtils.fromSNBT(ItemNBTUtils.getNMSItemStackJson(item))).getCompoundTag("tag").get("SkullOwner");
                 try {
                     String skinURL = null;

@@ -30,6 +30,7 @@ import org.bukkit.block.banner.Pattern;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.BlockStateMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -54,20 +55,21 @@ public class BannerGraphics {
 
         baseImage = ImageUtils.add(ImageUtils.multiply(baseImage, baseTint, true), 40);
 
-        if (!item.hasItemMeta()) {
+        ItemMeta itemMeta = item.getItemMeta();
+        if (itemMeta == null) {
             return new BannerAssetResult(baseImage, patternsImage);
         }
 
         List<Pattern> patterns;
-        if (!(item.getItemMeta() instanceof BannerMeta)) {
-            if (!(item.getItemMeta() instanceof BlockStateMeta)) {
+        if (!(itemMeta instanceof BannerMeta)) {
+            if (!(itemMeta instanceof BlockStateMeta)) {
                 return new BannerAssetResult(baseImage, patternsImage);
             }
-            BlockStateMeta bmeta = (BlockStateMeta) item.getItemMeta();
+            BlockStateMeta bmeta = (BlockStateMeta) itemMeta;
             Banner bannerBlockMeta = (Banner) bmeta.getBlockState();
             patterns = bannerBlockMeta.getPatterns();
         } else {
-            BannerMeta meta = (BannerMeta) item.getItemMeta();
+            BannerMeta meta = (BannerMeta) itemMeta;
             patterns = meta.getPatterns();
         }
 
@@ -92,17 +94,18 @@ public class BannerGraphics {
 
     @SuppressWarnings("deprecation")
     public static BannerAssetResult generateShieldAssets(ItemStack item) {
-        if (!item.hasItemMeta()) {
+        ItemMeta itemMeta = item.getItemMeta();
+        if (itemMeta == null) {
             return getDefaultShieldAssets();
         }
 
         List<Pattern> patterns;
         Color baseColor;
-        if (!(item.getItemMeta() instanceof BannerMeta)) {
-            if (!(item.getItemMeta() instanceof BlockStateMeta)) {
+        if (!(itemMeta instanceof BannerMeta)) {
+            if (!(itemMeta instanceof BlockStateMeta)) {
                 return getDefaultShieldAssets();
             }
-            BlockStateMeta bmeta = (BlockStateMeta) item.getItemMeta();
+            BlockStateMeta bmeta = (BlockStateMeta) itemMeta;
             if (!bmeta.hasBlockState()) {
                 return getDefaultShieldAssets();
             }
@@ -110,7 +113,7 @@ public class BannerGraphics {
             patterns = bannerBlockMeta.getPatterns();
             baseColor = new Color(bannerBlockMeta.getBaseColor().getColor().asRGB());
         } else {
-            BannerMeta meta = (BannerMeta) item.getItemMeta();
+            BannerMeta meta = (BannerMeta) itemMeta;
             patterns = meta.getPatterns();
             baseColor = new Color(meta.getBaseColor().getColor().asRGB());
         }

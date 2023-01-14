@@ -153,7 +153,7 @@ public class DiscordContentUtils {
                                     String label = (u + 1) + " - " + PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(name, InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)));
                                     if (label.length() > 100) {
                                         ItemStack stripNameItem = itemStack.clone();
-                                        if (stripNameItem.hasItemMeta()) {
+                                        if (stripNameItem.getItemMeta() != null) {
                                             ItemMeta meta = stripNameItem.getItemMeta();
                                             meta.setDisplayName(null);
                                             stripNameItem.setItemMeta(meta);
@@ -266,7 +266,7 @@ public class DiscordContentUtils {
                                 String label = (u + 1) + " - " + PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(name, InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)));
                                 if (label.length() > 100) {
                                     ItemStack stripNameItem = itemStack.clone();
-                                    if (stripNameItem.hasItemMeta()) {
+                                    if (stripNameItem.getItemMeta() != null) {
                                         ItemMeta meta = stripNameItem.getItemMeta();
                                         meta.setDisplayName(null);
                                         stripNameItem.setItemMeta(meta);
@@ -408,7 +408,7 @@ public class DiscordContentUtils {
 
     public static Inventory getBlockInventory(ItemStack item) {
         Inventory inv = null;
-        if (item.hasItemMeta() && item.getItemMeta() instanceof BlockStateMeta) {
+        if (item.getItemMeta() instanceof BlockStateMeta) {
             BlockState bsm = ((BlockStateMeta) item.getItemMeta()).getBlockState();
             if (bsm instanceof InventoryHolder) {
                 Inventory container = ((InventoryHolder) bsm).getInventory();

@@ -187,7 +187,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
             }
         }
         ItemStack frame = f1 > f2 ? InteractiveChat.invFrame2.clone() : InteractiveChat.invFrame1.clone();
-        if (frame.hasItemMeta()) {
+        if (frame.getItemMeta() != null) {
             ItemMeta frameMeta = frame.getItemMeta();
             frameMeta.setDisplayName(ChatColor.YELLOW + "");
             frame.setItemMeta(frameMeta);
@@ -266,7 +266,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
             }
         }
         ItemStack frame = f1 > f2 ? InteractiveChat.invFrame2.clone() : InteractiveChat.invFrame1.clone();
-        if (frame.hasItemMeta()) {
+        if (frame.getItemMeta() != null) {
             ItemMeta frameMeta = frame.getItemMeta();
             frameMeta.setDisplayName(ChatColor.YELLOW + "");
             frame.setItemMeta(frameMeta);
@@ -893,7 +893,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                     errorCode--;
 
                     Inventory inv = null;
-                    if (itemStack.hasItemMeta() && itemStack.getItemMeta() instanceof BlockStateMeta) {
+                    if (itemStack.getItemMeta() instanceof BlockStateMeta) {
                         BlockState bsm = ((BlockStateMeta) itemStack.getItemMeta()).getBlockState();
                         if (bsm instanceof InventoryHolder) {
                             Inventory container = ((InventoryHolder) bsm).getInventory();

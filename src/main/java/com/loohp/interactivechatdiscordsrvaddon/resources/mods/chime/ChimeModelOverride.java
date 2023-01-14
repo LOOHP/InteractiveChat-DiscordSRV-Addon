@@ -127,7 +127,7 @@ public class ChimeModelOverride extends ModelOverride {
             return value.contains(itemStack.getAmount());
         }),
         DURABILITY("durability", Range.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
-            if (itemStack.hasItemMeta() && itemStack.getItemMeta() instanceof Damageable) {
+            if (itemStack.getItemMeta() instanceof Damageable) {
                 return value.contains(((Damageable) itemStack.getItemMeta()).getDamage());
             } else {
                 return value.contains(0);

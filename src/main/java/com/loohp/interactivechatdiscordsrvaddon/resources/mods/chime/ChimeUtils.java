@@ -55,7 +55,7 @@ import java.util.function.UnaryOperator;
 public class ChimeUtils {
 
     public static String getItemDisplayName(ItemStack itemStack, UnaryOperator<String> translateFunction) {
-        if (!itemStack.hasItemMeta() || !itemStack.getItemMeta().hasDisplayName()) {
+        if (itemStack.getItemMeta() == null || !itemStack.getItemMeta().hasDisplayName()) {
             return "";
         }
         try {

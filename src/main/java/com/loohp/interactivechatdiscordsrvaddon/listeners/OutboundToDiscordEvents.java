@@ -655,9 +655,6 @@ public class OutboundToDiscordEvents implements Listener {
         if (item == null || item.getType().equals(Material.AIR)) {
             return;
         }
-        if (!item.hasItemMeta()) {
-            return;
-        }
         ItemMeta meta = item.getItemMeta();
         if (meta == null || !meta.hasDisplayName() || meta.getDisplayName().length() <= 0) {
             return;

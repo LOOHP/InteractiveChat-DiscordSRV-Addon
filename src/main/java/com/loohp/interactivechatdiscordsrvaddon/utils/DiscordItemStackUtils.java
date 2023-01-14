@@ -138,7 +138,7 @@ public class DiscordItemStackUtils {
     }
 
     public static Color getDiscordColor(ItemStack item) {
-        if (item != null && item.hasItemMeta()) {
+        if (item != null && item.getItemMeta() != null) {
             ItemMeta meta = item.getItemMeta();
             if (meta.hasDisplayName() && !meta.getDisplayName().equals("")) {
                 String colorStr = ChatColorUtils.getFirstColors(meta.getDisplayName());
@@ -197,7 +197,7 @@ public class DiscordItemStackUtils {
         Component itemDisplayNameComponent = ItemStackUtils.getDisplayName(item);
         prints.add(ToolTipComponent.text(itemDisplayNameComponent));
 
-        boolean hasMeta = item.hasItemMeta();
+        boolean hasMeta = item.getItemMeta() != null;
 
         if (InteractiveChat.version.isNewerThan(MCVersion.V1_19) && icMaterial.isMaterial(XMaterial.SPAWNER) && hasMeta && item.getItemMeta() instanceof BlockStateMeta) {
             BlockStateMeta meta = (BlockStateMeta) item.getItemMeta();
@@ -709,11 +709,9 @@ public class DiscordItemStackUtils {
 
     public static boolean isUnbreakable(ItemStack item) {
         if (itemMetaHasUnbreakable) {
-            if (item.hasItemMeta()) {
-                ItemMeta meta = item.getItemMeta();
-                if (meta != null) {
-                    return meta.isUnbreakable();
-                }
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                return meta.isUnbreakable();
             }
             return false;
         } else {

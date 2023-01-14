@@ -316,7 +316,7 @@ public abstract class CITProperties {
         if (InteractiveChat.version.isLegacy()) {
             damage = itemStack.getDurability();
         } else {
-            if (itemStack.hasItemMeta() && itemStack.getItemMeta() instanceof Damageable) {
+            if (itemStack.getItemMeta() instanceof Damageable) {
                 damage = ((Damageable) itemStack.getItemMeta()).getDamage();
             }
         }
