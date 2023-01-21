@@ -130,6 +130,10 @@ public class TranslationKeyUtils {
         }
     }
 
+    public static String getItemNbtTag() {
+        return "item.nbt_tags";
+    }
+
     public static String getSpawnerDescription1() {
         return "block.minecraft.spawner.desc1";
     }

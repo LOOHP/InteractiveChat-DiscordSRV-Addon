@@ -40,6 +40,7 @@ import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
+import com.loohp.interactivechat.utils.ItemNBTUtils;
 import com.loohp.interactivechat.utils.ItemStackUtils;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NBTParsingUtils;
@@ -701,6 +702,14 @@ public class DiscordItemStackUtils {
             int maxDur = item.getType().getMaxDurability();
             if (durability < maxDur) {
                 prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getDurability()).args(Component.text(durability), Component.text(maxDur)).color(NamedTextColor.WHITE)));
+            }
+        }
+        if (InteractiveChatDiscordSrvAddon.plugin.showAdvanceDetails) {
+            CompoundTag nbt = (CompoundTag) NBTParsingUtils.fromSNBT(ItemNBTUtils.getNMSItemStackJson(item));
+            prints.add(ToolTipComponent.text(Component.text(nbt.getString("id")).color(NamedTextColor.DARK_GRAY)));
+            CompoundTag tag = nbt.getCompoundTag("tag");
+            if (tag != null) {
+                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getItemNbtTag()).args(Component.text(tag.size())).color(NamedTextColor.DARK_GRAY)));
             }
         }
 

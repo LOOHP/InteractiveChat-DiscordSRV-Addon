@@ -30,6 +30,7 @@ ToolTipSettings:
   ShowArmorColor: true
   ShowMapScale: true
   ShowFireworkRocketDetailsInCrossbow: true
+  ShowAdvanceDetails: true
 
 #Choose what to include when sharing items and inventories to discord
 DiscordItemDetailsAndInteractions:
