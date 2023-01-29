@@ -98,6 +98,7 @@ import github.scarsz.discordsrv.util.WebhookUtil;
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
+import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import mineverse.Aust1n46.chat.api.MineverseChatPlayer;
@@ -125,7 +126,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -807,7 +807,8 @@ public class OutboundToDiscordEvents implements Listener {
             return;
         }
         String text = message.getContentRaw();
-        Set<Integer> matches = new LinkedHashSet<>();
+
+        IntSet matches = new IntLinkedOpenHashSet();
         synchronized (RESEND_WITH_ATTACHMENT) {
             for (int key : RESEND_WITH_ATTACHMENT.keySet()) {
                 if (text.contains("<ICA=" + key + ">")) {
@@ -817,12 +818,15 @@ public class OutboundToDiscordEvents implements Listener {
         }
         event.setCancelled(true);
         DiscordMessageContent content = new DiscordMessageContent(message);
-        for (int key : matches) {
+
+        for (IntIterator itr = matches.iterator(); itr.hasNext();) {
+            int key = itr.nextInt();
             AttachmentData data = RESEND_WITH_ATTACHMENT.remove(key);
             if (data != null) {
                 content.addAttachment(data.getName(), data.getData());
             }
         }
+
         TextChannel destinationChannel = DiscordSRV.getPlugin().getDestinationTextChannelForGameChannelName(event.getChannel());
         Debug.debug("onAdvancementSend sending message to discord");
         if (event.isUsingWebhooks()) {
@@ -871,7 +875,8 @@ public class OutboundToDiscordEvents implements Listener {
 
         List<DiscordDisplayData> dataList = new ArrayList<>();
 
-        for (int key : matches) {
+        for (IntIterator itr = matches.iterator(); itr.hasNext();) {
+            int key = itr.nextInt();
             DiscordDisplayData data = DATA.remove(key);
             if (data != null) {
                 dataList.add(data);
@@ -948,7 +953,8 @@ public class OutboundToDiscordEvents implements Listener {
 
         List<DiscordDisplayData> dataList = new ArrayList<>();
 
-        for (int key : matches) {
+        for (IntIterator itr = matches.iterator(); itr.hasNext();) {
+            int key = itr.nextInt();
             DiscordDisplayData data = DATA.remove(key);
             if (data != null) {
                 dataList.add(data);
