@@ -64,6 +64,7 @@ public class TranslationKeyUtils {
     private static Field nmsItemRecordTranslationKeyField;
     private static Class<?> nmsEntityTypesClass;
     private static Method getEntityKeyMethod;
+    private static Field entityKeyListField;
 
     static {
         if (InteractiveChat.version.isLegacy()) {
@@ -93,7 +94,11 @@ public class TranslationKeyUtils {
                 });
 
                 nmsEntityTypesClass = NMSUtils.getNMSClass("net.minecraft.server.%s.EntityTypes");
-                getEntityKeyMethod = nmsEntityTypesClass.getMethod("b", int.class);
+                try {
+                    getEntityKeyMethod = nmsEntityTypesClass.getMethod("b", int.class);
+                } catch (NoSuchMethodException e) {
+                    entityKeyListField = nmsEntityTypesClass.getDeclaredField("g");
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -150,7 +155,14 @@ public class TranslationKeyUtils {
                 return "";
             }
             try {
-                String str = getEntityKeyMethod.invoke(null, typeId).toString();
+                String str;
+                if (getEntityKeyMethod == null) {
+                    entityKeyListField.setAccessible(true);
+                    List<String> keyList = (List<String>) entityKeyListField.get(null);
+                    str = keyList.get(typeId);
+                } else {
+                    str = getEntityKeyMethod.invoke(null, typeId).toString();
+                }
                 if (str == null) {
                     return "";
                 } else {
