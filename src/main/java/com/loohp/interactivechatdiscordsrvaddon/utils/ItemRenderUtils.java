@@ -23,6 +23,7 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
+import com.loohp.interactivechat.libs.net.querz.nbt.io.SNBTUtil;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.CompoundTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.IntArrayTag;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.ListTag;
@@ -189,60 +190,81 @@ public class ItemRenderUtils {
         } else if (icMaterial.isMaterial(XMaterial.PLAYER_HEAD)) {
             BufferedImage skinImage = manager.getTextureManager().getTexture(ResourceRegistry.DEFAULT_WIDE_SKIN_LOCATION).getTexture();
             if (item.getItemMeta() != null) {
-                Tag<?> skullOwnerTag = ((CompoundTag) NBTParsingUtils.fromSNBT(ItemNBTUtils.getNMSItemStackJson(item))).getCompoundTag("tag").get("SkullOwner");
-                try {
-                    String skinURL = null;
-                    if (skullOwnerTag instanceof StringTag) {
-                        skinURL = SkinUtils.getSkinURLFromUUID(Bukkit.getOfflinePlayer(((StringTag) skullOwnerTag).getValue()).getUniqueId());
-                    } else if (skullOwnerTag instanceof CompoundTag) {
-                        CompoundTag propertiesTag = (CompoundTag) ((CompoundTag) skullOwnerTag).get("Properties");
-                        if (propertiesTag != null) {
-                            ListTag<?> texturesTag = (ListTag<?>) propertiesTag.get("textures");
-                            if (texturesTag != null && texturesTag.size() > 0) {
-                                StringTag valueTag = (StringTag) ((CompoundTag) texturesTag.get(0)).get("Value");
-                                if (valueTag != null) {
-                                    String json = FIX_WEIRD_SKULL_TEXTURE.apply(new String(Base64.getDecoder().decode(valueTag.getValue())));
-                                    try {
-                                        JSONObject texturesJson = (JSONObject) ((JSONObject) new JSONParser().parse(json)).get("textures");
-                                        if (texturesJson != null) {
-                                            JSONObject skinJson = (JSONObject) texturesJson.get("SKIN");
-                                            if (skinJson != null) {
-                                                skinURL = (String) skinJson.get("url");
+                CompoundTag itemCompoundTag = ((CompoundTag) NBTParsingUtils.fromSNBT(ItemNBTUtils.getNMSItemStackJson(item))).getCompoundTag("tag");
+                if (itemCompoundTag != null) {
+                    Tag<?> skullOwnerTag = itemCompoundTag.get("SkullOwner");
+                    try {
+                        String skinURL = null;
+                        if (skullOwnerTag instanceof StringTag) {
+                            skinURL = SkinUtils.getSkinURLFromUUID(Bukkit.getOfflinePlayer(((StringTag) skullOwnerTag).getValue()).getUniqueId());
+                        } else if (skullOwnerTag instanceof CompoundTag) {
+                            CompoundTag skullOwnerCompoundTag = (CompoundTag) skullOwnerTag;
+                            if (ResourceRegistry.RESOURCE_PACK_VERSION >= 12 && skullOwnerCompoundTag.containsKey("Id")) {
+                                Tag<?> uuidTag = ((CompoundTag) skullOwnerTag).get("Id");
+                                UUID uuid = null;
+                                try {
+                                    if (uuidTag instanceof StringTag) {
+                                        uuid = UUID.fromString(((StringTag) uuidTag).getValue());
+                                    } else if (uuidTag instanceof IntArrayTag) {
+                                        int[] array = ((IntArrayTag) uuidTag).getValue();
+                                        uuid = new UUID((long) array[0] << 32 | (long) array[1] & 4294967295L, (long) array[2] << 32 | (long) array[3] & 4294967295L);
+                                    }
+                                } catch (Throwable e) {
+                                    new IllegalArgumentException("Skull contains invalid UUID: \n" + SNBTUtil.toSNBT(uuidTag), e).printStackTrace();
+                                }
+                                if (uuid != null) {
+                                    skinImage = manager.getTextureManager().getTexture(DefaultSkinUtils.getTexture(uuid)).getTexture();
+                                }
+                            }
+                            CompoundTag propertiesTag = (CompoundTag) skullOwnerCompoundTag.get("Properties");
+                            if (propertiesTag != null) {
+                                ListTag<?> texturesTag = (ListTag<?>) propertiesTag.get("textures");
+                                if (texturesTag != null && texturesTag.size() > 0) {
+                                    StringTag valueTag = (StringTag) ((CompoundTag) texturesTag.get(0)).get("Value");
+                                    if (valueTag != null) {
+                                        String json = FIX_WEIRD_SKULL_TEXTURE.apply(new String(Base64.getDecoder().decode(valueTag.getValue())));
+                                        try {
+                                            JSONObject texturesJson = (JSONObject) ((JSONObject) new JSONParser().parse(json)).get("textures");
+                                            if (texturesJson != null) {
+                                                JSONObject skinJson = (JSONObject) texturesJson.get("SKIN");
+                                                if (skinJson != null) {
+                                                    skinURL = (String) skinJson.get("url");
+                                                }
                                             }
+                                        } catch (ParseException e) {
+                                            new IllegalArgumentException("Skull contains illegal texture data: \n" + json, e).printStackTrace();
                                         }
-                                    } catch (ParseException e) {
-                                        new IllegalArgumentException("Skull contains illegal texture data: \n" + json, e).printStackTrace();
                                     }
                                 }
                             }
-                        }
-                        if (skinURL == null) {
-                            Tag<?> uuidTag = ((CompoundTag) skullOwnerTag).get("Id");
-                            if (uuidTag != null) {
-                                if (uuidTag instanceof StringTag) {
-                                    try {
-                                        skinURL = SkinUtils.getSkinURLFromUUID(UUID.fromString(((StringTag) uuidTag).getValue()));
-                                    } catch (IllegalArgumentException ignore) {
-                                    }
-                                } else if (uuidTag instanceof IntArrayTag) {
-                                    int[] array = ((IntArrayTag) uuidTag).getValue();
-                                    if (array.length == 4) {
-                                        UUID uuid = new UUID((long) array[0] << 32 | (long) array[1] & 4294967295L, (long) array[2] << 32 | (long) array[3] & 4294967295L);
-                                        skinURL = SkinUtils.getSkinURLFromUUID(uuid);
+                            if (skinURL == null) {
+                                Tag<?> uuidTag = ((CompoundTag) skullOwnerTag).get("Id");
+                                if (uuidTag != null) {
+                                    if (uuidTag instanceof StringTag) {
+                                        try {
+                                            skinURL = SkinUtils.getSkinURLFromUUID(UUID.fromString(((StringTag) uuidTag).getValue()));
+                                        } catch (IllegalArgumentException ignore) {
+                                        }
+                                    } else if (uuidTag instanceof IntArrayTag) {
+                                        int[] array = ((IntArrayTag) uuidTag).getValue();
+                                        if (array.length == 4) {
+                                            UUID uuid = new UUID((long) array[0] << 32 | (long) array[1] & 4294967295L, (long) array[2] << 32 | (long) array[3] & 4294967295L);
+                                            skinURL = SkinUtils.getSkinURLFromUUID(uuid);
+                                        }
                                     }
                                 }
                             }
+                            if (skinURL == null) {
+                                StringTag nameTag = (StringTag) ((CompoundTag) skullOwnerTag).get("Name");
+                                skinURL = SkinUtils.getSkinURLFromUUID(Bukkit.getOfflinePlayer(nameTag.getValue()).getUniqueId());
+                            }
                         }
-                        if (skinURL == null) {
-                            StringTag nameTag = (StringTag) ((CompoundTag) skullOwnerTag).get("Name");
-                            skinURL = SkinUtils.getSkinURLFromUUID(Bukkit.getOfflinePlayer(nameTag.getValue()).getUniqueId());
+                        if (skinURL != null) {
+                            skinImage = ImageUtils.downloadImage(skinURL);
                         }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    if (skinURL != null) {
-                        skinImage = ImageUtils.downloadImage(skinURL);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
             }
             providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, ModelUtils.convertToModernSkinTexture(skinImage)));
