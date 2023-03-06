@@ -201,7 +201,7 @@ public class ItemRenderUtils {
                             if (texturesTag != null && texturesTag.size() > 0) {
                                 StringTag valueTag = (StringTag) ((CompoundTag) texturesTag.get(0)).get("Value");
                                 if (valueTag != null) {
-                                    String json = FIX_WEIRD_SKULL_TEXTURE.apply(new String(Base64.getMimeDecoder().decode(valueTag.getValue())));
+                                    String json = FIX_WEIRD_SKULL_TEXTURE.apply(new String(Base64.getDecoder().decode(valueTag.getValue())));
                                     try {
                                         JSONObject texturesJson = (JSONObject) ((JSONObject) new JSONParser().parse(json)).get("textures");
                                         if (texturesJson != null) {
