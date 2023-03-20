@@ -24,6 +24,7 @@ import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.api.InteractiveChatAPI;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
+import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.Style;
@@ -55,10 +56,12 @@ import github.scarsz.discordsrv.dependencies.kyori.adventure.text.TranslatableCo
 import github.scarsz.discordsrv.dependencies.mcdiscordreserializer.discord.DiscordSerializer;
 import github.scarsz.discordsrv.dependencies.mcdiscordreserializer.discord.DiscordSerializerOptions;
 import net.md_5.bungee.api.ChatColor;
+import org.bukkit.Art;
 import org.bukkit.Bukkit;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.World;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Banner;
 import org.bukkit.block.BlockState;
@@ -186,6 +189,7 @@ public class DiscordItemStackUtils {
             bukkitPlayer = Bukkit.getOnlinePlayers().iterator().next();
         }
         item = InteractiveChatAPI.transformItemStack(item, bukkitPlayer == null ? null : bukkitPlayer.getUniqueId());
+        World world = bukkitPlayer == null ? null : bukkitPlayer.getWorld();
 
         List<ToolTipComponent<?>> prints = new ArrayList<>();
         boolean hasCustomName = true;
@@ -200,21 +204,53 @@ public class DiscordItemStackUtils {
 
         boolean hasMeta = item.getItemMeta() != null;
 
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && ItemStackUtils.isArmor(item)) {
+            if (NBTEditor.contains(item, "Trim")) {
+                Key material = Key.key(NBTEditor.getString(item, "Trim", "material"));
+                Key pattern = Key.key(NBTEditor.getString(item, "Trim", "pattern"));
+                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getSmithingTemplateUpgrade()).color(NamedTextColor.GRAY)));
+                TextColor color = ArmorTrimUtils.getArmorTrimIndex(world, item).right();
+                prints.add(ToolTipComponent.text(Component.text(" ").append(Component.translatable(TranslationKeyUtils.getArmorTrimPatternDescription(pattern)).color(color))));
+                prints.add(ToolTipComponent.text(Component.text(" ").append(Component.translatable(TranslationKeyUtils.getArmorTrimMaterialDescription(material)).color(color))));
+            }
+        }
+
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && icMaterial.isOneOf(Collections.singletonList("CONTAINS:Smithing_Template"))) {
+            Key key = Key.key(item.getType().getKey().toString());
+            prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getTrimPatternName(key)).color(NamedTextColor.GRAY)));
+        }
+
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && icMaterial.isMaterial(XMaterial.PAINTING)) {
+            if (NBTEditor.contains(item, "EntityTag", "variant")) {
+                String variant = NBTEditor.getString(item, "EntityTag", "variant");
+                if (variant.contains(":")) {
+                    variant = variant.substring(variant.indexOf(":") + 1);
+                }
+                Art art = Art.getByName(variant);
+                if (art != null) {
+                    prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getPaintingTitle(art)).color(NamedTextColor.YELLOW)));
+                    prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getPaintingAuthor(art)).color(NamedTextColor.GRAY)));
+                    prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getPaintingDimension()).args(Component.text(art.getBlockWidth()), Component.text(art.getBlockHeight())).color(NamedTextColor.WHITE)));
+                }
+            }
+        }
+
         if (InteractiveChat.version.isNewerThan(MCVersion.V1_19) && icMaterial.isMaterial(XMaterial.SPAWNER) && hasMeta && item.getItemMeta() instanceof BlockStateMeta) {
             BlockStateMeta meta = (BlockStateMeta) item.getItemMeta();
+            EntityType entityType = null;
             if (meta.hasBlockState()) {
                 BlockState blockState = meta.getBlockState();
                 if (blockState instanceof CreatureSpawner) {
                     CreatureSpawner spawner = (CreatureSpawner) meta.getBlockState();
-                    EntityType entityType = spawner.getSpawnedType();
-                    if (entityType == null) {
-                        prints.add(ToolTipComponent.text(Component.empty()));
-                        prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getSpawnerDescription1()).color(NamedTextColor.GRAY)));
-                        prints.add(ToolTipComponent.text(Component.text(" ").append(Component.translatable(TranslationKeyUtils.getSpawnerDescription2()).color(NamedTextColor.BLUE))));
-                    } else {
-                        prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getEntityTypeName(entityType)).color(NamedTextColor.GRAY)));
-                    }
+                    entityType = spawner.getSpawnedType();
                 }
+            }
+            if (entityType == null) {
+                prints.add(ToolTipComponent.text(Component.empty()));
+                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getSpawnerDescription1()).color(NamedTextColor.GRAY)));
+                prints.add(ToolTipComponent.text(Component.text(" ").append(Component.translatable(TranslationKeyUtils.getSpawnerDescription2()).color(NamedTextColor.BLUE))));
+            } else {
+                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getEntityTypeName(entityType)).color(NamedTextColor.GRAY)));
             }
         }
 
@@ -468,8 +504,13 @@ public class DiscordItemStackUtils {
                                 component = Component.translatable(TranslationKeyUtils.getPotionWithAmplifier()).args(component, Component.translatable(TranslationKeyUtils.getEffectLevel(amplifier)));
                             }
                             if (duration > 20) {
-                                String time = TimeUtils.getReadableTimeBetween(0, duration, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true);
-                                component = Component.translatable(TranslationKeyUtils.getPotionWithDuration()).args(component, Component.text(time));
+                                Component time;
+                                if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && effect.getDuration() == -1) {
+                                    time = Component.translatable(TranslationKeyUtils.getPotionDurationInfinite());
+                                } else {
+                                    time = Component.text(TimeUtils.getReadableTimeBetween(0, duration, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true));
+                                }
+                                component = Component.translatable(TranslationKeyUtils.getPotionWithDuration()).args(component, time);
                             }
                             prints.add(ToolTipComponent.text(component.color(color)));
                         }

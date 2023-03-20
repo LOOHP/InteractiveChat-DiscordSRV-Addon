@@ -66,8 +66,13 @@ public class ResourcePackUtils {
                 nmsMinecraftVersionGetPackVersionMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
                     return nmsMinecraftVersionClass.getMethod("getPackVersion");
                 }, () -> {
-                    mojangPackTypeResourceEnumObject = com.mojang.bridge.game.PackType.RESOURCE;
-                    return nmsMinecraftVersionClass.getMethod("getPackVersion", com.mojang.bridge.game.PackType.class);
+                    Class<?> mojangPackTypeClass = NMSUtils.getNMSClass("com.mojang.bridge.game.PackType");
+                    mojangPackTypeResourceEnumObject = mojangPackTypeClass.getEnumConstants()[0];
+                    return nmsMinecraftVersionClass.getMethod("getPackVersion", mojangPackTypeClass);
+                }, () -> {
+                    Class<?> nmsResourcePackTypeClass = NMSUtils.getNMSClass("net.minecraft.server.packs.EnumResourcePackType");
+                    mojangPackTypeResourceEnumObject = nmsResourcePackTypeClass.getEnumConstants()[0];
+                    return nmsMinecraftVersionClass.getMethod("a", nmsResourcePackTypeClass);
                 });
             } catch (Exception ignore) {
             }

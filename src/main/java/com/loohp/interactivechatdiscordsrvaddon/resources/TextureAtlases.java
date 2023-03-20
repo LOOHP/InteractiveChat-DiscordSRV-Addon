@@ -32,10 +32,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -53,7 +54,7 @@ public class TextureAtlases {
         if (!folder.exists() || !folder.isDirectory()) {
             return EMPTY_ATLAS;
         }
-        Map<TextureAtlasType, List<TextureAtlasSource>> sources = new EnumMap<>(TextureAtlasType.class);
+        Map<TextureAtlasType, List<TextureAtlasSource>> sources = new HashMap<>();
         JSONParser parser = new JSONParser();
         for (ResourcePackFile file : folder.listFilesAndFolders()) {
             try {
@@ -61,9 +62,6 @@ public class TextureAtlases {
                 if (name.endsWith(".json")) {
                     String typeName = name.substring(0, name.lastIndexOf("."));
                     TextureAtlasType type = TextureAtlasType.fromName(typeName);
-                    if (type == null) {
-                        continue;
-                    }
                     InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
                     JSONObject rootJson = (JSONObject) parser.parse(reader);
                     reader.close();
@@ -104,6 +102,20 @@ public class TextureAtlases {
                                 double height = ((Number) regionJson.get("height")).doubleValue();
                             }
                             textureAtlasSource = new TextureAtlasUnstitchSource(resource, divisorX, divisorY, regions);
+                        } else if (sourceType.equals(TextureAtlasSourceType.PALETTED_PERMUTATIONS)) {
+                            JSONArray texturesArray = (JSONArray) sourceJson.get("textures");
+                            List<String> textures = new ArrayList<>(texturesArray.size());
+                            for (Object o : texturesArray) {
+                                textures.add((String) o);
+                            }
+                            String paletteKey = (String) sourceJson.get("palette_key");
+                            JSONObject permutationsJson = (JSONObject) sourceJson.get("permutations");
+                            Map<String, String> permutations = new LinkedHashMap<>();
+                            for (Object o : permutationsJson.keySet()) {
+                                String key = (String) o;
+                                permutations.put(key, (String) permutationsJson.get(key));
+                            }
+                            textureAtlasSource = new TextureAtlasPalettedPermutationsSource(textures, paletteKey, permutations);
                         } else {
                             continue;
                         }
@@ -136,18 +148,35 @@ public class TextureAtlases {
         return textureAtlases.values().stream().flatMap(each -> each.stream()).collect(Collectors.toList());
     }
 
-    public enum TextureAtlasType {
+    public static final class TextureAtlasType {
 
-        BLOCKS("blocks"),
-        BANNER_PATTERNS("banner_patterns"),
-        BEDS("beds"),
-        CHESTS("chests"),
-        SHIELD_PATTERNS("shield_patterns"),
-        SHULKER_BOXES("shulker_boxes"),
-        SIGNS("signs"),
-        MOB_EFFECTS("mob_effects"),
-        PAINTINGS("paintings"),
-        PARTICLES("particles");
+        public static final TextureAtlasType BLOCKS = new TextureAtlasType("blocks");
+        public static final TextureAtlasType BANNER_PATTERNS = new TextureAtlasType("banner_patterns");
+        public static final TextureAtlasType BEDS = new TextureAtlasType("beds");
+        public static final TextureAtlasType CHESTS = new TextureAtlasType("chests");
+        public static final TextureAtlasType SHIELD_PATTERNS = new TextureAtlasType("shield_patterns");
+        public static final TextureAtlasType SHULKER_BOXES = new TextureAtlasType("shulker_boxes");
+        public static final TextureAtlasType SIGNS = new TextureAtlasType("signs");
+        public static final TextureAtlasType MOB_EFFECTS = new TextureAtlasType("mob_effects");
+        public static final TextureAtlasType PAINTINGS = new TextureAtlasType("paintings");
+        public static final TextureAtlasType PARTICLES = new TextureAtlasType("particles");
+        public static final TextureAtlasType ARMOR_TRIMS = new TextureAtlasType("armor_trims");
+
+        private static final Map<String, TextureAtlasType> TYPES;
+
+        static {
+            TYPES = new HashMap<>();
+            TYPES.put(BLOCKS.name(), BLOCKS);
+            TYPES.put(BANNER_PATTERNS.name(), BANNER_PATTERNS);
+            TYPES.put(BEDS.name(), BEDS);
+            TYPES.put(CHESTS.name(), CHESTS);
+            TYPES.put(SHIELD_PATTERNS.name(), SHIELD_PATTERNS);
+            TYPES.put(SHULKER_BOXES.name(), SHULKER_BOXES);
+            TYPES.put(MOB_EFFECTS.name(), MOB_EFFECTS);
+            TYPES.put(PAINTINGS.name(), PAINTINGS);
+            TYPES.put(PARTICLES.name(), PARTICLES);
+            TYPES.put(ARMOR_TRIMS.name(), ARMOR_TRIMS);
+        }
 
         private String name;
 
@@ -155,17 +184,37 @@ public class TextureAtlases {
             this.name = name;
         }
 
-        public String getName() {
+        public String name() {
             return name;
         }
 
+        @Override
+        public String toString() {
+            return name();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            TextureAtlasType that = (TextureAtlasType) o;
+            return name.equals(that.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name);
+        }
+
         public static TextureAtlasType fromName(String name) {
-            for (TextureAtlasType type : values()) {
-                if (type.getName().equalsIgnoreCase(name)) {
+            for (TextureAtlasType type : TYPES.values()) {
+                if (type.name().equalsIgnoreCase(name)) {
                     return type;
                 }
             }
-            return null;
+            TextureAtlasType newType = new TextureAtlasType(name.toLowerCase());
+            TYPES.put(newType.name(), newType);
+            return newType;
         }
     }
 
@@ -175,6 +224,7 @@ public class TextureAtlases {
         public static final TextureAtlasSourceType<TextureAtlasSingleSource> SINGLE = new TextureAtlasSourceType<>("single", TextureAtlasSingleSource.class);
         public static final TextureAtlasSourceType<TextureAtlasFilterSource> FILTER = new TextureAtlasSourceType<>("filter", TextureAtlasFilterSource.class);
         public static final TextureAtlasSourceType<TextureAtlasUnstitchSource> UNSTITCH = new TextureAtlasSourceType<>("unstitch", TextureAtlasUnstitchSource.class);
+        public static final TextureAtlasSourceType<TextureAtlasPalettedPermutationsSource> PALETTED_PERMUTATIONS = new TextureAtlasSourceType<>("paletted_permutations", TextureAtlasPalettedPermutationsSource.class);
 
         private static final Map<String, TextureAtlasSourceType<?>> TYPES;
 
@@ -184,6 +234,7 @@ public class TextureAtlases {
             types.put(SINGLE.name(), SINGLE);
             types.put(FILTER.name(), FILTER);
             types.put(UNSTITCH.name(), UNSTITCH);
+            types.put(PALETTED_PERMUTATIONS.name(), PALETTED_PERMUTATIONS);
             TYPES = Collections.unmodifiableMap(types);
         }
 
@@ -203,6 +254,11 @@ public class TextureAtlases {
             return name;
         }
 
+        @Override
+        public String toString() {
+            return name();
+        }
+
         public static TextureAtlasSourceType<?> fromName(String name) {
             for (TextureAtlasSourceType<?> type : values().values()) {
                 if (type.name().equalsIgnoreCase(name)) {
@@ -210,6 +266,19 @@ public class TextureAtlases {
                 }
             }
             return null;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            TextureAtlasSourceType<?> that = (TextureAtlasSourceType<?>) o;
+            return name.equals(that.name) && typeClass.equals(that.typeClass);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, typeClass);
         }
     }
 
@@ -223,8 +292,8 @@ public class TextureAtlases {
 
     public static class TextureAtlasDirectorySource extends TextureAtlasSource {
 
-        private String source;
-        private String prefix;
+        private final String source;
+        private final String prefix;
 
         public TextureAtlasDirectorySource(String source, String prefix) {
             this.source = source;
@@ -252,8 +321,8 @@ public class TextureAtlases {
 
     public static class TextureAtlasSingleSource extends TextureAtlasSource {
 
-        private String resource;
-        private String sprite;
+        private final String resource;
+        private final String sprite;
 
         public TextureAtlasSingleSource(String resource, String sprite) {
             this.resource = resource;
@@ -279,14 +348,14 @@ public class TextureAtlases {
             if (!resource.contains(".")) {
                 file += ".png";
             }
-            return relativePath.equals(resource);
+            return relativePath.equals(file);
         }
     }
 
     public static class TextureAtlasFilterSource extends TextureAtlasSource {
 
-        private Pattern namespace;
-        private Pattern path;
+        private final Pattern namespace;
+        private final Pattern path;
 
         public TextureAtlasFilterSource(Pattern namespace, Pattern path) {
             this.namespace = namespace;
@@ -314,10 +383,10 @@ public class TextureAtlases {
 
     public static class TextureAtlasUnstitchSource extends TextureAtlasSource {
 
-        private String resource;
-        private double divisorX;
-        private double divisorY;
-        private List<Region> regions;
+        private final String resource;
+        private final double divisorX;
+        private final double divisorY;
+        private final List<Region> regions;
 
         public TextureAtlasUnstitchSource(String resource, double divisorX, double divisorY, List<Region> regions) {
             this.resource = resource;
@@ -353,17 +422,17 @@ public class TextureAtlases {
             if (!resource.contains(".")) {
                 file += ".png";
             }
-            return relativePath.equals(resource);
+            return relativePath.equals(file);
         }
 
         public class Region {
 
-            private String spriteName;
-            private double x;
-            private double y;
-            private double width;
-            private double height;
-            private UnaryOperator<BufferedImage> imageTransformFunction;
+            private final String spriteName;
+            private final double x;
+            private final double y;
+            private final double width;
+            private final double height;
+            private final UnaryOperator<BufferedImage> imageTransformFunction;
 
             public Region(String spriteName, double x, double y, double width, double height) {
                 this.spriteName = spriteName;
@@ -407,6 +476,50 @@ public class TextureAtlases {
             public double getHeight() {
                 return height;
             }
+        }
+    }
+
+    public static class TextureAtlasPalettedPermutationsSource extends TextureAtlasSource {
+
+        private final List<String> textures;
+        private final String paletteKey;
+        private final Map<String, String> permutations;
+
+        public TextureAtlasPalettedPermutationsSource(List<String> textures, String paletteKey, Map<String, String> permutations) {
+            this.textures = Collections.unmodifiableList(textures);
+            this.paletteKey = paletteKey;
+            this.permutations = Collections.unmodifiableMap(permutations);
+        }
+
+        public List<String> getTextures() {
+            return textures;
+        }
+
+        public String getPaletteKey() {
+            return paletteKey;
+        }
+
+        public Map<String, String> getPermutations() {
+            return permutations;
+        }
+
+        @Override
+        public TextureAtlasSourceType<?> getType() {
+            return TextureAtlasSourceType.PALETTED_PERMUTATIONS;
+        }
+
+        @Override
+        public boolean isIncluded(String namespace, String relativePath) {
+            for (String resource : textures) {
+                String file = resource;
+                if (!resource.contains(".")) {
+                    file += ".png";
+                }
+                if (relativePath.equals(file)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 

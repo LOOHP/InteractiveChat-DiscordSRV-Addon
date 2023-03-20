@@ -53,13 +53,25 @@ public class AdvancementUtils {
             craftAdvancementClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.advancement.CraftAdvancement");
             craftAdvancementClassGetHandleMethod = craftAdvancementClass.getMethod("getHandle");
             nmsAdvancementClass = NMSUtils.getNMSClass("net.minecraft.server.%s.Advancement", "net.minecraft.advancements.Advancement");
-            nmsAdvancementClassGetDisplayMethod = nmsAdvancementClass.getMethod("c");
             nmsAdvancementDisplayClass = NMSUtils.getNMSClass("net.minecraft.server.%s.AdvancementDisplay", "net.minecraft.advancements.AdvancementDisplay");
+            nmsAdvancementClassGetDisplayMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
+                Method method = nmsAdvancementClass.getMethod("c");
+                if (!method.getReturnType().equals(nmsAdvancementDisplayClass)) {
+                    throw new ReflectiveOperationException("method does not return the correct type");
+                }
+                return method;
+            }, () -> {
+                Method method = nmsAdvancementClass.getMethod("d");
+                if (!method.getReturnType().equals(nmsAdvancementDisplayClass)) {
+                    throw new ReflectiveOperationException("method does not return the correct type");
+                }
+                return method;
+            });
             nmsAdvancementDisplayClassGetTitleMethod = nmsAdvancementDisplayClass.getMethod("a");
             nmsAdvancementDisplayClassGetDescriptionMethod = nmsAdvancementDisplayClass.getMethod("b");
             nmsAdvancementDisplayClassGetTypeMethod = nmsAdvancementDisplayClass.getMethod("e");
             nmsAdvancementDisplayClassItemStackField = nmsAdvancementDisplayClass.getDeclaredField("c");
-        } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | NoSuchFieldException e) {
+        } catch (SecurityException | ReflectiveOperationException e) {
             e.printStackTrace();
         }
     }

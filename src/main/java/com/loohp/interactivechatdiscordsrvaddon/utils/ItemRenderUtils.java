@@ -39,6 +39,7 @@ import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechat.utils.CompassUtils;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.ItemNBTUtils;
+import com.loohp.interactivechat.utils.ItemStackUtils;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NBTParsingUtils;
 import com.loohp.interactivechat.utils.SkinUtils;
@@ -53,6 +54,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
+import com.loohp.interactivechatdiscordsrvaddon.resources.textures.EnchantmentGlintType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.SpawnEggTintData;
@@ -88,6 +90,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.UUID;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
@@ -144,9 +147,9 @@ public class ItemRenderUtils {
             requiresEnchantmentGlint = true;
         }
 
-        List<ValuePairs<TextureResource, OpenGLBlending>> enchantmentGlintResource = manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(null, item, () -> ImageGeneration.getDefaultEnchantmentTint(), manager.getLanguageManager().getTranslateFunction().ofLanguage(language));
-        UnaryOperator<BufferedImage> enchantmentGlintFunction = image -> ImageGeneration.getEnchantedImage(enchantmentGlintResource, image);
-        Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintFunction = image -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> ImageGeneration.getRawEnchantedImage(each.getFirst(), image)).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
+        List<ValuePairs<TextureResource, OpenGLBlending>> enchantmentGlintResource = manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(null, item, () -> ImageGeneration.getDefaultEnchantmentTint(EnchantmentGlintType.ITEM), manager.getLanguageManager().getTranslateFunction().ofLanguage(language));
+        BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintFunction = (image, type) -> ImageGeneration.getEnchantedImage(enchantmentGlintResource, image);
+        BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintFunction = (image, type) -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> ImageGeneration.getRawEnchantedImage(each.getFirst(), image)).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
 
         TintIndexData tintIndexData = TintUtils.getTintData(icMaterial);
         Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
@@ -469,7 +472,7 @@ public class ItemRenderUtils {
                 potionOverlay = ImageUtils.multiply(potionOverlay, colorOverlay);
 
                 providedTextures.put(ResourceRegistry.POTION_OVERLAY_PLACEHOLDER, new GeneratedTextureResource(manager, potionOverlay));
-                if (potiontype != null) {
+                if (potiontype != null && InteractiveChat.version.isOlderThan(MCVersion.V1_19_4)) {
                     if (!(potiontype.name().equals("WATER") || potiontype.name().equals("AWKWARD") || potiontype.name().equals("MUNDANE") || potiontype.name().equals("THICK") || potiontype.name().equals("UNCRAFTABLE"))) {
                         requiresEnchantmentGlint = true;
                     }
@@ -566,6 +569,27 @@ public class ItemRenderUtils {
             filledMapMarkings = ImageUtils.multiply(filledMapMarkings, tint);
 
             providedTextures.put(ResourceRegistry.MAP_MARKINGS_LOCATION, new GeneratedTextureResource(manager, filledMapMarkings));
+        } else if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && ItemStackUtils.isArmor(item)) {
+            float trimIndex = ArmorTrimUtils.getArmorTrimIndex(world, item).leftFloat();
+            predicates.put(ModelOverrideType.TRIM_TYPE, trimIndex);
+        } else if (icMaterial.isMaterial(org.bukkit.Material.DECORATED_POT)) {
+            for (int i = 0; i < 4; i++) {
+                TextureResource textureResource = null;
+                String shard = NBTEditor.getString(item, "BlockEntityTag", "shards", i);
+                if (shard != null) {
+                    if (shard.contains(":")) {
+                        shard = shard.substring(shard.indexOf(":") + 1);
+                    }
+                    if (shard.startsWith("pottery_shard_")) {
+                        String type = shard.substring("pottery_shard_".length());
+                        textureResource = manager.getTextureManager().getTexture(ResourceRegistry.DECORATED_POT_SHARD_LOCATION.replace("%s", type));
+                    }
+                }
+                if (textureResource == null) {
+                    textureResource = manager.getTextureManager().getTexture(ResourceRegistry.DECORATED_POT_SIDE_LOCATION);
+                }
+                providedTextures.put(ResourceRegistry.DECORATED_POT_FACE_PLACEHOLDER.replace("%s", String.valueOf(i)), textureResource);
+            }
         }
 
         String modelKey = directLocation == null ? ResourceRegistry.ITEM_MODEL_LOCATION + ModelUtils.getItemModelKey(icMaterial) : directLocation;
@@ -689,16 +713,16 @@ public class ItemRenderUtils {
 
     public static class ItemStackProcessResult {
 
-        private boolean requiresEnchantmentGlint;
-        private Map<ModelOverrideType, Float> predicates;
-        private Map<String, TextureResource> providedTextures;
-        private TintIndexData tintIndexData;
-        private String modelKey;
-        private Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction;
-        private UnaryOperator<BufferedImage> enchantmentGlintFunction;
-        private Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintFunction;
+        private final boolean requiresEnchantmentGlint;
+        private final Map<ModelOverrideType, Float> predicates;
+        private final Map<String, TextureResource> providedTextures;
+        private final TintIndexData tintIndexData;
+        private final String modelKey;
+        private final Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction;
+        private final BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintFunction;
+        private final BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintFunction;
 
-        public ItemStackProcessResult(boolean requiresEnchantmentGlint, Map<ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, String modelKey, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, UnaryOperator<BufferedImage> enchantmentGlintFunction, Function<BufferedImage, RawEnchantmentGlintData> rawEnchantmentGlintFunction) {
+        public ItemStackProcessResult(boolean requiresEnchantmentGlint, Map<ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, String modelKey, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintFunction, BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintFunction) {
             this.requiresEnchantmentGlint = requiresEnchantmentGlint;
             this.predicates = predicates;
             this.providedTextures = providedTextures;
@@ -733,11 +757,11 @@ public class ItemRenderUtils {
             return postResolveFunction;
         }
 
-        public UnaryOperator<BufferedImage> getEnchantmentGlintFunction() {
+        public BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> getEnchantmentGlintFunction() {
             return enchantmentGlintFunction;
         }
 
-        public Function<BufferedImage, RawEnchantmentGlintData> getRawEnchantmentGlintFunction() {
+        public BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> getRawEnchantmentGlintFunction() {
             return rawEnchantmentGlintFunction;
         }
 

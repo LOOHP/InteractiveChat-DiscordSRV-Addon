@@ -38,6 +38,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
+import com.loohp.interactivechatdiscordsrvaddon.resources.textures.EnchantmentGlintType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimation;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;
@@ -505,8 +506,8 @@ public class BlockModelRenderer extends JFrame {
         };
     }
 
-    public BufferedImage getRawEnchantedImage(BufferedImage source) {
-        TextureResource resource = resourceManager.getTextureManager().getTexture(ResourceRegistry.MISC_TEXTURE_LOCATION + "enchanted_item_glint");
+    public BufferedImage getRawEnchantedImage(BufferedImage source, EnchantmentGlintType type) {
+        TextureResource resource = resourceManager.getTextureManager().getTexture(type.getResourceLocation());
         BufferedImage tintOriginal = resource.getTexture();
         if (resource.hasTextureMeta()) {
             TextureMeta meta = resource.getTextureMeta();
@@ -540,8 +541,8 @@ public class BlockModelRenderer extends JFrame {
         return tintImage;
     }
 
-    public BufferedImage getEnchantedImage(BufferedImage source) {
-        return ImageUtils.additionNonTransparent(source, getRawEnchantedImage(source), ResourceRegistry.ENCHANTMENT_GLINT_FACTOR);
+    public BufferedImage getEnchantedImage(BufferedImage source, EnchantmentGlintType type) {
+        return ImageUtils.additionNonTransparent(source, getRawEnchantedImage(source, type), ResourceRegistry.ENCHANTMENT_GLINT_FACTOR);
     }
 
     public Color hex2Rgb(String colorStr) {
@@ -700,7 +701,7 @@ public class BlockModelRenderer extends JFrame {
         modelRenderer.reloadPoolSize();
         long start = System.currentTimeMillis();
         try {
-            RenderResult result = modelRenderer.render((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), (int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), resourceManager, null, false, key, ModelDisplayPosition.GUI, predicates, providedTextures, tintIndexData, enchantedCheckBox.isSelected(), altPosBox.isSelected(), source -> getEnchantedImage(source), source -> new RawEnchantmentGlintData(Collections.singletonList(getRawEnchantedImage(source)), Collections.singletonList(OpenGLBlending.GLINT)));
+            RenderResult result = modelRenderer.render((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), (int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), resourceManager, null, false, key, ModelDisplayPosition.GUI, predicates, providedTextures, tintIndexData, enchantedCheckBox.isSelected(), altPosBox.isSelected(), (source, type) -> getEnchantedImage(source, type), (source, type) -> new RawEnchantmentGlintData(Collections.singletonList(getRawEnchantedImage(source, type)), Collections.singletonList(OpenGLBlending.GLINT)));
             long end = System.currentTimeMillis();
             if (result.isSuccessful()) {
                 renderedImage = result.getImage();

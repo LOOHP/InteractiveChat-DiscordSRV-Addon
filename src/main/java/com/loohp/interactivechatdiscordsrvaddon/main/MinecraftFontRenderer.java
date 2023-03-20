@@ -40,6 +40,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.textures.EnchantmentGlintType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimation;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureProperties;
@@ -355,8 +356,8 @@ public class MinecraftFontRenderer extends JFrame {
         repaintLock.unlock();
     }
 
-    public BufferedImage getRawEnchantedImage(BufferedImage source) {
-        TextureResource resource = resourceManager.getTextureManager().getTexture(ResourceRegistry.MISC_TEXTURE_LOCATION + "enchanted_item_glint");
+    public BufferedImage getRawEnchantedImage(BufferedImage source, EnchantmentGlintType type) {
+        TextureResource resource = resourceManager.getTextureManager().getTexture(type.getResourceLocation());
         BufferedImage tintOriginal = resource.getTexture();
         if (resource.hasTextureMeta()) {
             TextureMeta meta = resource.getTextureMeta();
@@ -383,8 +384,8 @@ public class MinecraftFontRenderer extends JFrame {
         return tintImage;
     }
 
-    public BufferedImage getEnchantedImage(BufferedImage source) {
-        return ImageUtils.additionNonTransparent(source, getRawEnchantedImage(source), ResourceRegistry.ENCHANTMENT_GLINT_FACTOR);
+    public BufferedImage getEnchantedImage(BufferedImage source, EnchantmentGlintType type) {
+        return ImageUtils.additionNonTransparent(source, getRawEnchantedImage(source, type), ResourceRegistry.ENCHANTMENT_GLINT_FACTOR);
     }
 
     public Color hex2Rgb(String colorStr) {

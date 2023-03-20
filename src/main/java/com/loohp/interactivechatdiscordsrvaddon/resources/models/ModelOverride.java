@@ -104,6 +104,7 @@ public class ModelOverride {
         THROWING,
         TIME,
         LEVEL,
+        TRIM_TYPE,
         CUSTOM_MODEL_DATA;
 
         public static ModelOverrideType fromKey(String key) {

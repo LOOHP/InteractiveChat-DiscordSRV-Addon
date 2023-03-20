@@ -30,6 +30,8 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resources.TextureAtlases;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils;
+import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -68,6 +70,34 @@ public class TextureManager extends AbstractManager implements ITextureManager {
         return new GeneratedTextureResource(resourceManager, getMissingImage(16, 16));
     }
 
+    public static Int2IntMap createTexturePaletteReplacementMap(BufferedImage key, BufferedImage permutation) {
+        if (key.getWidth() != permutation.getWidth() || key.getHeight() != permutation.getHeight()) {
+            throw new ResourceLoadingException("Palette key size does not match permutation size");
+        }
+        Int2IntMap map = new Int2IntArrayMap();
+        int[] keyColors = key.getRGB(0, 0, key.getWidth(), key.getHeight(), null, 0, key.getWidth());
+        int[] permutationColors = permutation.getRGB(0, 0, permutation.getWidth(), permutation.getHeight(), null, 0, permutation.getWidth());
+        for (int i = 0; i < keyColors.length; i++) {
+            map.put(keyColors[i] & 16777215, permutationColors[i]);
+        }
+        return map;
+    }
+
+    public static BufferedImage applyPaletteReplacementMap(Int2IntMap palette, BufferedImage image) {
+        int[] colors = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());
+        for (int i = 0; i < colors.length; i++) {
+            int color = colors[i];
+            int alphaless = color & 16777215;
+            if (palette.containsKey(alphaless)) {
+                int replacement = palette.get(alphaless);
+                int alpha = (int) Math.round(Math.min(1.0, Math.max(0.0, ((double) (color >> 24 & 255) / 255.0) * ((double) (replacement >> 24 & 255) / 255.0))) * 255.0);
+                colors[i] = (replacement & 16777215) | (alpha << 24);
+            }
+        }
+        image.setRGB(0, 0, image.getWidth(), image.getHeight(), colors, 0, image.getWidth());
+        return image;
+    }
+
     private Map<String, TextureResource> textures;
 
     public TextureManager(ResourceManager manager) {
@@ -81,7 +111,7 @@ public class TextureManager extends AbstractManager implements ITextureManager {
             throw new IllegalArgumentException(root.getAbsolutePath() + " is not a directory.");
         }
         TextureAtlases textureAtlases = null;
-        if (meta.length > 0 && meta[0] instanceof Map) {
+        if (meta.length > 0 && meta[0] instanceof TextureAtlases) {
             textureAtlases = (TextureAtlases) meta[0];
         }
         JSONParser parser = new JSONParser();
@@ -96,40 +126,65 @@ public class TextureManager extends AbstractManager implements ITextureManager {
                     extension = key.substring(key.lastIndexOf(".") + 1);
                     key = key.substring(0, key.lastIndexOf("."));
                 }
-                TextureAtlases.TextureAtlasSource atlasSource = null;
-                if (textureAtlases == null || (atlasSource = checkAtlasInclusion(textureAtlases, namespace, relativePath)) != null) {
-                    Map<String, UnaryOperator<BufferedImage>> imageTransformFunctions = null;
-                    if (atlasSource != null) {
-                        TextureAtlases.TextureAtlasSourceType<?> sourceType = atlasSource.getType();
-                        if (sourceType.equals(TextureAtlases.TextureAtlasSourceType.DIRECTORY)) {
-                            String fileName = file.getName();
-                            fileName = fileName.substring(0, fileName.lastIndexOf("."));
-                            key = ((TextureAtlases.TextureAtlasDirectorySource) atlasSource).getPrefix() + fileName;
-                        } else if (sourceType.equals(TextureAtlases.TextureAtlasSourceType.UNSTITCH)) {
-                            imageTransformFunctions = ((TextureAtlases.TextureAtlasUnstitchSource) atlasSource).getRegions().stream().collect(Collectors.toMap(each -> each.getSpriteName(), each -> each.getImageTransformFunction(), (a, b) -> b));
-                        }
+                TextureAtlases.TextureAtlasSource atlasSource = textureAtlases == null ? null : checkAtlasInclusion(textureAtlases, namespace, relativePath);
+                Map<String, UnaryOperator<BufferedImage>> imageTransformFunctions = null;
+                if (atlasSource != null) {
+                    TextureAtlases.TextureAtlasSourceType<?> sourceType = atlasSource.getType();
+                    if (sourceType.equals(TextureAtlases.TextureAtlasSourceType.DIRECTORY)) {
+                        String fileName = file.getName();
+                        fileName = fileName.substring(0, fileName.lastIndexOf("."));
+                        key = ((TextureAtlases.TextureAtlasDirectorySource) atlasSource).getPrefix() + fileName;
+                    } else if (sourceType.equals(TextureAtlases.TextureAtlasSourceType.UNSTITCH)) {
+                        imageTransformFunctions = ((TextureAtlases.TextureAtlasUnstitchSource) atlasSource).getRegions().stream().collect(Collectors.toMap(each -> each.getSpriteName(), each -> each.getImageTransformFunction(), (a, b) -> b));
                     }
-                    if (extension.equalsIgnoreCase("png")) {
-                        if (imageTransformFunctions == null) {
-                            textures.put(key, new TextureResource(this, key, file, true, null));
-                        } else {
-                            for (Map.Entry<String, UnaryOperator<BufferedImage>> entry : imageTransformFunctions.entrySet()) {
-                                String spriteName = entry.getKey();
-                                textures.put(spriteName, new TextureResource(this, spriteName, file, true, entry.getValue()));
-                            }
-                        }
-                    } else if (extension.equalsIgnoreCase("mcmeta")) {
-                        InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
-                        JSONObject rootJson = (JSONObject) parser.parse(reader);
-                        reader.close();
-                        TextureMeta textureMeta = TextureMeta.fromJson(this, key + "." + extension, file, rootJson);
-                        textures.put(key + "." + extension, textureMeta);
+                }
+                if (extension.equalsIgnoreCase("png")) {
+                    if (imageTransformFunctions == null) {
+                        textures.put(key, new TextureResource(this, key, file, true, null));
                     } else {
-                        textures.put(key + "." + extension, new TextureResource(this, key, file));
+                        for (Map.Entry<String, UnaryOperator<BufferedImage>> entry : imageTransformFunctions.entrySet()) {
+                            String spriteName = entry.getKey();
+                            textures.put(spriteName, new TextureResource(this, spriteName, file, true, entry.getValue()));
+                        }
                     }
+                } else if (extension.equalsIgnoreCase("mcmeta")) {
+                    InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
+                    JSONObject rootJson = (JSONObject) parser.parse(reader);
+                    reader.close();
+                    TextureMeta textureMeta = TextureMeta.fromJson(this, key + "." + extension, file, rootJson);
+                    textures.put(key + "." + extension, textureMeta);
+                } else {
+                    textures.put(key + "." + extension, new TextureResource(this, key, file));
                 }
             } catch (Exception e) {
                 new ResourceLoadingException("Unable to load block model " + file.getAbsolutePath(), e).printStackTrace();
+            }
+        }
+        this.textures.putAll(textures);
+        textures = new HashMap<>();
+        if (textureAtlases != null) {
+            for (TextureAtlases.TextureAtlasSource textureAtlasSource : textureAtlases.getAllTextureAtlases()) {
+                if (textureAtlasSource.getType().equals(TextureAtlases.TextureAtlasSourceType.PALETTED_PERMUTATIONS)) {
+                    TextureAtlases.TextureAtlasPalettedPermutationsSource source = (TextureAtlases.TextureAtlasPalettedPermutationsSource) textureAtlasSource;
+                    String paletteKey = source.getPaletteKey();
+                    BufferedImage paletteImage = getTexture(paletteKey).getTexture();
+                    Map<String, Int2IntMap> permutations = new HashMap<>(source.getPermutations().size());
+                    for (Map.Entry<String, String> entry : source.getPermutations().entrySet()) {
+                        permutations.put(entry.getKey(), createTexturePaletteReplacementMap(paletteImage, getTexture(entry.getValue()).getTexture()));
+                    }
+                    for (String texture : source.getTextures()) {
+                        BufferedImage textureImage = getTexture(texture).getTexture();
+                        for (Map.Entry<String, Int2IntMap> entry : permutations.entrySet()) {
+                            BufferedImage newImage = new BufferedImage(textureImage.getWidth(), textureImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
+                            Graphics2D g = newImage.createGraphics();
+                            g.drawImage(textureImage, 0, 0, null);
+                            g.dispose();
+                            applyPaletteReplacementMap(entry.getValue(), newImage);
+                            String key = namespace + ":" + texture + "_" + entry.getKey();
+                            textures.put(key, new GeneratedTextureResource(manager, key, newImage));
+                        }
+                    }
+                }
             }
         }
         this.textures.putAll(textures);

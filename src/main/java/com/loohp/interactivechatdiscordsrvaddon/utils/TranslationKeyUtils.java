@@ -22,12 +22,14 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
+import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.org.apache.commons.text.WordUtils;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NMSUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackType;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.PatternTypeWrapper;
+import org.bukkit.Art;
 import org.bukkit.Color;
 import org.bukkit.DyeColor;
 import org.bukkit.FireworkEffect;
@@ -133,6 +135,71 @@ public class TranslationKeyUtils {
         } catch (SecurityException | ReflectiveOperationException e) {
             e.printStackTrace();
         }
+    }
+
+    public static String getArmorTrimMaterialDescription(Key material) {
+        return "trim_material." + material.namespace() + "." + material.value();
+    }
+
+    public static String getArmorTrimPatternDescription(Key pattern) {
+        return "trim_pattern." + pattern.namespace() + "." + pattern.value();
+    }
+
+    public static String getSmithingTemplateUpgrade() {
+        return "item.minecraft.smithing_template.upgrade";
+    }
+
+    public static String getSmithingTemplateAppliesTo() {
+        return "item.minecraft.smithing_template.applies_to";
+    }
+
+    public static String getSmithingTemplateArmorTrimAppliesTo() {
+        return "item.minecraft.smithing_template.armor_trim.applies_to";
+    }
+
+    public static String getSmithingTemplateNetheriteUpgradeAppliesTo() {
+        return "item.minecraft.smithing_template.netherite_upgrade.applies_to";
+    }
+
+    public static String getSmithingTemplateIngredients() {
+        return "item.minecraft.smithing_template.ingredients";
+    }
+
+    public static String getSmithingTemplateArmorTrimIngredients() {
+        return "item.minecraft.smithing_template.armor_trim.ingredients";
+    }
+
+    public static String getSmithingTemplateNetheriteUpgradeIngredients() {
+        return "item.minecraft.smithing_template.netherite_upgrade.ingredients";
+    }
+
+    public static String getTrimPatternName(Key material) {
+        String namespace = material.namespace();
+        String key = material.value();
+        key = key.substring(0, key.length() - "_smithing_template".length());
+        if (key.endsWith("_upgrade")) {
+            return "upgrade." + namespace + "." + key;
+        } else if (key.endsWith("_armor_trim")) {
+            key = key.substring(0, key.length() - "_armor_trim".length());
+            return "trim_pattern." + namespace + "." + key;
+        }
+        return material.asString();
+    }
+
+    public static String getPaintingTitle(Art art) {
+        return "painting.minecraft." + art.name().toLowerCase() + ".title";
+    }
+
+    public static String getPaintingAuthor(Art art) {
+        return "painting.minecraft." + art.name().toLowerCase() + ".author";
+    }
+
+    public static String getPaintingDimension() {
+        return "painting.dimensions";
+    }
+
+    public static String getPotionDurationInfinite() {
+        return "effect.duration.infinite";
     }
 
     public static String getItemNbtTag() {

@@ -48,6 +48,11 @@ public class GeneratedTextureResource extends TextureResource {
         this(manager, null, file);
     }
 
+    @Override
+    public TextureMeta getTextureMeta() {
+        return null;
+    }
+
     public static class GeneratedTextureManager extends AbstractManager implements ITextureManager {
 
         private GeneratedTextureManager(ResourceManager manager) {

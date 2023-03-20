@@ -32,7 +32,7 @@ public class ResourceRegistry {
             itemTextureLocation = com.loohp.interactivechat.InteractiveChat.version.isLegacy() ? "minecraft:items/" : "minecraft:item/";
             blockTextureLocation = com.loohp.interactivechat.InteractiveChat.version.isLegacy() ? "minecraft:blocks/" : "minecraft:block/";
         } catch (ClassNotFoundException | NoClassDefFoundError e) {
-            resourcePackVersion = 12;
+            resourcePackVersion = 13;
             itemTextureLocation = "minecraft:item/";
             blockTextureLocation = "minecraft:block/";
         }
@@ -65,6 +65,9 @@ public class ResourceRegistry {
 
     public static final String ITEM_MODEL_LOCATION = "minecraft:item/";
     public static final String BUILTIN_ENTITY_MODEL_LOCATION = ICD_PREFIX + "builtin_entity/";
+
+    public static final String ENCHANTMENT_GLINT_ENTITY_LOCATION = ResourceRegistry.MISC_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION < 13 ? "enchanted_item_glint" : "enchanted_glint_entity");
+    public static final String ENCHANTMENT_GLINT_ITEM_LOCATION = ResourceRegistry.MISC_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION < 13 ? "enchanted_item_glint" : "enchanted_glint_item");
 
     public static final String SKIN_TEXTURE_PLACEHOLDER = ICD_PREFIX + "skin";
     public static final String SKIN_FULL_TEXTURE_PLACEHOLDER = ICD_PREFIX + "skin_full";
@@ -100,6 +103,14 @@ public class ResourceRegistry {
 
     public static final String DEFAULT_WIDE_SKIN_LOCATION = ENTITY_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION < 12 ? "steve" : "player/wide/steve");
     public static final String DEFAULT_SLIM_SKIN_LOCATION = ENTITY_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION < 12 ? "alex" : "player/slim/alex");
+
+    public static final String DECORATED_POT_SIDE_LOCATION = ENTITY_TEXTURE_LOCATION + "decorated_pot/decorated_pot_side";
+    public static final String DECORATED_POT_SHARD_LOCATION = ENTITY_TEXTURE_LOCATION + "decorated_pot/pottery_pattern_%s";
+    public static final String DECORATED_POT_FACE_PLACEHOLDER = ICD_PREFIX + "decorated_pot/face_%s";
+
+    public static final String TRIM_TEXTURE_LOCATION = "minecraft:trims/";
+    public static final String ARMOR_TRIM_LOCATION = TRIM_TEXTURE_LOCATION + "models/armor/%s_%s";
+    public static final String ARMOR_TRIM_LEGGINGS_LOCATION = TRIM_TEXTURE_LOCATION + "models/armor/%s_leggings_%s";
 
     public static final double ENCHANTMENT_GLINT_FACTOR = 190.0 / 255.0;
 
