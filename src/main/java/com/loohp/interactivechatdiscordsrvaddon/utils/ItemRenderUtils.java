@@ -572,7 +572,7 @@ public class ItemRenderUtils {
         } else if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && ItemStackUtils.isArmor(item)) {
             float trimIndex = ArmorTrimUtils.getArmorTrimIndex(world, item).leftFloat();
             predicates.put(ModelOverrideType.TRIM_TYPE, trimIndex);
-        } else if (icMaterial.isMaterial(org.bukkit.Material.DECORATED_POT)) {
+        } else if (icMaterial.isMaterial(XMaterial.DECORATED_POT)) {
             for (int i = 0; i < 4; i++) {
                 TextureResource textureResource = null;
                 String shard = NBTEditor.getString(item, "BlockEntityTag", "shards", i);
