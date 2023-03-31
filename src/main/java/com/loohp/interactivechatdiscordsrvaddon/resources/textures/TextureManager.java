@@ -131,9 +131,10 @@ public class TextureManager extends AbstractManager implements ITextureManager {
                 if (atlasSource != null) {
                     TextureAtlases.TextureAtlasSourceType<?> sourceType = atlasSource.getType();
                     if (sourceType.equals(TextureAtlases.TextureAtlasSourceType.DIRECTORY)) {
-                        String fileName = file.getName();
+                        TextureAtlases.TextureAtlasDirectorySource directorySource = (TextureAtlases.TextureAtlasDirectorySource) atlasSource;
+                        String fileName = file.getRelativePathFrom(root.getChild(directorySource.getSource()));
                         fileName = fileName.substring(0, fileName.lastIndexOf("."));
-                        key = ((TextureAtlases.TextureAtlasDirectorySource) atlasSource).getPrefix() + fileName;
+                        key = namespace + ":" + directorySource.getPrefix() + fileName;
                     } else if (sourceType.equals(TextureAtlases.TextureAtlasSourceType.UNSTITCH)) {
                         imageTransformFunctions = ((TextureAtlases.TextureAtlasUnstitchSource) atlasSource).getRegions().stream().collect(Collectors.toMap(each -> each.getSpriteName(), each -> each.getImageTransformFunction(), (a, b) -> b));
                     }
