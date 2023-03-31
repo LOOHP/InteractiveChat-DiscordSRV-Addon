@@ -5,6 +5,7 @@ main: com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon
 api-version: 1.13
 description: DiscordSRV addon to InteractiveChat
 depend: [InteractiveChat, DiscordSRV]
+softdepend: [ItemsAdder]
 prefix: InteractiveChatDiscordSRVAddon
 
 commands:

@@ -29,6 +29,7 @@ import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.utils.FileUtils;
 import com.loohp.interactivechat.utils.HTTPRequestUtils;
 import com.loohp.interactivechat.utils.HashUtils;
+import com.loohp.interactivechatdiscordsrvaddon.hook.ItemsAdderHook;
 import com.loohp.interactivechatdiscordsrvaddon.libs.LibraryDownloadManager;
 import com.loohp.interactivechatdiscordsrvaddon.libs.LibraryLoader;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceDownloadManager;
@@ -168,6 +169,13 @@ public class AssetsDownloader {
     public static ServerResourcePackDownloadResult downloadServerResourcePack(File packFolder) {
         String url = InteractiveChatDiscordSrvAddon.plugin.alternateResourcePackURL;
         String hash = InteractiveChatDiscordSrvAddon.plugin.alternateResourcePackHash;
+        if (InteractiveChatDiscordSrvAddon.itemsAdderHook && InteractiveChatDiscordSrvAddon.plugin.itemsAdderPackAsServerResourcePack) {
+            String iaUrl = ItemsAdderHook.getItemsAdderResourcePackURL();
+            if (iaUrl != null) {
+                url = iaUrl;
+                hash = null;
+            }
+        }
         if (url == null || url.isEmpty()) {
             url = ResourcePackUtils.getServerResourcePack();
             hash = ResourcePackUtils.getServerResourcePackHash();

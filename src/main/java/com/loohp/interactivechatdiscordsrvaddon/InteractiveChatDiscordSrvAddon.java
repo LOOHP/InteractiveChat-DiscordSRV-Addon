@@ -41,6 +41,7 @@ import com.loohp.interactivechatdiscordsrvaddon.api.events.ResourceManagerInitia
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.hook.ItemsAdderHook;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordCommandEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordInteractionEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordReadyEvents;
@@ -124,6 +125,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public static InteractiveChatDiscordSrvAddon plugin;
     public static InteractiveChat interactivechat;
     public static DiscordSRV discordsrv;
+
+    public static boolean itemsAdderHook = false;
 
     public static boolean isReady = false;
 
@@ -253,6 +256,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public List<String> resourceOrder = new ArrayList<>();
     public boolean forceUnicode = false;
     public boolean includeServerResourcePack = true;
+    public boolean itemsAdderPackAsServerResourcePack = true;
     public String alternateResourcePackURL = "";
     public String alternateResourcePackHash = "";
     public boolean optifineCustomTextures = true;
@@ -348,6 +352,11 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         File serverResourcePack = new File(getDataFolder(), "server-resource-packs");
         if (!serverResourcePack.exists()) {
             serverResourcePack.mkdirs();
+        }
+
+        if (InteractiveChat.isPluginEnabled("ItemsAdder")) {
+            getServer().getConsoleSender().sendMessage(org.bukkit.ChatColor.AQUA + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon has hooked into ItemsAdder!");
+            itemsAdderHook = true;
         }
 
         if (!compatible()) {
@@ -464,6 +473,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         }
 
         includeServerResourcePack = config.getConfiguration().getBoolean("Resources.IncludeServerResourcePack");
+        itemsAdderPackAsServerResourcePack = config.getConfiguration().getBoolean("Resources.ItemsAdderPackAsServerResourcePack");
         alternateResourcePackURL = config.getConfiguration().getString("Resources.AlternateServerResourcePack.URL");
         alternateResourcePackHash = config.getConfiguration().getString("Resources.AlternateServerResourcePack.Hash");
         optifineCustomTextures = config.getConfiguration().getBoolean("Resources.OptifineCustomTextures");

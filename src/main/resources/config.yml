@@ -298,6 +298,9 @@ Resources:
   #Put server resource pack from server.properties
   #at the top of the resource pack ordering list if it is available
   IncludeServerResourcePack: true
+  #If ItemsAdder is present and as a resource pack hosted, use its resource pack as server resource pack
+  #IncludeServerResourcePack must be true for this setting to be effective
+  ItemsAdderPackAsServerResourcePack: true
   #Set this option if you want a separate url as the server resource pack
   #If the URL is empty, the url and hash from server.properties will be used
   #If the hash is empty but URL is not, the resource pack hash will not be checked
