@@ -41,7 +41,6 @@ import com.loohp.interactivechatdiscordsrvaddon.api.events.ResourceManagerInitia
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
-import com.loohp.interactivechatdiscordsrvaddon.hook.ItemsAdderHook;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordCommandEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordInteractionEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordReadyEvents;

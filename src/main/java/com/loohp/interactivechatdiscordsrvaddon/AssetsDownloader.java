@@ -29,7 +29,7 @@ import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.utils.FileUtils;
 import com.loohp.interactivechat.utils.HTTPRequestUtils;
 import com.loohp.interactivechat.utils.HashUtils;
-import com.loohp.interactivechatdiscordsrvaddon.hook.ItemsAdderHook;
+import com.loohp.interactivechatdiscordsrvaddon.hooks.ItemsAdderHook;
 import com.loohp.interactivechatdiscordsrvaddon.libs.LibraryDownloadManager;
 import com.loohp.interactivechatdiscordsrvaddon.libs.LibraryLoader;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceDownloadManager;
