@@ -685,7 +685,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                     OfflineICPlayer offlineICPlayer = ICPlayerFactory.getOfflineICPlayer(uuid);
                     errorCode--;
                     List<ToolTipComponent<?>> playerInfoComponents;
-                    if (offlineICPlayer.isOnline()) {
+                    if (offlineICPlayer.isOnline() && !((ICPlayer) offlineICPlayer).isVanished()) {
                         playerInfoComponents = InteractiveChatDiscordSrvAddon.plugin.playerinfoCommandFormatOnline.stream().map(each -> {
                             each = ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(offlineICPlayer, each));
                             return ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(each));
