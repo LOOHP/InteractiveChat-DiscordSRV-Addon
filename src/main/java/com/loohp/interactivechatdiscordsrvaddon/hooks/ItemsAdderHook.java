@@ -20,45 +20,13 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.hooks;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.Arrays;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 
 public class ItemsAdderHook {
 
-    private static Class<?> itemsAdderCoreClass;
-    private static Method itemsAdderCoreGetInstMethod;
-    private static Class<?> itemsAdderResourcePackDataClass;
-    private static Field itemsAdderCoreResourcePackDataField;
-    private static Class<?> itemsAdderResourcePackHostClass;
-    private static Field itemsAdderResourcePackDataGetHostField;
-    private static Method itemsAdderResourcePackHostGetURLMethod;
-
-    static {
-        try {
-            itemsAdderCoreClass = Class.forName("ia.m.I");
-            itemsAdderCoreGetInstMethod = Arrays.stream(itemsAdderCoreClass.getMethods()).filter(m -> m.getParameterCount() == 0 && m.getReturnType().equals(itemsAdderCoreClass)).findFirst().get();
-            itemsAdderResourcePackDataClass = Class.forName("ia.m.iF");
-            itemsAdderCoreResourcePackDataField = Arrays.stream(itemsAdderCoreClass.getFields()).filter(f -> f.getType().equals(itemsAdderResourcePackDataClass)).findFirst().get();
-            itemsAdderResourcePackHostClass = Class.forName("ia.m.jg");
-            itemsAdderResourcePackDataGetHostField = Arrays.stream(itemsAdderResourcePackDataClass.getFields()).filter(f -> f.getType().equals(itemsAdderResourcePackHostClass)).findFirst().get();
-            itemsAdderResourcePackHostGetURLMethod = Arrays.stream(itemsAdderResourcePackHostClass.getDeclaredMethods()).filter(m -> m.getParameterCount() == 1 && m.getParameterTypes()[0].equals(boolean.class) && m.getReturnType().equals(String.class)).findFirst().get();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public static String getItemsAdderResourcePackURL() {
-        try {
-            Object core = itemsAdderCoreGetInstMethod.invoke(null);
-            Object data = itemsAdderCoreResourcePackDataField.get(core);
-            Object host = itemsAdderResourcePackDataGetHostField.get(data);
-            itemsAdderResourcePackHostGetURLMethod.setAccessible(true);
-            return (String) itemsAdderResourcePackHostGetURLMethod.invoke(host, true);
-        } catch (IllegalAccessException | InvocationTargetException | ClassCastException e) {
-            e.printStackTrace();
-        }
+        Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] ItemsAdder Resource Pack URL Hooking coming soon!");
         return null;
     }
 
