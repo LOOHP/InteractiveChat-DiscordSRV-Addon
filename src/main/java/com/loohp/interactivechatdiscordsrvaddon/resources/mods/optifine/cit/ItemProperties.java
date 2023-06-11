@@ -32,8 +32,8 @@ import java.util.Set;
 
 public class ItemProperties extends CITProperties {
 
-    private Map<String, String> models;
-    private Map<String, String> textures;
+    private final Map<String, String> models;
+    private final Map<String, String> textures;
 
     public ItemProperties(int weight, Set<ICMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, CITValueMatcher> nbtMatch, Map<String, String> models, Map<String, String> textures) {
         super(weight, items, stackSize, damage, damageMask, hand, enchantments, nbtMatch);

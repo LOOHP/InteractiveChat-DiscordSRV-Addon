@@ -45,8 +45,8 @@ public class ResourceFilterBlock {
         return list;
     }
 
-    private Pattern namespace;
-    private Pattern path;
+    private final Pattern namespace;
+    private final Pattern path;
 
     public ResourceFilterBlock(Pattern namespace, Pattern path) {
         this.namespace = namespace;

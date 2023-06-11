@@ -39,7 +39,7 @@ import java.util.function.UnaryOperator;
 
 public class OptifineItemTextureResolver implements CustomItemTextureResolver {
 
-    private OptifineManager optifineManager;
+    private final OptifineManager optifineManager;
 
     public OptifineItemTextureResolver(OptifineManager optifineManager) {
         this.optifineManager = optifineManager;

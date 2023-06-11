@@ -20,11 +20,13 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
+import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.utils.ChatComponentType;
 import com.loohp.interactivechat.utils.ItemStackUtils;
+import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NMSUtils;
 import it.unimi.dsi.fastutil.floats.FloatObjectPair;
 import org.bukkit.World;
@@ -57,7 +59,11 @@ public class ArmorTrimUtils {
             nmsArmorTrimClass = NMSUtils.getNMSClass("net.minecraft.world.item.armortrim.ArmorTrim");
             nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.world.item.ItemStack");
             nmsTrimMaterialClass = NMSUtils.getNMSClass("net.minecraft.world.item.armortrim.TrimMaterial");
-            nmsWorldServerGetIRegistryCustom = nmsWorldServerClass.getMethod("u_");
+            if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_20)) {
+                nmsWorldServerGetIRegistryCustom = nmsWorldServerClass.getMethod("B_");
+            } else {
+                nmsWorldServerGetIRegistryCustom = nmsWorldServerClass.getMethod("u_");
+            }
             nmsArmorTrimGetTrimMethod = nmsArmorTrimClass.getMethod("a", nmsWorldServerGetIRegistryCustom.getReturnType(), nmsItemStackClass);
             nmsArmorTrimGetMaterialHolderMethod = nmsArmorTrimClass.getMethod("b");
             nmsHolderGetValueMethod = nmsArmorTrimGetMaterialHolderMethod.getReturnType().getMethod("a");

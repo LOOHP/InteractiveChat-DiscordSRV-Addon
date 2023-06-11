@@ -22,9 +22,9 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.models;
 
 public class Coordinates3D {
 
-    private double x;
-    private double y;
-    private double z;
+    private final double x;
+    private final double y;
+    private final double z;
 
     public Coordinates3D(double x, double y, double z) {
         this.x = x;

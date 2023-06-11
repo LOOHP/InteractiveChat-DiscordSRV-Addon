@@ -45,9 +45,9 @@ public class FieldAccessor<T> {
         return new FieldAccessor<>(null, null, defaultValue);
     }
 
-    private Field field;
-    private Function<Object, T> mapper;
-    private T defaultValue;
+    private final Field field;
+    private final Function<Object, T> mapper;
+    private final T defaultValue;
 
     private FieldAccessor(Field field, Function<Object, T> mapper, T defaultValue) {
         this.field = field;

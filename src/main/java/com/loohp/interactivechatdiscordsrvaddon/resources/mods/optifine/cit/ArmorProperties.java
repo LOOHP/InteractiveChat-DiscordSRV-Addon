@@ -32,7 +32,7 @@ import java.util.Set;
 
 public class ArmorProperties extends CITProperties {
 
-    private Map<String, String> textures;
+    private final Map<String, String> textures;
 
     public ArmorProperties(int weight, Set<ICMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, CITValueMatcher> nbtMatch, Map<String, String> textures) {
         super(weight, items, stackSize, damage, damageMask, hand, enchantments, nbtMatch);

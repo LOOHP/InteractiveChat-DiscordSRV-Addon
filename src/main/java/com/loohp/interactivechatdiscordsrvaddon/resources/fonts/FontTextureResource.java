@@ -27,7 +27,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResour
 import java.awt.image.BufferedImage;
 import java.lang.ref.Reference;
 
-public class FontTextureResource {
+public class FontTextureResource extends FontResource {
 
     private static long CACHE_TIME = 0;
 
@@ -39,22 +39,19 @@ public class FontTextureResource {
         CACHE_TIME = cacheTime;
     }
 
-    private TextureResource resource;
-    private char resourceWidth;
-    private char resourceHeight;
-    private char x;
-    private char y;
-    private char width;
-    private char height;
+    private final TextureResource resource;
+    private final char resourceWidth;
+    private final char resourceHeight;
+    private final char x;
+    private final char y;
 
     public FontTextureResource(TextureResource resource, char resourceWidth, char resourceHeight, char x, char y, char width, char height) {
+        super(width, height);
         this.resource = resource;
         this.resourceWidth = resourceWidth;
         this.resourceHeight = resourceHeight;
         this.x = x;
         this.y = y;
-        this.width = width;
-        this.height = height;
     }
 
     public FontTextureResource(TextureResource resource, int resourceWidth, int resourceHeight, int x, int y, int width, int height) {
@@ -103,14 +100,6 @@ public class FontTextureResource {
 
     public int getY() {
         return y;
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
     }
 
 }

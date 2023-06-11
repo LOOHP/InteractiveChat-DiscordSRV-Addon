@@ -31,7 +31,7 @@ import java.util.Set;
 
 public class ElytraProperties extends CITProperties {
 
-    private String texture;
+    private final String texture;
 
     public ElytraProperties(int weight, Set<ICMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, CITValueMatcher> nbtMatch, String texture) {
         super(weight, items, stackSize, damage, damageMask, hand, enchantments, nbtMatch);

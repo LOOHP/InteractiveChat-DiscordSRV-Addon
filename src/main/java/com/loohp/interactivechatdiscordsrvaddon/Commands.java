@@ -119,12 +119,14 @@ public class Commands implements CommandExecutor, TabCompleter {
                             sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.reloadConfigMessage);
                         } catch (Throwable e) {
                             e.printStackTrace();
+                        } finally {
+                            InteractiveChatDiscordSrvAddon.plugin.resourceReloadLock.unlock();
                         }
-                        InteractiveChatDiscordSrvAddon.plugin.resourceReloadLock.unlock();
                     } else {
                         sender.sendMessage(ChatColor.YELLOW + "Resource reloading in progress, please wait!");
                     }
-                } catch (IllegalStateException | InterruptedException e) {
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             } else {
                 sender.sendMessage(InteractiveChat.noPermissionMessage);

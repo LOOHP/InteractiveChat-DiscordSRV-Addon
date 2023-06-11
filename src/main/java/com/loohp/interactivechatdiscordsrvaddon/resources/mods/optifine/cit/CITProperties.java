@@ -248,14 +248,14 @@ public abstract class CITProperties {
         throw new IllegalArgumentException("Invalid CIT property type \"" + type + "\"");
     }
 
-    protected int weight;
-    protected Set<ICMaterial> items;
-    protected IntegerRange stackSize;
-    protected PercentageOrIntegerRange damage;
-    protected int damageMask;
-    protected EquipmentSlot hand;
-    protected Map<Enchantment, IntegerRange> enchantments;
-    protected Map<String, CITValueMatcher> nbtMatch;
+    protected final int weight;
+    protected final Set<ICMaterial> items;
+    protected final IntegerRange stackSize;
+    protected final PercentageOrIntegerRange damage;
+    protected final int damageMask;
+    protected final EquipmentSlot hand;
+    protected final Map<Enchantment, IntegerRange> enchantments;
+    protected final Map<String, CITValueMatcher> nbtMatch;
 
     public CITProperties(int weight, Set<ICMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, CITValueMatcher> nbtMatch) {
         this.weight = weight;

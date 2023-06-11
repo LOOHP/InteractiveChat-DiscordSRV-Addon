@@ -40,11 +40,11 @@ public class PreviewableImageContainer {
         return new PreviewableImageContainer(attachment.getFileName(), attachment.getUrl(), Collections.singletonList(attachment.getProxyUrl()), attachment.getContentType(), () -> attachment.retrieveInputStream());
     }
 
-    private String name;
-    private String url;
-    private List<String> altUrls;
-    private String contentType;
-    private Supplier<CompletableFuture<InputStream>> retrieveInputStream;
+    private final String name;
+    private final String url;
+    private final List<String> altUrls;
+    private final String contentType;
+    private final Supplier<CompletableFuture<InputStream>> retrieveInputStream;
 
     public PreviewableImageContainer(String name, String url, List<String> altUrls, String contentType, Supplier<CompletableFuture<InputStream>> retrieveInputStream) {
         this.name = name;

@@ -27,8 +27,8 @@ import java.util.Objects;
 @SuppressWarnings("DuplicateExpressions")
 public class IntegerRange {
 
-    private int min;
-    private int max;
+    private final int min;
+    private final int max;
 
     public IntegerRange(int min, int max) {
         this.min = min;

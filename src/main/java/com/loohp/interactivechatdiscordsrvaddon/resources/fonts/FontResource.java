@@ -1,8 +1,8 @@
 /*
  * This file is part of InteractiveChatDiscordSrvAddon.
  *
- * Copyright (C) 2022. LoohpJames <jamesloohp@gmail.com>
- * Copyright (C) 2022. Contributors
+ * Copyright (C) 2023. LoohpJames <jamesloohp@gmail.com>
+ * Copyright (C) 2023. Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,24 +18,28 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.loohp.interactivechatdiscordsrvaddon.objectholders;
+package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
-public class AttachmentData {
+import java.awt.image.BufferedImage;
 
-    private final String name;
-    private final byte[] data;
+public abstract class FontResource {
 
-    public AttachmentData(String name, byte[] data) {
-        this.name = name;
-        this.data = data;
+    protected final char width;
+    protected final char height;
+
+    public FontResource(char width, char height) {
+        this.width = width;
+        this.height = height;
     }
 
-    public String getName() {
-        return name;
+    public abstract BufferedImage getFontImage();
+
+    public int getWidth() {
+        return width;
     }
 
-    public byte[] getData() {
-        return data;
+    public int getHeight() {
+        return height;
     }
 
 }

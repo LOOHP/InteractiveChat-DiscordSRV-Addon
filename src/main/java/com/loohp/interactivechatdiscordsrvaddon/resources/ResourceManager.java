@@ -45,43 +45,45 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 public class ResourceManager implements AutoCloseable {
 
-    private List<ResourcePackInfo> resourcePackInfo;
+    private final List<ResourcePackInfo> resourcePackInfo;
 
-    private Map<String, IResourceRegistry> resourceRegistries;
+    private final Map<String, IResourceRegistry> resourceRegistries;
 
-    private ModelManager modelManager;
-    private TextureManager textureManager;
-    private FontManager fontManager;
-    private LanguageManager languageManager;
+    private final ModelManager modelManager;
+    private final TextureManager textureManager;
+    private final FontManager fontManager;
+    private final LanguageManager languageManager;
 
-    private Map<String, ModManager> modManagers;
+    private final Map<String, ModManager> modManagers;
 
-    private boolean flattenLegacy;
-    private boolean fontLegacy;
+    private final Set<Flag> flags;
 
-    private BiFunction<File, ResourcePackType, DefaultResourcePackInfo> defaultResourcePackInfoFunction;
-    private AtomicBoolean isValid;
-    private UUID uuid;
+    private final BiFunction<File, ResourcePackType, DefaultResourcePackInfo> defaultResourcePackInfoFunction;
+    private final AtomicBoolean isValid;
+    private final UUID uuid;
 
-    public ResourceManager(boolean flattenLegacy, boolean fontLegacy, Collection<ModManagerSupplier<?>> modManagerProviders, Collection<ResourceRegistrySupplier<?>> resourceManagerUtilsProviders, BiFunction<File, ResourcePackType, DefaultResourcePackInfo> defaultResourcePackInfoFunction) {
+    public ResourceManager(Collection<ModManagerSupplier<?>> modManagerProviders, Collection<ResourceRegistrySupplier<?>> resourceManagerUtilsProviders, BiFunction<File, ResourcePackType, DefaultResourcePackInfo> defaultResourcePackInfoFunction, Flag... flags) {
         this.resourcePackInfo = new ArrayList<>();
         this.defaultResourcePackInfoFunction = defaultResourcePackInfoFunction;
 
-        this.flattenLegacy = flattenLegacy;
-        this.fontLegacy = fontLegacy;
+        this.flags = flags.length == 0 ? Collections.emptySet() : Collections.unmodifiableSet(EnumSet.copyOf(Arrays.asList(flags)));
 
         this.isValid = new AtomicBoolean(true);
         this.uuid = UUID.randomUUID();
@@ -104,10 +106,10 @@ public class ResourceManager implements AutoCloseable {
         }
     }
 
-    public ResourceManager(boolean flattenLegacy, boolean fontLegacy, Collection<ModManagerSupplier<?>> modManagerProviders, Collection<ResourceRegistrySupplier<?>> resourceManagerUtilsProviders, int defaultResourcePackVersion) {
-        this(flattenLegacy, fontLegacy, modManagerProviders, resourceManagerUtilsProviders, (resourcePackFile, type) -> {
+    public ResourceManager(Collection<ModManagerSupplier<?>> modManagerProviders, Collection<ResourceRegistrySupplier<?>> resourceManagerUtilsProviders, int defaultResourcePackVersion, Flag... flags) {
+        this(modManagerProviders, resourceManagerUtilsProviders, (resourcePackFile, type) -> {
             return new ResourceManager.DefaultResourcePackInfo(Component.text(resourcePackFile.getName()), defaultResourcePackVersion, Component.text("The default look and feel of Minecraft (Modified by LOOHP)"));
-        });
+        }, flags);
     }
 
     public ResourcePackInfo loadResources(File resourcePackFile, ResourcePackType type) {
@@ -231,18 +233,21 @@ public class ResourceManager implements AutoCloseable {
 
         ResourcePackFile assetsFolder = resourcePack.getChild("assets");
         Map<String, TextureAtlases> textureAtlases = loadAtlases(assetsFolder);
+
+        ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, true, null, format, description, languageMeta, icon, resourceFilterBlocks, textureAtlases);
+        resourcePackInfo.add(0, info);
+
         try {
             filterResources(resourceFilterBlocks);
             loadAssets(assetsFolder, languageMeta, textureAtlases);
         } catch (Exception e) {
             new ResourceLoadingException("Unable to load assets for " + resourcePackNameStr, e).printStackTrace();
-            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, false, "Unable to load assets", format, description, languageMeta, icon, resourceFilterBlocks, textureAtlases);
+            resourcePackInfo.remove(0);
+            info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, false, "Unable to load assets", format, description, languageMeta, icon, resourceFilterBlocks, textureAtlases);
             resourcePackInfo.add(0, info);
             return info;
         }
 
-        ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, true, null, format, description, languageMeta, icon, resourceFilterBlocks, textureAtlases);
-        resourcePackInfo.add(0, info);
         return info;
     }
 
@@ -415,12 +420,42 @@ public class ResourceManager implements AutoCloseable {
         return Collections.unmodifiableMap(resourceRegistries);
     }
 
-    public boolean isFlattenLegacy() {
-        return flattenLegacy;
+    public Set<Flag> getFlags() {
+        return flags;
     }
 
-    public boolean isFontLegacy() {
-        return fontLegacy;
+    public boolean hasLegacyFlags() {
+        return flags.stream().anyMatch(f -> f.isLegacyFlag());
+    }
+
+    public boolean hasFlag(Flag flag) {
+        return flags.contains(flag);
+    }
+
+    public boolean hasFlags(Flag... flags) {
+        return this.flags.containsAll(Arrays.asList(flags));
+    }
+
+    public ResourcePackFile findResource(String resourceLocation) {
+        if (!resourceLocation.contains(":")) {
+            resourceLocation = "minecraft:" + resourceLocation;
+        }
+        String[] paths = ("assets/" + resourceLocation).split("[:/]");
+        outer: for (ResourcePackInfo info : resourcePackInfo) {
+            ResourcePackFile file = info.getResourcePackFile();
+            for (int i = 0; i < paths.length; i++) {
+                String path = paths[i];
+                if (i < paths.length - 1 && !file.isDirectory()) {
+                    continue outer;
+                }
+                file = file.getChild(path);
+                if (!file.exists()) {
+                    continue outer;
+                }
+            }
+            return file;
+        }
+        return null;
     }
 
     public boolean isValid() {
@@ -479,9 +514,9 @@ public class ResourceManager implements AutoCloseable {
 
     public static class DefaultResourcePackInfo {
 
-        private Component name;
-        private int version;
-        private Component description;
+        private final Component name;
+        private final int version;
+        private final Component description;
 
         public DefaultResourcePackInfo(Component name, int version, Component description) {
             this.name = name;
@@ -499,6 +534,33 @@ public class ResourceManager implements AutoCloseable {
 
         public Component getDescription() {
             return description;
+        }
+
+    }
+
+    public enum Flag {
+
+        LEGACY_PRE_FLATTEN(true),
+        LEGACY_HARDCODED_SPACE_FONT(true);
+
+        private final static Flag[] VALUES = values();
+
+        private final boolean legacy;
+
+        Flag(boolean legacy) {
+            this.legacy = legacy;
+        }
+
+        Flag() {
+            this(false);
+        }
+
+        public boolean isLegacyFlag() {
+            return legacy;
+        }
+
+        public static Flag[] build(boolean... values) {
+            return IntStream.range(0, values.length).filter(i -> values[i]).mapToObj(i -> VALUES[i]).toArray(Flag[]::new);
         }
 
     }

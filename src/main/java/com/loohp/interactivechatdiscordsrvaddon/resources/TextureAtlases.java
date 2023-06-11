@@ -37,6 +37,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -130,7 +131,7 @@ public class TextureAtlases {
         return new TextureAtlases(sources);
     }
 
-    private Map<TextureAtlasType, List<TextureAtlasSource>> textureAtlases;
+    private final Map<TextureAtlasType, List<TextureAtlasSource>> textureAtlases;
 
     public TextureAtlases(Map<TextureAtlasType, List<TextureAtlasSource>> textureAtlases) {
         this.textureAtlases = Collections.unmodifiableMap(textureAtlases);
@@ -165,20 +166,25 @@ public class TextureAtlases {
         private static final Map<String, TextureAtlasType> TYPES;
 
         static {
-            TYPES = new HashMap<>();
+            TYPES = new ConcurrentHashMap<>();
             TYPES.put(BLOCKS.name(), BLOCKS);
             TYPES.put(BANNER_PATTERNS.name(), BANNER_PATTERNS);
             TYPES.put(BEDS.name(), BEDS);
             TYPES.put(CHESTS.name(), CHESTS);
             TYPES.put(SHIELD_PATTERNS.name(), SHIELD_PATTERNS);
             TYPES.put(SHULKER_BOXES.name(), SHULKER_BOXES);
+            TYPES.put(SIGNS.name(), SIGNS);
             TYPES.put(MOB_EFFECTS.name(), MOB_EFFECTS);
             TYPES.put(PAINTINGS.name(), PAINTINGS);
             TYPES.put(PARTICLES.name(), PARTICLES);
             TYPES.put(ARMOR_TRIMS.name(), ARMOR_TRIMS);
         }
 
-        private String name;
+        public static Map<String, TextureAtlasType> types() {
+            return Collections.unmodifiableMap(TYPES);
+        }
+
+        private final String name;
 
         TextureAtlasType(String name) {
             this.name = name;
@@ -207,14 +213,8 @@ public class TextureAtlases {
         }
 
         public static TextureAtlasType fromName(String name) {
-            for (TextureAtlasType type : TYPES.values()) {
-                if (type.name().equalsIgnoreCase(name)) {
-                    return type;
-                }
-            }
-            TextureAtlasType newType = new TextureAtlasType(name.toLowerCase());
-            TYPES.put(newType.name(), newType);
-            return newType;
+            String normalized = name.toLowerCase();
+            return TYPES.computeIfAbsent(normalized, k -> new TextureAtlasType(normalized));
         }
     }
 
@@ -238,12 +238,12 @@ public class TextureAtlases {
             TYPES = Collections.unmodifiableMap(types);
         }
 
-        public static Map<String, TextureAtlasSourceType<?>> values() {
+        public static Map<String, TextureAtlasSourceType<?>> types() {
             return TYPES;
         }
 
-        private String name;
-        private Class<T> typeClass;
+        private final String name;
+        private final Class<T> typeClass;
 
         private TextureAtlasSourceType(String name, Class<T> typeClass) {
             this.name = name;
@@ -260,12 +260,7 @@ public class TextureAtlases {
         }
 
         public static TextureAtlasSourceType<?> fromName(String name) {
-            for (TextureAtlasSourceType<?> type : values().values()) {
-                if (type.name().equalsIgnoreCase(name)) {
-                    return type;
-                }
-            }
-            return null;
+            return TYPES.get(name.toLowerCase());
         }
 
         @Override

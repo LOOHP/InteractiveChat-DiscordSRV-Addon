@@ -28,21 +28,21 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class ResourcePackSystemFile implements ResourcePackFile {
 
-    private ResourcePackSystemFile root;
-    private File file;
-    private Set<InputStream> streams;
+    private final ResourcePackSystemFile root;
+    private final File file;
+    private final Set<InputStream> streams;
 
     public ResourcePackSystemFile(File file) {
         this.root = this;
         this.file = file;
-        this.streams = new HashSet<>();
+        this.streams = ConcurrentHashMap.newKeySet();
     }
 
     private ResourcePackSystemFile(ResourcePackSystemFile root, File file) {

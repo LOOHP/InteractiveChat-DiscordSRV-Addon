@@ -22,10 +22,10 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.models;
 
 public class TextureUV {
 
-    private double x1;
-    private double y1;
-    private double x2;
-    private double y2;
+    private final double x1;
+    private final double y1;
+    private final double x2;
+    private final double y2;
 
     public TextureUV(double x1, double y1, double x2, double y2) {
         this.x1 = x1;

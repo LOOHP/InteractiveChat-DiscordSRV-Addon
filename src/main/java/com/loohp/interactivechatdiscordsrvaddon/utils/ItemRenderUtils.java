@@ -61,11 +61,15 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.SpawnEggTintData
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintIndexData;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.DecoratedPot;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BundleMeta;
 import org.bukkit.inventory.meta.CompassMeta;
 import org.bukkit.inventory.meta.CrossbowMeta;
@@ -572,23 +576,22 @@ public class ItemRenderUtils {
         } else if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && ItemStackUtils.isArmor(item)) {
             float trimIndex = ArmorTrimUtils.getArmorTrimIndex(world, item).leftFloat();
             predicates.put(ModelOverrideType.TRIM_TYPE, trimIndex);
-        } else if (icMaterial.isMaterial(XMaterial.DECORATED_POT)) {
-            for (int i = 0; i < 4; i++) {
-                TextureResource textureResource = null;
-                String shard = NBTEditor.getString(item, "BlockEntityTag", "shards", i);
-                if (shard != null) {
-                    if (shard.contains(":")) {
-                        shard = shard.substring(shard.indexOf(":") + 1);
+        } else if (icMaterial.isMaterial(XMaterial.DECORATED_POT) && item.getItemMeta() instanceof BlockStateMeta) {
+            BlockStateMeta meta = (BlockStateMeta) item.getItemMeta();
+            BlockState state = meta.getBlockState();
+            if (state instanceof DecoratedPot) {
+                DecoratedPot pot = (DecoratedPot) state;
+                List<Material> materials = pot.getShards();
+                for (int i = 0; i < materials.size(); i++) {
+                    TextureResource textureResource = null;
+                    ItemStack sherd = new ItemStack(materials.get(i));
+                    String type = DecoratedPotPatternsUtils.getPatternName(sherd);
+                    if (type.contains(":")) {
+                        type = type.substring(type.indexOf(":") + 1);
                     }
-                    if (shard.startsWith("pottery_shard_")) {
-                        String type = shard.substring("pottery_shard_".length());
-                        textureResource = manager.getTextureManager().getTexture(ResourceRegistry.DECORATED_POT_SHARD_LOCATION.replace("%s", type));
-                    }
+                    textureResource = manager.getTextureManager().getTexture(ResourceRegistry.DECORATED_POT_SHERD_LOCATION.replace("%s", type));
+                    providedTextures.put(ResourceRegistry.DECORATED_POT_FACE_PLACEHOLDER.replace("%s", String.valueOf(i)), textureResource);
                 }
-                if (textureResource == null) {
-                    textureResource = manager.getTextureManager().getTexture(ResourceRegistry.DECORATED_POT_SIDE_LOCATION);
-                }
-                providedTextures.put(ResourceRegistry.DECORATED_POT_FACE_PLACEHOLDER.replace("%s", String.valueOf(i)), textureResource);
             }
         }
 

@@ -32,10 +32,10 @@ public class CITGlobalProperties {
         return new CITGlobalProperties(useGlint, cap, method, fade);
     }
 
-    private boolean useGlint;
-    private int cap;
-    private EnchantmentVisibilityMethod method;
-    private double fade;
+    private final boolean useGlint;
+    private final int cap;
+    private final EnchantmentVisibilityMethod method;
+    private final double fade;
 
     public CITGlobalProperties(boolean useGlint, int cap, EnchantmentVisibilityMethod method, double fade) {
         this.useGlint = useGlint;

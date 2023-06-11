@@ -29,11 +29,11 @@ import java.awt.Color;
 
 public class HoverClickDisplayData extends DiscordDisplayData {
 
-    private String displayText;
-    private Component hoverText;
-    private Color color;
-    private ClickEventAction clickAction;
-    private String clickValue;
+    private final String displayText;
+    private final Component hoverText;
+    private final Color color;
+    private final ClickEventAction clickAction;
+    private final String clickValue;
 
     public HoverClickDisplayData(OfflineICPlayer player, int position, Color color, String displayText, Component hoverText, ClickEventAction clickAction, String clickValue) {
         super(player, position);

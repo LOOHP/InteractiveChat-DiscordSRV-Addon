@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 
 public abstract class CITValueMatcher {
 
-    private String value;
+    private final String value;
 
     private IntTag matchInteger;
     private ByteTag matchByte;

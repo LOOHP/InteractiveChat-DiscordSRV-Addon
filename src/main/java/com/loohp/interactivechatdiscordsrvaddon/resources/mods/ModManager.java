@@ -28,8 +28,8 @@ import java.util.List;
 
 public abstract class ModManager extends AbstractManager {
 
-    private String modName;
-    private List<String> modAssetsFolderNames;
+    private final String modName;
+    private final List<String> modAssetsFolderNames;
 
     public ModManager(ResourceManager manager, String modName, List<String> modAssetsFolderNames) {
         super(manager);

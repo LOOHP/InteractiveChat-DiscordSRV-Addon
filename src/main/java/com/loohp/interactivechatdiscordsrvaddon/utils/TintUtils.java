@@ -23,6 +23,7 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
 
@@ -203,14 +204,12 @@ public class TintUtils {
 
         public static final TintIndexData EMPTY_INSTANCE = new TintIndexData(Collections.emptyList());
 
-        private List<IntSupplier> data;
-        private IntSet availableTintIndex;
+        private final List<IntSupplier> data;
+        private final IntSet availableTintIndex;
 
         public TintIndexData(List<IntSupplier> data) {
             this.data = data;
-            IntSet availableTintIndex = new IntArraySet();
-            IntStream.range(0, data.size()).filter(i -> data.get(i) != null).forEach(i -> availableTintIndex.add(i));
-            this.availableTintIndex = IntSets.unmodifiable(availableTintIndex);
+            this.availableTintIndex = IntSets.unmodifiable(IntOpenHashSet.toSet(IntStream.range(0, data.size()).filter(i -> data.get(i) != null)));
         }
 
         public BufferedImage applyTint(BufferedImage image, int tintIndex) {
@@ -243,8 +242,8 @@ public class TintUtils {
 
     public static class SpawnEggTintData {
 
-        private int base;
-        private int overlay;
+        private final int base;
+        private final int overlay;
 
         public SpawnEggTintData(int base, int overlay) {
             this.base = base;

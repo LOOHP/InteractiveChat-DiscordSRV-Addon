@@ -91,7 +91,7 @@ public class LanguageManager extends AbstractManager implements ILanguageManager
         Map<String, Map<String, String>> translations = new HashMap<>();
         for (ResourcePackFile file : root.listFilesRecursively()) {
             String name = file.getName();
-            if (!manager.isFlattenLegacy() && name.endsWith(".json")) {
+            if (!manager.hasFlag(ResourceManager.Flag.LEGACY_PRE_FLATTEN) && name.endsWith(".json")) {
                 try {
                     InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
                     JSONObject json = (JSONObject) parser.parse(reader);
@@ -108,7 +108,7 @@ public class LanguageManager extends AbstractManager implements ILanguageManager
                 } catch (Exception e) {
                     new ResourceLoadingException("Unable to load language " + file.getAbsolutePath(), e).printStackTrace();
                 }
-            } else if (manager.isFlattenLegacy() && name.endsWith(".lang")) {
+            } else if (manager.hasFlag(ResourceManager.Flag.LEGACY_PRE_FLATTEN) && name.endsWith(".lang")) {
                 try (BufferedReader reader = new BufferedReader(new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8))) {
                     Map<String, String> mapping = new HashMap<>();
                     String line;
@@ -143,7 +143,7 @@ public class LanguageManager extends AbstractManager implements ILanguageManager
             String assetNamespace = namespacedKey.substring(0, namespacedKey.indexOf(":"));
             String assetKey = namespacedKey.substring(namespacedKey.indexOf(":") + 1);
             if (!assetKey.contains(".")) {
-                assetKey = assetKey + (manager.isFlattenLegacy() ? ".lang" : ".json");
+                assetKey = assetKey + (manager.hasFlag(ResourceManager.Flag.LEGACY_PRE_FLATTEN) ? ".lang" : ".json");
             }
             if (namespace.matcher(assetNamespace).matches() && path.matcher(assetKey).matches()) {
                 itr.remove();

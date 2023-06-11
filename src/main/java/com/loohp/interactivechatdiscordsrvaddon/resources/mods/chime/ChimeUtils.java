@@ -226,9 +226,9 @@ public class ChimeUtils {
 
     public static class HashPredicate {
 
-        public String subTag;
-        public int modulo;
-        public Range<Float> value;
+        public final String subTag;
+        public final int modulo;
+        public final Range<Float> value;
 
         public HashPredicate(String subTag, int modulo, Range<Float> value) {
             this.subTag = subTag;

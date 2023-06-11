@@ -40,9 +40,9 @@ public enum AdvancementType {
         return null;
     }
 
-    private ChatColor color;
-    private String translationKey;
-    private boolean isLegacy;
+    private final ChatColor color;
+    private final String translationKey;
+    private final boolean isLegacy;
 
     AdvancementType(ChatColor color, String translationKey, boolean isLegacy) {
         this.color = color;

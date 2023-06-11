@@ -48,7 +48,7 @@ public class BitmapFont extends MinecraftFont {
     public static final String TYPE_KEY = "bitmap";
     public static final double ITALIC_SHEAR_X = -4.0 / 14.0;
 
-    private Int2ObjectMap<FontTextureResource> charImages;
+    private Int2ObjectMap<FontResource> charImages;
     private Int2IntMap charWidth;
     private String resourceLocation;
     private int height;

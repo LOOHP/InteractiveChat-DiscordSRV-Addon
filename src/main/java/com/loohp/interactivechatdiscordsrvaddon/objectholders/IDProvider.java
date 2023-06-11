@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class IDProvider {
 
-    private AtomicInteger counter;
+    private final AtomicInteger counter;
 
     public IDProvider() {
         this.counter = new AtomicInteger(0);

@@ -35,13 +35,13 @@ import java.util.Set;
 
 public class EnchantmentProperties extends CITProperties {
 
-    private int layer;
-    private double speed;
-    private double rotation;
-    private double duration;
-    private OpenGLBlending blend;
+    private final int layer;
+    private final double speed;
+    private final double rotation;
+    private final double duration;
+    private final OpenGLBlending blend;
 
-    private String texture;
+    private final String texture;
 
     public EnchantmentProperties(int weight, Set<ICMaterial> items, IntegerRange stackSize, PercentageOrIntegerRange damage, int damageMask, EquipmentSlot hand, Map<Enchantment, IntegerRange> enchantments, Map<String, CITValueMatcher> nbtMatch, int layer, double speed, double rotation, double duration, OpenGLBlending blend, String texture) {
         super(weight, items, stackSize, damage, damageMask, hand, enchantments, nbtMatch);

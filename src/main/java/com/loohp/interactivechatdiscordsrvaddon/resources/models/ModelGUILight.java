@@ -36,9 +36,9 @@ public enum ModelGUILight {
         return null;
     }
 
-    private Vector lightVector;
-    private double ambientLevel;
-    private double maxLevel;
+    private final Vector lightVector;
+    private final double ambientLevel;
+    private final double maxLevel;
 
     ModelGUILight(Vector lightVector, double ambientLevel, double maxLevel) {
         this.lightVector = lightVector;

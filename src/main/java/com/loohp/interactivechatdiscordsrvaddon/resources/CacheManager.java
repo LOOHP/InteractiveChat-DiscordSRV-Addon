@@ -36,11 +36,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CacheManager implements ICacheManager {
 
-    private File folder;
-    private DB db;
-    private HTreeMap<String, byte[]> cacheObjectMap;
-    private ScheduledExecutorService service;
-    private AtomicBoolean isValid;
+    private final File folder;
+    private final DB db;
+    private final HTreeMap<String, byte[]> cacheObjectMap;
+    private final ScheduledExecutorService service;
+    private final AtomicBoolean isValid;
 
     public CacheManager(File folder, Duration timeout) {
         this.folder = folder;

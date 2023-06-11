@@ -25,11 +25,11 @@ import org.bukkit.inventory.ItemStack;
 
 public class AdvancementData {
 
-    private Component title;
-    private Component description;
-    private ItemStack item;
-    private AdvancementType advancementType;
-    private boolean isMinecraft;
+    private final Component title;
+    private final Component description;
+    private final ItemStack item;
+    private final AdvancementType advancementType;
+    private final boolean isMinecraft;
 
     public AdvancementData(Component title, Component description, ItemStack item, AdvancementType advancementType, boolean isMinecraft) {
         this.title = title;

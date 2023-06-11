@@ -67,10 +67,11 @@ public abstract class MinecraftFont {
         return list;
     }
 
+    @SuppressWarnings("deprecation")
     public static MinecraftFont fromJson(ResourceManager manager, IFontManager fontManager, FontProvider provider, JSONObject fontJson) throws Exception {
         String typeStr = fontJson.get("type").toString();
         switch (typeStr) {
-            case SpaceFont.TYPE_KEY:
+            case SpaceFont.TYPE_KEY: {
                 Int2IntMap charAdvances = new Int2IntOpenHashMap();
                 JSONObject advancesJson = (JSONObject) fontJson.get("advances");
                 for (Object obj1 : advancesJson.keySet()) {
@@ -79,13 +80,15 @@ public abstract class MinecraftFont {
                     charAdvances.put(character.codePointAt(0), advance);
                 }
                 return new SpaceFont(manager, provider, charAdvances);
-            case BitmapFont.TYPE_KEY:
+            }
+            case BitmapFont.TYPE_KEY: {
                 String resourceLocation = fontJson.get("file").toString();
                 int height = ((Number) fontJson.getOrDefault("height", 8)).intValue();
                 int ascent = ((Number) fontJson.get("ascent")).intValue();
                 List<String> chars = (List<String>) ((JSONArray) fontJson.get("chars")).stream().map(each -> each.toString()).collect(Collectors.toList());
                 return new BitmapFont(manager, provider, resourceLocation, height, ascent, chars);
-            case LegacyUnicodeFont.TYPE_KEY:
+            }
+            case LegacyUnicodeFont.TYPE_KEY: {
                 String template = fontJson.get("template").toString();
                 DataInputStream sizesInput = new DataInputStream(new BufferedInputStream(fontManager.getFontResource(fontJson.get("sizes").toString()).getFile().getInputStream()));
                 Int2ObjectOpenHashMap<GlyphSize> sizes = new Int2ObjectOpenHashMap<>();
@@ -101,8 +104,9 @@ public abstract class MinecraftFont {
                 }
                 sizesInput.close();
                 return new LegacyUnicodeFont(manager, provider, sizes, template);
-            case TrueTypeFont.TYPE_KEY:
-                resourceLocation = fontJson.get("file").toString();
+            }
+            case TrueTypeFont.TYPE_KEY: {
+                String resourceLocation = fontJson.get("file").toString();
                 JSONArray shiftArray = (JSONArray) fontJson.get("shift");
                 float leftShift = ((Number) shiftArray.get(0)).floatValue();
                 float downShift = ((Number) shiftArray.get(1)).floatValue();
@@ -111,12 +115,33 @@ public abstract class MinecraftFont {
                 float oversample = ((Number) fontJson.get("oversample")).floatValue();
                 String skip = fontJson.getOrDefault("skip", "").toString();
                 return new TrueTypeFont(manager, provider, resourceLocation, shift, size, oversample, skip);
-            default:
+            }
+            case ReferenceFont.TYPE_KEY: {
+                String id = fontJson.get("id").toString();
+                return new ReferenceFont(manager, provider, id);
+            }
+            case UnihexFont.TYPE_KEY: {
+                String hexFile = fontJson.get("hex_file").toString();
+                JSONArray sizeOverridesArray = (JSONArray) fontJson.get("size_overrides");
+                List<UnihexFont.SizeOverride> sizeOverrides = new ArrayList<>(sizeOverridesArray.size());
+                for (Object obj : sizeOverridesArray) {
+                    JSONObject sizeOverride = (JSONObject) obj;
+                    int from = ((String) sizeOverride.get("from")).codePointAt(0);
+                    int to = ((String) sizeOverride.get("to")).codePointAt(0);
+                    byte left = ((Number) sizeOverride.get("left")).byteValue();
+                    byte right = ((Number) sizeOverride.get("right")).byteValue();
+                    sizeOverrides.add(new UnihexFont.SizeOverride(from, to, left, right));
+                }
+                return new UnihexFont(manager, provider, sizeOverrides, hexFile);
+            }
+            default: {
                 throw new ResourceLoadingException("Unknown font type \"" + typeStr + "\"");
+            }
         }
     }
 
-    protected ResourceManager manager;
+    protected final ResourceManager manager;
+
     protected FontProvider provider;
 
     public MinecraftFont(ResourceManager manager, FontProvider provider) {
@@ -136,6 +161,8 @@ public abstract class MinecraftFont {
         this.provider = provider;
     }
 
+    public abstract void reloadFonts();
+
     public abstract boolean canDisplayCharacter(String character);
 
     public abstract FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations);
@@ -144,17 +171,15 @@ public abstract class MinecraftFont {
 
     public abstract int getCharacterWidth(String character);
 
-    public abstract void reloadFonts();
-
     public abstract IntSet getDisplayableCharacters();
 
     public static class FontRenderResult {
 
-        private BufferedImage image;
-        private int width;
-        private int height;
-        private int spaceWidth;
-        private int italicExtraWidth;
+        private final BufferedImage image;
+        private final int width;
+        private final int height;
+        private final int spaceWidth;
+        private final int italicExtraWidth;
 
         public FontRenderResult(BufferedImage image, int width, int height, int spaceWidth, int italicExtraWidth) {
             this.image = image;

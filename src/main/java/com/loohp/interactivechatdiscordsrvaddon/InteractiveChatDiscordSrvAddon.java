@@ -649,6 +649,11 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                     sendMessage(ChatColor.YELLOW + "Resource reloading already in progress!", senders);
                     return;
                 }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                return;
+            }
+            try {
                 isReady = false;
                 if (InteractiveChatDiscordSrvAddon.plugin.isResourceManagerReady()) {
                     Bukkit.getScheduler().callSyncMethod(plugin, () -> {
@@ -715,14 +720,16 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
                 @SuppressWarnings("resource")
                 ResourceManager resourceManager = new ResourceManager(
-                        InteractiveChat.version.isLegacy(),
-                        InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_18_2),
                         mods,
                         Arrays.asList(CustomItemTextureRegistry.getDefaultSupplier(), ICacheManager.getDefaultSupplier(new File(getDataFolder(), "cache"))),
                         (resourcePackFile, type) -> new ResourceManager.DefaultResourcePackInfo(
                                 Component.translatable(TranslationKeyUtils.getResourcePackVanillaName()),
                                 ResourcePackUtils.getServerResourcePackVersion(),
                                 Component.translatable(TranslationKeyUtils.getResourcePackVanillaDescription()).append(Component.text(" (Modified by LOOHP)"))
+                        ),
+                        ResourceManager.Flag.build(
+                                InteractiveChat.version.isLegacy(),
+                                InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_18_2)
                         )
                 );
 
@@ -800,10 +807,10 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                     }
                     return null;
                 }).get();
-
-                resourceReloadLock.unlock();
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
+            } finally {
+                resourceReloadLock.unlock();
             }
         });
     }

@@ -64,7 +64,12 @@ public class AssetsDownloader {
             senderList.add(Bukkit.getConsoleSender());
             senders = senderList.toArray(new CommandSender[senderList.size()]);
         }
-        if (!LOCK.tryLock(0, TimeUnit.MILLISECONDS)) {
+        try {
+            if (!LOCK.tryLock(0, TimeUnit.MILLISECONDS)) {
+                return;
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
             return;
         }
         try {
@@ -153,8 +158,9 @@ public class AssetsDownloader {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            LOCK.unlock();
         }
-        LOCK.unlock();
     }
 
     public static void loadExtras() {

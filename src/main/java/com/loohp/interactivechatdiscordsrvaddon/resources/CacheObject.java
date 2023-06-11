@@ -82,8 +82,8 @@ public class CacheObject<T> {
         }
     }
 
-    private long timeCreated;
-    private T object;
+    private final long timeCreated;
+    private final T object;
 
     protected CacheObject(long timeCreated, T object) {
         this.timeCreated = timeCreated;

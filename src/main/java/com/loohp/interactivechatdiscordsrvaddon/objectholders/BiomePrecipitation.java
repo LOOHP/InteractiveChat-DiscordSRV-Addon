@@ -26,7 +26,7 @@ public enum BiomePrecipitation {
     SNOW("snow"),
     NONE("none");
 
-    private String name;
+    private final String name;
 
     BiomePrecipitation(String name) {
         this.name = name;

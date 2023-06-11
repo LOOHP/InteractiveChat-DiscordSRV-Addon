@@ -362,8 +362,9 @@ public class ComponentStringUtils {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < str.length(); i++) {
             String currentChar = str.substring(i, i + 1);
-            IntList list = provider.getDisplayableCharactersByWidth().get(provider.forCharacter(currentChar).getCharacterWidth(currentChar));
-            sb.append(Character.toChars(list.getInt(ThreadLocalRandom.current().nextInt(list.size()))));
+            int width = provider.forCharacter(currentChar).getCharacterWidth(currentChar);
+            IntList list = provider.getDisplayableCharactersByWidth().get(width);
+            sb.append(new String(Character.toChars(list.getInt(ThreadLocalRandom.current().nextInt(list.size())))));
         }
         return sb.toString();
     }

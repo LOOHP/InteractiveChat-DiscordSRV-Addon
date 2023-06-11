@@ -30,12 +30,12 @@ import java.util.Set;
 
 public class ModelFace {
 
-    private ModelFaceSide side;
-    private TextureUV uv;
-    private String texture;
-    private ModelFaceSide cullface;
-    private int rotation;
-    private int tintindex;
+    private final ModelFaceSide side;
+    private final TextureUV uv;
+    private final String texture;
+    private final ModelFaceSide cullface;
+    private final int rotation;
+    private final int tintindex;
 
     public ModelFace(ModelFaceSide side, TextureUV uv, String texture, ModelFaceSide cullface, int rotation, int tintindex) {
         this.side = side;

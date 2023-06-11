@@ -20,6 +20,7 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
+import com.google.common.collect.Multimap;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.api.InteractiveChatAPI;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
@@ -62,10 +63,12 @@ import org.bukkit.FireworkEffect;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Banner;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.CreatureSpawner;
+import org.bukkit.block.DecoratedPot;
 import org.bukkit.block.banner.Pattern;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
@@ -98,6 +101,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -116,7 +120,7 @@ public class DiscordItemStackUtils {
     public static final String DISCORD_EMPTY = "\u200e";
 
     private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.builder().extractUrls().hexColors().useUnusualXRepeatedCharacterHexFormat().build();
-    private static final DecimalFormat ATTRIBUTE_FORMAT = new DecimalFormat("0");
+    private static final DecimalFormat ATTRIBUTE_FORMAT = new DecimalFormat("#.##");
 
     private static Method bukkitBukkitClassGetMapShortMethod = null;
     private static Method bukkitMapViewClassGetIdMethod = null;
@@ -192,7 +196,7 @@ public class DiscordItemStackUtils {
         World world = bukkitPlayer == null ? null : bukkitPlayer.getWorld();
 
         List<ToolTipComponent<?>> prints = new ArrayList<>();
-        boolean hasCustomName = true;
+        boolean hasCustomName = false;
 
         if (item == null) {
             item = new ItemStack(Material.AIR);
@@ -204,7 +208,26 @@ public class DiscordItemStackUtils {
 
         boolean hasMeta = item.getItemMeta() != null;
 
-        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && ItemStackUtils.isArmor(item)) {
+        if (hasMeta && item.getItemMeta().getDisplayName() != null) {
+            hasCustomName = true;
+        }
+
+        if (icMaterial.isMaterial(XMaterial.DECORATED_POT) && hasMeta && item.getItemMeta() instanceof BlockStateMeta) {
+            BlockState state = ((BlockStateMeta) item.getItemMeta()).getBlockState();
+            if (state instanceof DecoratedPot) {
+                DecoratedPot pot = (DecoratedPot) state;
+                List<Material> materials = pot.getShards();
+                prints.add(ToolTipComponent.text(Component.empty()));
+                for (int i : new int[] {3, 1, 2, 0}) {
+                    if (i < materials.size()) {
+                        Key material = Key.key(materials.get(i).getKey().toString());
+                        prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getPotterySherdName(material)).color(NamedTextColor.GRAY)));
+                    }
+                }
+            }
+        }
+
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && ItemStackUtils.isArmor(item) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ARMOR_TRIM)) {
             if (NBTEditor.contains(item, "Trim")) {
                 Key material = Key.key(NBTEditor.getString(item, "Trim", "material"));
                 Key pattern = Key.key(NBTEditor.getString(item, "Trim", "pattern"));
@@ -521,16 +544,13 @@ public class DiscordItemStackUtils {
                         prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getPotionWhenDrunk()).color(NamedTextColor.DARK_PURPLE)));
                         for (Entry<String, AttributeModifier> entry : attributes.entrySet()) {
                             String attributeName = entry.getKey();
-                            if (attributeName.startsWith("attribute.name.")) {
-                                attributeName = attributeName.substring(15);
-                            }
                             AttributeModifier attributeModifier = entry.getValue();
                             double amount = attributeModifier.getAmount();
                             int operation = attributeModifier.getOperation().ordinal();
                             if (!(operation != 1 && operation != 2)) {
                                 amount *= 100;
                             }
-                            prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getAttributeModifierKey(amount, operation)).args(Component.text(ATTRIBUTE_FORMAT.format(Math.abs(amount))), Component.translatable(TranslationKeyUtils.getAttributeKey(attributeName))).color(amount < 0 ? NamedTextColor.RED : NamedTextColor.BLUE)));
+                            prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getAttributeModifierKey(false, amount, operation)).args(Component.text(ATTRIBUTE_FORMAT.format(Math.abs(amount))), Component.translatable(attributeName)).color(amount < 0 ? NamedTextColor.RED : NamedTextColor.BLUE)));
                         }
                     }
                 }
@@ -583,114 +603,56 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && NBTEditor.contains(item, "AttributeModifiers") && NBTEditor.getSize(item, "AttributeModifiers") > 0 && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
-            boolean useMainHand = false;
-            List<ToolTipComponent<?>> mainHand = new LinkedList<>();
-            boolean useOffhand = false;
-            List<ToolTipComponent<?>> offHand = new LinkedList<>();
-            boolean useFeet = false;
-            List<ToolTipComponent<?>> feet = new LinkedList<>();
-            boolean useLegs = false;
-            List<ToolTipComponent<?>> legs = new LinkedList<>();
-            boolean useChest = false;
-            List<ToolTipComponent<?>> chest = new LinkedList<>();
-            boolean useHead = false;
-            List<ToolTipComponent<?>> head = new LinkedList<>();
-            ListTag<CompoundTag> attributeList = (ListTag<CompoundTag>) NBTParsingUtils.fromSNBT(NBTEditor.getNBTCompound(item, "tag", "AttributeModifiers").toJson());
-            for (CompoundTag attributeTag : attributeList) {
-                String attributeName = attributeTag.getString("AttributeName").replace("minecraft:", "");
-                double amount = attributeTag.getNumber("Amount").doubleValue();
-                int operation = attributeTag.containsKey("Operation") ? attributeTag.getNumber("Operation").intValue() : 0;
-                if (!(operation != 1 && operation != 2)) {
-                    amount *= 100;
-                }
-                ToolTipComponent<?> attributeComponent = ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getAttributeModifierKey(amount, operation)).args(Component.text(ATTRIBUTE_FORMAT.format(Math.abs(amount))), Component.translatable(TranslationKeyUtils.getAttributeKey(attributeName))).color(amount < 0 ? NamedTextColor.RED : NamedTextColor.BLUE));
-                if (attributeTag.containsKey("Slot")) {
-                    String slot = attributeTag.getString("Slot");
-                    switch (slot) {
-                        case "mainhand":
-                            if (amount != 0) {
-                                mainHand.add(attributeComponent);
-                            }
-                            useMainHand = true;
-                            break;
-                        case "offhand":
-                            if (amount != 0) {
-                                offHand.add(attributeComponent);
-                            }
-                            useOffhand = true;
-                            break;
-                        case "feet":
-                            if (amount != 0) {
-                                feet.add(attributeComponent);
-                            }
-                            useFeet = true;
-                            break;
-                        case "legs":
-                            if (amount != 0) {
-                                legs.add(attributeComponent);
-                            }
-                            useLegs = true;
-                            break;
-                        case "chest":
-                            if (amount != 0) {
-                                chest.add(attributeComponent);
-                            }
-                            useChest = true;
-                            break;
-                        case "head":
-                            if (amount != 0) {
-                                head.add(attributeComponent);
-                            }
-                            useHead = true;
-                            break;
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
+            Map<EquipmentSlot, List<ToolTipComponent<?>>> tooltips = new EnumMap<>(EquipmentSlot.class);
+            Map<EquipmentSlot, Multimap<String, AttributeModifier>> attributeList = AttributeModifiersUtils.getAttributeModifiers(item);
+            for (Entry<EquipmentSlot, Multimap<String, AttributeModifier>> entry : attributeList.entrySet()) {
+                for (Entry<String, AttributeModifier> subEntry : entry.getValue().entries()) {
+                    AttributeModifier attributemodifier = subEntry.getValue();
+                    String attributeName = subEntry.getKey();
+                    double amount = attributemodifier.getAmount();
+                    AttributeModifier.Operation operation = attributemodifier.getOperation();
+
+                    boolean flag = false;
+
+                    if (bukkitPlayer != null) {
+                        if (attributemodifier.getUniqueId().equals(AttributeModifiersUtils.BASE_ATTACK_DAMAGE_UUID)) {
+                            amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).getBaseValue();
+                            amount += EnchantmentManagerUtils.getDamageBonus(item, EnchantmentManagerUtils.MonsterType.UNDEFINED);
+                            flag = true;
+                        } else if (attributemodifier.getUniqueId().equals(AttributeModifiersUtils.BASE_ATTACK_SPEED_UUID)) {
+                            amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_SPEED).getBaseValue();
+                            flag = true;
+                        }
                     }
-                } else {
+
+                    if (!attributemodifier.getOperation().equals(AttributeModifier.Operation.ADD_SCALAR) && !attributemodifier.getOperation().equals(AttributeModifier.Operation.MULTIPLY_SCALAR_1)) {
+                        if (attributeName.equals("attribute.name.generic.knockback_resistance")) {
+                            amount = amount * 10.0D;
+                        }
+                    } else {
+                        amount = amount * 100.0D;
+                    }
+
                     if (amount != 0) {
-                        mainHand.add(attributeComponent);
-                        offHand.add(attributeComponent);
-                        feet.add(attributeComponent);
-                        legs.add(attributeComponent);
-                        chest.add(attributeComponent);
-                        head.add(attributeComponent);
+                        TextColor color = flag ? NamedTextColor.DARK_GREEN : (amount < 0 ? NamedTextColor.RED : NamedTextColor.BLUE);
+                        Component component = Component.translatable(TranslationKeyUtils.getAttributeModifierKey(flag, amount, operation.ordinal())).args(Component.text(ATTRIBUTE_FORMAT.format(Math.abs(amount))), Component.translatable(attributeName)).color(color);
+                        if (flag) {
+                            component = Component.text(" ").append(component);
+                        }
+                        ToolTipComponent<?> attributeComponent = ToolTipComponent.text(component);
+                        tooltips.computeIfAbsent(entry.getKey(), k -> new LinkedList<>()).add(attributeComponent);
                     }
-                    useMainHand = true;
-                    useOffhand = true;
-                    useFeet = true;
-                    useLegs = true;
-                    useChest = true;
-                    useHead = true;
                 }
             }
-            if (useMainHand) {
-                prints.add(ToolTipComponent.text(Component.empty()));
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HAND)).color(NamedTextColor.GRAY)));
-                prints.addAll(mainHand);
-            }
-            if (useOffhand) {
-                prints.add(ToolTipComponent.text(Component.empty()));
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.OFF_HAND)).color(NamedTextColor.GRAY)));
-                prints.addAll(offHand);
-            }
-            if (useFeet) {
-                prints.add(ToolTipComponent.text(Component.empty()));
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.FEET)).color(NamedTextColor.GRAY)));
-                prints.addAll(feet);
-            }
-            if (useLegs) {
-                prints.add(ToolTipComponent.text(Component.empty()));
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.LEGS)).color(NamedTextColor.GRAY)));
-                prints.addAll(legs);
-            }
-            if (useChest) {
-                prints.add(ToolTipComponent.text(Component.empty()));
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.CHEST)).color(NamedTextColor.GRAY)));
-                prints.addAll(chest);
-            }
-            if (useHead) {
-                prints.add(ToolTipComponent.text(Component.empty()));
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getModifierSlotKey(EquipmentSlot.HEAD)).color(NamedTextColor.GRAY)));
-                prints.addAll(head);
+            for (EquipmentSlot equipmentSlot : EquipmentSlot.values()) {
+                List<ToolTipComponent<?>> lines = tooltips.get(equipmentSlot);
+                if (lines != null) {
+                    String modifierSlotKey = TranslationKeyUtils.getModifierSlotKey(equipmentSlot);
+                    prints.add(ToolTipComponent.text(Component.empty()));
+                    prints.add(ToolTipComponent.text(Component.translatable(modifierSlotKey).color(NamedTextColor.GRAY)));
+                    prints.addAll(lines);
+                }
             }
         }
 

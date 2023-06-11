@@ -54,8 +54,8 @@ import java.util.regex.Pattern;
 
 public class ChimeModelOverride extends ModelOverride {
 
-    private Map<ChimeModelOverrideType, Object> chimePredicates;
-    private String armorTexture;
+    private final Map<ChimeModelOverrideType, Object> chimePredicates;
+    private final String armorTexture;
 
     public ChimeModelOverride(Map<ModelOverrideType, Float> predicates, Map<ChimeModelOverrideType, Object> chimePredicates, String model, String armorTexture) {
         super(predicates, model);

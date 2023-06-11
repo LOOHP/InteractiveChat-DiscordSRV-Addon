@@ -36,12 +36,12 @@ import java.util.zip.ZipFile;
 
 public class ResourcePackZipEntryFile implements ResourcePackFile {
 
-    private String absoluteRootPath;
-    private ResourcePackZipEntryFile zipRootFile;
-    private ZipFile zipRoot;
-    private String zipPath;
-    private boolean isDirectory;
-    private ZipEntry zipEntry;
+    private final String absoluteRootPath;
+    private final ResourcePackZipEntryFile zipRootFile;
+    private final ZipFile zipRoot;
+    private final String zipPath;
+    private final boolean isDirectory;
+    private final ZipEntry zipEntry;
 
     public ResourcePackZipEntryFile(File resourcePackZip) throws IOException {
         this.absoluteRootPath = resourcePackZip.getAbsolutePath();

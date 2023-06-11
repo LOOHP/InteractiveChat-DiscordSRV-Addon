@@ -40,7 +40,7 @@ import java.util.function.UnaryOperator;
 
 public class ChimeItemTextureResolver implements CustomItemTextureResolver {
 
-    private ChimeManager chimeManager;
+    private final ChimeManager chimeManager;
 
     public ChimeItemTextureResolver(ChimeManager chimeManager) {
         this.chimeManager = chimeManager;

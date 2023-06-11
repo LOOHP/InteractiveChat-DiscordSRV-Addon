@@ -351,9 +351,14 @@ public class MinecraftFontRenderer extends JFrame {
                 return;
             }
         } catch (InterruptedException e) {
+            e.printStackTrace();
+            return;
         }
-        imagePanel.repaint();
-        repaintLock.unlock();
+        try {
+            imagePanel.repaint();
+        } finally {
+            repaintLock.unlock();
+        }
     }
 
     public BufferedImage getRawEnchantedImage(BufferedImage source, EnchantmentGlintType type) {
@@ -402,89 +407,94 @@ public class MinecraftFontRenderer extends JFrame {
                 return;
             }
         } catch (InterruptedException e) {
-        }
-        reloadResourcesButton.setEnabled(false);
-        resourceBar.setValue(0);
-        resourceBar.setVisible(true);
-        textAreaResources.setText("Loading Resources...");
-        updateTextAreaInputSize();
-
-        List<String> resourceOrder;
-        int valuePerPack;
-        try {
-            YamlFile yaml = new YamlFile();
-            yaml.options().useComments(true);
-            yaml.load(Files.newInputStream(Paths.get("InteractiveChatDiscordSrvAddon/config.yml")));
-            resourceOrder = yaml.getStringList("Resources.Order");
-            Collections.reverse(resourceOrder);
-            valuePerPack = (int) ((1.0 / (double) (resourceOrder.size() + 1)) * 10000);
-        } catch (IOException e) {
-            Toolkit.getDefaultToolkit().beep();
-            JOptionPane.showMessageDialog(null, GUIMain.createLabel("There is an error while loading from config:\n" + e.getMessage(), 13, Color.RED), title, JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
             return;
         }
-
-        if (resourceManager != null) {
-            resourceManager.close();
-        }
-
-        PrintStream original = System.err;
         try {
-            int packFormat = GUIMain.getDefaultPackVersion((Integer) defaultPackVersionSpinner.getValue());
-            defaultPackVersionSpinner.setValue(packFormat);
+            reloadResourcesButton.setEnabled(false);
+            resourceBar.setValue(0);
+            resourceBar.setVisible(true);
+            textAreaResources.setText("Loading Resources...");
+            updateTextAreaInputSize();
 
-            resourceManager = new ResourceManager(false, packFormat < 9, Collections.emptyList(), Collections.singletonList(ICacheManager.getDummySupplier()), packFormat);
-            resourceManager.loadResources(new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN, true);
-            resourceBar.setValue(valuePerPack);
-            for (String resourceName : resourceOrder) {
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                System.setErr(new PrintStream(baos));
-                try {
-                    File resourcePackFile = new File("InteractiveChatDiscordSrvAddon/resourcepacks/" + resourceName);
-                    ResourcePackInfo info = resourceManager.loadResources(resourcePackFile, ResourcePackType.LOCAL);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                String error = baos.toString();
-                if (!error.isEmpty()) {
-                    ForkJoinPool.commonPool().execute(() -> JOptionPane.showMessageDialog(null, GUIMain.createLabel("There are errors while loading \"" + resourceName + "\":\n" + error, 13, Color.RED), title, JOptionPane.ERROR_MESSAGE));
-                }
-                resourceBar.setValue(resourceBar.getValue() + valuePerPack);
+            List<String> resourceOrder;
+            int valuePerPack;
+            try {
+                YamlFile yaml = new YamlFile();
+                yaml.options().useComments(true);
+                yaml.load(Files.newInputStream(Paths.get("InteractiveChatDiscordSrvAddon/config.yml")));
+                resourceOrder = yaml.getStringList("Resources.Order");
+                Collections.reverse(resourceOrder);
+                valuePerPack = (int) ((1.0 / (double) (resourceOrder.size() + 1)) * 10000);
+            } catch (IOException e) {
+                Toolkit.getDefaultToolkit().beep();
+                JOptionPane.showMessageDialog(null, GUIMain.createLabel("There is an error while loading from config:\n" + e.getMessage(), 13, Color.RED), title, JOptionPane.ERROR_MESSAGE);
+                return;
             }
-        } catch (Throwable e) {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
-            Toolkit.getDefaultToolkit().beep();
-            JOptionPane.showMessageDialog(null, GUIMain.createLabel("An error occurred!\n" + sw, 13, Color.RED), title, JOptionPane.ERROR_MESSAGE);
-        }
-        System.setErr(original);
 
-        textAreaResources.setText("Loaded Resources:\n");
-        for (ResourcePackInfo info : resourceManager.getResourcePackInfo()) {
-            textAreaResources.append(" - " + PlainTextComponentSerializer.plainText().serialize(ResourcePackInfoUtils.resolveName(info)));
-            if (!info.getStatus()) {
-                textAreaResources.append(" (Failed)");
+            if (resourceManager != null) {
+                resourceManager.close();
             }
-            textAreaResources.append("\n");
-        }
 
-        List<LanguageData> languages = getAllLanguageData(resourceManager.getLanguageManager());
-        String lastSelected = comboBoxLanguages.getSelectedItem() == null ? null : ((LanguageData) comboBoxLanguages.getSelectedItem()).getLanguage();
-        comboBoxLanguages.removeAllItems();
-        for (LanguageData language : languages) {
-            comboBoxLanguages.addItem(language);
+            PrintStream original = System.err;
+            try {
+                int packFormat = GUIMain.getDefaultPackVersion((Integer) defaultPackVersionSpinner.getValue());
+                defaultPackVersionSpinner.setValue(packFormat);
+
+                resourceManager = new ResourceManager(Collections.emptyList(), Collections.singletonList(ICacheManager.getDummySupplier()), packFormat, ResourceManager.Flag.build(false, packFormat < 9));
+                resourceManager.loadResources(new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN, true);
+                resourceBar.setValue(valuePerPack);
+                for (String resourceName : resourceOrder) {
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    System.setErr(new PrintStream(baos));
+                    try {
+                        File resourcePackFile = new File("InteractiveChatDiscordSrvAddon/resourcepacks/" + resourceName);
+                        ResourcePackInfo info = resourceManager.loadResources(resourcePackFile, ResourcePackType.LOCAL);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    String error = baos.toString();
+                    if (!error.isEmpty()) {
+                        ForkJoinPool.commonPool().execute(() -> JOptionPane.showMessageDialog(null, GUIMain.createLabel("There are errors while loading \"" + resourceName + "\":\n" + error, 13, Color.RED), title, JOptionPane.ERROR_MESSAGE));
+                    }
+                    resourceBar.setValue(resourceBar.getValue() + valuePerPack);
+                }
+            } catch (Throwable e) {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                e.printStackTrace(pw);
+                Toolkit.getDefaultToolkit().beep();
+                JOptionPane.showMessageDialog(null, GUIMain.createLabel("An error occurred!\n" + sw, 13, Color.RED), title, JOptionPane.ERROR_MESSAGE);
+            }
+            System.setErr(original);
+
+            textAreaResources.setText("Loaded Resources:\n");
+            for (ResourcePackInfo info : resourceManager.getResourcePackInfo()) {
+                textAreaResources.append(" - " + PlainTextComponentSerializer.plainText().serialize(ResourcePackInfoUtils.resolveName(info)));
+                if (!info.getStatus()) {
+                    textAreaResources.append(" (Failed)");
+                }
+                textAreaResources.append("\n");
+            }
+
+            List<LanguageData> languages = getAllLanguageData(resourceManager.getLanguageManager());
+            String lastSelected = comboBoxLanguages.getSelectedItem() == null ? null : ((LanguageData) comboBoxLanguages.getSelectedItem()).getLanguage();
+            comboBoxLanguages.removeAllItems();
+            for (LanguageData language : languages) {
+                comboBoxLanguages.addItem(language);
+            }
+            Optional<LanguageData> optLanguage = languages.stream().filter(each -> each.getLanguage().equalsIgnoreCase(lastSelected == null ? "en_us" : lastSelected)).findFirst();
+            if (optLanguage.isPresent()) {
+                comboBoxLanguages.setSelectedItem(optLanguage.get());
+            } else {
+                comboBoxLanguages.setSelectedIndex(0);
+            }
+            reloadResourcesButton.setEnabled(true);
+            resourceBar.setVisible(false);
+            updateTextAreaInputSize();
+        } finally {
+            resourceLock.unlock();
         }
-        Optional<LanguageData> optLanguage = languages.stream().filter(each -> each.getLanguage().equalsIgnoreCase(lastSelected == null ? "en_us" : lastSelected)).findFirst();
-        if (optLanguage.isPresent()) {
-            comboBoxLanguages.setSelectedItem(optLanguage.get());
-        } else {
-            comboBoxLanguages.setSelectedIndex(0);
-        }
-        reloadResourcesButton.setEnabled(true);
-        resourceBar.setVisible(false);
-        updateTextAreaInputSize();
-        resourceLock.unlock();
     }
 
     private void updateTextComponent() {
@@ -496,6 +506,8 @@ public class MinecraftFontRenderer extends JFrame {
                 return;
             }
         } catch (InterruptedException e) {
+            e.printStackTrace();
+            return;
         }
         try {
             String text = textAreaInput.getText();
@@ -518,8 +530,9 @@ public class MinecraftFontRenderer extends JFrame {
             renderingComponents.set(prints);
         } catch (Throwable e) {
             e.printStackTrace();
+        } finally {
+            updateTextImageLock.unlock();
         }
-        updateTextImageLock.unlock();
     }
 
     private synchronized void updateImage() {

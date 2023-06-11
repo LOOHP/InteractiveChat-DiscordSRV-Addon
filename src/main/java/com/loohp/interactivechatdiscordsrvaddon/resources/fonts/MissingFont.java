@@ -21,14 +21,15 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 
-public class MissingFont extends LegacyUnicodeFont {
+import java.util.Collections;
+
+public class MissingFont extends UnihexFont {
 
     private int missingFontWidth;
 
     public MissingFont(ResourceManager manager, FontProvider provider) {
-        super(manager, provider, Int2ObjectMaps.emptyMap(), null);
+        super(manager, provider, Collections.emptyList(), null);
         this.missingFontWidth = missingCharacter.get().getFontImage().getWidth() * 2;
     }
 

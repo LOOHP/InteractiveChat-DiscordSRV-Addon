@@ -89,9 +89,9 @@ public class CharacterData {
         return ComponentCompacting.optimize(Component.empty().children(components));
     }
 
-    private Key font;
-    private TextColor color;
-    private List<TextDecoration> decorations;
+    private final Key font;
+    private final TextColor color;
+    private final List<TextDecoration> decorations;
 
     public CharacterData(Key font, TextColor color, List<TextDecoration> decorations) {
         this.font = font;

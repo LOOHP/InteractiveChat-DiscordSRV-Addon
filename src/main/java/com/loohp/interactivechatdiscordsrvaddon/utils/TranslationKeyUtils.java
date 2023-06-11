@@ -60,6 +60,7 @@ public class TranslationKeyUtils {
     private static Method getEffectKeyMethod;
     private static Class<?> craftItemStackClass;
     private static Class<?> nmsItemStackClass;
+    private static Class<?> nmsItemClass;
     private static Method asNMSCopyMethod;
     private static Method nmsGetItemMethod;
     private static Class<?> nmsItemRecordClass;
@@ -127,14 +128,25 @@ public class TranslationKeyUtils {
             craftItemStackClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.inventory.CraftItemStack");
             nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemStack", "net.minecraft.world.item.ItemStack");
             asNMSCopyMethod = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class);
+            nmsItemClass = NMSUtils.getNMSClass("net.minecraft.world.item.Item");
             nmsGetItemMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
                 return nmsItemStackClass.getMethod("getItem");
             }, () -> {
-                return nmsItemStackClass.getMethod("c");
+                Method method = nmsItemStackClass.getMethod("c");
+                if (!method.getReturnType().equals(nmsItemClass)) {
+                    throw new ReflectiveOperationException("Wrong return type");
+                }
+                return method;
+            }, () -> {
+                return nmsItemStackClass.getMethod("d");
             });
         } catch (SecurityException | ReflectiveOperationException e) {
             e.printStackTrace();
         }
+    }
+
+    public static String getPotterySherdName(Key material) {
+        return "item." + material.namespace() + "." + material.value();
     }
 
     public static String getArmorTrimMaterialDescription(Key material) {
@@ -519,12 +531,10 @@ public class TranslationKeyUtils {
         }
     }
 
-    public static String getAttributeKey(String attributeName) {
-        return "attribute.name." + attributeName;
-    }
-
-    public static String getAttributeModifierKey(double amount, int operation) {
-        if (amount > 0) {
+    public static String getAttributeModifierKey(boolean equalFlag, double amount, int operation) {
+        if (equalFlag) {
+            return "attribute.modifier.equals." + operation;
+        } else if (amount > 0) {
             return "attribute.modifier.plus." + operation;
         } else if (amount < 0) {
             return "attribute.modifier.take." + operation;

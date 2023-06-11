@@ -37,8 +37,8 @@ public class ToolTipComponent<T> {
         return new ToolTipComponent<>(image, ToolTipType.IMAGE);
     }
 
-    private T toolTipComponent;
-    private ToolTipType<T> type;
+    private final T toolTipComponent;
+    private final ToolTipType<T> type;
 
     private ToolTipComponent(T toolTipComponent, ToolTipType<T> type) {
         this.toolTipComponent = toolTipComponent;
@@ -71,8 +71,8 @@ public class ToolTipComponent<T> {
             return TYPES;
         }
 
-        private String name;
-        private Class<V> typeClass;
+        private final String name;
+        private final Class<V> typeClass;
 
         private ToolTipType(String name, Class<V> typeClass) {
             this.name = name;

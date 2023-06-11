@@ -33,8 +33,8 @@ public class ModelOverride {
         return value == null ? fallback : value;
     }
 
-    private Map<ModelOverrideType, Float> predicates;
-    private String model;
+    private final Map<ModelOverrideType, Float> predicates;
+    private final String model;
 
     public ModelOverride(Map<ModelOverrideType, Float> predicates, String model) {
         this.predicates = Collections.unmodifiableMap(predicates);

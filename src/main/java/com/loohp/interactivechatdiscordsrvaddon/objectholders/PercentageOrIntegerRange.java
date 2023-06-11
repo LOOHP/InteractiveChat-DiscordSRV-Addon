@@ -22,7 +22,7 @@ package com.loohp.interactivechatdiscordsrvaddon.objectholders;
 
 public class PercentageOrIntegerRange extends IntegerRange {
 
-    private boolean percentage;
+    private final boolean percentage;
 
     public PercentageOrIntegerRange(int min, int max, boolean percentage) {
         super(min, max);

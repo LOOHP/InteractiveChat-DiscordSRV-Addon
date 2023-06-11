@@ -32,19 +32,19 @@ public class ResourcePackInfo {
 
     public static final String UNKNOWN_PACK_ICON_LOCATION = "minecraft:misc/unknown_pack";
 
-    private ResourceManager manager;
-    private ResourcePackFile file;
-    private ResourcePackType type;
-    private boolean status;
-    private boolean exist;
-    private String rejectedReason;
-    private Component name;
-    private int packFormat;
-    private Component description;
-    private Map<String, LanguageMeta> languageMeta;
-    private BufferedImage icon;
-    private List<ResourceFilterBlock> resourceFilterBlocks;
-    private Map<String, TextureAtlases> textureAtlases;
+    private final ResourceManager manager;
+    private final ResourcePackFile file;
+    private final ResourcePackType type;
+    private final boolean status;
+    private final boolean exist;
+    private final String rejectedReason;
+    private final Component name;
+    private final int packFormat;
+    private final Component description;
+    private final Map<String, LanguageMeta> languageMeta;
+    private final BufferedImage icon;
+    private final List<ResourceFilterBlock> resourceFilterBlocks;
+    private final Map<String, TextureAtlases> textureAtlases;
 
     private ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, Component name, boolean status, boolean exist, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon, List<ResourceFilterBlock> resourceFilterBlocks, Map<String, TextureAtlases> textureAtlases) {
         this.manager = manager;

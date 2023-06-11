@@ -22,10 +22,10 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.languages;
 
 public class LanguageMeta {
 
-    private String language;
-    private String region;
-    private String name;
-    private boolean bidirectional;
+    private final String language;
+    private final String region;
+    private final String name;
+    private final boolean bidirectional;
 
     public LanguageMeta(String language, String region, String name, boolean bidirectional) {
         this.language = language;

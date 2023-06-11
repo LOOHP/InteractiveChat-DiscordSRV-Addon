@@ -73,14 +73,15 @@ public class ResourceDownloadManager {
         return MINECRAFT_VERSIONS;
     }
 
-    private String minecraftVersion;
-    private File packFolder;
+    private final String minecraftVersion;
+    private final File packFolder;
     private JSONObject data;
     private JSONObject assetIndex;
 
     public ResourceDownloadManager(String minecraftVersion, File packFolder) {
         this.minecraftVersion = minecraftVersion;
         this.packFolder = packFolder;
+
         this.data = null;
         this.assetIndex = null;
     }

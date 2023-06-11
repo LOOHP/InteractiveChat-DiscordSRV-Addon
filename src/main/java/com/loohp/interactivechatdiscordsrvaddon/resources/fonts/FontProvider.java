@@ -24,26 +24,26 @@ import com.loohp.interactivechat.libs.org.apache.commons.text.StringEscapeUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap.Entry;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.ints.IntLists;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.ints.IntSets;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.IntStream;
 
 public class FontProvider {
 
-    private ResourceManager manager;
-    private String key;
-    private List<MinecraftFont> providers;
-    private Int2ObjectMap<IntList> displayableCharactersByWidth;
+    private final ResourceManager manager;
+    private final String key;
+    private final List<MinecraftFont> providers;
+
+    private Int2ObjectMap<IntList> getDisplayableCharactersByWidth;
 
     public FontProvider(ResourceManager manager, String key, List<MinecraftFont> providers) {
         this.manager = manager;
@@ -63,13 +63,32 @@ public class FontProvider {
         return Collections.unmodifiableList(providers);
     }
 
+    public IntSet getDisplayableCharacters() {
+        return IntSets.unmodifiable(IntOpenHashSet.toSet(getDisplayableCharactersAsStream()));
+    }
+
+    public IntStream getDisplayableCharactersAsStream() {
+        return this.providers.stream().flatMapToInt(p -> p.getDisplayableCharacters().intStream());
+    }
+
     public Int2ObjectMap<IntList> getDisplayableCharactersByWidth() {
-        return Int2ObjectMaps.unmodifiable(displayableCharactersByWidth);
+        if (getDisplayableCharactersByWidth == null) {
+            Int2ObjectMap<IntList> charactersByWidth = new Int2ObjectOpenHashMap<>();
+            getDisplayableCharactersAsStream().forEach(i -> {
+                String c = new String(Character.toChars(i));
+                int width = forCharacter(c).getCharacterWidth(c);
+                charactersByWidth.computeIfAbsent(width, k -> new IntArrayList()).add(i);
+            });
+            this.getDisplayableCharactersByWidth = charactersByWidth;
+        }
+        return getDisplayableCharactersByWidth;
     }
 
     public void reloadFonts() {
+        this.getDisplayableCharactersByWidth = null;
+
         int i = 0;
-        if (manager.isFontLegacy() && (providers.isEmpty() || !(providers.get(0) instanceof SpaceFont))) {
+        if (manager.hasFlag(ResourceManager.Flag.LEGACY_HARDCODED_SPACE_FONT) && (providers.isEmpty() || !(providers.get(0) instanceof SpaceFont))) {
             providers.add(0, SpaceFont.generateLegacyHardcodedInstance(manager, this));
             i--;
         }
@@ -88,32 +107,15 @@ public class FontProvider {
             }
             i++;
         }
-
-        IntSet set = new IntOpenHashSet();
-        Int2ObjectMap<IntList> displayableCharactersByWidth = new Int2ObjectOpenHashMap<>();
-        for (MinecraftFont font : this.providers) {
-            for (int codePoint : font.getDisplayableCharacters()) {
-                if (set.contains(codePoint)) {
-                    continue;
-                }
-                int width = font.getCharacterWidth(new String(Character.toChars(codePoint)));
-                IntList list = displayableCharactersByWidth.get(width);
-                if (list == null) {
-                    displayableCharactersByWidth.put(width, list = new IntArrayList());
-                }
-                list.add(codePoint);
-                set.add(codePoint);
-            }
-        }
-        for (Entry<IntList> entry : displayableCharactersByWidth.int2ObjectEntrySet()) {
-            entry.setValue(IntLists.unmodifiable(entry.getValue()));
-        }
-        this.displayableCharactersByWidth = displayableCharactersByWidth;
     }
 
     public MinecraftFont forCharacterOrNull(String character) {
+        return forCharacterOrNull(character, false);
+    }
+
+    public MinecraftFont forCharacterOrNull(String character, boolean excludeMissing) {
         for (MinecraftFont font : providers) {
-            if (font.canDisplayCharacter(character)) {
+            if ((!excludeMissing || !(font instanceof MissingFont)) && font.canDisplayCharacter(character)) {
                 return font;
             }
         }
@@ -121,7 +123,11 @@ public class FontProvider {
     }
 
     public MinecraftFont forCharacter(String character) {
-        MinecraftFont font = forCharacterOrNull(character);
+        return forCharacter(character, false);
+    }
+
+    public MinecraftFont forCharacter(String character, boolean excludeMissing) {
+        MinecraftFont font = forCharacterOrNull(character, excludeMissing);
         if (font != null) {
             return font;
         }

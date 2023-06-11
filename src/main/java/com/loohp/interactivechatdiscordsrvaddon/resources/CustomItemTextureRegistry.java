@@ -49,7 +49,7 @@ public class CustomItemTextureRegistry implements IResourceRegistry {
         return manager -> new CustomItemTextureRegistry();
     }
 
-    private List<CustomItemTextureResolver> resolvers;
+    private final List<CustomItemTextureResolver> resolvers;
 
     public CustomItemTextureRegistry() {
         this.resolvers = new CopyOnWriteArrayList<>();

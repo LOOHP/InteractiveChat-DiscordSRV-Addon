@@ -559,77 +559,82 @@ public class BlockModelRenderer extends JFrame {
                 return;
             }
         } catch (InterruptedException e) {
-        }
-        renderModelButton.setEnabled(false);
-        reloadResourcesButton.setEnabled(false);
-        resourceBar.setValue(0);
-        resourceBar.setVisible(true);
-        textAreaResources.setText("Loading Resources...");
-
-        List<String> resourceOrder;
-        int valuePerPack;
-        try {
-            YamlFile yaml = new YamlFile();
-            yaml.options().useComments(true);
-            yaml.load(Files.newInputStream(Paths.get("InteractiveChatDiscordSrvAddon/config.yml")));
-            resourceOrder = yaml.getStringList("Resources.Order");
-            Collections.reverse(resourceOrder);
-            valuePerPack = (int) ((1.0 / (double) (resourceOrder.size() + 1)) * 10000);
-        } catch (IOException e) {
-            Toolkit.getDefaultToolkit().beep();
-            JOptionPane.showMessageDialog(null, GUIMain.createLabel("There is an error while loading from config:\n" + e.getMessage(), 13, Color.RED), title, JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
             return;
         }
+        try {
+            renderModelButton.setEnabled(false);
+            reloadResourcesButton.setEnabled(false);
+            resourceBar.setValue(0);
+            resourceBar.setVisible(true);
+            textAreaResources.setText("Loading Resources...");
+
+            List<String> resourceOrder;
+            int valuePerPack;
+            try {
+                YamlFile yaml = new YamlFile();
+                yaml.options().useComments(true);
+                yaml.load(Files.newInputStream(Paths.get("InteractiveChatDiscordSrvAddon/config.yml")));
+                resourceOrder = yaml.getStringList("Resources.Order");
+                Collections.reverse(resourceOrder);
+                valuePerPack = (int) ((1.0 / (double) (resourceOrder.size() + 1)) * 10000);
+            } catch (IOException e) {
+                Toolkit.getDefaultToolkit().beep();
+                JOptionPane.showMessageDialog(null, GUIMain.createLabel("There is an error while loading from config:\n" + e.getMessage(), 13, Color.RED), title, JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
         if (resourceManager != null) {
             resourceManager.close();
         }
 
-        PrintStream original = System.err;
-        try {
-            int packFormat = GUIMain.getDefaultPackVersion((Integer) defaultPackVersionSpinner.getValue());
-            defaultPackVersionSpinner.setValue(packFormat);
+            PrintStream original = System.err;
+            try {
+                int packFormat = GUIMain.getDefaultPackVersion((Integer) defaultPackVersionSpinner.getValue());
+                defaultPackVersionSpinner.setValue(packFormat);
 
-            resourceManager = new ResourceManager(false, false, Collections.emptyList(), Collections.singletonList(ICacheManager.getDummySupplier()), packFormat);
-            resourceManager.loadResources(new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN, true);
-            resourceBar.setValue(valuePerPack);
-            for (String resourceName : resourceOrder) {
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                System.setErr(new PrintStream(baos));
-                try {
-                    File resourcePackFile = new File("InteractiveChatDiscordSrvAddon/resourcepacks/" + resourceName);
-                    ResourcePackInfo info = resourceManager.loadResources(resourcePackFile, ResourcePackType.LOCAL);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                resourceManager = new ResourceManager(Collections.emptyList(), Collections.singletonList(ICacheManager.getDummySupplier()), packFormat);
+                resourceManager.loadResources(new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN, true);
+                resourceBar.setValue(valuePerPack);
+                for (String resourceName : resourceOrder) {
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    System.setErr(new PrintStream(baos));
+                    try {
+                        File resourcePackFile = new File("InteractiveChatDiscordSrvAddon/resourcepacks/" + resourceName);
+                        ResourcePackInfo info = resourceManager.loadResources(resourcePackFile, ResourcePackType.LOCAL);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    String error = baos.toString();
+                    if (!error.isEmpty()) {
+                        ForkJoinPool.commonPool().execute(() -> JOptionPane.showMessageDialog(null, GUIMain.createLabel("There are errors while loading \"" + resourceName + "\":\n" + error, 13, Color.RED), title, JOptionPane.ERROR_MESSAGE));
+                    }
+                    resourceBar.setValue(resourceBar.getValue() + valuePerPack);
                 }
-                String error = baos.toString();
-                if (!error.isEmpty()) {
-                    ForkJoinPool.commonPool().execute(() -> JOptionPane.showMessageDialog(null, GUIMain.createLabel("There are errors while loading \"" + resourceName + "\":\n" + error, 13, Color.RED), title, JOptionPane.ERROR_MESSAGE));
+            } catch (Throwable e) {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                e.printStackTrace(pw);
+                Toolkit.getDefaultToolkit().beep();
+                JOptionPane.showMessageDialog(null, GUIMain.createLabel("An error occurred!\n" + sw, 13, Color.RED), title, JOptionPane.ERROR_MESSAGE);
+            }
+            System.setErr(original);
+
+            textAreaResources.setText("Loaded Resources:\n");
+            for (ResourcePackInfo info : resourceManager.getResourcePackInfo()) {
+                textAreaResources.append(" - " + PlainTextComponentSerializer.plainText().serialize(ResourcePackInfoUtils.resolveName(info)));
+                if (!info.getStatus()) {
+                    textAreaResources.append(" (Failed)");
                 }
-                resourceBar.setValue(resourceBar.getValue() + valuePerPack);
+                textAreaResources.append("\n");
             }
-        } catch (Throwable e) {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
-            Toolkit.getDefaultToolkit().beep();
-            JOptionPane.showMessageDialog(null, GUIMain.createLabel("An error occurred!\n" + sw, 13, Color.RED), title, JOptionPane.ERROR_MESSAGE);
-        }
-        System.setErr(original);
 
-        textAreaResources.setText("Loaded Resources:\n");
-        for (ResourcePackInfo info : resourceManager.getResourcePackInfo()) {
-            textAreaResources.append(" - " + PlainTextComponentSerializer.plainText().serialize(ResourcePackInfoUtils.resolveName(info)));
-            if (!info.getStatus()) {
-                textAreaResources.append(" (Failed)");
-            }
-            textAreaResources.append("\n");
+            renderModelButton.setEnabled(true);
+            reloadResourcesButton.setEnabled(true);
+            resourceBar.setVisible(false);
+        } finally {
+            lock.unlock();
         }
-
-        renderModelButton.setEnabled(true);
-        reloadResourcesButton.setEnabled(true);
-        resourceBar.setVisible(false);
-        lock.unlock();
     }
 
     public void render() {
@@ -638,91 +643,96 @@ public class BlockModelRenderer extends JFrame {
                 return;
             }
         } catch (InterruptedException e) {
+            e.printStackTrace();
+            return;
         }
-        renderModelButton.setEnabled(false);
-        reloadResourcesButton.setEnabled(false);
-        spinnerThreads.setEnabled(false);
-        String key = textFieldResourceKey.getText();
-        if (!key.contains(":")) {
-            key = "minecraft:" + key;
-            textFieldResourceKey.setText(key);
-        }
-        String finalKey = key;
-        keyHistory.removeIf(each -> each.equalsIgnoreCase(finalKey));
-        keyHistory.add(0, key);
-        historyIndex = 0;
-        currentHistoryKey = null;
-        int lastSlash = key.lastIndexOf("/");
-        String trimmedKey = key.substring(lastSlash < 0 ? (key.lastIndexOf(":") + 1) : lastSlash + 1);
-
-        Map<String, TextureResource> providedTextures = new HashMap<>();
-        Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
-
-        SpawnEggTintData tintData = TintUtils.getSpawnEggTint(trimmedKey);
-        if (tintData != null) {
-            BufferedImage baseImage = resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg").getTexture();
-            BufferedImage overlayImage = resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg_overlay").getTexture(baseImage.getWidth(), baseImage.getHeight());
-
-            BufferedImage colorBase = ImageUtils.changeColorTo(ImageUtils.copyImage(baseImage), tintData.getBase());
-            BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(overlayImage), tintData.getOverlay());
-
-            baseImage = ImageUtils.multiply(baseImage, colorBase);
-            overlayImage = ImageUtils.multiply(overlayImage, colorOverlay);
-
-            providedTextures.put(ResourceRegistry.SPAWN_EGG_PLACEHOLDER, new GeneratedTextureResource(resourceManager, baseImage));
-            providedTextures.put(ResourceRegistry.SPAWN_EGG_OVERLAY_PLACEHOLDER, new GeneratedTextureResource(resourceManager, overlayImage));
-        }
-
-        TintIndexData tintIndexData = TintUtils.getTintData(trimmedKey);
-        for (Entry<ModelOverrideType, JSpinner> entry : overrideSettings.entrySet()) {
-            float value = ((Number) entry.getValue().getValue()).floatValue();
-            if (value != 0F) {
-                predicates.put(entry.getKey(), value);
+        try {
+            renderModelButton.setEnabled(false);
+            reloadResourcesButton.setEnabled(false);
+            spinnerThreads.setEnabled(false);
+            String key = textFieldResourceKey.getText();
+            if (!key.contains(":")) {
+                key = "minecraft:" + key;
+                textFieldResourceKey.setText(key);
             }
-        }
+            String finalKey = key;
+            keyHistory.removeIf(each -> each.equalsIgnoreCase(finalKey));
+            keyHistory.add(0, key);
+            historyIndex = 0;
+            currentHistoryKey = null;
+            int lastSlash = key.lastIndexOf("/");
+            String trimmedKey = key.substring(lastSlash < 0 ? (key.lastIndexOf(":") + 1) : lastSlash + 1);
 
-        for (ValueTrios<Supplier<String>, JButton, JFileChooser> data : providedTextureSettings.values()) {
-            String texturePlaceholder = data.getFirst().get();
-            File file = data.getThird().getSelectedFile();
-            if (file != null && file.getName().endsWith(".png")) {
-                try {
-                    BufferedImage image;
-                    if (texturePlaceholder.equals(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER) || texturePlaceholder.equals(ResourceRegistry.SKIN_FULL_TEXTURE_PLACEHOLDER)) {
-                        image = ModelUtils.convertToModernSkinTexture(ImageIO.read(file));
-                    } else {
-                        image = ImageIO.read(file);
-                    }
-                    providedTextures.put(texturePlaceholder, new GeneratedTextureResource(resourceManager, image));
-                } catch (Throwable e) {
-                    e.printStackTrace();
+            Map<String, TextureResource> providedTextures = new HashMap<>();
+            Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
+
+            SpawnEggTintData tintData = TintUtils.getSpawnEggTint(trimmedKey);
+            if (tintData != null) {
+                BufferedImage baseImage = resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg").getTexture();
+                BufferedImage overlayImage = resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg_overlay").getTexture(baseImage.getWidth(), baseImage.getHeight());
+
+                BufferedImage colorBase = ImageUtils.changeColorTo(ImageUtils.copyImage(baseImage), tintData.getBase());
+                BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(overlayImage), tintData.getOverlay());
+
+                baseImage = ImageUtils.multiply(baseImage, colorBase);
+                overlayImage = ImageUtils.multiply(overlayImage, colorOverlay);
+
+                providedTextures.put(ResourceRegistry.SPAWN_EGG_PLACEHOLDER, new GeneratedTextureResource(resourceManager, baseImage));
+                providedTextures.put(ResourceRegistry.SPAWN_EGG_OVERLAY_PLACEHOLDER, new GeneratedTextureResource(resourceManager, overlayImage));
+            }
+
+            TintIndexData tintIndexData = TintUtils.getTintData(trimmedKey);
+            for (Entry<ModelOverrideType, JSpinner> entry : overrideSettings.entrySet()) {
+                float value = ((Number) entry.getValue().getValue()).floatValue();
+                if (value != 0F) {
+                    predicates.put(entry.getKey(), value);
                 }
             }
-        }
-        modelRenderer.reloadPoolSize();
-        long start = System.currentTimeMillis();
-        try {
-            RenderResult result = modelRenderer.render((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), (int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), resourceManager, null, false, key, ModelDisplayPosition.GUI, predicates, providedTextures, tintIndexData, enchantedCheckBox.isSelected(), altPosBox.isSelected(), (source, type) -> getEnchantedImage(source, type), (source, type) -> new RawEnchantmentGlintData(Collections.singletonList(getRawEnchantedImage(source, type)), Collections.singletonList(OpenGLBlending.GLINT)));
-            long end = System.currentTimeMillis();
-            if (result.isSuccessful()) {
-                renderedImage = result.getImage();
-                imagePanel.repaint();
-                renderTimesLabel.setText((end - start) + "ms");
-                lastRenderedKey = key;
-            } else {
-                Toolkit.getDefaultToolkit().beep();
-                JOptionPane.showMessageDialog(null, GUIMain.createLabel("Render Rejected:\n" + result.getRejectedReason(), 13, Color.RED), title, JOptionPane.ERROR_MESSAGE);
+
+            for (ValueTrios<Supplier<String>, JButton, JFileChooser> data : providedTextureSettings.values()) {
+                String texturePlaceholder = data.getFirst().get();
+                File file = data.getThird().getSelectedFile();
+                if (file != null && file.getName().endsWith(".png")) {
+                    try {
+                        BufferedImage image;
+                        if (texturePlaceholder.equals(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER) || texturePlaceholder.equals(ResourceRegistry.SKIN_FULL_TEXTURE_PLACEHOLDER)) {
+                            image = ModelUtils.convertToModernSkinTexture(ImageIO.read(file));
+                        } else {
+                            image = ImageIO.read(file);
+                        }
+                        providedTextures.put(texturePlaceholder, new GeneratedTextureResource(resourceManager, image));
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                    }
+                }
             }
-        } catch (Throwable e) {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
-            Toolkit.getDefaultToolkit().beep();
-            JOptionPane.showMessageDialog(null, GUIMain.createLabel("An error occurred!\n" + sw, 13, Color.RED), title, JOptionPane.ERROR_MESSAGE);
+            modelRenderer.reloadPoolSize();
+            long start = System.currentTimeMillis();
+            try {
+                RenderResult result = modelRenderer.render((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), (int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), resourceManager, null, false, key, ModelDisplayPosition.GUI, predicates, providedTextures, tintIndexData, enchantedCheckBox.isSelected(), altPosBox.isSelected(), (source, type) -> getEnchantedImage(source, type), (source, type) -> new RawEnchantmentGlintData(Collections.singletonList(getRawEnchantedImage(source, type)), Collections.singletonList(OpenGLBlending.GLINT)));
+                long end = System.currentTimeMillis();
+                if (result.isSuccessful()) {
+                    renderedImage = result.getImage();
+                    imagePanel.repaint();
+                    renderTimesLabel.setText((end - start) + "ms");
+                    lastRenderedKey = key;
+                } else {
+                    Toolkit.getDefaultToolkit().beep();
+                    JOptionPane.showMessageDialog(null, GUIMain.createLabel("Render Rejected:\n" + result.getRejectedReason(), 13, Color.RED), title, JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Throwable e) {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                e.printStackTrace(pw);
+                Toolkit.getDefaultToolkit().beep();
+                JOptionPane.showMessageDialog(null, GUIMain.createLabel("An error occurred!\n" + sw, 13, Color.RED), title, JOptionPane.ERROR_MESSAGE);
+            }
+            renderModelButton.setEnabled(true);
+            reloadResourcesButton.setEnabled(true);
+            spinnerThreads.setEnabled(true);
+        } finally {
+            lock.unlock();
         }
-        renderModelButton.setEnabled(true);
-        reloadResourcesButton.setEnabled(true);
-        spinnerThreads.setEnabled(true);
-        lock.unlock();
     }
 
     public synchronized void copyImage() {

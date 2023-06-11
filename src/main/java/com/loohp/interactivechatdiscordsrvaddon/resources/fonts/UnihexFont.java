@@ -24,10 +24,15 @@ import com.loohp.blockmodelrenderer.utils.ColorUtils;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
-import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
+import it.unimi.dsi.fastutil.bytes.ByteArrayList;
+import it.unimi.dsi.fastutil.bytes.ByteList;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -38,29 +43,77 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.BitSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
-@SuppressWarnings("DeprecatedIsStillUsed")
-@Deprecated
-public class LegacyUnicodeFont extends MinecraftFont {
+public class UnihexFont extends MinecraftFont {
 
-    public static final String TYPE_KEY = "legacy_unicode";
+    public static final String TYPE_KEY = "unihex";
     public static final double ITALIC_SHEAR_X = -4.0 / 14.0;
+    public static final int HEIGHT = 16;
 
-    public static String getSectionSubstring(int i) {
-        return String.format("%04x", i).substring(0, 2);
+    private static boolean readUntilDelimiter(InputStream inputStream, ByteList data, int delimiter) throws IOException {
+        int i;
+        while ((i = inputStream.read()) != -1) {
+            if (i == delimiter) {
+                return true;
+            }
+            data.add((byte) i);
+        }
+        return false;
+    }
+
+    private static BitSet toBitSet(int lineNum, ByteList data) {
+        BitSet bitSet = new BitSet(data.size() * 4);
+        int c = 0;
+        for (byte i : data) {
+            int value = getHexDigitValue(lineNum, i);
+            bitSet.set(c++, ((value >> 3) & 1) == 1);
+            bitSet.set(c++, ((value >> 2) & 1) == 1);
+            bitSet.set(c++, ((value >> 1) & 1) == 1);
+            bitSet.set(c++, (value & 1) == 1);
+        }
+        return bitSet;
+    }
+
+    private static int getHexDigitValue(int lineNum, byte digit) {
+        switch (digit) {
+            case 48: return 0;
+            case 49: return 1;
+            case 50: return 2;
+            case 51: return 3;
+            case 52: return 4;
+            case 53: return 5;
+            case 54: return 6;
+            case 55: return 7;
+            case 56: return 8;
+            case 57: return 9;
+            case 65: return 10;
+            case 66: return 11;
+            case 67: return 12;
+            case 68: return 13;
+            case 69: return 14;
+            case 70: return 15;
+            default: throw new IllegalArgumentException("Invalid entry at line " + lineNum + ": expected hex digit, got " + (char) digit);
+        }
     }
 
     protected Optional<FontResource> missingCharacter;
     private Int2ObjectMap<Optional<FontResource>> charImages;
-    private Int2ObjectMap<GlyphSize> sizes;
-    private String template;
+    private Int2IntMap charWidth;
+    private List<SizeOverride> sizeOverrides;
+    private String hexFileResourceLocation;
 
-    public LegacyUnicodeFont(ResourceManager manager, FontProvider provider, Int2ObjectMap<GlyphSize> sizes, String template) {
+    public UnihexFont(ResourceManager manager, FontProvider provider, List<SizeOverride> sizeOverrides, String hexFileResourceLocation) {
         super(manager, provider);
-        this.sizes = sizes;
-        this.template = template;
+        this.sizeOverrides = Collections.unmodifiableList(sizeOverrides);
+        this.hexFileResourceLocation = hexFileResourceLocation;
 
         BufferedImage missingCharacter = new BufferedImage(5, 8, BufferedImage.TYPE_INT_ARGB);
         for (int i = 0; i < 8; ++i) {
@@ -75,32 +128,85 @@ public class LegacyUnicodeFont extends MinecraftFont {
     @Override
     public void reloadFonts() {
         this.charImages = new Int2ObjectOpenHashMap<>();
-
-        if (!hasTemplate()) {
+        this.charWidth = new Int2IntOpenHashMap();
+        if (!hasHexFileResourceLocation()) {
             return;
         }
-
-        for (int i = 0; i < 65536; i += 256) {
-            TextureResource resource = manager.getFontManager().getFontResource(template.replaceFirst("%s", getSectionSubstring(i)));
-            if (resource == null) {
-                continue;
-            }
-            BufferedImage fontBaseImage = resource.getTexture(256, 256);
-            int u = 0;
-            for (int y = 0; y < 256; y += 16) {
-                for (int x = 0; x < 256; x += 16) {
-                    int character = i + u;
-                    if (character != 0) {
-                        GlyphSize size = sizes.get(character);
-                        if (size.getEnd() - size.getStart() > 0) {
-                            charImages.put(character, Optional.of(new FontTextureResource(resource, 256, 256, x + size.getStart(), y, size.getEnd() - size.getStart() + 1, 16)));
-                        } else {
-                            charImages.put(character, Optional.empty());
-                        }
+        try (ZipInputStream zipInputStream = getHexFileInputStream()) {
+            for (ZipEntry zipEntry = zipInputStream.getNextEntry(); zipEntry != null; zipEntry = zipInputStream.getNextEntry()) {
+                if (!zipEntry.getName().endsWith(".hex")) {
+                    continue;
+                }
+                int line = 0;
+                while (true) {
+                    ByteList byteList = new ByteArrayList(128);
+                    if (!readUntilDelimiter(zipInputStream, byteList, 58) || byteList.size() == 0) {
+                        break;
                     }
-                    u++;
+                    int byteListSize = byteList.size();
+                    if (byteListSize != 4 && byteListSize != 5 && byteListSize != 6) {
+                        throw new IllegalArgumentException("Invalid entry at line " + line + ": expected 4, 5 or 6 hex digits followed by a colon");
+                    }
+                    int codePoint = 0;
+                    for (int u = 0; u < byteListSize; u++) {
+                        codePoint = codePoint << 4 | getHexDigitValue(line, byteList.getByte(u));
+                    }
+
+                    byteList.clear();
+                    readUntilDelimiter(zipInputStream, byteList, 10);
+                    BitSet bits = toBitSet(line, byteList);
+
+                    int rawWidth;
+                    switch (byteList.size()) {
+                        case 32: {rawWidth = 8; break;}
+                        case 64: {rawWidth = 16; break;}
+                        case 96: {rawWidth = 24; break;}
+                        case 128: {rawWidth = 32; break;}
+                        default: throw new IllegalArgumentException("Invalid entry at line " + line + ": expected hex number describing (8,16,24,32) x 16 bitmap, followed by a new line");
+                    };
+                    int left = rawWidth;
+                    int right = 0;
+                    SizeOverride sizeOverride = getSizeOverride(new String(Character.toChars(codePoint)));
+                    if (sizeOverride == null) {
+                        outer: for (int column = 0; column < rawWidth; column++) {
+                            for (int u = column; u < bits.size(); u += rawWidth) {
+                                if (bits.get(u)) {
+                                    left = column;
+                                    break outer;
+                                }
+                            }
+                        }
+                        outer: for (int column = rawWidth - 1; column >= 0; column--) {
+                            for (int u = column; u < bits.size(); u += rawWidth) {
+                                if (bits.get(u)) {
+                                    right = column;
+                                    break outer;
+                                }
+                            }
+                        }
+                    } else {
+                        left = sizeOverride.getLeft();
+                        right = sizeOverride.getRight();
+                    }
+                    if (left >= right) {
+                        charWidth.put(codePoint, 0);
+                        charImages.put(codePoint, Optional.empty());
+                    } else {
+                        int width = right - left + 1;
+                        BitSet pixels = new BitSet(width * HEIGHT);
+                        for (int y = 0; y < HEIGHT; y++) {
+                            for (int x = left; x <= right; x++) {
+                                pixels.set(y * width + (x - left), bits.get(y * rawWidth + x));
+                            }
+                        }
+                        charWidth.put(codePoint, width);
+                        charImages.put(codePoint, Optional.of(new FontBitmapResource(width, HEIGHT, pixels)));
+                    }
+                    line++;
                 }
             }
+        } catch (Exception e) {
+            throw new ResourceLoadingException("Invalid unihex zip entries " + getHexFile().getAbsolutePath(), e);
         }
     }
 
@@ -108,16 +214,31 @@ public class LegacyUnicodeFont extends MinecraftFont {
         return charImages.keySet();
     }
 
-    public Int2ObjectMap<GlyphSize> getSizes() {
-        return sizes;
+    public List<SizeOverride> getSizeOverrides() {
+        return sizeOverrides;
     }
 
-    public boolean hasTemplate() {
-        return template != null;
+    public SizeOverride getSizeOverride(String character) {
+        return sizeOverrides.stream().filter(e -> e.characterIncluded(character)).findFirst().orElse(null);
     }
 
-    public String getTemplate() {
-        return template;
+    public boolean hasHexFileResourceLocation() {
+        return hexFileResourceLocation != null;
+    }
+
+    public String getHexFileResourceLocation() {
+        return hexFileResourceLocation;
+    }
+
+    public ResourcePackFile getHexFile() {
+        if (!hasHexFileResourceLocation()) {
+            return null;
+        }
+        return manager.findResource(hexFileResourceLocation);
+    }
+
+    public ZipInputStream getHexFileInputStream() throws IOException {
+        return new ZipInputStream(getHexFile().getInputStream());
     }
 
     @Override
@@ -237,8 +358,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
 
     @Override
     public int getCharacterWidth(String character) {
-        GlyphSize size = sizes.get(character.codePointAt(0));
-        return size.getEnd() - size.getStart() + 1;
+        return charWidth.get(character.codePointAt(0));
     }
 
     @Override
@@ -246,22 +366,39 @@ public class LegacyUnicodeFont extends MinecraftFont {
         return IntSets.unmodifiable(charImages.keySet());
     }
 
-    public static class GlyphSize {
+    public static class SizeOverride {
 
-        private byte start;
-        private byte end;
+        private final int from;
+        private final int to;
+        private final byte left;
+        private final byte right;
 
-        public GlyphSize(byte start, byte end) {
-            this.start = start;
-            this.end = end;
+        public SizeOverride(int from, int to, byte left, byte right) {
+            this.from = from;
+            this.to = to;
+            this.left = left;
+            this.right = right;
         }
 
-        public byte getStart() {
-            return start;
+        public boolean characterIncluded(String character) {
+            int codePoint = character.codePointAt(0);
+            return codePoint >= from && codePoint <= to;
         }
 
-        public byte getEnd() {
-            return end;
+        public int getFrom() {
+            return from;
+        }
+
+        public int getTo() {
+            return to;
+        }
+
+        public byte getLeft() {
+            return left;
+        }
+
+        public byte getRight() {
+            return right;
         }
 
     }

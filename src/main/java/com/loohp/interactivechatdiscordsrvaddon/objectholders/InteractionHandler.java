@@ -29,10 +29,10 @@ import java.util.function.BiConsumer;
 
 public class InteractionHandler {
 
-    private Collection<? extends ActionRow> interactionToRegister;
-    private List<String> interactions;
-    private long expire;
-    private BiConsumer<GenericComponentInteractionCreateEvent, List<DiscordMessageContent>> reactionConsumer;
+    private final Collection<? extends ActionRow> interactionToRegister;
+    private final List<String> interactions;
+    private final long expire;
+    private final BiConsumer<GenericComponentInteractionCreateEvent, List<DiscordMessageContent>> reactionConsumer;
 
     public InteractionHandler(Collection<? extends ActionRow> interactionToRegister, List<String> interactions, long expire, BiConsumer<GenericComponentInteractionCreateEvent, List<DiscordMessageContent>> reactionConsumer) {
         this.interactionToRegister = interactionToRegister;

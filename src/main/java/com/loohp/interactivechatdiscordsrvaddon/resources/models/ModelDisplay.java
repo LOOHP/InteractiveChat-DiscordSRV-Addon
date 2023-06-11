@@ -28,10 +28,10 @@ import java.util.Set;
 
 public class ModelDisplay {
 
-    private ModelDisplayPosition position;
-    private Coordinates3D rotation;
-    private Coordinates3D translation;
-    private Coordinates3D scale;
+    private final ModelDisplayPosition position;
+    private final Coordinates3D rotation;
+    private final Coordinates3D translation;
+    private final Coordinates3D scale;
 
     public ModelDisplay(ModelDisplayPosition position, Coordinates3D rotation, Coordinates3D translation, Coordinates3D scale) {
         this.position = position;

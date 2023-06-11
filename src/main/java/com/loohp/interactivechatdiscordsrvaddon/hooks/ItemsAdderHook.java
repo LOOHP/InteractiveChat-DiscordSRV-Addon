@@ -20,14 +20,13 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.hooks;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import dev.lone.itemsadder.api.ItemsAdder;
 
 public class ItemsAdderHook {
 
     public static String getItemsAdderResourcePackURL() {
-        Bukkit.getConsoleSender().sendMessage(ChatColor.YELLOW + "[ICDiscordSrvAddon] ItemsAdder Resource Pack URL Hooking coming soon!");
-        return null;
+        String url = ItemsAdder.getPackUrl(false);
+        return url == null || url.trim().isEmpty() ? null : url;
     }
 
 }

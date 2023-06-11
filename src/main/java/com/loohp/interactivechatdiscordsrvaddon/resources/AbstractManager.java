@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 
 public abstract class AbstractManager implements IAbstractManager {
 
-    protected ResourceManager manager;
+    protected final ResourceManager manager;
 
     public AbstractManager(ResourceManager manager) {
         this.manager = manager;

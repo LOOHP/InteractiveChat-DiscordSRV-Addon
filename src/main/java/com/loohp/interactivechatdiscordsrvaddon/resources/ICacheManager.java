@@ -29,37 +29,41 @@ public interface ICacheManager extends IResourceRegistry {
 
     String IDENTIFIER = "CacheManager";
 
+    ICacheManager DUMMY_CACHE_MANAGER = new ICacheManager() {
+        @Override
+        public CacheObject<?> getCache(String key) {
+            return null;
+        }
+
+        @Override
+        public CacheObject<?> removeCache(String key) {
+            return null;
+        }
+
+        @Override
+        public <T> void putCache(String key, T value) {
+            //do nothing
+        }
+
+        @Override
+        public void clearAllCache() {
+            //do nothing
+        }
+
+        @Override
+        public String getRegistryIdentifier() {
+            return IDENTIFIER;
+        }
+    };
+
+    ResourceRegistrySupplier<ICacheManager> DUMMY_SUPPLIER = manager -> DUMMY_CACHE_MANAGER;
+
     static ResourceRegistrySupplier<ICacheManager> getDefaultSupplier(File folder) {
         return manager -> new CacheManager(folder, Duration.ofMinutes(10));
     }
 
     static ResourceRegistrySupplier<ICacheManager> getDummySupplier() {
-        return manager -> new ICacheManager() {
-            @Override
-            public CacheObject<?> getCache(String key) {
-                return null;
-            }
-
-            @Override
-            public CacheObject<?> removeCache(String key) {
-                return null;
-            }
-
-            @Override
-            public <T> void putCache(String key, T value) {
-                //do nothing
-            }
-
-            @Override
-            public void clearAllCache() {
-                //do nothing
-            }
-
-            @Override
-            public String getRegistryIdentifier() {
-                return IDENTIFIER;
-            }
-        };
+        return DUMMY_SUPPLIER;
     }
 
     CacheObject<?> getCache(String key);
