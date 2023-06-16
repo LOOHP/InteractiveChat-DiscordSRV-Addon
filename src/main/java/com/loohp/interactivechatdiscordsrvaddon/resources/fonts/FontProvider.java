@@ -64,7 +64,9 @@ public class FontProvider {
     }
 
     public IntSet getDisplayableCharacters() {
-        return IntSets.unmodifiable(IntOpenHashSet.toSet(getDisplayableCharactersAsStream()));
+        IntSet set = new IntOpenHashSet();
+        getDisplayableCharactersAsStream().forEach(i -> set.add(i));
+        return IntSets.unmodifiable(set);
     }
 
     public IntStream getDisplayableCharactersAsStream() {

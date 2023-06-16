@@ -22,7 +22,6 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
-import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
@@ -33,7 +32,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.IntSupplier;
-import java.util.stream.IntStream;
 
 public class TintUtils {
 
@@ -209,7 +207,13 @@ public class TintUtils {
 
         public TintIndexData(List<IntSupplier> data) {
             this.data = data;
-            this.availableTintIndex = IntSets.unmodifiable(IntOpenHashSet.toSet(IntStream.range(0, data.size()).filter(i -> data.get(i) != null)));
+            IntSet availableTintIndexSet = new IntOpenHashSet();
+            for (int i = 0; i < data.size(); i++) {
+                if (data.get(i) != null) {
+                    availableTintIndexSet.add(i);
+                }
+            }
+            this.availableTintIndex = IntSets.unmodifiable(availableTintIndexSet);
         }
 
         public BufferedImage applyTint(BufferedImage image, int tintIndex) {
