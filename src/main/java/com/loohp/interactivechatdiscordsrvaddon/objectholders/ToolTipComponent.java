@@ -29,6 +29,12 @@ import java.util.Map;
 
 public class ToolTipComponent<T> {
 
+    public static final ToolTipComponent<Component> EMPTY = text(Component.empty());
+
+    public static ToolTipComponent<Component> empty() {
+        return EMPTY;
+    }
+
     public static ToolTipComponent<Component> text(Component component) {
         return new ToolTipComponent<>(component, ToolTipType.TEXT);
     }

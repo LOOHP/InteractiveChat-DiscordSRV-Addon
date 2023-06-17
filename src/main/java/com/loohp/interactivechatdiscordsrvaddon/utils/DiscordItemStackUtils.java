@@ -27,7 +27,6 @@ import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.Style;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
@@ -114,6 +113,11 @@ import java.util.stream.Collectors;
 import static com.loohp.interactivechat.utils.LanguageUtils.getTranslation;
 import static com.loohp.interactivechat.utils.LanguageUtils.getTranslationKey;
 
+import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.*;
+
+import static com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor.*;
+import static com.loohp.interactivechat.libs.net.kyori.adventure.text.Component.*;
+
 @SuppressWarnings("deprecation")
 public class DiscordItemStackUtils {
 
@@ -143,6 +147,18 @@ public class DiscordItemStackUtils {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static ToolTipComponent<Component> tooltipEmpty() {
+        return ToolTipComponent.empty();
+    }
+    
+    private static ToolTipComponent<Component> tooltipText(Component component) {
+        return ToolTipComponent.text(component);
+    }
+
+    private static ToolTipComponent<BufferedImage> tooltipImage(BufferedImage image) {
+        return ToolTipComponent.image(image);
     }
 
     public static Color getDiscordColor(ItemStack item) {
@@ -204,7 +220,7 @@ public class DiscordItemStackUtils {
         ICMaterial icMaterial = ICMaterial.from(item);
 
         Component itemDisplayNameComponent = ItemStackUtils.getDisplayName(item);
-        prints.add(ToolTipComponent.text(itemDisplayNameComponent));
+        prints.add(tooltipText(itemDisplayNameComponent));
 
         boolean hasMeta = item.getItemMeta() != null;
 
@@ -217,11 +233,11 @@ public class DiscordItemStackUtils {
             if (state instanceof DecoratedPot) {
                 DecoratedPot pot = (DecoratedPot) state;
                 List<Material> materials = pot.getShards();
-                prints.add(ToolTipComponent.text(Component.empty()));
+                prints.add(tooltipEmpty());
                 for (int i : new int[] {3, 1, 2, 0}) {
                     if (i < materials.size()) {
                         Key material = Key.key(materials.get(i).getKey().toString());
-                        prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getPotterySherdName(material)).color(NamedTextColor.GRAY)));
+                        prints.add(tooltipText(translatable(getPotterySherdName(material)).color(GRAY)));
                     }
                 }
             }
@@ -231,16 +247,30 @@ public class DiscordItemStackUtils {
             if (NBTEditor.contains(item, "Trim")) {
                 Key material = Key.key(NBTEditor.getString(item, "Trim", "material"));
                 Key pattern = Key.key(NBTEditor.getString(item, "Trim", "pattern"));
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getSmithingTemplateUpgrade()).color(NamedTextColor.GRAY)));
+                prints.add(tooltipText(translatable(getSmithingTemplateUpgrade()).color(GRAY)));
                 TextColor color = ArmorTrimUtils.getArmorTrimIndex(world, item).right();
-                prints.add(ToolTipComponent.text(Component.text(" ").append(Component.translatable(TranslationKeyUtils.getArmorTrimPatternDescription(pattern)).color(color))));
-                prints.add(ToolTipComponent.text(Component.text(" ").append(Component.translatable(TranslationKeyUtils.getArmorTrimMaterialDescription(material)).color(color))));
+                prints.add(tooltipText(text(" ").append(translatable(getArmorTrimPatternDescription(pattern)).color(color))));
+                prints.add(tooltipText(text(" ").append(translatable(getArmorTrimMaterialDescription(material)).color(color))));
             }
         }
 
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && icMaterial.isOneOf(Collections.singletonList("CONTAINS:Smithing_Template"))) {
             Key key = Key.key(item.getType().getKey().toString());
-            prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getTrimPatternName(key)).color(NamedTextColor.GRAY)));
+            prints.add(tooltipText(translatable(getTrimPatternName(key)).color(GRAY)));
+            prints.add(tooltipEmpty());
+            prints.add(tooltipText(translatable(getSmithingTemplateAppliesTo()).color(GRAY)));
+            boolean isNetheriteUpgrade = icMaterial.isMaterial(XMaterial.NETHERITE_UPGRADE_SMITHING_TEMPLATE);
+            if (isNetheriteUpgrade) {
+                prints.add(tooltipText(text(" ").append(translatable(getSmithingTemplateNetheriteUpgradeAppliesTo()).color(BLUE))));
+            } else {
+                prints.add(tooltipText(text(" ").append(translatable(getSmithingTemplateArmorTrimAppliesTo()).color(BLUE))));
+            }
+            prints.add(tooltipText(translatable(getSmithingTemplateIngredients()).color(GRAY)));
+            if (isNetheriteUpgrade) {
+                prints.add(tooltipText(text(" ").append(translatable(getSmithingTemplateNetheriteUpgradeIngredients()).color(BLUE))));
+            } else {
+                prints.add(tooltipText(text(" ").append(translatable(getSmithingTemplateArmorTrimIngredients()).color(BLUE))));
+            }
         }
 
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && icMaterial.isMaterial(XMaterial.PAINTING)) {
@@ -251,9 +281,9 @@ public class DiscordItemStackUtils {
                 }
                 Art art = Art.getByName(variant);
                 if (art != null) {
-                    prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getPaintingTitle(art)).color(NamedTextColor.YELLOW)));
-                    prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getPaintingAuthor(art)).color(NamedTextColor.GRAY)));
-                    prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getPaintingDimension()).args(Component.text(art.getBlockWidth()), Component.text(art.getBlockHeight())).color(NamedTextColor.WHITE)));
+                    prints.add(tooltipText(translatable(getPaintingTitle(art)).color(YELLOW)));
+                    prints.add(tooltipText(translatable(getPaintingAuthor(art)).color(GRAY)));
+                    prints.add(tooltipText(translatable(getPaintingDimension()).args(text(art.getBlockWidth()), text(art.getBlockHeight())).color(WHITE)));
                 }
             }
         }
@@ -269,18 +299,18 @@ public class DiscordItemStackUtils {
                 }
             }
             if (entityType == null) {
-                prints.add(ToolTipComponent.text(Component.empty()));
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getSpawnerDescription1()).color(NamedTextColor.GRAY)));
-                prints.add(ToolTipComponent.text(Component.text(" ").append(Component.translatable(TranslationKeyUtils.getSpawnerDescription2()).color(NamedTextColor.BLUE))));
+                prints.add(tooltipEmpty());
+                prints.add(tooltipText(translatable(getSpawnerDescription1()).color(GRAY)));
+                prints.add(tooltipText(text(" ").append(translatable(getSpawnerDescription2()).color(BLUE))));
             } else {
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getEntityTypeName(entityType)).color(NamedTextColor.GRAY)));
+                prints.add(tooltipText(translatable(getEntityTypeName(entityType)).color(GRAY)));
             }
         }
 
         if (icMaterial.isMaterial(XMaterial.GOAT_HORN)) {
             String instrument = NBTEditor.getString(item, "instrument");
             if (instrument != null) {
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getGoatHornInstrument(NamespacedKey.fromString(instrument))).color(NamedTextColor.GRAY)));
+                prints.add(tooltipText(translatable(getGoatHornInstrument(NamespacedKey.fromString(instrument))).color(GRAY)));
             }
         }
 
@@ -288,22 +318,22 @@ public class DiscordItemStackUtils {
             BundleMeta meta = (BundleMeta) item.getItemMeta();
             List<ItemStack> items = meta.getItems();
             BufferedImage contentsImage = ImageGeneration.getBundleContainerInterface(player, items);
-            prints.add(ToolTipComponent.image(contentsImage));
+            prints.add(tooltipImage(contentsImage));
             int fullness = BundleUtils.getFullness(items);
-            prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getBundleFullness()).args(Component.text(fullness), Component.text(64)).color(NamedTextColor.GRAY)));
+            prints.add(tooltipText(translatable(getBundleFullness()).args(text(fullness), text(64)).color(GRAY)));
         }
 
         if (icMaterial.isMaterial(XMaterial.WRITTEN_BOOK) && hasMeta && item.getItemMeta() instanceof BookMeta) {
             BookMeta meta = (BookMeta) item.getItemMeta();
             String author = meta.getAuthor();
             if (author != null) {
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getBookAuthor()).args(Component.text(author)).color(NamedTextColor.GRAY)));
+                prints.add(tooltipText(translatable(getBookAuthor()).args(text(author)).color(GRAY)));
             }
             Generation generation = meta.getGeneration();
             if (generation == null) {
                 generation = Generation.ORIGINAL;
             }
-            prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getBookGeneration(generation)).color(NamedTextColor.GRAY)));
+            prints.add(tooltipText(translatable(getBookGeneration(generation)).color(GRAY)));
         }
 
         if (icMaterial.isMaterial(XMaterial.SHIELD) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
@@ -328,7 +358,7 @@ public class DiscordItemStackUtils {
                         break;
                     }
                     PatternTypeWrapper type = PatternTypeWrapper.fromPatternType(pattern.getPattern());
-                    prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getBannerPatternName(type, pattern.getColor())).color(NamedTextColor.GRAY)));
+                    prints.add(tooltipText(translatable(getBannerPatternName(type, pattern.getColor())).color(GRAY)));
                 }
             }
         }
@@ -352,52 +382,52 @@ public class DiscordItemStackUtils {
                     break;
                 }
                 PatternTypeWrapper type = PatternTypeWrapper.fromPatternType(pattern.getPattern());
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getBannerPatternName(type, pattern.getColor())).color(NamedTextColor.GRAY)));
+                prints.add(tooltipText(translatable(getBannerPatternName(type, pattern.getColor())).color(GRAY)));
             }
         }
 
         if (icMaterial.isMaterial(XMaterial.TROPICAL_FISH_BUCKET)) {
-            List<String> translations = TranslationKeyUtils.getTropicalFishBucketName(item);
+            List<String> translations = getTropicalFishBucketName(item);
             if (translations.size() > 0) {
-                prints.add(ToolTipComponent.text(Component.translatable(translations.get(0)).color(NamedTextColor.GRAY).decorate(TextDecoration.ITALIC)));
+                prints.add(tooltipText(translatable(translations.get(0)).color(GRAY).decorate(TextDecoration.ITALIC)));
                 if (translations.size() > 1) {
-                    prints.add(ToolTipComponent.text(ComponentStringUtils.join(Component.empty().color(NamedTextColor.GRAY).decorate(TextDecoration.ITALIC), Component.text(", "), translations.stream().skip(1).map(each -> Component.translatable(each)).collect(Collectors.toList()))));
+                    prints.add(tooltipText(ComponentStringUtils.join(empty().color(GRAY).decorate(TextDecoration.ITALIC), text(", "), translations.stream().skip(1).map(each -> translatable(each)).collect(Collectors.toList()))));
                 }
             }
         }
 
         if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:music_disc"))) {
-            prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getMusicDiscName(item)).color(NamedTextColor.GRAY)));
+            prints.add(tooltipText(translatable(getMusicDiscName(item)).color(GRAY)));
         }
 
         if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:disc_fragment"))) {
-            prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getDiscFragmentName(item)).color(NamedTextColor.GRAY)));
+            prints.add(tooltipText(translatable(getDiscFragmentName(item)).color(GRAY)));
         }
 
         if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:banner_pattern"))) {
-            prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getBannerPatternItemName(icMaterial)).color(NamedTextColor.GRAY)));
+            prints.add(tooltipText(translatable(getBannerPatternItemName(icMaterial)).color(GRAY)));
         }
 
         if (icMaterial.isMaterial(XMaterial.FIREWORK_ROCKET)) {
             if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && NBTEditor.contains(item, "Fireworks", "Flight")) {
                 int flight = NBTEditor.getByte(item, "Fireworks", "Flight");
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getRocketFlightDuration()).append(Component.text(" " + flight)).color(NamedTextColor.GRAY)));
+                prints.add(tooltipText(translatable(getRocketFlightDuration()).append(text(" " + flight)).color(GRAY)));
             }
             if (hasMeta && item.getItemMeta() instanceof FireworkMeta) {
                 FireworkMeta fireworkMeta = (FireworkMeta) item.getItemMeta();
                 for (FireworkEffect fireworkEffect : fireworkMeta.getEffects()) {
-                    prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getFireworkType(fireworkEffect.getType())).color(NamedTextColor.GRAY)));
+                    prints.add(tooltipText(translatable(getFireworkType(fireworkEffect.getType())).color(GRAY)));
                     if (!fireworkEffect.getColors().isEmpty()) {
-                        prints.add(ToolTipComponent.text(ComponentStringUtils.join(Component.text("  ").color(NamedTextColor.GRAY), Component.text(", "), fireworkEffect.getColors().stream().map(each -> Component.translatable(TranslationKeyUtils.getFireworkColor(each))).collect(Collectors.toList()))));
+                        prints.add(tooltipText(ComponentStringUtils.join(text("  ").color(GRAY), text(", "), fireworkEffect.getColors().stream().map(each -> translatable(getFireworkColor(each))).collect(Collectors.toList()))));
                     }
                     if (!fireworkEffect.getFadeColors().isEmpty()) {
-                        prints.add(ToolTipComponent.text(ComponentStringUtils.join(Component.text("  ").append(Component.translatable(TranslationKeyUtils.getFireworkFade())).append(Component.text(" ")).color(NamedTextColor.GRAY), Component.text(", "), fireworkEffect.getFadeColors().stream().map(each -> Component.translatable(TranslationKeyUtils.getFireworkColor(each))).collect(Collectors.toList()))));
+                        prints.add(tooltipText(ComponentStringUtils.join(text("  ").append(translatable(getFireworkFade())).append(text(" ")).color(GRAY), text(", "), fireworkEffect.getFadeColors().stream().map(each -> translatable(getFireworkColor(each))).collect(Collectors.toList()))));
                     }
                     if (fireworkEffect.hasTrail()) {
-                        prints.add(ToolTipComponent.text(Component.text("  ").append(Component.translatable(TranslationKeyUtils.getFireworkTrail())).color(NamedTextColor.GRAY)));
+                        prints.add(tooltipText(text("  ").append(translatable(getFireworkTrail())).color(GRAY)));
                     }
                     if (fireworkEffect.hasFlicker()) {
-                        prints.add(ToolTipComponent.text(Component.text("  ").append(Component.translatable(TranslationKeyUtils.getFireworkFlicker())).color(NamedTextColor.GRAY)));
+                        prints.add(tooltipText(text("  ").append(translatable(getFireworkFlicker())).color(GRAY)));
                     }
                 }
             }
@@ -406,18 +436,18 @@ public class DiscordItemStackUtils {
         if (icMaterial.isMaterial(XMaterial.FIREWORK_STAR) && hasMeta && item.getItemMeta() instanceof FireworkEffectMeta) {
             FireworkEffectMeta fireworkEffectMeta = (FireworkEffectMeta) item.getItemMeta();
             FireworkEffect fireworkEffect = fireworkEffectMeta.getEffect();
-            prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getFireworkType(fireworkEffect.getType())).color(NamedTextColor.GRAY)));
+            prints.add(tooltipText(translatable(getFireworkType(fireworkEffect.getType())).color(GRAY)));
             if (!fireworkEffect.getColors().isEmpty()) {
-                prints.add(ToolTipComponent.text(ComponentStringUtils.join(Component.text("  ").color(NamedTextColor.GRAY), Component.text(", "), fireworkEffect.getColors().stream().map(each -> Component.translatable(TranslationKeyUtils.getFireworkColor(each))).collect(Collectors.toList()))));
+                prints.add(tooltipText(ComponentStringUtils.join(text("  ").color(GRAY), text(", "), fireworkEffect.getColors().stream().map(each -> translatable(getFireworkColor(each))).collect(Collectors.toList()))));
             }
             if (!fireworkEffect.getFadeColors().isEmpty()) {
-                prints.add(ToolTipComponent.text(ComponentStringUtils.join(Component.text("  ").append(Component.translatable(TranslationKeyUtils.getFireworkFade())).append(Component.text(" ")).color(NamedTextColor.GRAY), Component.text(", "), fireworkEffect.getFadeColors().stream().map(each -> Component.translatable(TranslationKeyUtils.getFireworkColor(each))).collect(Collectors.toList()))));
+                prints.add(tooltipText(ComponentStringUtils.join(text("  ").append(translatable(getFireworkFade())).append(text(" ")).color(GRAY), text(", "), fireworkEffect.getFadeColors().stream().map(each -> translatable(getFireworkColor(each))).collect(Collectors.toList()))));
             }
             if (fireworkEffect.hasTrail()) {
-                prints.add(ToolTipComponent.text(Component.text("  ").append(Component.translatable(TranslationKeyUtils.getFireworkTrail())).color(NamedTextColor.GRAY)));
+                prints.add(tooltipText(text("  ").append(translatable(getFireworkTrail())).color(GRAY)));
             }
             if (fireworkEffect.hasFlicker()) {
-                prints.add(ToolTipComponent.text(Component.text("  ").append(Component.translatable(TranslationKeyUtils.getFireworkFlicker())).color(NamedTextColor.GRAY)));
+                prints.add(tooltipText(text("  ").append(translatable(getFireworkFlicker())).color(GRAY)));
             }
         }
 
@@ -428,11 +458,11 @@ public class DiscordItemStackUtils {
                 ItemStack charge = charged.get(0);
                 List<ToolTipComponent<?>> chargedItemInfo = getToolTip(charge, player).getComponents();
                 Component chargeItemName = (Component) chargedItemInfo.get(0).getToolTipComponent();
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getCrossbowProjectile()).color(NamedTextColor.WHITE).append(Component.text(" [").color(NamedTextColor.WHITE)).append(chargeItemName).append(Component.text("]").color(NamedTextColor.WHITE))));
+                prints.add(tooltipText(translatable(getCrossbowProjectile()).color(WHITE).append(text(" [").color(WHITE)).append(chargeItemName).append(text("]").color(WHITE))));
                 if (InteractiveChatDiscordSrvAddon.plugin.showFireworkRocketDetailsInCrossbow && ICMaterial.from(charge).isMaterial(XMaterial.FIREWORK_ROCKET)) {
                     chargedItemInfo.stream().skip(1).forEachOrdered(each -> {
-                        if (each.getType().equals(ToolTipType.TEXT)) {
-                            prints.add(ToolTipComponent.text(Component.text("  ").append((Component) each.getToolTipComponent())));
+                        if (each.getType().equals(ToolTipComponent.ToolTipType.TEXT)) {
+                            prints.add(tooltipText(text("  ").append((Component) each.getToolTipComponent())));
                         } else {
                             prints.add(each);
                         }
@@ -447,12 +477,12 @@ public class DiscordItemStackUtils {
             int id = FilledMapUtils.getMapId(item);
             int scale = mapView == null ? 0 : mapView.getScale().getValue();
             if (!InteractiveChat.version.isLegacy()) {
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getFilledMapId()).args(Component.text(id)).color(NamedTextColor.GRAY)));
+                prints.add(tooltipText(translatable(getFilledMapId()).args(text(id)).color(GRAY)));
             } else {
-                prints.set(0, ToolTipComponent.text(((Component) prints.get(0).getToolTipComponent()).append(Component.text(" (#" + id + ")").color(NamedTextColor.GRAY))));
+                prints.set(0, tooltipText(((Component) prints.get(0).getToolTipComponent()).append(text(" (#" + id + ")").color(GRAY))));
             }
-            prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getFilledMapScale()).args(Component.text((int) Math.pow(2, scale))).color(NamedTextColor.GRAY)));
-            prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getFilledMapLevel()).args(Component.text(scale), Component.text(4)).color(NamedTextColor.GRAY)));
+            prints.add(tooltipText(translatable(getFilledMapScale()).args(text((int) Math.pow(2, scale))).color(GRAY)));
+            prints.add(tooltipText(translatable(getFilledMapLevel()).args(text(scale), text(4)).color(GRAY)));
         }
 
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && !hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS))) {
@@ -466,12 +496,12 @@ public class DiscordItemStackUtils {
                 effects.addAll(meta.getCustomEffects());
 
                 if (effects.isEmpty()) {
-                    prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getNoEffect()).color(NamedTextColor.GRAY)));
+                    prints.add(tooltipText(translatable(getNoEffect()).color(GRAY)));
                 } else {
                     Map<String, AttributeModifier> attributes = new HashMap<>();
                     for (PotionEffect effect : effects) {
                         if (InteractiveChat.version.isLegacy()) {
-                            String key = TranslationKeyUtils.getEffect(effect.getType());
+                            String key = getEffect(effect.getType());
                             String translation = getTranslation(key, language);
                             String description = "";
                             if (key.equals(translation)) {
@@ -480,7 +510,7 @@ public class DiscordItemStackUtils {
                                 description += translation;
                             }
                             int amplifier = effect.getAmplifier();
-                            String effectLevelTranslation = getTranslation(TranslationKeyUtils.getEffectLevel(amplifier), language);
+                            String effectLevelTranslation = getTranslation(getEffectLevel(amplifier), language);
                             if (effectLevelTranslation.length() > 0) {
                                 description += " " + effectLevelTranslation;
                             }
@@ -497,9 +527,9 @@ public class DiscordItemStackUtils {
                             } catch (Throwable e) {
                                 color = ChatColor.BLUE;
                             }
-                            prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(color + description)));
+                            prints.add(tooltipText(LegacyComponentSerializer.legacySection().deserialize(color + description)));
                         } else {
-                            String key = TranslationKeyUtils.getEffect(effect.getType());
+                            String key = getEffect(effect.getType());
                             String potionName;
                             if (key.equals(getTranslation(key, language))) {
                                 potionName = WordUtils.capitalize(effect.getType().getName().toLowerCase().replace("_", " "));
@@ -520,28 +550,28 @@ public class DiscordItemStackUtils {
                             try {
                                 color = ColorUtils.toTextColor(PotionUtils.getPotionEffectChatColor(effect.getType()));
                             } catch (Throwable e) {
-                                color = NamedTextColor.BLUE;
+                                color = BLUE;
                             }
-                            Component component = Component.translatable(potionName);
+                            Component component = translatable(potionName);
                             if (amplifier > 0) {
-                                component = Component.translatable(TranslationKeyUtils.getPotionWithAmplifier()).args(component, Component.translatable(TranslationKeyUtils.getEffectLevel(amplifier)));
+                                component = translatable(getPotionWithAmplifier()).args(component, translatable(getEffectLevel(amplifier)));
                             }
                             if (duration > 20) {
                                 Component time;
                                 if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && effect.getDuration() == -1) {
-                                    time = Component.translatable(TranslationKeyUtils.getPotionDurationInfinite());
+                                    time = translatable(getPotionDurationInfinite());
                                 } else {
-                                    time = Component.text(TimeUtils.getReadableTimeBetween(0, duration, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true));
+                                    time = text(TimeUtils.getReadableTimeBetween(0, duration, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true));
                                 }
-                                component = Component.translatable(TranslationKeyUtils.getPotionWithDuration()).args(component, time);
+                                component = translatable(getPotionWithDuration()).args(component, time);
                             }
-                            prints.add(ToolTipComponent.text(component.color(color)));
+                            prints.add(tooltipText(component.color(color)));
                         }
                         attributes.putAll(PotionUtils.getPotionAttributes(effect));
                     }
                     if (!attributes.isEmpty()) {
-                        prints.add(ToolTipComponent.text(Component.empty()));
-                        prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getPotionWhenDrunk()).color(NamedTextColor.DARK_PURPLE)));
+                        prints.add(tooltipEmpty());
+                        prints.add(tooltipText(translatable(getPotionWhenDrunk()).color(DARK_PURPLE)));
                         for (Entry<String, AttributeModifier> entry : attributes.entrySet()) {
                             String attributeName = entry.getKey();
                             AttributeModifier attributeModifier = entry.getValue();
@@ -550,7 +580,7 @@ public class DiscordItemStackUtils {
                             if (!(operation != 1 && operation != 2)) {
                                 amount *= 100;
                             }
-                            prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getAttributeModifierKey(false, amount, operation)).args(Component.text(ATTRIBUTE_FORMAT.format(Math.abs(amount))), Component.translatable(attributeName)).color(amount < 0 ? NamedTextColor.RED : NamedTextColor.BLUE)));
+                            prints.add(tooltipText(translatable(getAttributeModifierKey(false, amount, operation)).args(text(ATTRIBUTE_FORMAT.format(Math.abs(amount))), translatable(attributeName)).color(amount < 0 ? RED : BLUE)));
                         }
                     }
                 }
@@ -567,7 +597,7 @@ public class DiscordItemStackUtils {
             for (Entry<Enchantment, Integer> entry : enchantments.entrySet()) {
                 Enchantment enchantment = entry.getKey();
                 int level = entry.getValue();
-                String key = TranslationKeyUtils.getEnchantment(enchantment);
+                String key = getEnchantment(enchantment);
                 String enchantmentName;
                 if (key.equals(getTranslation(key, language))) {
                     continue;
@@ -576,9 +606,9 @@ public class DiscordItemStackUtils {
                 }
                 if (enchantmentName != null) {
                     if (enchantment.getMaxLevel() == 1 && level == 1) {
-                        prints.add(ToolTipComponent.text(Component.translatable(enchantmentName).color(NamedTextColor.GRAY)));
+                        prints.add(tooltipText(translatable(enchantmentName).color(GRAY)));
                     } else {
-                        prints.add(ToolTipComponent.text(Component.translatable(enchantmentName).append(Component.text(" ")).append(Component.translatable(TranslationKeyUtils.getEnchantmentLevel(level))).color(NamedTextColor.GRAY)));
+                        prints.add(tooltipText(translatable(enchantmentName).append(text(" ")).append(translatable(getEnchantmentLevel(level))).color(GRAY)));
                     }
                 }
             }
@@ -589,7 +619,7 @@ public class DiscordItemStackUtils {
             if (NBTEditor.contains(item, "display", "color")) {
                 Color color = new Color(meta.getColor().asRGB());
                 String hex = ColorUtils.rgb2Hex(color).toUpperCase();
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getDyeColor()).args(Component.text(hex)).color(NamedTextColor.GRAY)));
+                prints.add(tooltipText(translatable(getDyeColor()).args(text(hex)).color(GRAY)));
             }
         }
 
@@ -597,8 +627,8 @@ public class DiscordItemStackUtils {
             List<Component> loreLines = ItemStackUtils.getLore(item);
             if (loreLines != null) {
                 for (Component lore : loreLines) {
-                    Component component = lore.applyFallbackStyle(Style.style(NamedTextColor.DARK_PURPLE, TextDecoration.ITALIC));
-                    prints.add(ToolTipComponent.text(component));
+                    Component component = lore.applyFallbackStyle(Style.style(DARK_PURPLE, TextDecoration.ITALIC));
+                    prints.add(tooltipText(component));
                 }
             }
         }
@@ -635,12 +665,12 @@ public class DiscordItemStackUtils {
                     }
 
                     if (amount != 0) {
-                        TextColor color = flag ? NamedTextColor.DARK_GREEN : (amount < 0 ? NamedTextColor.RED : NamedTextColor.BLUE);
-                        Component component = Component.translatable(TranslationKeyUtils.getAttributeModifierKey(flag, amount, operation.ordinal())).args(Component.text(ATTRIBUTE_FORMAT.format(Math.abs(amount))), Component.translatable(attributeName)).color(color);
+                        TextColor color = flag ? DARK_GREEN : (amount < 0 ? RED : BLUE);
+                        Component component = translatable(getAttributeModifierKey(flag, amount, operation.ordinal())).args(text(ATTRIBUTE_FORMAT.format(Math.abs(amount))), translatable(attributeName)).color(color);
                         if (flag) {
-                            component = Component.text(" ").append(component);
+                            component = text(" ").append(component);
                         }
-                        ToolTipComponent<?> attributeComponent = ToolTipComponent.text(component);
+                        ToolTipComponent<?> attributeComponent = tooltipText(component);
                         tooltips.computeIfAbsent(entry.getKey(), k -> new LinkedList<>()).add(attributeComponent);
                     }
                 }
@@ -648,22 +678,22 @@ public class DiscordItemStackUtils {
             for (EquipmentSlot equipmentSlot : EquipmentSlot.values()) {
                 List<ToolTipComponent<?>> lines = tooltips.get(equipmentSlot);
                 if (lines != null) {
-                    String modifierSlotKey = TranslationKeyUtils.getModifierSlotKey(equipmentSlot);
-                    prints.add(ToolTipComponent.text(Component.empty()));
-                    prints.add(ToolTipComponent.text(Component.translatable(modifierSlotKey).color(NamedTextColor.GRAY)));
+                    String modifierSlotKey = getModifierSlotKey(equipmentSlot);
+                    prints.add(tooltipEmpty());
+                    prints.add(tooltipText(translatable(modifierSlotKey).color(GRAY)));
                     prints.addAll(lines);
                 }
             }
         }
 
         if (hasMeta && isUnbreakable(item) && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_UNBREAKABLE)) {
-            prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getUnbreakable()).color(NamedTextColor.BLUE)));
+            prints.add(tooltipText(translatable(getUnbreakable()).color(BLUE)));
         }
 
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_DESTROYS)) {
             if (NBTEditor.contains(item, "CanDestroy") && NBTEditor.getSize(item, "CanDestroy") > 0) {
-                prints.add(ToolTipComponent.text(Component.empty()));
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getCanDestroy()).color(NamedTextColor.GRAY)));
+                prints.add(tooltipEmpty());
+                prints.add(tooltipText(translatable(getCanDestroy()).color(GRAY)));
                 ListTag<StringTag> materialList = (ListTag<StringTag>) NBTParsingUtils.fromSNBT(NBTEditor.getNBTCompound(item, "tag", "CanDestroy").toJson());
                 for (StringTag materialTag : materialList) {
                     String key = materialTag.getValue();
@@ -672,9 +702,9 @@ public class DiscordItemStackUtils {
                     }
                     ICMaterial parsedICMaterial = ICMaterial.from(key.toUpperCase());
                     if (parsedICMaterial == null) {
-                        prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase())).color(NamedTextColor.DARK_GRAY)));
+                        prints.add(tooltipText(LegacyComponentSerializer.legacySection().deserialize(WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase())).color(DARK_GRAY)));
                     } else {
-                        prints.add(ToolTipComponent.text(Component.translatable(getTranslationKey(parsedICMaterial.parseItem())).color(NamedTextColor.DARK_GRAY)));
+                        prints.add(tooltipText(translatable(getTranslationKey(parsedICMaterial.parseItem())).color(DARK_GRAY)));
                     }
                 }
             }
@@ -682,8 +712,8 @@ public class DiscordItemStackUtils {
 
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_PLACED_ON)) {
             if (NBTEditor.contains(item, "CanPlaceOn") && NBTEditor.getSize(item, "CanPlaceOn") > 0) {
-                prints.add(ToolTipComponent.text(Component.empty()));
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getCanPlace()).color(NamedTextColor.GRAY)));
+                prints.add(tooltipEmpty());
+                prints.add(tooltipText(translatable(getCanPlace()).color(GRAY)));
                 ListTag<StringTag> materialList = (ListTag<StringTag>) NBTParsingUtils.fromSNBT(NBTEditor.getNBTCompound(item, "tag", "CanPlaceOn").toJson());
                 for (StringTag materialTag : materialList) {
                     String key = materialTag.getValue();
@@ -692,9 +722,9 @@ public class DiscordItemStackUtils {
                     }
                     ICMaterial parsedICMaterial = ICMaterial.from(key.toUpperCase());
                     if (parsedICMaterial == null) {
-                        prints.add(ToolTipComponent.text(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_GRAY + WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase()))));
+                        prints.add(tooltipText(LegacyComponentSerializer.legacySection().deserialize(ChatColor.DARK_GRAY + WordUtils.capitalizeFully(materialTag.getValue().replace("_", " ").toLowerCase()))));
                     } else {
-                        prints.add(ToolTipComponent.text(Component.translatable(getTranslationKey(parsedICMaterial.parseItem())).color(NamedTextColor.DARK_GRAY)));
+                        prints.add(tooltipText(translatable(getTranslationKey(parsedICMaterial.parseItem())).color(DARK_GRAY)));
                     }
                 }
             }
@@ -704,15 +734,15 @@ public class DiscordItemStackUtils {
             int durability = item.getType().getMaxDurability() - (InteractiveChat.version.isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
             int maxDur = item.getType().getMaxDurability();
             if (durability < maxDur) {
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getDurability()).args(Component.text(durability), Component.text(maxDur)).color(NamedTextColor.WHITE)));
+                prints.add(tooltipText(translatable(getDurability()).args(text(durability), text(maxDur)).color(WHITE)));
             }
         }
         if (InteractiveChatDiscordSrvAddon.plugin.showAdvanceDetails) {
             CompoundTag nbt = (CompoundTag) NBTParsingUtils.fromSNBT(ItemNBTUtils.getNMSItemStackJson(item));
-            prints.add(ToolTipComponent.text(Component.text(nbt.getString("id")).color(NamedTextColor.DARK_GRAY)));
+            prints.add(tooltipText(text(nbt.getString("id")).color(DARK_GRAY)));
             CompoundTag tag = nbt.getCompoundTag("tag");
             if (tag != null) {
-                prints.add(ToolTipComponent.text(Component.translatable(TranslationKeyUtils.getItemNbtTag()).args(Component.text(tag.size())).color(NamedTextColor.DARK_GRAY)));
+                prints.add(tooltipText(translatable(getItemNbtTag()).args(text(tag.size())).color(DARK_GRAY)));
             }
         }
 
@@ -751,8 +781,8 @@ public class DiscordItemStackUtils {
 
     public static class DiscordToolTip {
 
-        private List<ToolTipComponent<?>> components;
-        private boolean isBaseItem;
+        private final List<ToolTipComponent<?>> components;
+        private final boolean isBaseItem;
 
         public DiscordToolTip(List<ToolTipComponent<?>> components, boolean isBaseItem) {
             this.components = components;
