@@ -1516,7 +1516,7 @@ public class ImageGeneration {
         int gridHeight = BundleUtils.getContainerGridSizeY(items.size());
         boolean isFull = BundleUtils.getFullness(items) >= 64;
 
-        BufferedImage image = new BufferedImage(36 * gridWidth + 4, 40 * gridHeight + 4, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage image = new BufferedImage(36 * gridWidth + 4, 40 * gridHeight + 2, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
 
         BufferedImage topCorner = icons.getSubimage(0, 40, 2, 2);
@@ -1524,10 +1524,8 @@ public class ImageGeneration {
         g.drawImage(topCorner, image.getWidth() - 2, 0, null);
 
         BufferedImage horizontalTop = icons.getSubimage(0, 40, 36, 2);
-        BufferedImage horizontalBottom = icons.getSubimage(0, 120, 36, 2);
         for (int x = 2; x < image.getWidth() - 2; x += horizontalTop.getWidth()) {
             g.drawImage(horizontalTop, x, 0, null);
-            g.drawImage(horizontalBottom, x, image.getHeight() - 2, null);
         }
 
         BufferedImage vertical = icons.getSubimage(0, 36, 2, 40);
@@ -1535,10 +1533,6 @@ public class ImageGeneration {
             g.drawImage(vertical, 0, y, null);
             g.drawImage(vertical, image.getWidth() - 2, y, null);
         }
-
-        BufferedImage bottomCorner = icons.getSubimage(0, 120, 2, 2);
-        g.drawImage(bottomCorner, 0, image.getHeight() - 2, null);
-        g.drawImage(bottomCorner, image.getWidth() - 2, image.getHeight() - 2, null);
 
         BufferedImage slot = icons.getSubimage(0, 0, 36, 40);
         BufferedImage fullSlot = icons.getSubimage(0, 80, 36, 40);
@@ -1556,6 +1550,15 @@ public class ImageGeneration {
                 }
             }
         }
+
+        BufferedImage horizontalBottom = icons.getSubimage(0, 120, 36, 2);
+        for (int x = 2; x < image.getWidth() - 2; x += horizontalTop.getWidth()) {
+            g.drawImage(horizontalBottom, x, image.getHeight() - 2, null);
+        }
+
+        BufferedImage bottomCorner = icons.getSubimage(0, 120, 2, 2);
+        g.drawImage(bottomCorner, 0, image.getHeight() - 2, null);
+        g.drawImage(bottomCorner, image.getWidth() - 2, image.getHeight() - 2, null);
 
         g.dispose();
         return image;
