@@ -24,6 +24,8 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.IAbstractManager;
 
 public interface ITextureManager extends IAbstractManager {
 
+    TextureResource getMissingTexture();
+
     default TextureResource getTexture(String resourceLocation) {
         return getTexture(resourceLocation, true);
     }

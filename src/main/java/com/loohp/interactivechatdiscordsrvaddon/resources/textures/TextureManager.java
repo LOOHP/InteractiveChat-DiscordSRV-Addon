@@ -268,6 +268,11 @@ public class TextureManager extends AbstractManager implements ITextureManager {
     }
 
     @Override
+    public TextureResource getMissingTexture() {
+        return getMissingTexture(manager);
+    }
+
+    @Override
     public TextureResource getTexture(String resourceLocation, boolean returnMissingTexture) {
         if (!resourceLocation.contains(":")) {
             resourceLocation = ResourceRegistry.DEFAULT_NAMESPACE + ":" + resourceLocation;
@@ -276,7 +281,7 @@ public class TextureManager extends AbstractManager implements ITextureManager {
             resourceLocation = resourceLocation.substring(0, resourceLocation.length() - 4);
         }
         if (returnMissingTexture) {
-            return textures.getOrDefault(resourceLocation, getMissingTexture(manager));
+            return textures.getOrDefault(resourceLocation, getMissingTexture());
         } else {
             return textures.get(resourceLocation);
         }

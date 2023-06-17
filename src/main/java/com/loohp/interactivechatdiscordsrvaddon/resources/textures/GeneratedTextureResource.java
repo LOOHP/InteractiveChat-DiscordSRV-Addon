@@ -75,6 +75,11 @@ public class GeneratedTextureResource extends TextureResource {
         }
 
         @Override
+        public TextureResource getMissingTexture() {
+            return manager.getTextureManager().getMissingTexture();
+        }
+
+        @Override
         public TextureResource getTexture(String resourceLocation, boolean returnMissingTexture) {
             throw new UnsupportedOperationException("Cannot operate on Generated Texture Managers");
         }

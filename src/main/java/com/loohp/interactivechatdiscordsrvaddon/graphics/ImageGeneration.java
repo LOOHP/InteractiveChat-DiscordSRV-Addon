@@ -1625,9 +1625,9 @@ public class ImageGeneration {
 
     public static class GenericContainerBackgroundResult {
 
-        private BufferedImage image;
-        private int expandedX;
-        private int expandedY;
+        private final BufferedImage image;
+        private final int expandedX;
+        private final int expandedY;
 
         private GenericContainerBackgroundResult(BufferedImage image, int expandedX, int expandedY) {
             this.image = image;

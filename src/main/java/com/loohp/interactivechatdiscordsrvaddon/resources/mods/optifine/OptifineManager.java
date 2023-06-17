@@ -45,7 +45,6 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.Ench
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.ItemProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
-import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -487,6 +486,11 @@ public class OptifineManager extends ModManager implements IOptifineManager {
     }
 
     @Override
+    public TextureResource getMissingTexture() {
+        return manager.getTextureManager().getMissingTexture();
+    }
+
+    @Override
     public TextureResource getTexture(String resourceLocation, boolean returnMissingTexture) {
         TextureResource textureResource = manager.getTextureManager().getTexture(resourceLocation, false);
         if (textureResource != null) {
@@ -497,7 +501,7 @@ public class OptifineManager extends ModManager implements IOptifineManager {
             return (TextureResource) asset.getSecond();
         }
         if (returnMissingTexture) {
-            return TextureManager.getMissingTexture(manager);
+            return getMissingTexture();
         } else {
             return null;
         }

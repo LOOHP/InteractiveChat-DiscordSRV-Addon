@@ -251,6 +251,11 @@ public class ChimeManager extends ModManager implements IChimeManager {
     }
 
     @Override
+    public TextureResource getMissingTexture() {
+        return manager.getTextureManager().getMissingTexture();
+    }
+
+    @Override
     public TextureResource getTexture(String resourceLocation, boolean returnMissingTexture) {
         if (!resourceLocation.contains(":")) {
             resourceLocation = ResourceRegistry.DEFAULT_NAMESPACE + ":" + resourceLocation;
