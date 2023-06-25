@@ -114,17 +114,16 @@ import static com.loohp.interactivechat.utils.LanguageUtils.getTranslation;
 import static com.loohp.interactivechat.utils.LanguageUtils.getTranslationKey;
 
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.*;
+import static com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils.*;
 
 import static com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor.*;
 import static com.loohp.interactivechat.libs.net.kyori.adventure.text.Component.*;
 
 @SuppressWarnings("deprecation")
 public class DiscordItemStackUtils {
-
-    public static final String DISCORD_EMPTY = "\u200e";
-
-    private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.builder().extractUrls().hexColors().useUnusualXRepeatedCharacterHexFormat().build();
+    
     private static final DecimalFormat ATTRIBUTE_FORMAT = new DecimalFormat("#.##");
+    private static final int[] POTTERY_SHERD_ORDER = new int[] {3, 1, 2, 0};
 
     private static Method bukkitBukkitClassGetMapShortMethod = null;
     private static Method bukkitMapViewClassGetIdMethod = null;
@@ -136,11 +135,11 @@ public class DiscordItemStackUtils {
             try {
                 //noinspection JavaReflectionMemberAccess
                 bukkitBukkitClassGetMapShortMethod = Bukkit.class.getMethod("getMap", short.class);
-            } catch (NoSuchMethodException e1) {
+            } catch (NoSuchMethodException ignore) {
             }
             try {
                 bukkitMapViewClassGetIdMethod = MapView.class.getMethod("getId");
-            } catch (NoSuchMethodException e1) {
+            } catch (NoSuchMethodException ignore) {
             }
             chatColorHasGetColor = Arrays.stream(ChatColor.class.getMethods()).anyMatch(each -> each.getName().equalsIgnoreCase("getColor") && each.getReturnType().equals(Color.class));
             itemMetaHasUnbreakable = Arrays.stream(ItemMeta.class.getMethods()).anyMatch(each -> each.getName().equalsIgnoreCase("isUnbreakable") && each.getReturnType().equals(boolean.class));
@@ -234,7 +233,7 @@ public class DiscordItemStackUtils {
                 DecoratedPot pot = (DecoratedPot) state;
                 List<Material> materials = pot.getShards();
                 prints.add(tooltipEmpty());
-                for (int i : new int[] {3, 1, 2, 0}) {
+                for (int i : POTTERY_SHERD_ORDER) {
                     if (i < materials.size()) {
                         Key material = Key.key(materials.get(i).getKey().toString());
                         prints.add(tooltipText(translatable(getPotterySherdName(material)).color(GRAY)));
@@ -254,7 +253,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && icMaterial.isOneOf(Collections.singletonList("CONTAINS:Smithing_Template"))) {
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && icMaterial.isOneOf(Collections.singletonList("CONTAINS:smithing_template"))) {
             Key key = Key.key(item.getType().getKey().toString());
             prints.add(tooltipText(translatable(getTrimPatternName(key)).color(GRAY)));
             prints.add(tooltipEmpty());
@@ -363,7 +362,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:Banner")) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
+        if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:banner")) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
             List<Pattern> patterns = Collections.emptyList();
             if (!(item.getItemMeta() instanceof BannerMeta)) {
                 if (item.getItemMeta() instanceof BlockStateMeta) {
@@ -391,7 +390,7 @@ public class DiscordItemStackUtils {
             if (translations.size() > 0) {
                 prints.add(tooltipText(translatable(translations.get(0)).color(GRAY).decorate(TextDecoration.ITALIC)));
                 if (translations.size() > 1) {
-                    prints.add(tooltipText(ComponentStringUtils.join(empty().color(GRAY).decorate(TextDecoration.ITALIC), text(", "), translations.stream().skip(1).map(each -> translatable(each)).collect(Collectors.toList()))));
+                    prints.add(tooltipText(join(empty().color(GRAY).decorate(TextDecoration.ITALIC), text(", "), translations.stream().skip(1).map(each -> translatable(each)))));
                 }
             }
         }
@@ -418,10 +417,10 @@ public class DiscordItemStackUtils {
                 for (FireworkEffect fireworkEffect : fireworkMeta.getEffects()) {
                     prints.add(tooltipText(translatable(getFireworkType(fireworkEffect.getType())).color(GRAY)));
                     if (!fireworkEffect.getColors().isEmpty()) {
-                        prints.add(tooltipText(ComponentStringUtils.join(text("  ").color(GRAY), text(", "), fireworkEffect.getColors().stream().map(each -> translatable(getFireworkColor(each))).collect(Collectors.toList()))));
+                        prints.add(tooltipText(join(text("  ").color(GRAY), text(", "), fireworkEffect.getColors().stream().map(each -> translatable(getFireworkColor(each))))));
                     }
                     if (!fireworkEffect.getFadeColors().isEmpty()) {
-                        prints.add(tooltipText(ComponentStringUtils.join(text("  ").append(translatable(getFireworkFade())).append(text(" ")).color(GRAY), text(", "), fireworkEffect.getFadeColors().stream().map(each -> translatable(getFireworkColor(each))).collect(Collectors.toList()))));
+                        prints.add(tooltipText(join(text("  ").append(translatable(getFireworkFade())).append(text(" ")).color(GRAY), text(", "), fireworkEffect.getFadeColors().stream().map(each -> translatable(getFireworkColor(each))))));
                     }
                     if (fireworkEffect.hasTrail()) {
                         prints.add(tooltipText(text("  ").append(translatable(getFireworkTrail())).color(GRAY)));
@@ -438,10 +437,10 @@ public class DiscordItemStackUtils {
             FireworkEffect fireworkEffect = fireworkEffectMeta.getEffect();
             prints.add(tooltipText(translatable(getFireworkType(fireworkEffect.getType())).color(GRAY)));
             if (!fireworkEffect.getColors().isEmpty()) {
-                prints.add(tooltipText(ComponentStringUtils.join(text("  ").color(GRAY), text(", "), fireworkEffect.getColors().stream().map(each -> translatable(getFireworkColor(each))).collect(Collectors.toList()))));
+                prints.add(tooltipText(join(text("  ").color(GRAY), text(", "), fireworkEffect.getColors().stream().map(each -> translatable(getFireworkColor(each))))));
             }
             if (!fireworkEffect.getFadeColors().isEmpty()) {
-                prints.add(tooltipText(ComponentStringUtils.join(text("  ").append(translatable(getFireworkFade())).append(text(" ")).color(GRAY), text(", "), fireworkEffect.getFadeColors().stream().map(each -> translatable(getFireworkColor(each))).collect(Collectors.toList()))));
+                prints.add(tooltipText(join(text("  ").append(translatable(getFireworkFade())).append(text(" ")).color(GRAY), text(", "), fireworkEffect.getFadeColors().stream().map(each -> translatable(getFireworkColor(each))))));
             }
             if (fireworkEffect.hasTrail()) {
                 prints.add(tooltipText(text("  ").append(translatable(getFireworkTrail())).color(GRAY)));
@@ -457,12 +456,12 @@ public class DiscordItemStackUtils {
             if (charged != null && !charged.isEmpty()) {
                 ItemStack charge = charged.get(0);
                 List<ToolTipComponent<?>> chargedItemInfo = getToolTip(charge, player).getComponents();
-                Component chargeItemName = (Component) chargedItemInfo.get(0).getToolTipComponent();
+                Component chargeItemName = chargedItemInfo.get(0).getToolTipComponent(ToolTipType.TEXT);
                 prints.add(tooltipText(translatable(getCrossbowProjectile()).color(WHITE).append(text(" [").color(WHITE)).append(chargeItemName).append(text("]").color(WHITE))));
                 if (InteractiveChatDiscordSrvAddon.plugin.showFireworkRocketDetailsInCrossbow && ICMaterial.from(charge).isMaterial(XMaterial.FIREWORK_ROCKET)) {
                     chargedItemInfo.stream().skip(1).forEachOrdered(each -> {
-                        if (each.getType().equals(ToolTipComponent.ToolTipType.TEXT)) {
-                            prints.add(tooltipText(text("  ").append((Component) each.getToolTipComponent())));
+                        if (each.getType().equals(ToolTipType.TEXT)) {
+                            prints.add(tooltipText(text("  ").append(each.getToolTipComponent(ToolTipType.TEXT))));
                         } else {
                             prints.add(each);
                         }
@@ -479,7 +478,7 @@ public class DiscordItemStackUtils {
             if (!InteractiveChat.version.isLegacy()) {
                 prints.add(tooltipText(translatable(getFilledMapId()).args(text(id)).color(GRAY)));
             } else {
-                prints.set(0, tooltipText(((Component) prints.get(0).getToolTipComponent()).append(text(" (#" + id + ")").color(GRAY))));
+                prints.set(0, tooltipText(prints.get(0).getToolTipComponent(ToolTipType.TEXT).append(text(" (#" + id + ")").color(GRAY))));
             }
             prints.add(tooltipText(translatable(getFilledMapScale()).args(text((int) Math.pow(2, scale))).color(GRAY)));
             prints.add(tooltipText(translatable(getFilledMapLevel()).args(text(scale), text(4)).color(GRAY)));
@@ -752,10 +751,7 @@ public class DiscordItemStackUtils {
     public static boolean isUnbreakable(ItemStack item) {
         if (itemMetaHasUnbreakable) {
             ItemMeta meta = item.getItemMeta();
-            if (meta != null) {
-                return meta.isUnbreakable();
-            }
-            return false;
+            return meta != null && meta.isUnbreakable();
         } else {
             return NBTEditor.getByte(item, "Unbreakable") > 0;
         }
@@ -768,7 +764,7 @@ public class DiscordItemStackUtils {
         DiscordSerializer serializerRegular = new DiscordSerializer(new DiscordSerializerOptions(embedLinks, true, (Function<KeybindComponent, String>) resolver, (Function<TranslatableComponent, String>) resolver));
         return toolTipComponents.stream().map(toolTipComponent -> {
             if (toolTipComponent.getType().equals(ToolTipType.TEXT)) {
-                Component component = (Component) toolTipComponent.getToolTipComponent();
+                Component component = toolTipComponent.getToolTipComponent(ToolTipType.TEXT);
                 if (component != null) {
                     return serializerRegular.serialize(ComponentStringUtils.toDiscordSRVComponent(component));
                 }

@@ -50,6 +50,8 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -58,6 +60,7 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ComponentStringUtils {
 
@@ -332,22 +335,33 @@ public class ComponentStringUtils {
     }
 
     public static Component join(Component parent, Component deliminator, Component... components) {
-        return join(parent, deliminator, Arrays.asList(components));
+        return join(parent, deliminator, Arrays.stream(components));
     }
 
-    public static Component join(Component parent, Component deliminator, List<? extends Component> components) {
-        if (components.size() <= 0) {
+    public static Component join(Component parent, Component deliminator, Collection<? extends Component> components) {
+        if (components.size() == 0) {
             return parent;
         }
         if (components.size() == 1) {
-            return parent.append(components.get(0));
+            return parent.append(components.iterator().next());
+        }
+        return join(parent, deliminator, components.iterator());
+    }
+
+    public static Component join(Component parent, Component deliminator, Stream<? extends Component> stream) {
+        return join(parent, deliminator, stream.iterator());
+    }
+
+    public static Component join(Component parent, Component deliminator, Iterator<? extends Component> itr) {
+        if (!itr.hasNext()) {
+            return parent;
         }
         List<Component> children = new ArrayList<>(parent.children());
-        for (int i = 0; i < components.size() - 1; i++) {
-            children.add(components.get(i));
+        children.add(itr.next());
+        while (itr.hasNext()) {
             children.add(deliminator);
+            children.add(itr.next());
         }
-        children.add(components.get(components.size() - 1));
         return parent.children(children);
     }
 

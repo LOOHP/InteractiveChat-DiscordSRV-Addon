@@ -55,6 +55,10 @@ public class ToolTipComponent<T> {
         return toolTipComponent;
     }
 
+    public <E> E getToolTipComponent(ToolTipType<E> type) {
+        return (E) toolTipComponent;
+    }
+
     public ToolTipType<T> getType() {
         return type;
     }
