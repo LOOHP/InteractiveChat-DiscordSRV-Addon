@@ -20,10 +20,10 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.stream.JsonReader;
+import com.loohp.interactivechat.libs.com.google.gson.Gson;
+import com.loohp.interactivechat.libs.com.google.gson.GsonBuilder;
+import com.loohp.interactivechat.libs.com.google.gson.JsonObject;
+import com.loohp.interactivechat.libs.com.google.gson.stream.JsonReader;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream;
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;

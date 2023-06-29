@@ -20,10 +20,10 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.metrics;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
+import com.loohp.interactivechat.libs.com.google.gson.JsonArray;
+import com.loohp.interactivechat.libs.com.google.gson.JsonObject;
+import com.loohp.interactivechat.libs.com.google.gson.JsonParser;
+import com.loohp.interactivechat.libs.com.google.gson.JsonPrimitive;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;

@@ -20,10 +20,10 @@
 
 package com.loohp.interactivechatdiscordsrvaddon;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonParser;
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechat.libs.com.google.gson.Gson;
+import com.loohp.interactivechat.libs.com.google.gson.GsonBuilder;
+import com.loohp.interactivechat.libs.com.google.gson.JsonParser;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.utils.FileUtils;
