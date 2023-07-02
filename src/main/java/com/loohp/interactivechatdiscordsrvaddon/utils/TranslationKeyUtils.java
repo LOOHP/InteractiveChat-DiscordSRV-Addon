@@ -128,7 +128,7 @@ public class TranslationKeyUtils {
             craftItemStackClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.inventory.CraftItemStack");
             nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemStack", "net.minecraft.world.item.ItemStack");
             asNMSCopyMethod = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class);
-            nmsItemClass = NMSUtils.getNMSClass("net.minecraft.world.item.Item");
+            nmsItemClass = NMSUtils.getNMSClass("net.minecraft.server.%s.Item", "net.minecraft.world.item.Item");
             nmsGetItemMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
                 return nmsItemStackClass.getMethod("getItem");
             }, () -> {
