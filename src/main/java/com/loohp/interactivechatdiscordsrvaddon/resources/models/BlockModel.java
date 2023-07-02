@@ -195,12 +195,18 @@ public class BlockModel {
         return resourceLocation;
     }
 
-    public String getRawParent() {
+    protected String getRawParent() {
         return parent;
     }
 
     public String getParent() {
-        return parent == null ? null : (parent.contains(":") ? parent : ResourceRegistry.DEFAULT_NAMESPACE + ":" + parent);
+        if (parent == null) {
+            return null;
+        }
+        if (parent.contains(":")) {
+            return parent;
+        }
+        return ResourceRegistry.DEFAULT_NAMESPACE + ":" + parent;
     }
 
     public boolean isAmbientocclusion() {

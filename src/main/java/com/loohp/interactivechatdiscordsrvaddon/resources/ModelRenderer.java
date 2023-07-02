@@ -186,9 +186,9 @@ public class ModelRenderer implements AutoCloseable {
             Map<String, TextureResource> overrideTextures = entry.getValue().getSecond();
             Model itemRenderModel = null;
             if (itemBlockModel != null) {
-                if (itemBlockModel.getRawParent() == null || !itemBlockModel.getRawParent().contains("/")) {
+                if (itemBlockModel.getParent() == null || !itemBlockModel.getParent().contains("/")) {
                     itemRenderModel = generateStandardRenderModel(itemBlockModel, manager, playerModelItem.getProvidedTextures(), overrideTextures, playerModelItem.getTintIndexData(), playerModelItem.isEnchanted(), false, playerModelItem.getRawEnchantmentGlintProvider());
-                } else if (itemBlockModel.getRawParent().equals(ModelManager.ITEM_BASE)) {
+                } else if (itemBlockModel.getParent().equals(ModelManager.ITEM_BASE)) {
                     BufferedImage image = new BufferedImage(INTERNAL_W, INTERNAL_H, BufferedImage.TYPE_INT_ARGB);
                     Graphics2D g = image.createGraphics();
                     g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
@@ -328,9 +328,9 @@ public class ModelRenderer implements AutoCloseable {
         }
 
         BufferedImage image = new BufferedImage(internalWidth, internalHeight, BufferedImage.TYPE_INT_ARGB);
-        if (blockModel.getRawParent() == null || !blockModel.getRawParent().contains("/")) {
+        if (blockModel.getParent() == null || !blockModel.getParent().contains("/")) {
             renderBlockModel(generateStandardRenderModel(blockModel, manager, providedTextures, overrideTextures, tintIndexData, enchanted, false, rawEnchantmentGlintProvider), image, blockModel.getDisplay(displayPosition), blockModel.getGUILight(), usePlayerModelPosition);
-        } else if (blockModel.getRawParent().equals(ModelManager.ITEM_BASE)) {
+        } else if (blockModel.getParent().equals(ModelManager.ITEM_BASE)) {
             Graphics2D g = image.createGraphics();
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             for (int i = 0; blockModel.getTextures().containsKey(ModelManager.ITEM_BASE_LAYER + i); i++) {
@@ -371,7 +371,7 @@ public class ModelRenderer implements AutoCloseable {
                 image = enchantmentGlintProvider.apply(image, EnchantmentGlintType.ITEM);
             }
         } else {
-            rejectedReason = blockModel.getRawParent();
+            rejectedReason = blockModel.getParent();
         }
         RenderResult result;
         if (rejectedReason == null) {

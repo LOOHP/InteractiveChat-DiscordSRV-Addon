@@ -182,10 +182,10 @@ public class ChimeManager extends ModManager implements IChimeManager {
             }
         }
         while (model.getParent() != null) {
-            if (model.getRawParent().equals(ModelManager.ITEM_BASE)) {
+            if (model.getParent().equals(ModelManager.ITEM_BASE)) {
                 break;
             }
-            if (model.getRawParent().equals(ModelManager.BLOCK_ENTITY_BASE)) {
+            if (model.getParent().equals(ModelManager.BLOCK_ENTITY_BASE)) {
                 BlockModel builtinModel = resolveBlockModel(ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + resourceLocation.substring(resourceLocation.lastIndexOf("/") + 1), is1_8, predicates);
                 if (builtinModel != null) {
                     return builtinModel;
@@ -226,10 +226,10 @@ public class ChimeManager extends ModManager implements IChimeManager {
             }
         }
         while (model.getParent() != null) {
-            if (model.getRawParent().equals(ModelManager.ITEM_BASE)) {
+            if (model.getParent().equals(ModelManager.ITEM_BASE)) {
                 break;
             }
-            if (model.getRawParent().equals(ModelManager.BLOCK_ENTITY_BASE)) {
+            if (model.getParent().equals(ModelManager.BLOCK_ENTITY_BASE)) {
                 BlockModel builtinModel = resolveBlockModel(ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + resourceLocation.substring(resourceLocation.lastIndexOf("/") + 1), is1_8, predicates);
                 if (builtinModel != null) {
                     return builtinModel;

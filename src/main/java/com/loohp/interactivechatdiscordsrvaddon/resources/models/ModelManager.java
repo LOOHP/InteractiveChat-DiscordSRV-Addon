@@ -53,8 +53,8 @@ public class ModelManager extends AbstractManager implements IModelManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
     public static final String CACHE_KEY = "ModelManager";
-    public static final String BLOCK_ENTITY_BASE = "builtin/entity";
-    public static final String ITEM_BASE = "builtin/generated";
+    public static final String BLOCK_ENTITY_BASE = "minecraft:builtin/entity";
+    public static final String ITEM_BASE = "minecraft:builtin/generated";
     public static final String ITEM_BASE_LAYER = "layer";
 
     public static JSONObject specialReadProvider(ResourcePackFile file) throws IOException, ParseException {
@@ -151,10 +151,10 @@ public class ModelManager extends AbstractManager implements IModelManager {
             }
         }
         while (model.getParent() != null) {
-            if (model.getRawParent().equals(ITEM_BASE)) {
+            if (model.getParent().equals(ITEM_BASE)) {
                 break;
             }
-            if (model.getRawParent().equals(BLOCK_ENTITY_BASE)) {
+            if (model.getParent().equals(BLOCK_ENTITY_BASE)) {
                 BlockModel builtinModel = resolveBlockModel(ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + resourceLocation.substring(resourceLocation.lastIndexOf("/") + 1), is1_8, predicates);
                 if (builtinModel != null) {
                     return builtinModel;
