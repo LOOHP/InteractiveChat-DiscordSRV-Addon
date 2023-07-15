@@ -719,11 +719,11 @@ public class OutboundToDiscordEvents implements Listener {
             return;
         }
 
-        String title = null;
-        String description = null;
-        ItemStack item = null;
-        AdvancementType advancementType = null;
-        boolean isMinecraft = true;
+        String title;
+        String description;
+        ItemStack item;
+        AdvancementType advancementType;
+        boolean isMinecraft;
 
         Event bukkitEvent = event.getTriggeringBukkitEvent();
         if (bukkitEvent.getClass().getSimpleName().equals("PlayerAdvancementDoneEvent")) {
@@ -754,6 +754,7 @@ public class OutboundToDiscordEvents implements Listener {
             advancementType = data.getAdvancementType();
             isMinecraft = data.isMinecraft();
         } else {
+            Debug.debug("onAdvancement unknown bukkit event - " + bukkitEvent.getClass());
             return;
         }
 

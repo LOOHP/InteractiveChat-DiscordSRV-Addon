@@ -33,8 +33,7 @@ import java.util.function.BiConsumer;
 public class LibraryLoader {
 
     private static final URLClassLoaderAccess LOADER_ACCESS = URLClassLoaderAccess.create((URLClassLoader) LibraryLoader.class.getClassLoader());
-    private static final BiConsumer<File, Throwable> NOOP_LISTENER = (file, e) -> {
-    };
+    private static final BiConsumer<File, Throwable> NOOP_LISTENER = (file, e) -> {};
     private static final List<Relocation> RELOCATION_RULES = new ArrayList<>();
 
     static {
@@ -48,6 +47,7 @@ public class LibraryLoader {
         RELOCATION_RULES.add(new Relocation(dot("org{}eclipse"), "org.eclipse"));
         RELOCATION_RULES.add(new Relocation(dot("org{}json"), "org.json"));
         RELOCATION_RULES.add(new Relocation(dot("org{}mapdb"), "org.mapdb"));
+        RELOCATION_RULES.add(new Relocation(dot("com{}google{}gson"), "com.google.gson"));
     }
 
     private static String dot(String str) {
