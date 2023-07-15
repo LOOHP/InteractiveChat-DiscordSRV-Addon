@@ -83,19 +83,6 @@ public class ResourceRegistry {
 
     public static final String LEGACY_BED_TEXTURE_PLACEHOLDER = ICD_PREFIX + "legacy_bed";
 
-    public static final String LEATHER_HELMET_PLACEHOLDER = ITEM_TEXTURE_LOCATION + "leather_helmet";
-    public static final String LEATHER_CHESTPLATE_PLACEHOLDER = ITEM_TEXTURE_LOCATION + "leather_chestplate";
-    public static final String LEATHER_LEGGINGS_PLACEHOLDER = ITEM_TEXTURE_LOCATION + "leather_leggings";
-    public static final String LEATHER_BOOTS_PLACEHOLDER = ITEM_TEXTURE_LOCATION + "leather_boots";
-    public static final String LEATHER_HORSE_ARMOR_PLACEHOLDER = ITEM_TEXTURE_LOCATION + "leather_horse_armor";
-
-    public static final String SPAWN_EGG_PLACEHOLDER = ITEM_TEXTURE_LOCATION + "spawn_egg";
-    public static final String SPAWN_EGG_OVERLAY_PLACEHOLDER = ITEM_TEXTURE_LOCATION + "spawn_egg_overlay";
-
-    public static final String TIPPED_ARROW_HEAD_PLACEHOLDER = ITEM_TEXTURE_LOCATION + "tipped_arrow_head";
-    public static final String POTION_OVERLAY_PLACEHOLDER = ITEM_TEXTURE_LOCATION + "potion_overlay";
-
-    public static final String FIREWORK_STAR_OVERLAY_LOCATION = ITEM_MODEL_LOCATION + "firework_star_overlay";
     public static final String MAP_MARKINGS_LOCATION = ITEM_TEXTURE_LOCATION + "filled_map_markings";
 
     public static final String GRASS_COLORMAP_LOCATION = COLORMAP_TEXTURE_LOCATION + "grass";

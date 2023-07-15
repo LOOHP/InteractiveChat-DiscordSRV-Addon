@@ -79,7 +79,7 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.ContainerTitlePrintingFunc
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils.ItemStackProcessResult;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ModelUtils;
-import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintIndexData;
+import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintColorProvider;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper;
 import org.bukkit.Bukkit;
@@ -809,11 +809,11 @@ public class ImageGeneration {
                         Map<ModelOverrideType, Float> predicate = itemProcessResult.getPredicates();
                         String modelKey = itemProcessResult.getModelKey();
                         Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
-                        TintIndexData tintIndexData = itemProcessResult.getTintIndexData();
+                        TintColorProvider tintColorProvider = itemProcessResult.getTintColorProvider();
                         List<ValuePairs<TextureResource, OpenGLBlending>> enchantmentGlintResource = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.HEAD, helmet, () -> getDefaultEnchantmentTint(EnchantmentGlintType.ITEM), translateFunction.get());
                         BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintFunction = (img, glintType) -> getEnchantedImage(enchantmentGlintResource, img);
                         BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintFunction = (img, glintType) -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> getRawEnchantedImage(each.getFirst(), img)).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
-                        modelItems.put(PlayerModelItemPosition.HELMET, new PlayerModelItem(PlayerModelItemPosition.HELMET, modelKey, resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, EquipmentSlot.HEAD, helmet, version.get().isOld(), predicate, player, world, livingEntity, translateFunction.get()).orElse(null), predicate, enchanted, itemProvidedTextures, tintIndexData, enchantmentGlintFunction, rawEnchantmentGlintFunction));
+                        modelItems.put(PlayerModelItemPosition.HELMET, new PlayerModelItem(PlayerModelItemPosition.HELMET, modelKey, resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, EquipmentSlot.HEAD, helmet, version.get().isOld(), predicate, player, world, livingEntity, translateFunction.get()).orElse(null), predicate, enchanted, itemProvidedTextures, tintColorProvider, enchantmentGlintFunction, rawEnchantmentGlintFunction));
                         break;
                 }
                 if (isArmor) {
@@ -849,11 +849,11 @@ public class ImageGeneration {
                 Map<ModelOverrideType, Float> predicate = itemProcessResult.getPredicates();
                 String modelKey = itemProcessResult.getModelKey();
                 Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
-                TintIndexData tintIndexData = itemProcessResult.getTintIndexData();
+                TintColorProvider tintColorProvider = itemProcessResult.getTintColorProvider();
                 List<ValuePairs<TextureResource, OpenGLBlending>> enchantmentGlintResource = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(slot, rightHand, () -> getDefaultEnchantmentTint(EnchantmentGlintType.ITEM), translateFunction.get());
                 BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintFunction = (img, glintType) -> getEnchantedImage(enchantmentGlintResource, img);
                 BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintFunction = (img, glintType) -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> getRawEnchantedImage(each.getFirst(), img)).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
-                modelItems.put(PlayerModelItemPosition.RIGHT_HAND, new PlayerModelItem(PlayerModelItemPosition.RIGHT_HAND, modelKey, resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, slot, rightHand, version.get().isOld(), predicate, player, world, livingEntity, translateFunction.get()).orElse(null), predicate, enchanted, itemProvidedTextures, tintIndexData, enchantmentGlintFunction, rawEnchantmentGlintFunction));
+                modelItems.put(PlayerModelItemPosition.RIGHT_HAND, new PlayerModelItem(PlayerModelItemPosition.RIGHT_HAND, modelKey, resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, slot, rightHand, version.get().isOld(), predicate, player, world, livingEntity, translateFunction.get()).orElse(null), predicate, enchanted, itemProvidedTextures, tintColorProvider, enchantmentGlintFunction, rawEnchantmentGlintFunction));
             }
             if (leftHand != null && !leftHand.getType().equals(Material.AIR)) {
                 EquipmentSlot slot = player.isRightHanded() ? EquipmentSlot.valueOf("OFF_HAND") : EquipmentSlot.HAND;
@@ -862,17 +862,17 @@ public class ImageGeneration {
                 Map<ModelOverrideType, Float> predicate = itemProcessResult.getPredicates();
                 String modelKey = itemProcessResult.getModelKey();
                 Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
-                TintIndexData tintIndexData = itemProcessResult.getTintIndexData();
+                TintColorProvider tintColorProvider = itemProcessResult.getTintColorProvider();
                 List<ValuePairs<TextureResource, OpenGLBlending>> enchantmentGlintResource = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(slot, leftHand, () -> getDefaultEnchantmentTint(EnchantmentGlintType.ITEM), translateFunction.get());
                 BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintFunction = (img, glintType) -> getEnchantedImage(enchantmentGlintResource, img);
                 BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintFunction = (img, glintType) -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> getRawEnchantedImage(each.getFirst(), img)).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
-                modelItems.put(PlayerModelItemPosition.LEFT_HAND, new PlayerModelItem(PlayerModelItemPosition.LEFT_HAND, modelKey, resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, slot, leftHand, version.get().isOld(), predicate, player, world, livingEntity, translateFunction.get()).orElse(null), predicate, enchanted, itemProvidedTextures, tintIndexData, enchantmentGlintFunction, rawEnchantmentGlintFunction));
+                modelItems.put(PlayerModelItemPosition.LEFT_HAND, new PlayerModelItem(PlayerModelItemPosition.LEFT_HAND, modelKey, resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, slot, leftHand, version.get().isOld(), predicate, player, world, livingEntity, translateFunction.get()).orElse(null), predicate, enchanted, itemProvidedTextures, tintColorProvider, enchantmentGlintFunction, rawEnchantmentGlintFunction));
             }
         }
 
         boolean upsideDown = ModelUtils.isRenderedUpsideDown(player.getName(), cape != null);
 
-        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.renderPlayer(image.getWidth(), image.getHeight(), resourceManager.get(), version.get().isOld(), slim, providedTextures, TintIndexData.EMPTY_INSTANCE, modelItems);
+        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.renderPlayer(image.getWidth(), image.getHeight(), resourceManager.get(), version.get().isOld(), slim, providedTextures, TintColorProvider.EMPTY_INSTANCE, modelItems);
         Graphics2D g = image.createGraphics();
         BufferedImage resizedImage = ImageUtils.resizeImageAbs(renderResult.getImage(), 117, 159);
         if (upsideDown) {
@@ -909,11 +909,11 @@ public class ImageGeneration {
         boolean requiresEnchantmentGlint = processResult.requiresEnchantmentGlint();
         Map<ModelOverrideType, Float> predicates = processResult.getPredicates();
         Map<String, TextureResource> providedTextures = processResult.getProvidedTextures();
-        TintIndexData tintIndexData = processResult.getTintIndexData();
+        TintColorProvider tintColorProvider = processResult.getTintColorProvider();
         String modelKey = processResult.getModelKey();
 
         BufferedImage itemImage;
-        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(size, size, resourceManager.get(), processResult.getPostResolveFunction(), version.get().isOld(), modelKey, ModelDisplayPosition.GUI, predicates, providedTextures, tintIndexData, requiresEnchantmentGlint, processResult.getEnchantmentGlintFunction(), processResult.getRawEnchantmentGlintFunction());
+        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(size, size, resourceManager.get(), processResult.getPostResolveFunction(), version.get().isOld(), modelKey, ModelDisplayPosition.GUI, predicates, providedTextures, tintColorProvider, requiresEnchantmentGlint, processResult.getEnchantmentGlintFunction(), processResult.getRawEnchantmentGlintFunction());
         if (renderResult.isSuccessful()) {
             itemImage = renderResult.getImage();
         } else {

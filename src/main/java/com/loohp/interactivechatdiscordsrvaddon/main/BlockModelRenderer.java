@@ -48,7 +48,7 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.ModelUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackInfoUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.SpawnEggTintData;
-import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintIndexData;
+import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintColorProvider;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -666,22 +666,13 @@ public class BlockModelRenderer extends JFrame {
             Map<String, TextureResource> providedTextures = new HashMap<>();
             Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
 
+            TintColorProvider tintColorProvider = TintUtils.getTintProvider(trimmedKey);
+
             SpawnEggTintData tintData = TintUtils.getSpawnEggTint(trimmedKey);
             if (tintData != null) {
-                BufferedImage baseImage = resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg").getTexture();
-                BufferedImage overlayImage = resourceManager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg_overlay").getTexture(baseImage.getWidth(), baseImage.getHeight());
-
-                BufferedImage colorBase = ImageUtils.changeColorTo(ImageUtils.copyImage(baseImage), tintData.getBase());
-                BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(overlayImage), tintData.getOverlay());
-
-                baseImage = ImageUtils.multiply(baseImage, colorBase);
-                overlayImage = ImageUtils.multiply(overlayImage, colorOverlay);
-
-                providedTextures.put(ResourceRegistry.SPAWN_EGG_PLACEHOLDER, new GeneratedTextureResource(resourceManager, baseImage));
-                providedTextures.put(ResourceRegistry.SPAWN_EGG_OVERLAY_PLACEHOLDER, new GeneratedTextureResource(resourceManager, overlayImage));
+                tintColorProvider = new TintUtils.DyeTintProvider(tintIndex -> tintData.getColor(tintIndex));
             }
 
-            TintIndexData tintIndexData = TintUtils.getTintData(trimmedKey);
             for (Entry<ModelOverrideType, JSpinner> entry : overrideSettings.entrySet()) {
                 float value = ((Number) entry.getValue().getValue()).floatValue();
                 if (value != 0F) {
@@ -709,7 +700,7 @@ public class BlockModelRenderer extends JFrame {
             modelRenderer.reloadPoolSize();
             long start = System.currentTimeMillis();
             try {
-                RenderResult result = modelRenderer.render((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), (int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), resourceManager, null, false, key, ModelDisplayPosition.GUI, predicates, providedTextures, tintIndexData, enchantedCheckBox.isSelected(), altPosBox.isSelected(), (source, type) -> getEnchantedImage(source, type), (source, type) -> new RawEnchantmentGlintData(Collections.singletonList(getRawEnchantedImage(source, type)), Collections.singletonList(OpenGLBlending.GLINT)));
+                RenderResult result = modelRenderer.render((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), (int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), resourceManager, null, false, key, ModelDisplayPosition.GUI, predicates, providedTextures, tintColorProvider, enchantedCheckBox.isSelected(), altPosBox.isSelected(), (source, type) -> getEnchantedImage(source, type), (source, type) -> new RawEnchantmentGlintData(Collections.singletonList(getRawEnchantedImage(source, type)), Collections.singletonList(OpenGLBlending.GLINT)));
                 long end = System.currentTimeMillis();
                 if (result.isSuccessful()) {
                     renderedImage = result.getImage();

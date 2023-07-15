@@ -58,7 +58,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.textures.EnchantmentGl
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.SpawnEggTintData;
-import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintIndexData;
+import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintColorProvider;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -80,7 +80,6 @@ import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
-import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -91,7 +90,6 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Random;
 import java.util.UUID;
 import java.util.function.BiFunction;
@@ -155,7 +153,7 @@ public class ItemRenderUtils {
         BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintFunction = (image, type) -> ImageGeneration.getEnchantedImage(enchantmentGlintResource, image);
         BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintFunction = (image, type) -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> ImageGeneration.getRawEnchantedImage(each.getFirst(), image)).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
 
-        TintIndexData tintIndexData = TintUtils.getTintData(icMaterial);
+        TintColorProvider tintColorProvider = TintUtils.getTintProvider(icMaterial);
         Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
         Map<String, TextureResource> providedTextures = new HashMap<>();
 
@@ -415,87 +413,32 @@ public class ItemRenderUtils {
             predicates.put(ModelOverrideType.LEVEL, level);
         } else if (item.getItemMeta() instanceof LeatherArmorMeta) {
             LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
-            Color color = new Color(meta.getColor().asRGB());
-            if (icMaterial.isMaterial(XMaterial.LEATHER_HORSE_ARMOR)) {
-                BufferedImage itemImage = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + icMaterial.name().toLowerCase()).getTexture(32, 32);
-                BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
-                itemImage = ImageUtils.multiply(itemImage, colorOverlay);
-                providedTextures.put(ResourceRegistry.LEATHER_HORSE_ARMOR_PLACEHOLDER, new GeneratedTextureResource(manager, itemImage));
-            } else {
-                BufferedImage itemImage = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + icMaterial.name().toLowerCase()).getTexture(32, 32);
-                BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
-                itemImage = ImageUtils.multiply(itemImage, colorOverlay);
-                if (icMaterial.name().contains("HELMET")) {
-                    providedTextures.put(ResourceRegistry.LEATHER_HELMET_PLACEHOLDER, new GeneratedTextureResource(manager, itemImage));
-                } else if (icMaterial.name().contains("CHESTPLATE")) {
-                    providedTextures.put(ResourceRegistry.LEATHER_CHESTPLATE_PLACEHOLDER, new GeneratedTextureResource(manager, itemImage));
-                } else if (icMaterial.name().contains("LEGGINGS")) {
-                    providedTextures.put(ResourceRegistry.LEATHER_LEGGINGS_PLACEHOLDER, new GeneratedTextureResource(manager, itemImage));
-                } else if (icMaterial.name().contains("BOOTS")) {
-                    providedTextures.put(ResourceRegistry.LEATHER_BOOTS_PLACEHOLDER, new GeneratedTextureResource(manager, itemImage));
-                }
-            }
+            tintColorProvider = new TintUtils.DyeTintProvider(tintIndex -> tintIndex > 0 ? -1 : meta.getColor().asRGB());
         } else if (item.getItemMeta() instanceof PotionMeta) {
-            if (icMaterial.isMaterial(XMaterial.TIPPED_ARROW)) {
-                PotionMeta meta = (PotionMeta) item.getItemMeta();
-                PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
-                BufferedImage tippedArrowHead = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "tipped_arrow_head").getTexture(32, 32);
-
-                int color;
-                try {
-                    if (meta.hasColor()) {
-                        color = meta.getColor().asRGB();
-                    } else {
-                        color = PotionUtils.getPotionBaseColor(potiontype);
-                    }
-                } catch (Throwable e) {
-                    color = PotionUtils.getPotionBaseColor(PotionType.WATER);
+            PotionMeta meta = (PotionMeta) item.getItemMeta();
+            PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
+            int color;
+            try {
+                if (meta.hasColor()) {
+                    color = meta.getColor().asRGB();
+                } else {
+                    color = PotionUtils.getPotionBaseColor(potiontype);
                 }
+            } catch (Throwable e) {
+                color = PotionUtils.getPotionBaseColor(PotionType.WATER);
+            }
+            int finalColor = color;
+            tintColorProvider = new TintUtils.DyeTintProvider(tintIndex -> tintIndex == 0 ? finalColor : -1);
 
-                BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(tippedArrowHead), color);
-                tippedArrowHead = ImageUtils.multiply(tippedArrowHead, colorOverlay);
-
-                providedTextures.put(ResourceRegistry.TIPPED_ARROW_HEAD_PLACEHOLDER, new GeneratedTextureResource(manager, tippedArrowHead));
-            } else {
-                PotionMeta meta = (PotionMeta) item.getItemMeta();
-                PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
-                BufferedImage potionOverlay = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "potion_overlay").getTexture(32, 32);
-
-                int color;
-                try {
-                    if (meta.hasColor()) {
-                        color = meta.getColor().asRGB();
-                    } else {
-                        color = PotionUtils.getPotionBaseColor(potiontype);
-                    }
-                } catch (Throwable e) {
-                    color = PotionUtils.getPotionBaseColor(PotionType.WATER);
-                }
-
-                BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(potionOverlay), color);
-                potionOverlay = ImageUtils.multiply(potionOverlay, colorOverlay);
-
-                providedTextures.put(ResourceRegistry.POTION_OVERLAY_PLACEHOLDER, new GeneratedTextureResource(manager, potionOverlay));
-                if (potiontype != null && InteractiveChat.version.isOlderThan(MCVersion.V1_19_4)) {
-                    if (!(potiontype.name().equals("WATER") || potiontype.name().equals("AWKWARD") || potiontype.name().equals("MUNDANE") || potiontype.name().equals("THICK") || potiontype.name().equals("UNCRAFTABLE"))) {
-                        requiresEnchantmentGlint = true;
-                    }
+            if (!icMaterial.isMaterial(XMaterial.TIPPED_ARROW) && potiontype != null && InteractiveChat.version.isOlderThan(MCVersion.V1_19_4)) {
+                if (!(potiontype.name().equals("WATER") || potiontype.name().equals("AWKWARD") || potiontype.name().equals("MUNDANE") || potiontype.name().equals("THICK") || potiontype.name().equals("UNCRAFTABLE"))) {
+                    requiresEnchantmentGlint = true;
                 }
             }
         } else if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:spawn_egg"))) {
             SpawnEggTintData tintData = TintUtils.getSpawnEggTint(icMaterial);
             if (tintData != null) {
-                BufferedImage baseImage = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg").getTexture();
-                BufferedImage overlayImage = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "spawn_egg_overlay").getTexture(baseImage.getWidth(), baseImage.getHeight());
-
-                BufferedImage colorBase = ImageUtils.changeColorTo(ImageUtils.copyImage(baseImage), tintData.getBase());
-                BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(overlayImage), tintData.getOverlay());
-
-                baseImage = ImageUtils.multiply(baseImage, colorBase);
-                overlayImage = ImageUtils.multiply(overlayImage, colorOverlay);
-
-                providedTextures.put(ResourceRegistry.SPAWN_EGG_PLACEHOLDER, new GeneratedTextureResource(manager, baseImage));
-                providedTextures.put(ResourceRegistry.SPAWN_EGG_OVERLAY_PLACEHOLDER, new GeneratedTextureResource(manager, overlayImage));
+                tintColorProvider = new TintUtils.DyeTintProvider(tintIndex -> tintData.getColor(tintIndex));
             }
         } else if (icMaterial.isMaterial(XMaterial.FIREWORK_STAR)) {
             int overlayColor;
@@ -518,11 +461,7 @@ public class ItemRenderUtils {
                 overlayColor = (i /= is.length) << 16 | (j /= is.length) << 8 | (k /= is.length);
             }
 
-            BufferedImage fireworkStarOverlay = manager.getTextureManager().getTexture(ResourceRegistry.FIREWORK_STAR_OVERLAY_LOCATION).getTexture();
-            BufferedImage tint = ImageUtils.changeColorTo(ImageUtils.copyImage(fireworkStarOverlay), overlayColor);
-            fireworkStarOverlay = ImageUtils.multiply(fireworkStarOverlay, tint);
-
-            providedTextures.put(ResourceRegistry.FIREWORK_STAR_OVERLAY_LOCATION, new GeneratedTextureResource(manager, fireworkStarOverlay));
+            tintColorProvider = new TintUtils.DyeTintProvider(tintIndex -> tintIndex != 1 ? -1 : overlayColor);
         } else if (InteractiveChat.version.isLegacy() && icMaterial.isOneOf(Collections.singletonList("CONTAINS:bed"))) {
             String colorName = icMaterial.name().replace("_BED", "").toLowerCase();
             BufferedImage bedTexture = manager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "bed/" + colorName).getTexture();
@@ -597,113 +536,9 @@ public class ItemRenderUtils {
 
         String modelKey = directLocation == null ? ResourceRegistry.ITEM_MODEL_LOCATION + ModelUtils.getItemModelKey(icMaterial) : directLocation;
 
-        Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction = manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, slot, item, is1_8, predicates, player, world, livingEntity, manager.getLanguageManager().getTranslateFunction().ofLanguage(language)).map(function -> {
-            return function.andThen(result -> {
-                Map<String, TextureResource> overrideTextures = result.getSecond();
-                for (Entry<String, TextureResource> entry : overrideTextures.entrySet()) {
-                    String overriddenResource = result.getFirst().getTextures().get(entry.getKey());
-                    if (overriddenResource == null) {
-                        continue;
-                    }
-                    if (!overriddenResource.contains(":")) {
-                        String namespace = result.getFirst().getResourceLocation();
-                        if (namespace.contains(":")) {
-                            namespace = namespace.substring(0, namespace.indexOf(":"));
-                        } else {
-                            namespace = ResourceRegistry.DEFAULT_NAMESPACE;
-                        }
-                        overriddenResource = namespace + ":" + overriddenResource;
-                    }
-                    if (item.getItemMeta() instanceof PotionMeta) {
-                        if (icMaterial.isMaterial(XMaterial.TIPPED_ARROW)) {
-                            if (overriddenResource.equalsIgnoreCase(ResourceRegistry.TIPPED_ARROW_HEAD_PLACEHOLDER)) {
-                                PotionMeta meta = (PotionMeta) item.getItemMeta();
-                                PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
-                                BufferedImage tippedArrowHead = manager.getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "tipped_arrow_head").getTexture(32, 32);
+        Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction = manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, slot, item, is1_8, predicates, player, world, livingEntity, manager.getLanguageManager().getTranslateFunction().ofLanguage(language)).orElse(null);
 
-                                int color;
-                                try {
-                                    if (meta.hasColor()) {
-                                        color = meta.getColor().asRGB();
-                                    } else {
-                                        color = PotionUtils.getPotionBaseColor(potiontype);
-                                    }
-                                } catch (Throwable e) {
-                                    color = PotionUtils.getPotionBaseColor(PotionType.WATER);
-                                }
-
-                                BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(tippedArrowHead), color);
-                                tippedArrowHead = ImageUtils.multiply(tippedArrowHead, colorOverlay);
-
-                                entry.setValue(new GeneratedTextureResource(manager, tippedArrowHead));
-                            }
-                        } else {
-                            if (overriddenResource.equalsIgnoreCase(ResourceRegistry.POTION_OVERLAY_PLACEHOLDER)) {
-                                PotionMeta meta = (PotionMeta) item.getItemMeta();
-                                PotionType potiontype = InteractiveChat.version.isOld() ? Potion.fromItemStack(item).getType() : meta.getBasePotionData().getType();
-                                BufferedImage potionOverlay = entry.getValue().getTexture(32, 32);
-
-                                int color;
-                                try {
-                                    if (meta.hasColor()) {
-                                        color = meta.getColor().asRGB();
-                                    } else {
-                                        color = PotionUtils.getPotionBaseColor(potiontype);
-                                    }
-                                } catch (Throwable e) {
-                                    color = PotionUtils.getPotionBaseColor(PotionType.WATER);
-                                }
-
-                                BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(potionOverlay), color);
-                                potionOverlay = ImageUtils.multiply(potionOverlay, colorOverlay);
-
-                                entry.setValue(new GeneratedTextureResource(manager, potionOverlay));
-                            }
-                        }
-                    } else if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:spawn_egg"))) {
-                        if (overriddenResource.equalsIgnoreCase(ResourceRegistry.SPAWN_EGG_PLACEHOLDER)) {
-                            SpawnEggTintData tintData = TintUtils.getSpawnEggTint(icMaterial);
-                            if (tintData != null) {
-                                BufferedImage baseImage = entry.getValue().getTexture();
-                                BufferedImage colorBase = ImageUtils.changeColorTo(ImageUtils.copyImage(baseImage), tintData.getBase());
-                                baseImage = ImageUtils.multiply(baseImage, colorBase);
-                                entry.setValue(new GeneratedTextureResource(manager, baseImage));
-                            }
-                        } else if (overriddenResource.equalsIgnoreCase(ResourceRegistry.SPAWN_EGG_OVERLAY_PLACEHOLDER)) {
-                            SpawnEggTintData tintData = TintUtils.getSpawnEggTint(icMaterial);
-                            if (tintData != null) {
-                                BufferedImage overlayImage = entry.getValue().getTexture();
-                                BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(overlayImage), tintData.getOverlay());
-                                overlayImage = ImageUtils.multiply(overlayImage, colorOverlay);
-                                entry.setValue(new GeneratedTextureResource(manager, overlayImage));
-                            }
-                        }
-                    } else if (item.getItemMeta() instanceof LeatherArmorMeta) {
-                        LeatherArmorMeta meta = (LeatherArmorMeta) item.getItemMeta();
-                        Color color = new Color(meta.getColor().asRGB());
-                        if (icMaterial.isMaterial(XMaterial.LEATHER_HORSE_ARMOR)) {
-                            if (overriddenResource.equalsIgnoreCase(ResourceRegistry.LEATHER_HORSE_ARMOR_PLACEHOLDER)) {
-                                BufferedImage itemImage = entry.getValue().getTexture(32, 32);
-                                BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
-                                itemImage = ImageUtils.multiply(itemImage, colorOverlay);
-                                entry.setValue(new GeneratedTextureResource(manager, itemImage));
-                            }
-                        } else {
-                            if (overriddenResource.equalsIgnoreCase(ResourceRegistry.LEATHER_HELMET_PLACEHOLDER) || overriddenResource.equalsIgnoreCase(ResourceRegistry.LEATHER_CHESTPLATE_PLACEHOLDER) || overriddenResource.equalsIgnoreCase(ResourceRegistry.LEATHER_LEGGINGS_PLACEHOLDER) || overriddenResource.equalsIgnoreCase(ResourceRegistry.LEATHER_BOOTS_PLACEHOLDER)) {
-                                BufferedImage itemImage = entry.getValue().getTexture(32, 32);
-                                BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(itemImage), color);
-                                itemImage = ImageUtils.multiply(itemImage, colorOverlay);
-                                entry.setValue(new GeneratedTextureResource(manager, itemImage));
-                            }
-                        }
-                    }
-                }
-
-                return result;
-            });
-        }).orElse(null);
-
-        return new ItemStackProcessResult(requiresEnchantmentGlint, predicates, providedTextures, tintIndexData, modelKey, postResolveFunction, enchantmentGlintFunction, rawEnchantmentGlintFunction);
+        return new ItemStackProcessResult(requiresEnchantmentGlint, predicates, providedTextures, tintColorProvider, modelKey, postResolveFunction, enchantmentGlintFunction, rawEnchantmentGlintFunction);
     }
 
     private static String tagToString(Tag<?> tag) {
@@ -719,17 +554,17 @@ public class ItemRenderUtils {
         private final boolean requiresEnchantmentGlint;
         private final Map<ModelOverrideType, Float> predicates;
         private final Map<String, TextureResource> providedTextures;
-        private final TintIndexData tintIndexData;
+        private final TintColorProvider tintColorProvider;
         private final String modelKey;
         private final Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction;
         private final BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintFunction;
         private final BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintFunction;
 
-        public ItemStackProcessResult(boolean requiresEnchantmentGlint, Map<ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintIndexData tintIndexData, String modelKey, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintFunction, BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintFunction) {
+        public ItemStackProcessResult(boolean requiresEnchantmentGlint, Map<ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintColorProvider tintColorProvider, String modelKey, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintFunction, BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintFunction) {
             this.requiresEnchantmentGlint = requiresEnchantmentGlint;
             this.predicates = predicates;
             this.providedTextures = providedTextures;
-            this.tintIndexData = tintIndexData;
+            this.tintColorProvider = tintColorProvider;
             this.modelKey = modelKey;
             this.postResolveFunction = postResolveFunction;
             this.enchantmentGlintFunction = enchantmentGlintFunction;
@@ -748,8 +583,8 @@ public class ItemRenderUtils {
             return providedTextures;
         }
 
-        public TintIndexData getTintIndexData() {
-            return tintIndexData;
+        public TintColorProvider getTintColorProvider() {
+            return tintColorProvider;
         }
 
         public String getModelKey() {
