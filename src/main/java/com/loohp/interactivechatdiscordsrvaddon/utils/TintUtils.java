@@ -198,7 +198,17 @@ public class TintUtils {
 
     public interface TintColorProvider {
 
-        TintColorProvider EMPTY_INSTANCE = new TintIndexData(Collections.emptyList());
+        TintColorProvider EMPTY_INSTANCE = new TintColorProvider() {
+            @Override
+            public BufferedImage applyTint(BufferedImage image, int tintIndex) {
+                return image;
+            }
+
+            @Override
+            public int getTintColor(int tintIndex) {
+                return -1;
+            }
+        };
 
         BufferedImage applyTint(BufferedImage image, int tintIndex);
 
@@ -233,7 +243,7 @@ public class TintUtils {
                     return colorSupplier.getAsInt();
                 }
             }
-            return 0xFFFFFF;
+            return -1;
         }
 
     }
