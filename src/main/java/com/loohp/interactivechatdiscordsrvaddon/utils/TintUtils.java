@@ -259,18 +259,19 @@ public class TintUtils {
         @Override
         public BufferedImage applyTint(BufferedImage image, int tintIndex) {
             if (tintIndex >= 0) {
-                if (colorSupplier != null) {
-                    int color = colorSupplier.applyAsInt(tintIndex);
-                    BufferedImage tintImage = ImageUtils.changeColorTo(ImageUtils.copyImage(image), color);
-                    return ImageUtils.multiply(image, tintImage);
-                }
+                int color = colorSupplier.applyAsInt(tintIndex);
+                BufferedImage tintImage = ImageUtils.changeColorTo(ImageUtils.copyImage(image), color);
+                return ImageUtils.multiply(image, tintImage);
             }
             return image;
         }
 
         @Override
         public int getTintColor(int tintIndex) {
-            return colorSupplier.applyAsInt(tintIndex);
+            if (tintIndex >= 0) {
+                return colorSupplier.applyAsInt(tintIndex);
+            }
+            return -1;
         }
 
     }
