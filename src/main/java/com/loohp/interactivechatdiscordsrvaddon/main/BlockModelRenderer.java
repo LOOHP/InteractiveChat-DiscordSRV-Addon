@@ -670,7 +670,7 @@ public class BlockModelRenderer extends JFrame {
 
             SpawnEggTintData tintData = TintUtils.getSpawnEggTint(trimmedKey);
             if (tintData != null) {
-                tintColorProvider = new TintUtils.DyeTintProvider(tintIndex -> tintData.getColor(tintIndex));
+                tintColorProvider = tintData;
             }
 
             for (Entry<ModelOverrideType, JSpinner> entry : overrideSettings.entrySet()) {

@@ -24,6 +24,7 @@ import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -53,28 +54,28 @@ public class TintUtils {
     private static int[] FOLIAGE_TINT_PIXELS = new int[65536];
 
     static {
-        TintColorProvider grassTint = new TintIndexData(Collections.singletonList(() -> getGrassTintColor(DEFAULT_TEMPERATURE, DEFAULT_DOWNFALL)));
+        TintColorProvider grassTint = new TintIndexData(() -> getGrassTintColor(DEFAULT_TEMPERATURE, DEFAULT_DOWNFALL));
         TINT_PROVIDERS.put("GRASS_BLOCK", grassTint);
         TINT_PROVIDERS.put("GRASS", grassTint);
         TINT_PROVIDERS.put("LARGE_FERN", grassTint);
         TINT_PROVIDERS.put("POTTED_FERN", grassTint);
         TINT_PROVIDERS.put("SUGAR_CANE", grassTint);
 
-        TintColorProvider grassTint2 = new TintIndexData(Collections.singletonList(() -> getGrassTintColor(DEFAULT2_TEMPERATURE, DEFAULT2_DOWNFALL)));
+        TintColorProvider grassTint2 = new TintIndexData(() -> getGrassTintColor(DEFAULT2_TEMPERATURE, DEFAULT2_DOWNFALL));
         TINT_PROVIDERS.put("TALL_GRASS", grassTint2);
         TINT_PROVIDERS.put("FERN", grassTint2);
 
-        TintColorProvider foliageTint = new TintIndexData(Collections.singletonList(() -> getFoliageTintColor(DEFAULT_TEMPERATURE, DEFAULT_DOWNFALL)));
+        TintColorProvider foliageTint = new TintIndexData(() -> getFoliageTintColor(DEFAULT_TEMPERATURE, DEFAULT_DOWNFALL));
         TINT_PROVIDERS.put("OAK_LEAVES", foliageTint);
         TINT_PROVIDERS.put("JUNGLE_LEAVES", foliageTint);
         TINT_PROVIDERS.put("ACACIA_LEAVES", foliageTint);
         TINT_PROVIDERS.put("DARK_OAK_LEAVES", foliageTint);
         TINT_PROVIDERS.put("VINE", foliageTint);
 
-        TINT_PROVIDERS.put("BIRCH_LEAVES", new TintIndexData(Collections.singletonList(() -> FOLIAGE_BIRCH_COLOR)));
-        TINT_PROVIDERS.put("SPRUCE_LEAVES", new TintIndexData(Collections.singletonList(() -> FOLIAGE_SPRUCE_COLOR)));
-        TINT_PROVIDERS.put("MANGROVE_LEAVES", new TintIndexData(Collections.singletonList(() -> FOLIAGE_MANGROVE_COLOR)));
-        TINT_PROVIDERS.put("LILY_PAD", new TintIndexData(Collections.singletonList(() -> LILY_PAD_COLOR)));
+        TINT_PROVIDERS.put("BIRCH_LEAVES", new TintIndexData(() -> FOLIAGE_BIRCH_COLOR));
+        TINT_PROVIDERS.put("SPRUCE_LEAVES", new TintIndexData(() -> FOLIAGE_SPRUCE_COLOR));
+        TINT_PROVIDERS.put("MANGROVE_LEAVES", new TintIndexData(() -> FOLIAGE_MANGROVE_COLOR));
+        TINT_PROVIDERS.put("LILY_PAD", new TintIndexData(() -> LILY_PAD_COLOR));
 
         SPAWN_EGG_TINT_DATA.put("ALLAY_SPAWN_EGG", new SpawnEggTintData(56063, 44543));
         SPAWN_EGG_TINT_DATA.put("AXOLOTL_SPAWN_EGG", new SpawnEggTintData(16499171, 10890612));
@@ -208,11 +209,25 @@ public class TintUtils {
             public int getTintColor(int tintIndex) {
                 return -1;
             }
+
+            @Override
+            public boolean hasTintColor(int tintIndex) {
+                return false;
+            }
         };
 
-        BufferedImage applyTint(BufferedImage image, int tintIndex);
+        default BufferedImage applyTint(BufferedImage image, int tintIndex) {
+            if (hasTintColor(tintIndex)) {
+                int color = getTintColor(tintIndex);
+                BufferedImage tintImage = ImageUtils.changeColorTo(ImageUtils.copyImage(image), color);
+                return ImageUtils.multiply(image, tintImage);
+            }
+            return image;
+        }
 
         int getTintColor(int tintIndex);
+
+        boolean hasTintColor(int tintIndex);
 
     }
 
@@ -221,21 +236,14 @@ public class TintUtils {
         private final List<IntSupplier> data;
 
         public TintIndexData(List<IntSupplier> data) {
-            this.data = data;
+            this.data = Collections.unmodifiableList(data);
         }
 
-        public BufferedImage applyTint(BufferedImage image, int tintIndex) {
-            if (tintIndex >= 0 && tintIndex < data.size()) {
-                IntSupplier colorSupplier = data.get(tintIndex);
-                if (colorSupplier != null) {
-                    int color = colorSupplier.getAsInt();
-                    BufferedImage tintImage = ImageUtils.changeColorTo(ImageUtils.copyImage(image), color);
-                    return ImageUtils.multiply(image, tintImage);
-                }
-            }
-            return image;
+        public TintIndexData(IntSupplier... data) {
+            this(Arrays.asList(data));
         }
 
+        @Override
         public int getTintColor(int tintIndex) {
             if (tintIndex >= 0 && tintIndex < data.size()) {
                 IntSupplier colorSupplier = data.get(tintIndex);
@@ -246,6 +254,10 @@ public class TintUtils {
             return -1;
         }
 
+        @Override
+        public boolean hasTintColor(int tintIndex) {
+            return tintIndex >= 0 && tintIndex < data.size() && data.get(tintIndex) != null;
+        }
     }
 
     public static class DyeTintProvider implements TintColorProvider {
@@ -257,16 +269,6 @@ public class TintUtils {
         }
 
         @Override
-        public BufferedImage applyTint(BufferedImage image, int tintIndex) {
-            if (tintIndex >= 0) {
-                int color = colorSupplier.applyAsInt(tintIndex);
-                BufferedImage tintImage = ImageUtils.changeColorTo(ImageUtils.copyImage(image), color);
-                return ImageUtils.multiply(image, tintImage);
-            }
-            return image;
-        }
-
-        @Override
         public int getTintColor(int tintIndex) {
             if (tintIndex >= 0) {
                 return colorSupplier.applyAsInt(tintIndex);
@@ -274,9 +276,13 @@ public class TintUtils {
             return -1;
         }
 
+        @Override
+        public boolean hasTintColor(int tintIndex) {
+            return tintIndex >= 0;
+        }
     }
 
-    public static class SpawnEggTintData {
+    public static class SpawnEggTintData implements TintColorProvider {
 
         private final int base;
         private final int overlay;
@@ -284,10 +290,6 @@ public class TintUtils {
         public SpawnEggTintData(int base, int overlay) {
             this.base = base;
             this.overlay = overlay;
-        }
-
-        public int getColor(int tintIndex) {
-            return tintIndex == 0 ? this.base : this.overlay;
         }
 
         public int getBase() {
@@ -298,6 +300,15 @@ public class TintUtils {
             return overlay;
         }
 
+        @Override
+        public int getTintColor(int tintIndex) {
+            return tintIndex == 0 ? this.base : this.overlay;
+        }
+
+        @Override
+        public boolean hasTintColor(int tintIndex) {
+            return true;
+        }
     }
 
 }

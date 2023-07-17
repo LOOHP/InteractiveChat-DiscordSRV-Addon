@@ -438,7 +438,7 @@ public class ItemRenderUtils {
         } else if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:spawn_egg"))) {
             SpawnEggTintData tintData = TintUtils.getSpawnEggTint(icMaterial);
             if (tintData != null) {
-                tintColorProvider = new TintUtils.DyeTintProvider(tintIndex -> tintData.getColor(tintIndex));
+                tintColorProvider = tintData;
             }
         } else if (icMaterial.isMaterial(XMaterial.FIREWORK_STAR)) {
             int overlayColor;
