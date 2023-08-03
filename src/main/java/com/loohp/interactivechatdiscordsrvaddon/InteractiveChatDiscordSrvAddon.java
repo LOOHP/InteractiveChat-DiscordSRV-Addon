@@ -55,6 +55,7 @@ import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ICacheManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
+import com.loohp.interactivechatdiscordsrvaddon.resources.PackFormat;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager.ModManagerSupplier;
@@ -720,11 +721,12 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
                 @SuppressWarnings("resource")
                 ResourceManager resourceManager = new ResourceManager(
+                        ResourcePackUtils.getServerResourcePackVersion(),
                         mods,
                         Arrays.asList(CustomItemTextureRegistry.getDefaultSupplier(), ICacheManager.getDefaultSupplier(new File(getDataFolder(), "cache"))),
                         (resourcePackFile, type) -> new ResourceManager.DefaultResourcePackInfo(
                                 Component.translatable(TranslationKeyUtils.getResourcePackVanillaName()),
-                                ResourcePackUtils.getServerResourcePackVersion(),
+                                PackFormat.version(ResourcePackUtils.getServerResourcePackVersion()),
                                 Component.translatable(TranslationKeyUtils.getResourcePackVanillaDescription()).append(Component.text(" (Modified by LOOHP)"))
                         ),
                         ResourceManager.Flag.build(

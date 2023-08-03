@@ -39,14 +39,15 @@ public class ResourcePackInfo {
     private final boolean exist;
     private final String rejectedReason;
     private final Component name;
-    private final int packFormat;
+    private final PackFormat packFormat;
     private final Component description;
     private final Map<String, LanguageMeta> languageMeta;
+    private final List<PackOverlay> overlays;
     private final BufferedImage icon;
     private final List<ResourceFilterBlock> resourceFilterBlocks;
     private final Map<String, TextureAtlases> textureAtlases;
 
-    private ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, Component name, boolean status, boolean exist, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon, List<ResourceFilterBlock> resourceFilterBlocks, Map<String, TextureAtlases> textureAtlases) {
+    private ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, Component name, boolean status, boolean exist, String rejectedReason, PackFormat packFormat, Component description, Map<String, LanguageMeta> languageMeta, List<PackOverlay> overlays, BufferedImage icon, List<ResourceFilterBlock> resourceFilterBlocks, Map<String, TextureAtlases> textureAtlases) {
         this.manager = manager;
         this.file = file;
         this.type = type;
@@ -57,17 +58,18 @@ public class ResourcePackInfo {
         this.packFormat = packFormat;
         this.description = description;
         this.languageMeta = Collections.unmodifiableMap(languageMeta);
+        this.overlays = Collections.unmodifiableList(overlays);
         this.icon = icon;
         this.resourceFilterBlocks = resourceFilterBlocks;
         this.textureAtlases = Collections.unmodifiableMap(textureAtlases);
     }
 
-    public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, Component name, boolean status, String rejectedReason, int packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon, List<ResourceFilterBlock> resourceFilterBlocks, Map<String, TextureAtlases> textureAtlases) {
-        this(manager, file, type, name, status, true, rejectedReason, packFormat, description, languageMeta, icon, resourceFilterBlocks, textureAtlases);
+    public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, Component name, boolean status, String rejectedReason, PackFormat packFormat, Component description, Map<String, LanguageMeta> languageMeta, BufferedImage icon, List<ResourceFilterBlock> resourceFilterBlocks, Map<String, TextureAtlases> textureAtlases, List<PackOverlay> overlays) {
+        this(manager, file, type, name, status, true, rejectedReason, packFormat, description, languageMeta, overlays, icon, resourceFilterBlocks, textureAtlases);
     }
 
     public ResourcePackInfo(ResourceManager manager, ResourcePackFile file, ResourcePackType type, Component name, String rejectedReason) {
-        this(manager, file, type, name, false, false, rejectedReason, -1, null, Collections.emptyMap(), null, Collections.emptyList(), Collections.emptyMap());
+        this(manager, file, type, name, false, false, rejectedReason, null, null, Collections.emptyMap(), Collections.emptyList(), null, Collections.emptyList(), Collections.emptyMap());
     }
 
     public ResourceManager getManager() {
@@ -106,12 +108,18 @@ public class ResourcePackInfo {
         return name;
     }
 
-    public int getPackFormat() {
+    public PackFormat getPackFormat() {
         return packFormat;
     }
 
     public int compareServerPackFormat(int localFormat) {
-        return Integer.compare(packFormat, localFormat);
+        if (packFormat == null) {
+            return 1;
+        }
+        if (packFormat.isCompatible(localFormat)) {
+            return 0;
+        }
+        return Integer.compare(packFormat.getMajor(), localFormat);
     }
 
     public Component getDescription() {
@@ -120,6 +128,10 @@ public class ResourcePackInfo {
 
     public Map<String, LanguageMeta> getLanguageMeta() {
         return languageMeta;
+    }
+
+    public List<PackOverlay> getOverlays() {
+        return overlays;
     }
 
     public BufferedImage getRawIcon() {
@@ -137,4 +149,5 @@ public class ResourcePackInfo {
     public Map<String, TextureAtlases> getTextureAtlases() {
         return textureAtlases;
     }
+
 }

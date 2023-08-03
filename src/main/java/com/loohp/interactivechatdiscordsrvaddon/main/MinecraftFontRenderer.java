@@ -35,6 +35,7 @@ import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.libs.URLClassLoaderAccess;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ICacheManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.PackFormat;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceDownloadManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
@@ -441,7 +442,7 @@ public class MinecraftFontRenderer extends JFrame {
                 int packFormat = GUIMain.getDefaultPackVersion((Integer) defaultPackVersionSpinner.getValue());
                 defaultPackVersionSpinner.setValue(packFormat);
 
-                resourceManager = new ResourceManager(Collections.emptyList(), Collections.singletonList(ICacheManager.getDummySupplier()), packFormat, ResourceManager.Flag.build(false, packFormat < 9));
+                resourceManager = new ResourceManager(packFormat, Collections.emptyList(), Collections.singletonList(ICacheManager.getDummySupplier()), PackFormat.version(packFormat), ResourceManager.Flag.build(false, packFormat < 9));
                 resourceManager.loadResources(new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN, true);
                 resourceBar.setValue(valuePerPack);
                 for (String resourceName : resourceOrder) {

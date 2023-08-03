@@ -58,16 +58,66 @@ public class TextureMeta extends TextureResource {
             int[] mipmaps = ((JSONArray) propertiesJson.getOrDefault("mipmaps", new JSONArray())).stream().mapToInt(each -> ((Number) each).intValue()).toArray();
             properties = new TextureProperties(blur, clamp, mipmaps);
         }
-        return new TextureMeta(manager, resourceKey, file, animation, properties);
+        TextureGui gui = null;
+        if (rootJson.containsKey("gui")) {
+            TextureGui.Scaling<?> scaling = null;
+            JSONObject guiJson = (JSONObject) rootJson.get("gui");
+            if (guiJson.containsKey("scaling")) {
+                JSONObject scalingJson = (JSONObject) guiJson.get("scaling");
+                String type = (String) scalingJson.get("type");
+                switch (type) {
+                    case "stretch": {
+                        scaling = new TextureGui.Scaling<>(TextureGui.ScalingType.STRETCH, new TextureGui.StretchScalingProperty());
+                        break;
+                    }
+                    case "tile": {
+                        int width = ((Number) scalingJson.get("width")).intValue();
+                        int height = ((Number) scalingJson.get("height")).intValue();
+                        scaling = new TextureGui.Scaling<>(TextureGui.ScalingType.TILE, new TextureGui.TileScalingProperty(width, height));
+                        break;
+                    }
+                    case "nine_slice": {
+                        int width = ((Number) scalingJson.get("width")).intValue();
+                        int height = ((Number) scalingJson.get("height")).intValue();
+                        int borderLeft;
+                        int borderTop;
+                        int borderRight;
+                        int borderBottom;
+                        Object boarder = scalingJson.get("border");
+                        if (boarder instanceof Number) {
+                            int value = ((Number) boarder).intValue();
+                            borderLeft = value;
+                            borderTop = value;
+                            borderRight = value;
+                            borderBottom = value;
+                        } else if (boarder instanceof JSONObject) {
+                            JSONObject boarderJson = (JSONObject) boarder;
+                            borderLeft = ((Number) scalingJson.get("left")).intValue();
+                            borderTop = ((Number) scalingJson.get("top")).intValue();
+                            borderRight = ((Number) scalingJson.get("right")).intValue();
+                            borderBottom = ((Number) scalingJson.get("bottom")).intValue();
+                        } else {
+                            throw new IllegalArgumentException("Invalid type for boarder properties \"" + boarder.getClass() + "\"");
+                        }
+                        scaling = new TextureGui.Scaling<>(TextureGui.ScalingType.NINE_SLICE, new TextureGui.NineSliceScalingProperty(width, height, borderLeft, borderTop, borderRight, borderBottom));
+                        break;
+                    }
+                }
+            }
+            gui = new TextureGui(scaling);
+        }
+        return new TextureMeta(manager, resourceKey, file, animation, properties, gui);
     }
 
-    private TextureAnimation animation;
-    private TextureProperties properties;
+    private final TextureAnimation animation;
+    private final TextureProperties properties;
+    private final TextureGui gui;
 
-    public TextureMeta(ITextureManager manager, String resourceKey, ResourcePackFile file, TextureAnimation animation, TextureProperties properties) {
+    public TextureMeta(ITextureManager manager, String resourceKey, ResourcePackFile file, TextureAnimation animation, TextureProperties properties, TextureGui gui) {
         super(manager, resourceKey, file, false, null);
         this.animation = animation;
         this.properties = properties;
+        this.gui = gui;
     }
 
     public TextureAnimation getAnimation() {
@@ -78,12 +128,20 @@ public class TextureMeta extends TextureResource {
         return properties;
     }
 
+    public TextureGui getGui() {
+        return gui;
+    }
+
     public boolean hasAnimation() {
         return animation != null;
     }
 
     public boolean hasProperties() {
         return properties != null;
+    }
+
+    public boolean hasGui() {
+        return gui != null;
     }
 
     @Override

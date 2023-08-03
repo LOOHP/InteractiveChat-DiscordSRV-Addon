@@ -62,6 +62,7 @@ import java.util.stream.IntStream;
 
 public class ResourceManager implements AutoCloseable {
 
+    private final int nativeServerPackFormat;
     private final List<ResourcePackInfo> resourcePackInfo;
 
     private final Map<String, IResourceRegistry> resourceRegistries;
@@ -79,7 +80,9 @@ public class ResourceManager implements AutoCloseable {
     private final AtomicBoolean isValid;
     private final UUID uuid;
 
-    public ResourceManager(Collection<ModManagerSupplier<?>> modManagerProviders, Collection<ResourceRegistrySupplier<?>> resourceManagerUtilsProviders, BiFunction<File, ResourcePackType, DefaultResourcePackInfo> defaultResourcePackInfoFunction, Flag... flags) {
+    public ResourceManager(int nativeServerPackFormat, Collection<ModManagerSupplier<?>> modManagerProviders, Collection<ResourceRegistrySupplier<?>> resourceManagerUtilsProviders, BiFunction<File, ResourcePackType, DefaultResourcePackInfo> defaultResourcePackInfoFunction, Flag... flags) {
+        this.nativeServerPackFormat = nativeServerPackFormat;
+
         this.resourcePackInfo = new ArrayList<>();
         this.defaultResourcePackInfoFunction = defaultResourcePackInfoFunction;
 
@@ -106,8 +109,8 @@ public class ResourceManager implements AutoCloseable {
         }
     }
 
-    public ResourceManager(Collection<ModManagerSupplier<?>> modManagerProviders, Collection<ResourceRegistrySupplier<?>> resourceManagerUtilsProviders, int defaultResourcePackVersion, Flag... flags) {
-        this(modManagerProviders, resourceManagerUtilsProviders, (resourcePackFile, type) -> {
+    public ResourceManager(int nativeServerPackFormat, Collection<ModManagerSupplier<?>> modManagerProviders, Collection<ResourceRegistrySupplier<?>> resourceManagerUtilsProviders, PackFormat defaultResourcePackVersion, Flag... flags) {
+        this(nativeServerPackFormat, modManagerProviders, resourceManagerUtilsProviders, (resourcePackFile, type) -> {
             return new ResourceManager.DefaultResourcePackInfo(Component.text(resourcePackFile.getName()), defaultResourcePackVersion, Component.text("The default look and feel of Minecraft (Modified by LOOHP)"));
         }, flags);
     }
@@ -161,9 +164,10 @@ public class ResourceManager implements AutoCloseable {
             return info;
         }
 
-        int format;
+        PackFormat format;
         Component description = null;
         Map<String, LanguageMeta> languageMeta = new HashMap<>();
+        List<PackOverlay> overlays = new ArrayList<>();
         List<ResourceFilterBlock> resourceFilterBlocks;
         try {
             JSONObject packJson = (JSONObject) json.get("pack");
@@ -172,7 +176,24 @@ public class ResourceManager implements AutoCloseable {
                 format = defaultResourcePackInfo.getVersion();
                 description = defaultResourcePackInfo.getDescription();
             } else {
-                format = ((Number) packJson.get("pack_format")).intValue();
+                int majorFormat = ((Number) packJson.get("pack_format")).intValue();
+                if (packJson.containsKey("supported_formats")) {
+                    Object supportedFormatsObj = packJson.get("supported_formats");
+                    if (supportedFormatsObj instanceof Number) {
+                        int supportedFormat = ((Number) supportedFormatsObj).intValue();
+                        format = PackFormat.version(majorFormat, supportedFormat, supportedFormat);
+                    } else if (supportedFormatsObj instanceof JSONArray) {
+                        JSONArray supportedFormats = (JSONArray) supportedFormatsObj;
+                        format = PackFormat.version(majorFormat, ((Number) supportedFormats.get(0)).intValue(), ((Number) supportedFormats.get(1)).intValue());
+                    } else if (supportedFormatsObj instanceof JSONObject) {
+                        JSONObject supportedFormats = (JSONObject) supportedFormatsObj;
+                        format = PackFormat.version(majorFormat, ((Number) supportedFormats.get("min_inclusive")).intValue(), ((Number) supportedFormats.get("max_inclusive")).intValue());
+                    } else {
+                        throw new IllegalArgumentException("Don't know how to read supported_formats " + supportedFormatsObj);
+                    }
+                } else {
+                    format = PackFormat.version(majorFormat);
+                }
                 Object descriptionObj = packJson.get("description");
                 if (descriptionObj instanceof JSONObject) {
                     String descriptionJson = new GsonBuilder().create().toJson(descriptionObj);
@@ -208,6 +229,32 @@ public class ResourceManager implements AutoCloseable {
                 }
             }
 
+            JSONObject overlaysJson = (JSONObject) json.get("overlays");
+            if (overlaysJson != null) {
+                JSONArray entriesArray = (JSONArray) overlaysJson.get("entries");
+                for (Object obj : entriesArray) {
+                    JSONObject entry = (JSONObject) obj;
+
+                    PackFormat overlayFormat;
+                    Object formatsObj = entry.get("formats");
+                    if (formatsObj instanceof Number) {
+                        int supportedFormat = ((Number) formatsObj).intValue();
+                        overlayFormat = PackFormat.version(supportedFormat, supportedFormat);
+                    } else if (formatsObj instanceof JSONArray) {
+                        JSONArray supportedFormats = (JSONArray) formatsObj;
+                        overlayFormat = PackFormat.version(((Number) supportedFormats.get(0)).intValue(), ((Number) supportedFormats.get(1)).intValue());
+                    } else if (formatsObj instanceof JSONObject) {
+                        JSONObject supportedFormats = (JSONObject) formatsObj;
+                        overlayFormat = PackFormat.version(((Number) supportedFormats.get("min_inclusive")).intValue(), ((Number) supportedFormats.get("max_inclusive")).intValue());
+                    } else {
+                        throw new IllegalArgumentException("Don't know how to read supported_formats " + formatsObj);
+                    }
+
+                    String directory = (String) entry.get("directory");
+                    overlays.add(0, new PackOverlay(overlayFormat, directory));
+                }
+            }
+
             JSONObject filterJson = (JSONObject) json.get("filter");
             JSONArray filterBlockArray;
             if (filterJson != null && (filterBlockArray = (JSONArray) filterJson.get("block")) != null) {
@@ -234,16 +281,37 @@ public class ResourceManager implements AutoCloseable {
         ResourcePackFile assetsFolder = resourcePack.getChild("assets");
         Map<String, TextureAtlases> textureAtlases = loadAtlases(assetsFolder);
 
-        ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, true, null, format, description, languageMeta, icon, resourceFilterBlocks, textureAtlases);
+        for (PackOverlay overlay : overlays) {
+            if (overlay.getFormats().isCompatible(nativeServerPackFormat)) {
+                ResourcePackFile overlayAssetsFolder = resourcePack.getChild(overlay.getDirectory()).getChild("assets");
+                Map<String, TextureAtlases> overlayTextureAtlases = loadAtlases(overlayAssetsFolder);
+                for (Map.Entry<String, TextureAtlases> entry : overlayTextureAtlases.entrySet()) {
+                    String namespace = entry.getKey();
+                    TextureAtlases atlases = textureAtlases.get(namespace);
+                    if (atlases == null) {
+                        textureAtlases.put(namespace, entry.getValue());
+                    } else {
+                        textureAtlases.put(namespace, atlases.merge(entry.getValue()));
+                    }
+                }
+            }
+        }
+
+        ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, true, null, format, description, languageMeta, icon, resourceFilterBlocks, textureAtlases, overlays);
         resourcePackInfo.add(0, info);
 
         try {
             filterResources(resourceFilterBlocks);
             loadAssets(assetsFolder, languageMeta, textureAtlases);
+            for (PackOverlay overlay : overlays) {
+                if (overlay.getFormats().isCompatible(nativeServerPackFormat)) {
+                    loadAssets(resourcePack.getChild(overlay.getDirectory()).getChild("assets"), languageMeta, textureAtlases);
+                }
+            }
         } catch (Exception e) {
             new ResourceLoadingException("Unable to load assets for " + resourcePackNameStr, e).printStackTrace();
             resourcePackInfo.remove(0);
-            info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, false, "Unable to load assets", format, description, languageMeta, icon, resourceFilterBlocks, textureAtlases);
+            info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, false, "Unable to load assets", format, description, languageMeta, icon, resourceFilterBlocks, textureAtlases, overlays);
             resourcePackInfo.add(0, info);
             return info;
         }
@@ -362,6 +430,10 @@ public class ResourceManager implements AutoCloseable {
 
     public List<ResourcePackInfo> getResourcePackInfo() {
         return Collections.unmodifiableList(resourcePackInfo);
+    }
+
+    public int getNativeServerPackFormat() {
+        return nativeServerPackFormat;
     }
 
     public ModelManager getModelManager() {
@@ -515,10 +587,10 @@ public class ResourceManager implements AutoCloseable {
     public static class DefaultResourcePackInfo {
 
         private final Component name;
-        private final int version;
+        private final PackFormat version;
         private final Component description;
 
-        public DefaultResourcePackInfo(Component name, int version, Component description) {
+        public DefaultResourcePackInfo(Component name, PackFormat version, Component description) {
             this.name = name;
             this.version = version;
             this.description = description;
@@ -528,7 +600,7 @@ public class ResourceManager implements AutoCloseable {
             return name;
         }
 
-        public int getVersion() {
+        public PackFormat getVersion() {
             return version;
         }
 

@@ -103,9 +103,24 @@ public class TextureResource {
     }
 
     public BufferedImage getTexture(int w, int h) {
+        return getTexture(w, h, false);
+    }
+
+    public BufferedImage getTexture(int w, int h, boolean clearAnimation) {
         BufferedImage image = loadImage();
         if (imageTransformFunction != null) {
             image = imageTransformFunction.apply(image);
+        }
+        if (clearAnimation && hasTextureMeta()) {
+            TextureMeta meta = getTextureMeta();
+            if (meta.hasAnimation()) {
+                TextureAnimation animation = meta.getAnimation();
+                if (animation.hasWidth() && animation.hasHeight()) {
+                    image = ImageUtils.copyAndGetSubImage(image, 0, 0, animation.getWidth(), animation.getHeight());
+                } else {
+                    image = ImageUtils.copyAndGetSubImage(image, 0, 0, image.getWidth(), image.getWidth());
+                }
+            }
         }
         if (image.getWidth() != w || image.getHeight() != h) {
             image = ImageUtils.resizeImageAbs(image, w, h);
@@ -116,9 +131,24 @@ public class TextureResource {
     }
 
     public BufferedImage getTexture() {
+        return getTexture(false);
+    }
+
+    public BufferedImage getTexture(boolean clearAnimation) {
         BufferedImage image = loadImage();
         if (imageTransformFunction != null) {
             image = imageTransformFunction.apply(image);
+        }
+        if (clearAnimation && hasTextureMeta()) {
+            TextureMeta meta = getTextureMeta();
+            if (meta.hasAnimation()) {
+                TextureAnimation animation = meta.getAnimation();
+                if (animation.hasWidth() && animation.hasHeight()) {
+                    image = ImageUtils.copyAndGetSubImage(image, 0, 0, animation.getWidth(), animation.getHeight());
+                } else {
+                    image = ImageUtils.copyAndGetSubImage(image, 0, 0, image.getWidth(), image.getWidth());
+                }
+            }
         }
         return ImageUtils.copyImage(image);
     }

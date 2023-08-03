@@ -32,6 +32,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ICacheManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RawEnchantmentGlintData;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RenderResult;
+import com.loohp.interactivechatdiscordsrvaddon.resources.PackFormat;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackType;
@@ -593,7 +594,7 @@ public class BlockModelRenderer extends JFrame {
                 int packFormat = GUIMain.getDefaultPackVersion((Integer) defaultPackVersionSpinner.getValue());
                 defaultPackVersionSpinner.setValue(packFormat);
 
-                resourceManager = new ResourceManager(Collections.emptyList(), Collections.singletonList(ICacheManager.getDummySupplier()), packFormat);
+                resourceManager = new ResourceManager(packFormat, Collections.emptyList(), Collections.singletonList(ICacheManager.getDummySupplier()), PackFormat.version(packFormat));
                 resourceManager.loadResources(new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN, true);
                 resourceBar.setValue(valuePerPack);
                 for (String resourceName : resourceOrder) {

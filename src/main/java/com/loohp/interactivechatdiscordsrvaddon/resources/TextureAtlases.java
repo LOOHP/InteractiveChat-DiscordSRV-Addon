@@ -149,6 +149,12 @@ public class TextureAtlases {
         return textureAtlases.values().stream().flatMap(each -> each.stream()).collect(Collectors.toList());
     }
 
+    public TextureAtlases merge(TextureAtlases other) {
+        Map<TextureAtlasType, List<TextureAtlasSource>> textureAtlases = new HashMap<>(this.textureAtlases);
+        textureAtlases.putAll(other.getTextureAtlases());
+        return new TextureAtlases(textureAtlases);
+    }
+
     public static final class TextureAtlasType {
 
         public static final TextureAtlasType BLOCKS = new TextureAtlasType("blocks");
