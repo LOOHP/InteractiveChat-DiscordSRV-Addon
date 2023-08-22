@@ -49,7 +49,6 @@ public class ResourceRegistry {
     public static final String BANNER_TEXTURE_LOCATION = "minecraft:entity/banner/";
     public static final String SHIELD_TEXTURE_LOCATION = "minecraft:entity/shield/";
     public static final String ITEM_TEXTURE_LOCATION;
-    public static final String ARMOR_TEXTURE_LOCATION = "minecraft:models/armor/";
     public static final String BLOCK_TEXTURE_LOCATION;
     public static final String ENTITY_TEXTURE_LOCATION = "minecraft:entity/";
     public static final String MISC_TEXTURE_LOCATION = "minecraft:misc/";
@@ -60,10 +59,12 @@ public class ResourceRegistry {
     public static final String IC_GUI_TEXTURE_LOCATION = ICD_PREFIX + "gui/";
     public static final String IC_MISC_TEXTURE_LOCATION = ICD_PREFIX + "misc/";
 
+    public static final String ARMOR_TEXTURE_LOCATION = "models/armor/";
+
     public static final String IC_OLD_BASE_BLOCK_MODEL = ICD_PREFIX + "block/block";
     public static final String IC_OLD_BASE_ITEM_MODEL = ICD_PREFIX + "item/generated";
 
-    public static final String ITEM_MODEL_LOCATION = "minecraft:item/";
+    public static final String ITEM_MODEL_LOCATION = "item/";
     public static final String BUILTIN_ENTITY_MODEL_LOCATION = ICD_PREFIX + "builtin_entity/";
 
     public static final String ENCHANTMENT_GLINT_ENTITY_LOCATION = ResourceRegistry.MISC_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION < 13 ? "enchanted_item_glint" : "enchanted_glint_entity");

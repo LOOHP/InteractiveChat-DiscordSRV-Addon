@@ -145,7 +145,7 @@ public class ItemRenderUtils {
             requiresEnchantmentGlint = true;
         } else if (icMaterial.isMaterial(XMaterial.ENCHANTED_BOOK)) {
             requiresEnchantmentGlint = true;
-        } else if (item.getEnchantments().size() > 0) {
+        } else if (!item.getEnchantments().isEmpty()) {
             requiresEnchantmentGlint = true;
         }
 
@@ -534,7 +534,12 @@ public class ItemRenderUtils {
             }
         }
 
-        String modelKey = directLocation == null ? ResourceRegistry.ITEM_MODEL_LOCATION + ModelUtils.getItemModelKey(icMaterial) : directLocation;
+        String modelKey;
+        if (directLocation == null) {
+            modelKey = ModelUtils.getNamespace(icMaterial) + ":" + ResourceRegistry.ITEM_MODEL_LOCATION + ModelUtils.getItemModelKey(icMaterial);
+        } else {
+            modelKey = directLocation;
+        }
 
         Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction = manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, slot, item, is1_8, predicates, player, world, livingEntity, manager.getLanguageManager().getTranslateFunction().ofLanguage(language)).orElse(null);
 

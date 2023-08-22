@@ -22,12 +22,18 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.textures;
 
 import com.loohp.interactivechatdiscordsrvaddon.resources.IAbstractManager;
 
+import java.util.Optional;
+
 public interface ITextureManager extends IAbstractManager {
 
     TextureResource getMissingTexture();
 
     default TextureResource getTexture(String resourceLocation) {
         return getTexture(resourceLocation, true);
+    }
+
+    default Optional<TextureResource> getOptionalTexture(String resourceLocation) {
+        return Optional.ofNullable(getTexture(resourceLocation, false));
     }
 
     TextureResource getTexture(String resourceLocation, boolean returnMissingTexture);

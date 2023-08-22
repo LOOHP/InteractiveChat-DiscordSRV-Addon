@@ -28,8 +28,11 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.ChatColorUtils;
+import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelFace.ModelFaceSide;
+import org.bukkit.Material;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -251,6 +254,17 @@ public class ModelUtils {
         LEGACY_MODEL_NAME.put("ZOMBIE_VILLAGER_SPAWN_EGG", "spawn_egg");
     }
 
+    public static String getNamespace(ICMaterial icMaterial) {
+        if (InteractiveChat.version.isOlderThan(MCVersion.V1_14)) {
+            return ResourceRegistry.DEFAULT_NAMESPACE;
+        }
+        Material material = icMaterial.parseMaterial();
+        if (material == null) {
+            return ResourceRegistry.DEFAULT_NAMESPACE;
+        }
+        return material.getKey().getNamespace();
+    }
+
     public static String getItemModelKey(ICMaterial icMaterial) {
         if (InteractiveChat.version.isLegacy()) {
             String legacyKey = LEGACY_MODEL_NAME.get(icMaterial.name());
@@ -258,7 +272,14 @@ public class ModelUtils {
                 return legacyKey.toLowerCase();
             }
         }
-        return icMaterial.name().toLowerCase();
+        if (InteractiveChat.version.isOlderThan(MCVersion.V1_14)) {
+            return icMaterial.name().toLowerCase();
+        }
+        Material material = icMaterial.parseMaterial();
+        if (material == null) {
+            return icMaterial.name().toLowerCase();
+        }
+        return material.getKey().getKey();
     }
 
     public static BufferedImage convertToModernSkinTexture(BufferedImage skin) {
