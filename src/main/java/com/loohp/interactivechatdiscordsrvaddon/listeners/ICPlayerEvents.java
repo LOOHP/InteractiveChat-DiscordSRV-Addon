@@ -73,31 +73,33 @@ public class ICPlayerEvents implements Listener {
         }
         Map<String, Object> cachedProperties = CACHED_PROPERTIES.get(player.getUniqueId());
         if (cachedProperties == null) {
-            cachedProperties = new HashMap<>();
-            JSONObject json = HTTPRequestUtils.getJSONResponse(PROFILE_URL.replace("%s", player.getName()));
-            if (json != null && json.containsKey("properties")) {
-                JSONObject properties = (JSONObject) json.get("properties");
-                for (Object obj : properties.keySet()) {
-                    try {
-                        String key = (String) obj;
-                        String value = (String) properties.get(key);
-                        if (value.endsWith(".png")) {
-                            BufferedImage image = ImageUtils.downloadImage(value);
-                            player.addProperties(key, image);
-                            cachedProperties.put(key, image);
-                        } else if (value.endsWith(".bin")) {
-                            byte[] data = HTTPRequestUtils.download(value);
-                            player.addProperties(key, data);
-                            cachedProperties.put(key, data);
-                        } else {
-                            player.addProperties(key, value);
-                            cachedProperties.put(key, value);
+            if (player.getName() != null) {
+                cachedProperties = new HashMap<>();
+                JSONObject json = HTTPRequestUtils.getJSONResponse(PROFILE_URL.replace("%s", player.getName()));
+                if (json != null && json.containsKey("properties")) {
+                    JSONObject properties = (JSONObject) json.get("properties");
+                    for (Object obj : properties.keySet()) {
+                        try {
+                            String key = (String) obj;
+                            String value = (String) properties.get(key);
+                            if (value.endsWith(".png")) {
+                                BufferedImage image = ImageUtils.downloadImage(value);
+                                player.addProperties(key, image);
+                                cachedProperties.put(key, image);
+                            } else if (value.endsWith(".bin")) {
+                                byte[] data = HTTPRequestUtils.download(value);
+                                player.addProperties(key, data);
+                                cachedProperties.put(key, data);
+                            } else {
+                                player.addProperties(key, value);
+                                cachedProperties.put(key, value);
+                            }
+                        } catch (Exception ignore) {
                         }
-                    } catch (Exception ignore) {
                     }
                 }
+                CACHED_PROPERTIES.put(player.getUniqueId(), cachedProperties);
             }
-            CACHED_PROPERTIES.put(player.getUniqueId(), cachedProperties);
         } else {
             for (Entry<String, Object> entry : cachedProperties.entrySet()) {
                 player.addProperties(entry.getKey(), entry.getValue());

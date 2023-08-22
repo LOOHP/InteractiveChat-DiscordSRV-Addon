@@ -50,7 +50,6 @@ import java.util.stream.Collectors;
 
 public class TextureManager extends AbstractManager implements ITextureManager {
 
-    public static final String SKIN_REQUIRED = "interactivechatdiscordsrvaddon/skin";
     private static final Color MISSING_TEXTURE_0 = new Color(0, 0, 0);
     private static final Color MISSING_TEXTURE_1 = new Color(248, 0, 248);
 
