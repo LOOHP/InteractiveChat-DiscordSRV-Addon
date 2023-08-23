@@ -23,6 +23,7 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.NMSUtils;
+import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
@@ -98,7 +99,7 @@ public class ArmorUtils {
                 if (NBTEditor.contains(armorItem, "display", "color")) {
                     color = NBTEditor.getInt(armorItem, "display", "color");
                 } else {
-                    color = 10511680;
+                    color = ResourceRegistry.DEFAULT_DYE_COLOR;
                 }
                 return ArmorTextureResult.result(namespace, base, base + "_overlay", color);
             } else {

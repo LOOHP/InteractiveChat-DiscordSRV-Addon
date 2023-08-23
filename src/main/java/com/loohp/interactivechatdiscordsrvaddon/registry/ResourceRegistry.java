@@ -106,4 +106,6 @@ public class ResourceRegistry {
     public static final int ENDER_PEARL_COOLDOWN = 20;
     public static final int CHORUS_FRUIT_COOLDOWN = 20;
 
+    public static final int DEFAULT_DYE_COLOR = 10511680;
+
 }

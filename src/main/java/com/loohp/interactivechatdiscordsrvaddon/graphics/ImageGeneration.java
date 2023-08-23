@@ -734,7 +734,7 @@ public class ImageGeneration {
                 }
                 providedTextures.put(ResourceRegistry.HELMET_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(resourceManager.get(), helmetImage));
             }
-        } else if (!helmet.getType().equals(Material.AIR)) {
+        } else if (helmet != null && !helmet.getType().equals(Material.AIR)) {
             ItemStackProcessResult itemProcessResult = ItemRenderUtils.processItemForRendering(resourceManager.get(), player, helmet, EquipmentSlot.HEAD, version.get().isOld(), language.get());
             boolean enchanted = itemProcessResult.requiresEnchantmentGlint();
             Map<ModelOverrideType, Float> predicate = itemProcessResult.getPredicates();
