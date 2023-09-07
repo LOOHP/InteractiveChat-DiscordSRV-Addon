@@ -532,7 +532,7 @@ public class ImageUtils {
         return result;
     }
 
-    public static BufferedImage printComponentShadowlessDynamicSize(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int centerX, int topY, float fontSize, boolean dynamicFontSize) {
+    public static ComponentPrintResult printComponentShadowlessDynamicSize(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int centerX, int topY, float fontSize, boolean dynamicFontSize) {
         Component text = ComponentFlattening.flatten(ComponentStringUtils.resolve(ComponentModernizing.modernize(component), manager.getLanguageManager().getTranslateFunction().ofLanguage(language)));
         String striped = ChatColorUtils.stripColor(ChatColorUtils.filterIllegalColorCodes(PlainTextComponentSerializer.plainText().serialize(text)));
 
@@ -547,6 +547,7 @@ public class ImageUtils {
 
         int x = centerX;
         int lastItalicExtraWidth = 0;
+        int lastSpaceWidth = 0;
         int height = 0;
         String character = null;
         for (int i = 0; i < data.size(); i++) {
@@ -566,7 +567,7 @@ public class ImageUtils {
             MinecraftFont fontProvider = manager.getFontManager().getFontProviders(characterData.getFont()).forCharacter(character);
             FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, characterData.getColor(), characterData.getDecorations());
             textImage = result.getImage();
-            x += result.getWidth() + result.getSpaceWidth();
+            x += result.getWidth() + (lastSpaceWidth = result.getSpaceWidth());
             lastItalicExtraWidth = result.getItalicExtraWidth();
             if (height < result.getHeight()) {
                 height = result.getHeight();
@@ -590,16 +591,17 @@ public class ImageUtils {
         g3.drawImage(background, 0, 0, null);
         g3.drawImage(textImage, x - centerX, (int) (y - (height / 5) + Math.max(1, 1 * (fontSize / 8))) - image.getHeight(), null);
         g3.dispose();
-        return image;
+        return new ComponentPrintResult(image, x - lastSpaceWidth);
     }
 
-    public static BufferedImage printComponentRightAligned(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize) {
+    public static ComponentPrintResult printComponentRightAligned(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize) {
         return printComponentRightAligned(manager, image, component, language, legacyRGB, topX, topY, fontSize, CHAT_COLOR_BACKGROUND_FACTOR);
     }
 
-    public static BufferedImage printComponentRightAligned(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize, double shadowFactor) {
+    public static ComponentPrintResult printComponentRightAligned(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize, double shadowFactor) {
         BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        textImage = printComponent(manager, textImage, component, language, legacyRGB, 0, 0, fontSize, shadowFactor);
+        ComponentPrintResult printResult = printComponent(manager, textImage, component, language, legacyRGB, 0, 0, fontSize, shadowFactor);
+        textImage = printResult.getImage();
         int lastX = 0;
         for (int x = 0; x < textImage.getWidth() - 9; x++) {
             for (int y = 0; y < textImage.getHeight(); y++) {
@@ -612,12 +614,13 @@ public class ImageUtils {
         Graphics2D g = image.createGraphics();
         g.drawImage(textImage, topX - lastX, topY, null);
         g.dispose();
-        return image;
+        return new ComponentPrintResult(image, printResult.getTextWidth());
     }
 
-    public static BufferedImage printComponentGlowing(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize) {
+    public static ComponentPrintResult printComponentGlowing(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize) {
         BufferedImage temp = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        temp = printComponent0(manager, temp, component, language, legacyRGB, topX, topY, fontSize, 1);
+        ComponentPrintResult printResult = printComponent0(manager, temp, component, language, legacyRGB, topX, topY, fontSize, 1);
+        temp = printResult.getImage();
         Graphics2D g = image.createGraphics();
         BufferedImage shadow = transformRGB(copyImage(temp), (x, y, color) -> {
             int alpha = getAlpha(color);
@@ -641,20 +644,21 @@ public class ImageUtils {
         }
         g.drawImage(temp, 0, 0, null);
         g.dispose();
-        return image;
+        return new ComponentPrintResult(image, printResult.getTextWidth());
     }
 
-    public static BufferedImage printComponentShadowless(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize) {
+    public static ComponentPrintResult printComponentShadowless(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize) {
         return printComponent0(manager, image, component, language, legacyRGB, topX, topY, fontSize, 1);
     }
 
-    public static BufferedImage printComponent(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize) {
+    public static ComponentPrintResult printComponent(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize) {
         return printComponent(manager, image, component, language, legacyRGB, topX, topY, fontSize, CHAT_COLOR_BACKGROUND_FACTOR);
     }
 
-    public static BufferedImage printComponent(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize, double shadowFactor) {
+    public static ComponentPrintResult printComponent(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize, double shadowFactor) {
         BufferedImage temp = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        temp = printComponent0(manager, temp, component, language, legacyRGB, topX, topY, fontSize, 1);
+        ComponentPrintResult printResult = printComponent0(manager, temp, component, language, legacyRGB, topX, topY, fontSize, 1);
+        temp = printResult.getImage();
         Graphics2D g = image.createGraphics();
         if (shadowFactor != 0) {
             BufferedImage shadow = multiply(copyImage(temp), shadowFactor);
@@ -662,10 +666,10 @@ public class ImageUtils {
         }
         g.drawImage(temp, 0, 0, null);
         g.dispose();
-        return image;
+        return new ComponentPrintResult(image, printResult.getTextWidth());
     }
 
-    private static BufferedImage printComponent0(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize, double factor) {
+    private static ComponentPrintResult printComponent0(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize, double factor) {
         Component text = ComponentFlattening.flatten(ComponentStringUtils.resolve(ComponentModernizing.modernize(component), manager.getLanguageManager().getTranslateFunction().ofLanguage(language)));
 
         BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
@@ -674,6 +678,7 @@ public class ImageUtils {
 
         int x = topX;
         int lastItalicExtraWidth = 0;
+        int lastSpaceWidth = 0;
         String character = null;
         for (int i = 0; i < data.size(); i++) {
             CharObjectPair<CharacterData> pair = data.get(i);
@@ -692,14 +697,33 @@ public class ImageUtils {
             MinecraftFont fontProvider = manager.getFontManager().getFontProviders(characterData.getFont()).forCharacter(character);
             FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, characterData.getColor(), characterData.getDecorations());
             textImage = result.getImage();
-            x += result.getWidth() + result.getSpaceWidth();
+            x += result.getWidth() + (lastSpaceWidth = result.getSpaceWidth());
             lastItalicExtraWidth = result.getItalicExtraWidth();
             character = null;
         }
         Graphics2D g = image.createGraphics();
         g.drawImage(textImage, 0, topY - image.getHeight(), null);
         g.dispose();
-        return image;
+        return new ComponentPrintResult(image, x - lastSpaceWidth);
+    }
+
+    public static class ComponentPrintResult {
+
+        private final BufferedImage image;
+        private final int textWidth;
+
+        public ComponentPrintResult(BufferedImage image, int textWidth) {
+            this.image = image;
+            this.textWidth = textWidth;
+        }
+
+        public BufferedImage getImage() {
+            return image;
+        }
+
+        public int getTextWidth() {
+            return textWidth;
+        }
     }
 
 }

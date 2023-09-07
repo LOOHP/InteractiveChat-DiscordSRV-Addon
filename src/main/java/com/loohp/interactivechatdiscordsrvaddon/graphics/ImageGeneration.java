@@ -285,7 +285,7 @@ public class ImageGeneration {
         int rows = inventory.getSize() / 9;
         GenericContainerBackgroundResult result = getGenericContainerBackground(rows, (image, x, y, fontSize, defaultTextColor) -> {
             Component defaultColorTitle = title == null ? Component.translatable(TranslationKeyUtils.getDefaultContainerTitle()).color(defaultTextColor) : title.colorIfAbsent(defaultTextColor);
-            return ImageUtils.printComponentShadowless(resourceManager.get(), image, defaultColorTitle, InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), x, y, fontSize);
+            return ImageUtils.printComponentShadowless(resourceManager.get(), image, defaultColorTitle, InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), x, y, fontSize).getImage();
         });
         BufferedImage background = result.getBackgroundImage();
 
@@ -869,7 +869,7 @@ public class ImageGeneration {
             if (amount <= 0) {
                 component = component.color(NamedTextColor.RED);
             }
-            newItemImage = ImageUtils.printComponentRightAligned(resourceManager.get(), newItemImage, component, InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), (int) Math.round(33 * scale), (int) Math.round(17 * scale), (float) (16 * scale), ITEM_AMOUNT_TEXT_DARKEN_FACTOR);
+            newItemImage = ImageUtils.printComponentRightAligned(resourceManager.get(), newItemImage, component, InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), (int) Math.round(33 * scale), (int) Math.round(17 * scale), (float) (16 * scale), ITEM_AMOUNT_TEXT_DARKEN_FACTOR).getImage();
             g4.dispose();
             itemImage = newItemImage;
         }
@@ -1035,17 +1035,22 @@ public class ImageGeneration {
             } else {
                 return 0;
             }
-        }).sum() + 15;
+        }).sum() + 415;
 
         BufferedImage image = new BufferedImage(2240, requiredHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
 
         int topX = image.getWidth() / 5 * 2;
-        int currentY = 8;
+        int maxX = 0;
+        int currentY = 208;
         for (ToolTipComponent<?> print : prints) {
             ToolTipType<?> type = print.getType();
             if (type.equals(ToolTipType.TEXT)) {
-                ImageUtils.printComponent(resourceManager.get(), image, print.getToolTipComponent(ToolTipType.TEXT), InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), topX + 8, currentY, 16);
+                ImageUtils.ComponentPrintResult printResult = ImageUtils.printComponent(resourceManager.get(), image, print.getToolTipComponent(ToolTipType.TEXT), InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), topX + 8, currentY, 16);
+                int textWidth = printResult.getTextWidth();
+                if (textWidth > maxX) {
+                    maxX = textWidth;
+                }
                 currentY += 20;
             } else if (type.equals(ToolTipType.IMAGE)) {
                 currentY += 5;
@@ -1066,7 +1071,6 @@ public class ImageGeneration {
                 }
             }
         }
-
         int lastX = 0;
         for (int x = firstX; x < image.getWidth() - 9; x++) {
             for (int y = 0; y < image.getHeight(); y++) {
@@ -1076,10 +1080,30 @@ public class ImageGeneration {
                 }
             }
         }
-
         firstX = Math.max(0, firstX - 8);
 
-        BufferedImage background = new BufferedImage(lastX - topX + 9, image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        int firstY = 0;
+        outer:
+        for (int y = 0; y < image.getHeight() - 9; y++) {
+            for (int x = firstX; x <= lastX; x++) {
+                if (image.getRGB(x, y) != 0) {
+                    firstY = y;
+                    break outer;
+                }
+            }
+        }
+        int lastY = 0;
+        for (int y = firstY; y < image.getHeight() - 9; y++) {
+            for (int x = firstX; x <= lastX; x++) {
+                if (image.getRGB(x, y) != 0) {
+                    lastY = y;
+                    break;
+                }
+            }
+        }
+        firstY = Math.max(0, firstY - 8);
+
+        BufferedImage background = new BufferedImage(maxX + 9, currentY - 191, BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D g2 = background.createGraphics();
         g2.setColor(TOOLTIP_BACKGROUND_COLOR);
@@ -1097,10 +1121,10 @@ public class ImageGeneration {
         g2.dispose();
 
         int offsetX = Math.max(topX - firstX, 0);
-        BufferedImage output = new BufferedImage(offsetX + background.getWidth(), background.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        BufferedImage output = new BufferedImage(offsetX + lastX - topX + 9, lastY - firstY + 9, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g3 = output.createGraphics();
-        g3.drawImage(background, offsetX, 0, null);
-        g3.drawImage(image, -firstX, 0, null);
+        g3.drawImage(background, offsetX, 200 - firstY, null);
+        g3.drawImage(image, -firstX, -firstY, null);
         g3.dispose();
 
         return output;

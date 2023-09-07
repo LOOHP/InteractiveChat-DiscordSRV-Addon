@@ -230,8 +230,8 @@ public class BitmapFont extends MinecraftFont {
         if (sign > 0) {
             g.drawImage(charImage, x + extraWidth, (int) (y - ascent * scale), null);
         } else {
-            g.drawImage(ImageUtils.flipVertically(charImage), x + extraWidth, y, -w, -h, null);
-            spaceWidth = (int) Math.ceil(spaceWidth + accuratePixelSize * 8) + 1;
+            g.drawImage(ImageUtils.flipVertically(charImage), x + extraWidth, (int) (y - ascent * scale), -w, -h, null);
+            spaceWidth += Math.round(2 * scale);
         }
         g.dispose();
         return new FontRenderResult(image, w * sign + extraWidth, h, spaceWidth, italicExtraWidth);
