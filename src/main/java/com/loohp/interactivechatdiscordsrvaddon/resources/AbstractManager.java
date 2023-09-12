@@ -20,9 +20,37 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources;
 
+import com.loohp.interactivechat.libs.com.google.gson.Gson;
+import com.loohp.interactivechat.libs.com.google.gson.GsonBuilder;
+import com.loohp.interactivechat.libs.com.google.gson.JsonObject;
+import com.loohp.interactivechat.libs.com.google.gson.stream.JsonReader;
+import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream;
+import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
+import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
+import com.loohp.interactivechat.libs.org.json.simple.parser.ParseException;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
 public abstract class AbstractManager implements IAbstractManager {
+
+    public static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+
+    public static JSONObject readJSONObject(ResourcePackFile file) throws IOException, ParseException {
+        try (InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8)) {
+            return (JSONObject) new JSONParser().parse(reader);
+        } catch (ParseException e) {
+            try (InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8)) {
+                JsonReader jsonReader = new JsonReader(reader);
+                jsonReader.setLenient(false);
+                JsonObject jsonObject = GSON.getAdapter(JsonObject.class).read(jsonReader);
+                String json = GSON.toJson(jsonObject);
+                return (JSONObject) new JSONParser().parse(json);
+            }
+        }
+    }
 
     protected final ResourceManager manager;
 

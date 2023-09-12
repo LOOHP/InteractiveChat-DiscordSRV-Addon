@@ -20,6 +20,8 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.languages;
 
+import com.loohp.interactivechat.libs.com.google.gson.Gson;
+import com.loohp.interactivechat.libs.com.google.gson.GsonBuilder;
 import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
@@ -45,6 +47,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class LanguageManager extends AbstractManager implements ILanguageManager {
+
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
     public static TranslateFunction defaultTranslateFunction(LanguageManager manager) {
         return (translationKey, language) -> {
@@ -93,9 +97,7 @@ public class LanguageManager extends AbstractManager implements ILanguageManager
             String name = file.getName();
             if (!manager.hasFlag(ResourceManager.Flag.LEGACY_PRE_FLATTEN) && name.endsWith(".json")) {
                 try {
-                    InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
-                    JSONObject json = (JSONObject) parser.parse(reader);
-                    reader.close();
+                    JSONObject json = readJSONObject(file);
                     Map<String, String> mapping = new HashMap<>();
                     for (Object obj : json.keySet()) {
                         try {
