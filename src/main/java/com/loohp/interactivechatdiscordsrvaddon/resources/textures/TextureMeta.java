@@ -83,21 +83,21 @@ public class TextureMeta extends TextureResource {
                         int borderTop;
                         int borderRight;
                         int borderBottom;
-                        Object boarder = scalingJson.get("border");
-                        if (boarder instanceof Number) {
-                            int value = ((Number) boarder).intValue();
+                        Object border = scalingJson.get("border");
+                        if (border instanceof Number) {
+                            int value = ((Number) border).intValue();
                             borderLeft = value;
                             borderTop = value;
                             borderRight = value;
                             borderBottom = value;
-                        } else if (boarder instanceof JSONObject) {
-                            JSONObject boarderJson = (JSONObject) boarder;
-                            borderLeft = ((Number) scalingJson.get("left")).intValue();
-                            borderTop = ((Number) scalingJson.get("top")).intValue();
-                            borderRight = ((Number) scalingJson.get("right")).intValue();
-                            borderBottom = ((Number) scalingJson.get("bottom")).intValue();
+                        } else if (border instanceof JSONObject) {
+                            JSONObject boarderJson = (JSONObject) border;
+                            borderLeft = ((Number) boarderJson.get("left")).intValue();
+                            borderTop = ((Number) boarderJson.get("top")).intValue();
+                            borderRight = ((Number) boarderJson.get("right")).intValue();
+                            borderBottom = ((Number) boarderJson.get("bottom")).intValue();
                         } else {
-                            throw new IllegalArgumentException("Invalid type for boarder properties \"" + boarder.getClass() + "\"");
+                            throw new IllegalArgumentException("Invalid type for boarder properties \"" + border.getClass() + "\"");
                         }
                         scaling = new TextureGui.Scaling<>(TextureGui.ScalingType.NINE_SLICE, new TextureGui.NineSliceScalingProperty(width, height, borderLeft, borderTop, borderRight, borderBottom));
                         break;
