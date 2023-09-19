@@ -39,6 +39,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import com.loohp.interactivechat.modules.InventoryDisplay;
 import com.loohp.interactivechat.modules.ItemDisplay;
+import com.loohp.interactivechat.objectholders.ICInventoryHolder;
 import com.loohp.interactivechat.objectholders.ICPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.ICPlayerFactory;
@@ -162,7 +163,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
     }
 
     private static void layout0(OfflineICPlayer player, String sha1, String title) throws Exception {
-        Inventory inv = Bukkit.createInventory(null, 54, title);
+        Inventory inv = Bukkit.createInventory(ICInventoryHolder.INSTANCE, 54, title);
         int f1 = 0;
         int f2 = 0;
         int u = 45;
@@ -250,7 +251,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
         int selectedSlot = player.getSelectedSlot();
         int level = player.getExperienceLevel();
 
-        Inventory inv = Bukkit.createInventory(null, 54, title);
+        Inventory inv = Bukkit.createInventory(ICInventoryHolder.INSTANCE, 54, title);
         int f1 = 0;
         int f2 = 0;
         for (int j = 0; j < Math.min(player.getInventory().getSize(), 45); j++) {
@@ -301,7 +302,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
         }
         inv.setItem(37, exp);
 
-        Inventory inv2 = Bukkit.createInventory(null, 45, title);
+        Inventory inv2 = Bukkit.createInventory(ICInventoryHolder.INSTANCE, 45, title);
         for (int j = 0; j < Math.min(player.getInventory().getSize(), 45); j++) {
             ItemStack item = player.getInventory().getItem(j);
             if (item != null && !item.getType().equals(Material.AIR)) {
@@ -341,7 +342,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
 
     private static void ender(OfflineICPlayer player, String sha1, String title) throws Exception {
         int size = player.getEnderChest().getSize();
-        Inventory inv = Bukkit.createInventory(null, InventoryUtils.toMultipleOf9(size), title);
+        Inventory inv = Bukkit.createInventory(ICInventoryHolder.INSTANCE, InventoryUtils.toMultipleOf9(size), title);
         for (int j = 0; j < size; j++) {
             if (player.getEnderChest().getItem(j) != null) {
                 if (!player.getEnderChest().getItem(j).getType().equals(Material.AIR)) {
@@ -898,7 +899,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                         if (bsm instanceof InventoryHolder) {
                             Inventory container = ((InventoryHolder) bsm).getInventory();
                             if (!container.isEmpty()) {
-                                inv = Bukkit.createInventory(null, InventoryUtils.toMultipleOf9(container.getSize()));
+                                inv = Bukkit.createInventory(ICInventoryHolder.INSTANCE, InventoryUtils.toMultipleOf9(container.getSize()));
                                 for (int j = 0; j < container.getSize(); j++) {
                                     if (container.getItem(j) != null) {
                                         if (!container.getItem(j).getType().equals(Material.AIR)) {

@@ -24,6 +24,7 @@ import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import com.loohp.interactivechat.objectholders.ICInventoryHolder;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.ICPlayerFactory;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
@@ -413,7 +414,7 @@ public class DiscordContentUtils {
             if (bsm instanceof InventoryHolder) {
                 Inventory container = ((InventoryHolder) bsm).getInventory();
                 if (!container.isEmpty()) {
-                    inv = Bukkit.createInventory(null, InventoryUtils.toMultipleOf9(container.getSize()));
+                    inv = Bukkit.createInventory(ICInventoryHolder.INSTANCE, InventoryUtils.toMultipleOf9(container.getSize()));
                     for (int j = 0; j < container.getSize(); j++) {
                         if (container.getItem(j) != null) {
                             if (!container.getItem(j).getType().equals(Material.AIR)) {

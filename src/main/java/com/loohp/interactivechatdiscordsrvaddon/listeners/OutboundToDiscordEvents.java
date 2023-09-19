@@ -26,6 +26,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import com.loohp.interactivechat.objectholders.CustomPlaceholder;
+import com.loohp.interactivechat.objectholders.ICInventoryHolder;
 import com.loohp.interactivechat.objectholders.ICPlaceholder;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.ICPlayerFactory;
@@ -491,7 +492,7 @@ public class OutboundToDiscordEvents implements Listener {
                         int inventoryId = DATA_ID_PROVIDER.getNext();
                         int position = matcher.start();
 
-                        Inventory inv = Bukkit.createInventory(null, 45);
+                        Inventory inv = Bukkit.createInventory(ICInventoryHolder.INSTANCE, 45);
                         for (int j = 0; j < icSender.getInventory().getSize(); j++) {
                             if (icSender.getInventory().getItem(j) != null) {
                                 if (!icSender.getInventory().getItem(j).getType().equals(Material.AIR)) {
@@ -538,7 +539,7 @@ public class OutboundToDiscordEvents implements Listener {
                         int inventoryId = DATA_ID_PROVIDER.getNext();
                         int position = matcher.start();
 
-                        Inventory inv = Bukkit.createInventory(null, InventoryUtils.toMultipleOf9(icSender.getEnderChest().getSize()));
+                        Inventory inv = Bukkit.createInventory(ICInventoryHolder.INSTANCE, InventoryUtils.toMultipleOf9(icSender.getEnderChest().getSize()));
                         for (int j = 0; j < icSender.getEnderChest().getSize(); j++) {
                             if (icSender.getEnderChest().getItem(j) != null) {
                                 if (!icSender.getEnderChest().getItem(j).getType().equals(Material.AIR)) {
