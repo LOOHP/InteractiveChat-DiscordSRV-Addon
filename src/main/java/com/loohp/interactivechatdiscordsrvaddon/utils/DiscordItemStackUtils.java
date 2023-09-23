@@ -75,6 +75,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ArmorMeta;
 import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BookMeta;
@@ -89,6 +90,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.inventory.meta.trim.ArmorTrim;
+import org.bukkit.inventory.meta.trim.TrimMaterial;
+import org.bukkit.inventory.meta.trim.TrimPattern;
 import org.bukkit.map.MapView;
 import org.bukkit.potion.PotionEffect;
 
@@ -301,12 +305,16 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && ItemStackUtils.isArmor(item) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ARMOR_TRIM)) {
-            if (NBTEditor.contains(item, "Trim")) {
-                Key material = Key.key(NBTEditor.getString(item, "Trim", "material"));
-                Key pattern = Key.key(NBTEditor.getString(item, "Trim", "pattern"));
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_20) && hasMeta && item.getItemMeta() instanceof ArmorMeta) {
+            ArmorMeta armorMeta = (ArmorMeta) item.getItemMeta();
+            ArmorTrim armorTrim = armorMeta.getTrim();
+            if (armorTrim != null && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ARMOR_TRIM)) {
+                TrimMaterial trimMaterial = armorTrim.getMaterial();
+                TrimPattern trimPattern = armorTrim.getPattern();
+                Key material = KeyUtils.toKey(trimMaterial.getKey());
+                Key pattern = KeyUtils.toKey(trimPattern.getKey());
                 prints.add(tooltipText(translatable(getSmithingTemplateUpgrade()).color(GRAY)));
-                TextColor color = ArmorTrimUtils.getArmorTrimIndex(world, item).right();
+                TextColor color = ArmorTrimUtils.getTrimMaterialItemModelData(trimMaterial).right();
                 prints.add(tooltipText(text(" ").append(translatable(getArmorTrimPatternDescription(pattern)).color(color))));
                 prints.add(tooltipText(text(" ").append(translatable(getArmorTrimMaterialDescription(material)).color(color))));
             }

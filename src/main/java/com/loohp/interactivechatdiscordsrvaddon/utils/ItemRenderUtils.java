@@ -39,7 +39,6 @@ import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechat.utils.CompassUtils;
 import com.loohp.interactivechat.utils.FilledMapUtils;
 import com.loohp.interactivechat.utils.ItemNBTUtils;
-import com.loohp.interactivechat.utils.ItemStackUtils;
 import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NBTParsingUtils;
 import com.loohp.interactivechat.utils.SkinUtils;
@@ -69,6 +68,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ArmorMeta;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BundleMeta;
 import org.bukkit.inventory.meta.CompassMeta;
@@ -76,6 +76,8 @@ import org.bukkit.inventory.meta.CrossbowMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.inventory.meta.trim.ArmorTrim;
+import org.bukkit.inventory.meta.trim.TrimMaterial;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
@@ -512,8 +514,11 @@ public class ItemRenderUtils {
             filledMapMarkings = ImageUtils.multiply(filledMapMarkings, tint);
 
             providedTextures.put(ResourceRegistry.MAP_MARKINGS_LOCATION, new GeneratedTextureResource(manager, filledMapMarkings));
-        } else if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && ItemStackUtils.isArmor(item)) {
-            float trimIndex = ArmorTrimUtils.getArmorTrimIndex(world, item).leftFloat();
+        } else if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_20) && item.getItemMeta() instanceof ArmorMeta) {
+            ArmorMeta armorMeta = (ArmorMeta) item.getItemMeta();
+            ArmorTrim armorTrim = armorMeta.getTrim();
+            TrimMaterial trimMaterial = armorTrim == null ? null : armorTrim.getMaterial();
+            float trimIndex = ArmorTrimUtils.getTrimMaterialItemModelData(trimMaterial).leftFloat();
             predicates.put(ModelOverrideType.TRIM_TYPE, trimIndex);
         } else if (icMaterial.isMaterial(XMaterial.DECORATED_POT) && item.getItemMeta() instanceof BlockStateMeta) {
             BlockStateMeta meta = (BlockStateMeta) item.getItemMeta();

@@ -20,79 +20,52 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
-import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.utils.ChatComponentType;
-import com.loohp.interactivechat.utils.ItemStackUtils;
-import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NMSUtils;
 import it.unimi.dsi.fastutil.floats.FloatObjectPair;
-import org.bukkit.World;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.trim.TrimMaterial;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Optional;
+import java.util.Arrays;
+import java.util.NoSuchElementException;
 
 public class ArmorTrimUtils {
 
-    private static Class<?> craftWorldClass;
-    private static Class<?> nmsWorldServerClass;
-    private static Class<?> nmsArmorTrimClass;
-    private static Class<?> nmsItemStackClass;
+    private static Class<?> craftTrimMaterialClass;
+    private static Method craftTrimMaterialGetHandleMethod;
+    private static Class<?> nmsIChatBaseComponentClass;
     private static Class<?> nmsTrimMaterialClass;
-    private static Method craftWorldGetHandleMethod;
-    private static Method nmsWorldServerGetIRegistryCustom;
-    private static Method nmsArmorTrimGetTrimMethod;
-    private static Method nmsArmorTrimGetMaterialHolderMethod;
-    private static Method nmsHolderGetValueMethod;
     private static Method nmsArmorTrimMaterialGetMaterialIndexMethod;
     private static Method nmsArmorTrimMaterialGetDescriptionMethod;
 
     static {
         try {
-            craftWorldClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.CraftWorld");
-            craftWorldGetHandleMethod = craftWorldClass.getMethod("getHandle");
-            nmsWorldServerClass = craftWorldGetHandleMethod.getReturnType();
-            nmsArmorTrimClass = NMSUtils.getNMSClass("net.minecraft.world.item.armortrim.ArmorTrim");
-            nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.world.item.ItemStack");
+            craftTrimMaterialClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.inventory.trim.CraftTrimMaterial");
+            craftTrimMaterialGetHandleMethod = craftTrimMaterialClass.getMethod("getHandle");
+            nmsIChatBaseComponentClass = NMSUtils.getNMSClass("net.minecraft.network.chat.IChatBaseComponent");
             nmsTrimMaterialClass = NMSUtils.getNMSClass("net.minecraft.world.item.armortrim.TrimMaterial");
-            if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_20)) {
-                nmsWorldServerGetIRegistryCustom = nmsWorldServerClass.getMethod("B_");
-            } else {
-                nmsWorldServerGetIRegistryCustom = nmsWorldServerClass.getMethod("u_");
-            }
-            nmsArmorTrimGetTrimMethod = nmsArmorTrimClass.getMethod("a", nmsWorldServerGetIRegistryCustom.getReturnType(), nmsItemStackClass);
-            nmsArmorTrimGetMaterialHolderMethod = nmsArmorTrimClass.getMethod("b");
-            nmsHolderGetValueMethod = nmsArmorTrimGetMaterialHolderMethod.getReturnType().getMethod("a");
-            nmsArmorTrimMaterialGetMaterialIndexMethod = nmsTrimMaterialClass.getMethod("c");
-            nmsArmorTrimMaterialGetDescriptionMethod = nmsTrimMaterialClass.getMethod("e");
-        } catch (ClassNotFoundException | NoSuchMethodException e) {
+            nmsArmorTrimMaterialGetMaterialIndexMethod = Arrays.stream(nmsTrimMaterialClass.getMethods()).filter(m -> m.getReturnType().equals(float.class)).findFirst().get();
+            nmsArmorTrimMaterialGetDescriptionMethod = Arrays.stream(nmsTrimMaterialClass.getMethods()).filter(m -> m.getReturnType().equals(nmsIChatBaseComponentClass)).findFirst().get();
+        } catch (ClassNotFoundException | NoSuchMethodException | NoSuchElementException e) {
             e.printStackTrace();
         }
     }
 
-    public static FloatObjectPair<TextColor> getArmorTrimIndex(World world, ItemStack itemStack) {
-        if (world == null) {
+    public static FloatObjectPair<TextColor> getTrimMaterialItemModelData(TrimMaterial trimMaterial) {
+        if (trimMaterial == null) {
             return FloatObjectPair.of(0.0F, NamedTextColor.GRAY);
         }
         try {
-            Object nmsWorldServer = craftWorldGetHandleMethod.invoke(craftWorldClass.cast(world));
-            Object nmsIRegistryCustom = nmsWorldServerGetIRegistryCustom.invoke(nmsWorldServer);
-            Optional<?> optNmsArmorTrim = (Optional<?>) nmsArmorTrimGetTrimMethod.invoke(null, nmsIRegistryCustom, ItemStackUtils.toNMSCopy(itemStack));
-            if (optNmsArmorTrim.isPresent()) {
-                Object nmsHolderArmorTrimMaterial = nmsArmorTrimGetMaterialHolderMethod.invoke(optNmsArmorTrim.get());
-                Object nmsArmorTrimMaterial = nmsHolderGetValueMethod.invoke(nmsHolderArmorTrimMaterial);
-                float index = (float) nmsArmorTrimMaterialGetMaterialIndexMethod.invoke(nmsArmorTrimMaterial);
-                Object nmsDescription = nmsArmorTrimMaterialGetDescriptionMethod.invoke(nmsArmorTrimMaterial);
-                Component component = ChatComponentType.IChatBaseComponent.convertFrom(nmsDescription);
-                TextColor color = component.color();
-                return FloatObjectPair.of(index, color == null ? NamedTextColor.GRAY : color);
-            } else {
-                return FloatObjectPair.of(0.0F, NamedTextColor.GRAY);
-            }
+            Object nmsTrimMaterial = craftTrimMaterialGetHandleMethod.invoke(craftTrimMaterialClass.cast(trimMaterial));
+            float index = (float) nmsArmorTrimMaterialGetMaterialIndexMethod.invoke(nmsTrimMaterial);
+            Object nmsDescription = nmsArmorTrimMaterialGetDescriptionMethod.invoke(nmsTrimMaterial);
+            Component component = ChatComponentType.IChatBaseComponent.convertFrom(nmsDescription);
+            TextColor color = component.color();
+            return FloatObjectPair.of(index, color == null ? NamedTextColor.GRAY : color);
         } catch (IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
             return FloatObjectPair.of(Float.NEGATIVE_INFINITY, NamedTextColor.GRAY);

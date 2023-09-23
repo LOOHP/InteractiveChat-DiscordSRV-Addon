@@ -33,6 +33,7 @@ import org.bukkit.inventory.ItemStack;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Optional;
 
 public class AdvancementUtils {
 
@@ -62,7 +63,7 @@ public class AdvancementUtils {
                 return method;
             }, () -> {
                 Method method = nmsAdvancementClass.getMethod("d");
-                if (!method.getReturnType().equals(nmsAdvancementDisplayClass)) {
+                if (!method.getReturnType().equals(nmsAdvancementDisplayClass) && !method.getReturnType().isAssignableFrom(Optional.class)) {
                     throw new ReflectiveOperationException("method does not return the correct type");
                 }
                 return method;
@@ -83,6 +84,9 @@ public class AdvancementUtils {
             Object craftAdvancement = craftAdvancementClass.cast(advancement);
             Object nmsAdvancement = craftAdvancementClassGetHandleMethod.invoke(craftAdvancement);
             Object nmsAdvancementDisplay = nmsAdvancementClassGetDisplayMethod.invoke(nmsAdvancement);
+            if (nmsAdvancementDisplay == null || (nmsAdvancementDisplay instanceof Optional && (nmsAdvancementDisplay = ((Optional<?>) nmsAdvancementDisplay).orElse(null)) == null)) {
+                return null;
+            }
             Object nmsTitle = nmsAdvancementDisplayClassGetTitleMethod.invoke(nmsAdvancementDisplay);
             Component title = ChatComponentType.IChatBaseComponent.convertFrom(nmsTitle);
             Object nmsDescription = nmsAdvancementDisplayClassGetDescriptionMethod.invoke(nmsAdvancementDisplay);

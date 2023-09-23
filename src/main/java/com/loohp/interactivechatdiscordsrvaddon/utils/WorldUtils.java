@@ -29,6 +29,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -41,6 +42,8 @@ public class WorldUtils {
     private static Method getMinecraftKeyMethod;
     private static Method getBiomeAtMethod;
     private static Method holderGetMethod;
+    private static Class<?> nmsBlockPositionClass;
+    private static Constructor<?> nmsBlockPositionConstructor;
     private static Method getPrecipitationMethod;
 
     static {
@@ -59,10 +62,16 @@ public class WorldUtils {
                 } else {
                     biomeBaseClass = getBiomeAtMethod.getReturnType();
                 }
-                if (InteractiveChat.version.isOlderThan(MCVersion.V1_17)) {
-                    getPrecipitationMethod = biomeBaseClass.getMethod("d");
+                if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4)) {
+                    nmsBlockPositionClass = NMSUtils.getNMSClass("net.minecraft.server.%s.BlockPosition", "net.minecraft.core.BlockPosition");
+                    nmsBlockPositionConstructor = nmsBlockPositionClass.getConstructor(int.class, int.class, int.class);
+                    getPrecipitationMethod = biomeBaseClass.getMethod("a", nmsBlockPositionClass);
                 } else {
-                    getPrecipitationMethod = biomeBaseClass.getMethod("c");
+                    if (InteractiveChat.version.isOlderThan(MCVersion.V1_17)) {
+                        getPrecipitationMethod = biomeBaseClass.getMethod("d");
+                    } else {
+                        getPrecipitationMethod = biomeBaseClass.getMethod("c");
+                    }
                 }
             } catch (ReflectiveOperationException e) {
                 e.printStackTrace();
@@ -114,8 +123,12 @@ public class WorldUtils {
                 if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_18)) {
                     biomeBaseObject = holderGetMethod.invoke(biomeBaseObject);
                 }
-                return BiomePrecipitation.fromName(((Enum<?>) getPrecipitationMethod.invoke(biomeBaseObject)).name());
-            } catch (IllegalAccessException | InvocationTargetException e) {
+                if (getPrecipitationMethod.getParameterCount() == 0) {
+                    return BiomePrecipitation.fromName(((Enum<?>) getPrecipitationMethod.invoke(biomeBaseObject)).name());
+                }
+                Object nmsBlockPositionObject = nmsBlockPositionConstructor.newInstance(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+                return BiomePrecipitation.fromName(((Enum<?>) getPrecipitationMethod.invoke(biomeBaseObject, nmsBlockPositionObject)).name());
+            } catch (IllegalAccessException | InvocationTargetException | InstantiationException e) {
                 e.printStackTrace();
             }
         } else {
