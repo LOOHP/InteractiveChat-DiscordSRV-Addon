@@ -33,6 +33,7 @@ import org.bukkit.inventory.ItemStack;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Optional;
 
 public class AdvancementUtils {
@@ -41,6 +42,8 @@ public class AdvancementUtils {
 
     private static Class<?> craftAdvancementClass;
     private static Method craftAdvancementClassGetHandleMethod;
+    private static Class<?> nmsAdvancementHolderClass;
+    private static Method nmsAdvancementHolderGetAdvancementMethod;
     private static Class<?> nmsAdvancementClass;
     private static Method nmsAdvancementClassGetDisplayMethod;
     private static Class<?> nmsAdvancementDisplayClass;
@@ -54,6 +57,10 @@ public class AdvancementUtils {
             craftAdvancementClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.advancement.CraftAdvancement");
             craftAdvancementClassGetHandleMethod = craftAdvancementClass.getMethod("getHandle");
             nmsAdvancementClass = NMSUtils.getNMSClass("net.minecraft.server.%s.Advancement", "net.minecraft.advancements.Advancement");
+            if (!craftAdvancementClassGetHandleMethod.getReturnType().equals(nmsAdvancementClass)) {
+                nmsAdvancementHolderClass = craftAdvancementClassGetHandleMethod.getReturnType();
+                nmsAdvancementHolderGetAdvancementMethod = Arrays.stream(nmsAdvancementHolderClass.getMethods()).filter(m -> m.getReturnType().equals(nmsAdvancementClass)).findFirst().get();
+            }
             nmsAdvancementDisplayClass = NMSUtils.getNMSClass("net.minecraft.server.%s.AdvancementDisplay", "net.minecraft.advancements.AdvancementDisplay");
             nmsAdvancementClassGetDisplayMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
                 Method method = nmsAdvancementClass.getMethod("c");
@@ -82,7 +89,13 @@ public class AdvancementUtils {
             Advancement advancement = (Advancement) advancementObject;
             boolean isMinecraft = advancement.getKey().getNamespace().equals(MINECRAFT_NAMESPACE);
             Object craftAdvancement = craftAdvancementClass.cast(advancement);
-            Object nmsAdvancement = craftAdvancementClassGetHandleMethod.invoke(craftAdvancement);
+            Object nmsAdvancementOrHolder = craftAdvancementClassGetHandleMethod.invoke(craftAdvancement);
+            Object nmsAdvancement;
+            if (nmsAdvancementClass.isInstance(nmsAdvancementOrHolder)) {
+                nmsAdvancement = nmsAdvancementOrHolder;
+            } else {
+                nmsAdvancement = nmsAdvancementHolderGetAdvancementMethod.invoke(nmsAdvancementOrHolder);
+            }
             Object nmsAdvancementDisplay = nmsAdvancementClassGetDisplayMethod.invoke(nmsAdvancement);
             if (nmsAdvancementDisplay == null || (nmsAdvancementDisplay instanceof Optional && (nmsAdvancementDisplay = ((Optional<?>) nmsAdvancementDisplay).orElse(null)) == null)) {
                 return null;
