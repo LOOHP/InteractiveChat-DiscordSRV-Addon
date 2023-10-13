@@ -98,10 +98,12 @@ public class TextureManager extends AbstractManager implements ITextureManager {
     }
 
     private Map<String, TextureResource> textures;
+    private Map<String, TextureAtlases> textureAtlases;
 
     public TextureManager(ResourceManager manager) {
         super(manager);
         this.textures = new HashMap<>();
+        this.textureAtlases = new HashMap<>();
     }
 
     @Override
@@ -161,33 +163,9 @@ public class TextureManager extends AbstractManager implements ITextureManager {
             }
         }
         this.textures.putAll(textures);
-        textures = new HashMap<>();
         if (textureAtlases != null) {
-            for (TextureAtlases.TextureAtlasSource textureAtlasSource : textureAtlases.getAllTextureAtlases()) {
-                if (textureAtlasSource.getType().equals(TextureAtlases.TextureAtlasSourceType.PALETTED_PERMUTATIONS)) {
-                    TextureAtlases.TextureAtlasPalettedPermutationsSource source = (TextureAtlases.TextureAtlasPalettedPermutationsSource) textureAtlasSource;
-                    String paletteKey = source.getPaletteKey();
-                    BufferedImage paletteImage = getTexture(paletteKey).getTexture();
-                    Map<String, Int2IntMap> permutations = new HashMap<>(source.getPermutations().size());
-                    for (Map.Entry<String, String> entry : source.getPermutations().entrySet()) {
-                        permutations.put(entry.getKey(), createTexturePaletteReplacementMap(paletteImage, getTexture(entry.getValue()).getTexture()));
-                    }
-                    for (String texture : source.getTextures()) {
-                        BufferedImage textureImage = getTexture(texture).getTexture();
-                        for (Map.Entry<String, Int2IntMap> entry : permutations.entrySet()) {
-                            BufferedImage newImage = new BufferedImage(textureImage.getWidth(), textureImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
-                            Graphics2D g = newImage.createGraphics();
-                            g.drawImage(textureImage, 0, 0, null);
-                            g.dispose();
-                            applyPaletteReplacementMap(entry.getValue(), newImage);
-                            String key = namespace + ":" + texture + "_" + entry.getKey();
-                            textures.put(key, new GeneratedTextureResource(manager, key, newImage));
-                        }
-                    }
-                }
-            }
+            this.textureAtlases.put(namespace, textureAtlases);
         }
-        this.textures.putAll(textures);
     }
 
     protected TextureAtlases.TextureAtlasSource checkAtlasInclusion(TextureAtlases textureAtlases, String namespace, String relativePath) {
@@ -245,6 +223,46 @@ public class TextureManager extends AbstractManager implements ITextureManager {
 
     @Override
     protected void reload() {
+        for (Map.Entry<String, TextureAtlases> textureAtlasesEntry : this.textureAtlases.entrySet()) {
+            Map<String, TextureResource> textures = new HashMap<>();
+            String namespace = textureAtlasesEntry.getKey();
+            TextureAtlases textureAtlases = textureAtlasesEntry.getValue();
+            if (textureAtlases != null) {
+                for (TextureAtlases.TextureAtlasSource textureAtlasSource : textureAtlases.getAllTextureAtlases()) {
+                    if (textureAtlasSource.getType().equals(TextureAtlases.TextureAtlasSourceType.PALETTED_PERMUTATIONS)) {
+                        TextureAtlases.TextureAtlasPalettedPermutationsSource source = (TextureAtlases.TextureAtlasPalettedPermutationsSource) textureAtlasSource;
+                        String paletteKey = source.getPaletteKey();
+                        try {
+                            BufferedImage paletteImage = getTexture(paletteKey).getTexture();
+                            Map<String, Int2IntMap> permutations = new HashMap<>(source.getPermutations().size());
+                            for (Map.Entry<String, String> entry : source.getPermutations().entrySet()) {
+                                try {
+                                    permutations.put(entry.getKey(), createTexturePaletteReplacementMap(paletteImage, getTexture(entry.getValue()).getTexture()));
+                                } catch (Exception e) {
+                                    new ResourceLoadingException("Unable to load paletted permutation of " + entry.getKey() + " in " + namespace + ":" + paletteKey, e).printStackTrace();
+                                }
+                            }
+                            for (String texture : source.getTextures()) {
+                                BufferedImage textureImage = getTexture(texture).getTexture();
+                                for (Map.Entry<String, Int2IntMap> entry : permutations.entrySet()) {
+                                    BufferedImage newImage = new BufferedImage(textureImage.getWidth(), textureImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
+                                    Graphics2D g = newImage.createGraphics();
+                                    g.drawImage(textureImage, 0, 0, null);
+                                    g.dispose();
+                                    applyPaletteReplacementMap(entry.getValue(), newImage);
+                                    String key = namespace + ":" + texture + "_" + entry.getKey();
+                                    textures.put(key, new GeneratedTextureResource(manager, key, newImage));
+                                }
+                            }
+                        } catch (Exception e) {
+                            new ResourceLoadingException("Unable to load paletted permutation in " + namespace + ":" + paletteKey, e).printStackTrace();
+                        }
+                    }
+                }
+            }
+            this.textures.putAll(textures);
+        }
+
         int[] grassColorArray;
         TextureResource grassColorMap = getTexture(ResourceRegistry.GRASS_COLORMAP_LOCATION, false);
         if (grassColorMap != null && grassColorMap.isTexture()) {
