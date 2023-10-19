@@ -20,16 +20,20 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
+import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.io.github.bananapuncher714.nbteditor.NBTEditor;
 import com.loohp.interactivechat.objectholders.ICMaterial;
+import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.NMSUtils;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 
 public class ArmorUtils {
 
@@ -43,34 +47,42 @@ public class ArmorUtils {
     private static Class<?> nmsArmorMaterialClass;
     private static Method nmsItemArmorGetArmorMaterialMethod;
     private static Method nmsArmorMaterialGetNameMethod;
+    private static Class<?> nmsEnumArmorMaterialClass;
+    private static Field nmsEnumArmorMaterialNameField;
     private static Class<?> nmsEnumItemSlotClass;
     private static Method nmsItemArmorGetItemSlotMethod;
 
     static {
         try {
-            craftItemStackClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.inventory.CraftItemStack");
-            nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemStack", "net.minecraft.world.item.ItemStack");
-            asNMSCopyMethod = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class);
-            nmsItemClass = NMSUtils.getNMSClass("net.minecraft.server.%s.Item", "net.minecraft.world.item.Item");
-            nmsGetItemMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
-                return nmsItemStackClass.getMethod("getItem");
-            }, () -> {
-                Method method = nmsItemStackClass.getMethod("c");
-                if (!method.getReturnType().equals(nmsItemClass)) {
-                    throw new ReflectiveOperationException("Wrong return type");
+            if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_13)) {
+                craftItemStackClass = NMSUtils.getNMSClass("org.bukkit.craftbukkit.%s.inventory.CraftItemStack");
+                nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemStack", "net.minecraft.world.item.ItemStack");
+                asNMSCopyMethod = craftItemStackClass.getMethod("asNMSCopy", ItemStack.class);
+                nmsItemClass = NMSUtils.getNMSClass("net.minecraft.server.%s.Item", "net.minecraft.world.item.Item");
+                nmsGetItemMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
+                    return nmsItemStackClass.getMethod("getItem");
+                }, () -> {
+                    Method method = nmsItemStackClass.getMethod("c");
+                    if (!method.getReturnType().equals(nmsItemClass)) {
+                        throw new ReflectiveOperationException("Wrong return type");
+                    }
+                    return method;
+                }, () -> {
+                    return nmsItemStackClass.getMethod("d");
+                });
+                nmsItemArmorClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemArmor", "net.minecraft.world.item.ItemArmor");
+                nmsItemArmorColorableClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemArmorColorable", "net.minecraft.world.item.ItemArmorColorable");
+                nmsArmorMaterialClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ArmorMaterial", "net.minecraft.world.item.ArmorMaterial");
+                nmsItemArmorGetArmorMaterialMethod = Arrays.stream(nmsItemArmorClass.getMethods()).filter(m -> m.getReturnType().equals(nmsArmorMaterialClass)).findFirst().get();
+                nmsArmorMaterialGetNameMethod = Arrays.stream(nmsArmorMaterialClass.getMethods()).filter(m -> m.getReturnType().equals(String.class)).findFirst().orElse(null);
+                if (nmsArmorMaterialGetNameMethod == null) {
+                    nmsEnumArmorMaterialClass = NMSUtils.getNMSClass("net.minecraft.server.%s.EnumArmorMaterial", "net.minecraft.world.item.EnumArmorMaterial");
+                    nmsEnumArmorMaterialNameField = Arrays.stream(nmsEnumArmorMaterialClass.getDeclaredFields()).filter(m -> m.getType().equals(String.class)).findFirst().get();
                 }
-                return method;
-            }, () -> {
-                return nmsItemStackClass.getMethod("d");
-            });
-            nmsItemArmorClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemArmor", "net.minecraft.world.item.ItemArmor");
-            nmsItemArmorColorableClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemArmorColorable", "net.minecraft.world.item.ItemArmorColorable");
-            nmsArmorMaterialClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ArmorMaterial", "net.minecraft.world.item.ArmorMaterial");
-            nmsItemArmorGetArmorMaterialMethod = Arrays.stream(nmsItemArmorClass.getMethods()).filter(m -> m.getReturnType().equals(nmsArmorMaterialClass)).findFirst().get();
-            nmsArmorMaterialGetNameMethod = Arrays.stream(nmsArmorMaterialClass.getMethods()).filter(m -> m.getReturnType().equals(String.class)).findFirst().get();
-            nmsEnumItemSlotClass = NMSUtils.getNMSClass("net.minecraft.server.%s.EnumItemSlot", "net.minecraft.world.entity.EnumItemSlot");
-            nmsItemArmorGetItemSlotMethod = Arrays.stream(nmsItemArmorClass.getMethods()).filter(m -> m.getReturnType().equals(nmsEnumItemSlotClass)).findFirst().get();
-        } catch (SecurityException | ReflectiveOperationException e) {
+                nmsEnumItemSlotClass = NMSUtils.getNMSClass("net.minecraft.server.%s.EnumItemSlot", "net.minecraft.world.entity.EnumItemSlot");
+                nmsItemArmorGetItemSlotMethod = Arrays.stream(nmsItemArmorClass.getMethods()).filter(m -> m.getReturnType().equals(nmsEnumItemSlotClass)).findFirst().get();
+            }
+        } catch (SecurityException | ReflectiveOperationException | NoSuchElementException e) {
             e.printStackTrace();
         }
     }
@@ -80,21 +92,49 @@ public class ArmorUtils {
             return ArmorTextureResult.NONE;
         }
         try {
-            Object nmsItemStackObject = asNMSCopyMethod.invoke(null, armorItem);
-            Object nmsItemObject = nmsGetItemMethod.invoke(nmsItemStackObject);
-            if (!nmsItemArmorClass.isInstance(nmsItemObject)) {
-                return ArmorTextureResult.NONE;
+            String armorMaterialName;
+            boolean isArmorColorable;
+            if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_13)) {
+                Object nmsItemStackObject = asNMSCopyMethod.invoke(null, armorItem);
+                Object nmsItemObject = nmsGetItemMethod.invoke(nmsItemStackObject);
+                if (!nmsItemArmorClass.isInstance(nmsItemObject)) {
+                    return ArmorTextureResult.NONE;
+                }
+                Enum<?> nmsEnumItemSlot = (Enum<?>) nmsItemArmorGetItemSlotMethod.invoke(nmsItemObject);
+                if (slot.ordinal() != nmsEnumItemSlot.ordinal()) {
+                    return ArmorTextureResult.NONE;
+                }
+                Object nmsArmorMaterial = nmsItemArmorGetArmorMaterialMethod.invoke(nmsItemObject);
+                if (nmsArmorMaterialGetNameMethod == null) {
+                    nmsEnumArmorMaterialNameField.setAccessible(true);
+                    armorMaterialName = (String) nmsEnumArmorMaterialNameField.get(nmsArmorMaterial);
+                } else {
+                    armorMaterialName = (String) nmsArmorMaterialGetNameMethod.invoke(nmsArmorMaterial);
+                }
+                isArmorColorable = nmsItemArmorColorableClass.isInstance(nmsItemObject);
+            } else {
+                String armorItemMaterial = armorItem.getType().name();
+                if (armorItemMaterial.contains("DIAMOND")) {
+                    armorMaterialName = "diamond";
+                    isArmorColorable = false;
+                } else if (armorItemMaterial.contains("GOLD")) {
+                    armorMaterialName = "gold";
+                    isArmorColorable = false;
+                } else if (armorItemMaterial.contains("IRON")) {
+                    armorMaterialName = "iron";
+                    isArmorColorable = false;
+                } else if (armorItemMaterial.contains("CHAIN")) {
+                    armorMaterialName = "chainmail";
+                    isArmorColorable = false;
+                } else {
+                    armorMaterialName = "leather";
+                    isArmorColorable = true;
+                }
             }
-            Enum<?> nmsEnumItemSlot = (Enum<?>) nmsItemArmorGetItemSlotMethod.invoke(nmsItemObject);
-            if (slot.ordinal() != nmsEnumItemSlot.ordinal()) {
-                return ArmorTextureResult.NONE;
-            }
-            Object nmsArmorMaterial = nmsItemArmorGetArmorMaterialMethod.invoke(nmsItemObject);
-            String armorMaterialName = (String) nmsArmorMaterialGetNameMethod.invoke(nmsArmorMaterial);
             String namespace = ModelUtils.getNamespace(ICMaterial.from(armorItem));
             int layer = slot.equals(EquipmentSlot.LEGS) ? 2 : 1;
             String base = armorMaterialName + "_layer_" + layer;
-            if (nmsItemArmorColorableClass.isInstance(nmsItemObject)) {
+            if (isArmorColorable) {
                 int color;
                 if (NBTEditor.contains(armorItem, "display", "color")) {
                     color = NBTEditor.getInt(armorItem, "display", "color");
