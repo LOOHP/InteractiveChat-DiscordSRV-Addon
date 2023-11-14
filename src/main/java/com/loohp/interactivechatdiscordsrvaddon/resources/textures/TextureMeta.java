@@ -34,7 +34,7 @@ public class TextureMeta extends TextureResource {
         TextureAnimation animation = null;
         if (rootJson.containsKey("animation")) {
             JSONObject animationJson = (JSONObject) rootJson.get("animation");
-            boolean interpolate = (boolean) animationJson.getOrDefault("interpolate", false);
+            boolean interpolate = Boolean.parseBoolean(animationJson.getOrDefault("interpolate", false).toString());
             int width = ((Number) animationJson.getOrDefault("width", -1)).intValue();
             int height = ((Number) animationJson.getOrDefault("height", -1)).intValue();
             int frametime = ((Number) animationJson.getOrDefault("frametime", -1)).intValue();
@@ -53,8 +53,8 @@ public class TextureMeta extends TextureResource {
         TextureProperties properties = null;
         if (rootJson.containsKey("texture")) {
             JSONObject propertiesJson = (JSONObject) rootJson.get("texture");
-            boolean blur = (boolean) propertiesJson.getOrDefault("blur", false);
-            boolean clamp = (boolean) propertiesJson.getOrDefault("clamp", false);
+            boolean blur = Boolean.parseBoolean(propertiesJson.getOrDefault("blur", false).toString());
+            boolean clamp = Boolean.parseBoolean(propertiesJson.getOrDefault("clamp", false).toString());
             int[] mipmaps = ((JSONArray) propertiesJson.getOrDefault("mipmaps", new JSONArray())).stream().mapToInt(each -> ((Number) each).intValue()).toArray();
             properties = new TextureProperties(blur, clamp, mipmaps);
         }
