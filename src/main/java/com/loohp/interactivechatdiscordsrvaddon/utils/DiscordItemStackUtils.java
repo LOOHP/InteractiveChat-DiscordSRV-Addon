@@ -295,11 +295,13 @@ public class DiscordItemStackUtils {
             if (state instanceof DecoratedPot) {
                 DecoratedPot pot = (DecoratedPot) state;
                 List<Material> materials = pot.getShards();
-                prints.add(tooltipEmpty());
-                for (int i : POTTERY_SHERD_ORDER) {
-                    if (i < materials.size()) {
-                        Key material = Key.key(materials.get(i).getKey().toString());
-                        prints.add(tooltipText(translatable(getPotterySherdName(material)).color(GRAY)));
+                if (!materials.stream().allMatch(e -> e.equals(Material.BRICK))) {
+                    prints.add(tooltipEmpty());
+                    for (int i : POTTERY_SHERD_ORDER) {
+                        if (i < materials.size()) {
+                            Key material = Key.key(materials.get(i).getKey().toString());
+                            prints.add(tooltipText(translatable(getPotterySherdName(material)).color(GRAY)));
+                        }
                     }
                 }
             }

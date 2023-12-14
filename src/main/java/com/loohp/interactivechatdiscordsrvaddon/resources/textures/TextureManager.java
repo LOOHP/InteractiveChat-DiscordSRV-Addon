@@ -38,8 +38,10 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -47,6 +49,7 @@ import java.util.Map;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TextureManager extends AbstractManager implements ITextureManager {
 
@@ -127,17 +130,21 @@ public class TextureManager extends AbstractManager implements ITextureManager {
                     extension = key.substring(key.lastIndexOf(".") + 1);
                     key = key.substring(0, key.lastIndexOf("."));
                 }
-                TextureAtlases.TextureAtlasSource atlasSource = textureAtlases == null ? null : checkAtlasInclusion(textureAtlases, namespace, relativePath);
+                List<TextureAtlases.TextureAtlasSource> atlasSources = textureAtlases == null ? Collections.emptyList() : checkAtlasInclusion(textureAtlases, namespace, relativePath);
                 Map<String, UnaryOperator<BufferedImage>> imageTransformFunctions = null;
-                if (atlasSource != null) {
-                    TextureAtlases.TextureAtlasSourceType<?> sourceType = atlasSource.getType();
-                    if (sourceType.equals(TextureAtlases.TextureAtlasSourceType.DIRECTORY)) {
-                        TextureAtlases.TextureAtlasDirectorySource directorySource = (TextureAtlases.TextureAtlasDirectorySource) atlasSource;
-                        String fileName = file.getRelativePathFrom(root.getChild(directorySource.getSource()));
-                        fileName = fileName.substring(0, fileName.lastIndexOf("."));
-                        key = namespace + ":" + directorySource.getPrefix() + fileName;
-                    } else if (sourceType.equals(TextureAtlases.TextureAtlasSourceType.UNSTITCH)) {
-                        imageTransformFunctions = ((TextureAtlases.TextureAtlasUnstitchSource) atlasSource).getRegions().stream().collect(Collectors.toMap(each -> each.getSpriteName(), each -> each.getImageTransformFunction(), (a, b) -> b));
+                if (!atlasSources.isEmpty()) {
+                    for (TextureAtlases.TextureAtlasSource atlasSource : atlasSources) {
+                        TextureAtlases.TextureAtlasSourceType<?> sourceType = atlasSource.getType();
+                        if (sourceType.equals(TextureAtlases.TextureAtlasSourceType.DIRECTORY)) {
+                            TextureAtlases.TextureAtlasDirectorySource directorySource = (TextureAtlases.TextureAtlasDirectorySource) atlasSource;
+                            String fileName = file.getRelativePathFrom(root.getChild(directorySource.getSource()));
+                            fileName = fileName.substring(0, fileName.lastIndexOf("."));
+                            key = namespace + ":" + directorySource.getPrefix() + fileName;
+                            break;
+                        } else if (sourceType.equals(TextureAtlases.TextureAtlasSourceType.UNSTITCH)) {
+                            imageTransformFunctions = ((TextureAtlases.TextureAtlasUnstitchSource) atlasSource).getRegions().stream().collect(Collectors.toMap(each -> each.getSpriteName(), each -> each.getImageTransformFunction(), (a, b) -> b));
+                            break;
+                        }
                     }
                 }
                 if (extension.equalsIgnoreCase("png")) {
@@ -168,41 +175,34 @@ public class TextureManager extends AbstractManager implements ITextureManager {
         }
     }
 
-    protected TextureAtlases.TextureAtlasSource checkAtlasInclusion(TextureAtlases textureAtlases, String namespace, String relativePath) {
-        for (List<TextureAtlases.TextureAtlasSource> textureAtlasesLists : textureAtlases.getTextureAtlases().values()) {
-            TextureAtlases.TextureAtlasSource result = null;
+    private Iterable<List<TextureAtlases.TextureAtlasSource>> getFullTextureAtlasSource(TextureAtlases textureAtlases) {
+        Stream.Builder<List<TextureAtlases.TextureAtlasSource>> builder = Stream.builder();
+        textureAtlases.getTextureAtlases().values().forEach(e -> builder.add(e));
+        builder.add(TextureAtlases.DEFAULT_BLOCK_ATLASES);
+        builder.add(TextureAtlases.DEFAULT_BLOCK_ATLASES);
+        Iterator<List<TextureAtlases.TextureAtlasSource>> itr = builder.build().iterator();
+        return () -> itr;
+    }
+
+    protected List<TextureAtlases.TextureAtlasSource> checkAtlasInclusion(TextureAtlases textureAtlases, String namespace, String relativePath) {
+        List<TextureAtlases.TextureAtlasSource> results = new ArrayList<>();
+        for (List<TextureAtlases.TextureAtlasSource> textureAtlasesLists : getFullTextureAtlasSource(textureAtlases)) {
             for (TextureAtlases.TextureAtlasSource source : textureAtlasesLists) {
                 if (!source.getType().equals(TextureAtlases.TextureAtlasSourceType.FILTER) && source.isIncluded(namespace, relativePath)) {
-                    result = source;
-                    break;
+                    boolean filtered = false;
+                    for (TextureAtlases.TextureAtlasSource source0 : textureAtlasesLists) {
+                        if (source0.getType().equals(TextureAtlases.TextureAtlasSourceType.FILTER) && !source0.isIncluded(namespace, relativePath)) {
+                            filtered = true;
+                            break;
+                        }
+                    }
+                    if (!filtered) {
+                        results.add(source);
+                    }
                 }
             }
-            if (result == null) {
-                break;
-            }
-            for (TextureAtlases.TextureAtlasSource source : textureAtlasesLists) {
-                if (source.getType().equals(TextureAtlases.TextureAtlasSourceType.FILTER) && !source.isIncluded(namespace, relativePath)) {
-                    return null;
-                }
-            }
-            return result;
         }
-        TextureAtlases.TextureAtlasSource result = null;
-        for (TextureAtlases.TextureAtlasSource source : TextureAtlases.DEFAULT_BLOCK_ATLASES) {
-            if (!source.getType().equals(TextureAtlases.TextureAtlasSourceType.FILTER) && source.isIncluded(namespace, relativePath)) {
-                result = source;
-                break;
-            }
-        }
-        if (result == null) {
-            return null;
-        }
-        for (TextureAtlases.TextureAtlasSource source : TextureAtlases.DEFAULT_BLOCK_ATLASES) {
-            if (source.getType().equals(TextureAtlases.TextureAtlasSourceType.FILTER) && !source.isIncluded(namespace, relativePath)) {
-                return null;
-            }
-        }
-        return null;
+        return results;
     }
 
     @Override

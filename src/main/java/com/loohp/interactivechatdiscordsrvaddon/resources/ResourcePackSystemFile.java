@@ -158,6 +158,11 @@ public class ResourcePackSystemFile implements ResourcePackFile {
     }
 
     @Override
+    public String toString() {
+        return getAbsolutePath();
+    }
+
+    @Override
     public void close() {
         for (InputStream stream : root.streams) {
             try {

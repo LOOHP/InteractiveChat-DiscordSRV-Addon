@@ -92,8 +92,8 @@ public class ResourceRegistry {
     public static final String DEFAULT_WIDE_SKIN_LOCATION = ENTITY_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION < 12 ? "steve" : "player/wide/steve");
     public static final String DEFAULT_SLIM_SKIN_LOCATION = ENTITY_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION < 12 ? "alex" : "player/slim/alex");
 
-    public static final String DECORATED_POT_SIDE_LOCATION = ENTITY_TEXTURE_LOCATION + "decorated_pot/decorated_pot_side";
-    public static final String DECORATED_POT_SHERD_LOCATION = ENTITY_TEXTURE_LOCATION + "decorated_pot/%s";
+    public static final String DECORATED_POT_SHERD_MINECRAFT_LOCATION = ENTITY_TEXTURE_LOCATION + "decorated_pot/%s";
+    public static final String DECORATED_POT_SHERD_LOCATION = "%s" + DECORATED_POT_SHERD_MINECRAFT_LOCATION.substring(DEFAULT_NAMESPACE.length());
     public static final String DECORATED_POT_FACE_PLACEHOLDER = ICD_PREFIX + "decorated_pot/face_%s";
 
     public static final String TRIM_TEXTURE_LOCATION = "minecraft:trims/";

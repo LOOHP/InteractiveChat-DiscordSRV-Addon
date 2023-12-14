@@ -83,7 +83,7 @@ public class TextureAtlases {
                         } else if (sourceType.equals(TextureAtlasSourceType.SINGLE)) {
                             String resource = (String) sourceJson.get("resource");
                             String sprite = (String) sourceJson.getOrDefault("sprite", resource);
-                            textureAtlasSource = new TextureAtlasDirectorySource(resource, sprite);
+                            textureAtlasSource = new TextureAtlasSingleSource(resource, sprite);
                         } else if (sourceType.equals(TextureAtlasSourceType.FILTER)) {
                             Pattern namespace = Pattern.compile((String) sourceJson.get("namespace"));
                             Pattern path = Pattern.compile((String) sourceJson.get("path"));
@@ -161,6 +161,7 @@ public class TextureAtlases {
         public static final TextureAtlasType BANNER_PATTERNS = new TextureAtlasType("banner_patterns");
         public static final TextureAtlasType BEDS = new TextureAtlasType("beds");
         public static final TextureAtlasType CHESTS = new TextureAtlasType("chests");
+        public static final TextureAtlasType DECORATED_POT = new TextureAtlasType("decorated_pot");
         public static final TextureAtlasType SHIELD_PATTERNS = new TextureAtlasType("shield_patterns");
         public static final TextureAtlasType SHULKER_BOXES = new TextureAtlasType("shulker_boxes");
         public static final TextureAtlasType SIGNS = new TextureAtlasType("signs");
@@ -177,6 +178,7 @@ public class TextureAtlases {
             TYPES.put(BANNER_PATTERNS.name(), BANNER_PATTERNS);
             TYPES.put(BEDS.name(), BEDS);
             TYPES.put(CHESTS.name(), CHESTS);
+            TYPES.put(DECORATED_POT.name(), DECORATED_POT);
             TYPES.put(SHIELD_PATTERNS.name(), SHIELD_PATTERNS);
             TYPES.put(SHULKER_BOXES.name(), SHULKER_BOXES);
             TYPES.put(SIGNS.name(), SIGNS);
@@ -296,9 +298,13 @@ public class TextureAtlases {
         private final String source;
         private final String prefix;
 
+        private final String[] sourceTree;
+
         public TextureAtlasDirectorySource(String source, String prefix) {
             this.source = source;
             this.prefix = prefix;
+
+            this.sourceTree = source.split("/");
         }
 
         public String getSource() {
@@ -316,7 +322,18 @@ public class TextureAtlases {
 
         @Override
         public boolean isIncluded(String namespace, String relativePath) {
-            return relativePath.startsWith(source);
+            String[] path = relativePath.split("/");
+            if (path.length < sourceTree.length) {
+                return false;
+            }
+            for (int i = 0; i < sourceTree.length; i++) {
+                String part = sourceTree[i];
+                String match = path[i];
+                if (!part.equals(match)) {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 

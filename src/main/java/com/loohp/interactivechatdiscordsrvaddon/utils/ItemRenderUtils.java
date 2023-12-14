@@ -530,11 +530,26 @@ public class ItemRenderUtils {
                     TextureResource textureResource = null;
                     ItemStack sherd = new ItemStack(materials.get(i));
                     String type = DecoratedPotPatternsUtils.getPatternName(sherd);
-                    if (type.contains(":")) {
-                        type = type.substring(type.indexOf(":") + 1);
+                    if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_20_3)) {
+                        String namespace;
+                        String key;
+                        if (type.contains(":")) {
+                            int sep = type.indexOf(":");
+                            namespace = type.substring(0, sep);
+                            key = type.substring(sep + 1);
+                        } else {
+                            namespace = ResourceRegistry.DEFAULT_NAMESPACE;
+                            key = type;
+                        }
+                        textureResource = manager.getTextureManager().getTexture(ResourceRegistry.DECORATED_POT_SHERD_LOCATION.replaceFirst("%s", namespace).replaceFirst("%s", key));
+                        providedTextures.put(ResourceRegistry.DECORATED_POT_FACE_PLACEHOLDER.replace("%s", String.valueOf(i)), textureResource);
+                    } else {
+                        if (type.contains(":")) {
+                            type = type.substring(type.indexOf(":") + 1);
+                        }
+                        textureResource = manager.getTextureManager().getTexture(ResourceRegistry.DECORATED_POT_SHERD_MINECRAFT_LOCATION.replace("%s", type));
+                        providedTextures.put(ResourceRegistry.DECORATED_POT_FACE_PLACEHOLDER.replace("%s", String.valueOf(i)), textureResource);
                     }
-                    textureResource = manager.getTextureManager().getTexture(ResourceRegistry.DECORATED_POT_SHERD_LOCATION.replace("%s", type));
-                    providedTextures.put(ResourceRegistry.DECORATED_POT_FACE_PLACEHOLDER.replace("%s", String.valueOf(i)), textureResource);
                 }
             }
         }

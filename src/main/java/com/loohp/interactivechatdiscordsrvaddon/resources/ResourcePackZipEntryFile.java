@@ -207,6 +207,11 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
     }
 
     @Override
+    public String toString() {
+        return getAbsolutePath();
+    }
+
+    @Override
     public void close() {
         try {
             zipRoot.close();
