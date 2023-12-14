@@ -55,6 +55,7 @@ public class ResourceRegistry {
     public static final String GUI_TEXTURE_LOCATION = "minecraft:gui/";
     public static final String MAP_TEXTURE_LOCATION = "minecraft:map/";
     public static final String COLORMAP_TEXTURE_LOCATION = "minecraft:colormap/";
+    public static final String DEFAULT_SPRITE_LOCATION = "minecraft:";
     public static final String IC_BLOCK_TEXTURE_LOCATION = ICD_PREFIX + "block/";
     public static final String IC_GUI_TEXTURE_LOCATION = ICD_PREFIX + "gui/";
     public static final String IC_MISC_TEXTURE_LOCATION = ICD_PREFIX + "misc/";

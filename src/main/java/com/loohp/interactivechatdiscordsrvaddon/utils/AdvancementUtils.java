@@ -50,6 +50,7 @@ public class AdvancementUtils {
     private static Method nmsAdvancementDisplayClassGetTitleMethod;
     private static Method nmsAdvancementDisplayClassGetDescriptionMethod;
     private static Method nmsAdvancementDisplayClassGetTypeMethod;
+    private static Class<?> nmsItemStackClass;
     private static Field nmsAdvancementDisplayClassItemStackField;
 
     static {
@@ -64,7 +65,7 @@ public class AdvancementUtils {
             nmsAdvancementDisplayClass = NMSUtils.getNMSClass("net.minecraft.server.%s.AdvancementDisplay", "net.minecraft.advancements.AdvancementDisplay");
             nmsAdvancementClassGetDisplayMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
                 Method method = nmsAdvancementClass.getMethod("c");
-                if (!method.getReturnType().equals(nmsAdvancementDisplayClass)) {
+                if (!method.getReturnType().equals(nmsAdvancementDisplayClass) && !method.getReturnType().isAssignableFrom(Optional.class)) {
                     throw new ReflectiveOperationException("method does not return the correct type");
                 }
                 return method;
@@ -78,7 +79,8 @@ public class AdvancementUtils {
             nmsAdvancementDisplayClassGetTitleMethod = nmsAdvancementDisplayClass.getMethod("a");
             nmsAdvancementDisplayClassGetDescriptionMethod = nmsAdvancementDisplayClass.getMethod("b");
             nmsAdvancementDisplayClassGetTypeMethod = nmsAdvancementDisplayClass.getMethod("e");
-            nmsAdvancementDisplayClassItemStackField = nmsAdvancementDisplayClass.getDeclaredField("c");
+            nmsItemStackClass = NMSUtils.getNMSClass("net.minecraft.server.%s.ItemStack", "net.minecraft.world.item.ItemStack");
+            nmsAdvancementDisplayClassItemStackField = Arrays.stream(nmsAdvancementDisplayClass.getDeclaredFields()).filter(e -> e.getType().equals(nmsItemStackClass)).findFirst().get();
         } catch (SecurityException | ReflectiveOperationException e) {
             e.printStackTrace();
         }

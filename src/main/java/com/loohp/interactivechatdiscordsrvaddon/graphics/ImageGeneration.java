@@ -1421,7 +1421,7 @@ public class ImageGeneration {
                 return icons.getSubimage(0, 47 * scale, 10 * scale, 8 * scale);
             }
         } else {
-            String location = ResourceRegistry.GUI_TEXTURE_LOCATION + "sprites/icon/";
+            String location = ResourceRegistry.DEFAULT_SPRITE_LOCATION + "icon/";
             if (ms < 0) {
                 location += "ping_unknown";
             } else if (ms < 150) {
@@ -1458,7 +1458,7 @@ public class ImageGeneration {
                     return icons.getSubimage(0, 128 * scale + offsetY, 26 * scale, 26 * scale);
             }
         } else {
-            String location = ResourceRegistry.GUI_TEXTURE_LOCATION + "sprites/advancements/";
+            String location = ResourceRegistry.DEFAULT_SPRITE_LOCATION + "advancements/";
             switch (advancementType) {
                 case CHALLENGE: {
                     location += (completed ? "challenge_frame_obtained" : "challenge_frame_unobtained");
@@ -1530,7 +1530,7 @@ public class ImageGeneration {
             g.drawImage(bottomCorner, 0, image.getHeight() - 2, null);
             g.drawImage(bottomCorner, image.getWidth() - 2, image.getHeight() - 2, null);
         } else {
-            BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "sprites/container/bundle/background").getTexture(64, 64);
+            BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/bundle/background").getTexture(64, 64);
 
             BufferedImage topCorner = icons.getSubimage(0, 0, 2, 2);
             g.drawImage(topCorner, 0, 0, null);
@@ -1547,8 +1547,8 @@ public class ImageGeneration {
                 g.drawImage(vertical, image.getWidth() - 2, y, null);
             }
 
-            BufferedImage slot = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "sprites/container/bundle/slot").getTexture(36, 40);
-            BufferedImage fullSlot = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "sprites/container/bundle/blocked_slot").getTexture(36, 40);
+            BufferedImage slot = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/bundle/slot").getTexture(36, 40);
+            BufferedImage fullSlot = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/bundle/blocked_slot").getTexture(36, 40);
 
             int i = -1;
             for (int y = 2; y < image.getHeight() - 2; y += vertical.getHeight()) {
@@ -1594,8 +1594,8 @@ public class ImageGeneration {
             nextPage = ImageUtils.copyAndGetSubImage(icons, 0, 384, 46, 26);
             previousPage = ImageUtils.copyAndGetSubImage(icons, 0, 410, 46, 26);
         } else {
-            nextPage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "sprites/widget/page_forward").getTexture(46, 26);
-            previousPage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "sprites/widget/page_backward").getTexture(46, 26);
+            nextPage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_SPRITE_LOCATION + "widget/page_forward").getTexture(46, 26);
+            previousPage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_SPRITE_LOCATION + "widget/page_backward").getTexture(46, 26);
         }
         int totalPages = pages.size();
         List<Supplier<BufferedImage>> result = new ArrayList<>(totalPages);
