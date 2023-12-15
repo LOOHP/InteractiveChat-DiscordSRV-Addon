@@ -32,7 +32,7 @@ public class ResourceRegistry {
             itemTextureLocation = com.loohp.interactivechat.InteractiveChat.version.isLegacy() ? "minecraft:items/" : "minecraft:item/";
             blockTextureLocation = com.loohp.interactivechat.InteractiveChat.version.isLegacy() ? "minecraft:blocks/" : "minecraft:block/";
         } catch (ClassNotFoundException | NoClassDefFoundError e) {
-            resourcePackVersion = 15;
+            resourcePackVersion = 22;
             itemTextureLocation = "minecraft:item/";
             blockTextureLocation = "minecraft:block/";
         }
@@ -55,7 +55,7 @@ public class ResourceRegistry {
     public static final String GUI_TEXTURE_LOCATION = "minecraft:gui/";
     public static final String MAP_TEXTURE_LOCATION = "minecraft:map/";
     public static final String COLORMAP_TEXTURE_LOCATION = "minecraft:colormap/";
-    public static final String DEFAULT_SPRITE_LOCATION = "minecraft:";
+    public static final String DEFAULT_SPRITE_LOCATION = RESOURCE_PACK_VERSION < 22 ? GUI_TEXTURE_LOCATION + "sprites/" : "minecraft:";
     public static final String IC_BLOCK_TEXTURE_LOCATION = ICD_PREFIX + "block/";
     public static final String IC_GUI_TEXTURE_LOCATION = ICD_PREFIX + "gui/";
     public static final String IC_MISC_TEXTURE_LOCATION = ICD_PREFIX + "misc/";

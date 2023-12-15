@@ -33,6 +33,7 @@ import org.bukkit.inventory.ItemStack;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -45,7 +46,7 @@ public class AdvancementUtils {
     private static Class<?> nmsAdvancementHolderClass;
     private static Method nmsAdvancementHolderGetAdvancementMethod;
     private static Class<?> nmsAdvancementClass;
-    private static Method nmsAdvancementClassGetDisplayMethod;
+    private static Field nmsAdvancementClassGetDisplayField;
     private static Class<?> nmsAdvancementDisplayClass;
     private static Method nmsAdvancementDisplayClassGetTitleMethod;
     private static Method nmsAdvancementDisplayClassGetDescriptionMethod;
@@ -63,18 +64,8 @@ public class AdvancementUtils {
                 nmsAdvancementHolderGetAdvancementMethod = Arrays.stream(nmsAdvancementHolderClass.getMethods()).filter(m -> m.getReturnType().equals(nmsAdvancementClass)).findFirst().get();
             }
             nmsAdvancementDisplayClass = NMSUtils.getNMSClass("net.minecraft.server.%s.AdvancementDisplay", "net.minecraft.advancements.AdvancementDisplay");
-            nmsAdvancementClassGetDisplayMethod = NMSUtils.reflectiveLookup(Method.class, () -> {
-                Method method = nmsAdvancementClass.getMethod("c");
-                if (!method.getReturnType().equals(nmsAdvancementDisplayClass) && !method.getReturnType().isAssignableFrom(Optional.class)) {
-                    throw new ReflectiveOperationException("method does not return the correct type");
-                }
-                return method;
-            }, () -> {
-                Method method = nmsAdvancementClass.getMethod("d");
-                if (!method.getReturnType().equals(nmsAdvancementDisplayClass) && !method.getReturnType().isAssignableFrom(Optional.class)) {
-                    throw new ReflectiveOperationException("method does not return the correct type");
-                }
-                return method;
+            nmsAdvancementClassGetDisplayField = Arrays.stream(nmsAdvancementClass.getDeclaredFields()).filter(f -> f.getType().equals(nmsAdvancementDisplayClass)).findFirst().orElseGet(() -> {
+                return Arrays.stream(nmsAdvancementClass.getDeclaredFields()).filter(f -> f.getType().equals(Optional.class) && ((ParameterizedType) f.getGenericType()).getActualTypeArguments()[0].equals(nmsAdvancementDisplayClass)).findFirst().get();
             });
             nmsAdvancementDisplayClassGetTitleMethod = nmsAdvancementDisplayClass.getMethod("a");
             nmsAdvancementDisplayClassGetDescriptionMethod = nmsAdvancementDisplayClass.getMethod("b");
@@ -98,7 +89,8 @@ public class AdvancementUtils {
             } else {
                 nmsAdvancement = nmsAdvancementHolderGetAdvancementMethod.invoke(nmsAdvancementOrHolder);
             }
-            Object nmsAdvancementDisplay = nmsAdvancementClassGetDisplayMethod.invoke(nmsAdvancement);
+            nmsAdvancementClassGetDisplayField.setAccessible(true);
+            Object nmsAdvancementDisplay = nmsAdvancementClassGetDisplayField.get(nmsAdvancement);
             if (nmsAdvancementDisplay == null || (nmsAdvancementDisplay instanceof Optional && (nmsAdvancementDisplay = ((Optional<?>) nmsAdvancementDisplay).orElse(null)) == null)) {
                 return null;
             }
