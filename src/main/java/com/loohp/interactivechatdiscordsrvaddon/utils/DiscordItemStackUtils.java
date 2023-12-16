@@ -186,6 +186,7 @@ import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils
 public class DiscordItemStackUtils {
     
     private static final DecimalFormat ATTRIBUTE_FORMAT = new DecimalFormat("#.##");
+    private static final DecimalFormat DURATION_FORMAT = new DecimalFormat("##.##");
     private static final int[] POTTERY_SHERD_ORDER = new int[] {3, 1, 2, 0};
 
     private static Method bukkitBukkitClassGetMapShortMethod = null;
@@ -648,7 +649,7 @@ public class DiscordItemStackUtils {
                             if (!(operation != 1 && operation != 2)) {
                                 amount *= 100;
                             }
-                            prints.add(tooltipText(translatable(getAttributeModifierKey(false, amount, operation)).args(text(ATTRIBUTE_FORMAT.format(Math.abs(amount))), translatable(attributeName)).color(amount < 0 ? RED : BLUE)));
+                            prints.add(tooltipText(translatable(getAttributeModifierKey(false, amount, operation)).args(text(DURATION_FORMAT.format(Math.abs(amount))), translatable(attributeName)).color(amount < 0 ? RED : BLUE)));
                         }
                     }
                 }
