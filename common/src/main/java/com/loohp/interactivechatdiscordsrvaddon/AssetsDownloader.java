@@ -321,11 +321,11 @@ public class AssetsDownloader {
 
     public static class ServerResourcePackDownloadResult {
 
-        private ServerResourcePackDownloadResultType type;
-        private File resourcePackFile;
-        private String packHash;
-        private String expectedHash;
-        private Throwable error;
+        private final ServerResourcePackDownloadResultType type;
+        private final  File resourcePackFile;
+        private final String packHash;
+        private final String expectedHash;
+        private final Throwable error;
 
         public ServerResourcePackDownloadResult(ServerResourcePackDownloadResultType type, File resourcePackFile, String packHash, String expectedHash, Throwable error) {
             this.type = type;

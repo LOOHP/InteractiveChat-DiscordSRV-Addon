@@ -47,7 +47,9 @@ import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.SkinUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
+import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent.ToolTipType;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
@@ -78,7 +80,6 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.ContainerTitlePrintingFunc
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ItemRenderUtils.ItemStackProcessResult;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ModelUtils;
-import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintColorProvider;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.ItemMapWrapper;
 import org.bukkit.Bukkit;
@@ -935,15 +936,21 @@ public class ImageGeneration {
         Graphics2D g2 = image.createGraphics();
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 
-        BufferedImage asset = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.MAP_TEXTURE_LOCATION + "map_icons").getTexture();
-        int iconWidth = asset.getWidth() / MAP_ICON_PER_ROLE;
+        BufferedImage asset;
+        int iconWidth;
+        if (resourceManager.get().getNativeServerPackFormat() >= 24) {
+            asset = null;
+            iconWidth = -1;
+        } else {
+            asset = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.MAP_TEXTURE_LOCATION + "map_icons").getTexture();
+            iconWidth = asset.getWidth() / MAP_ICON_PER_ROLE;
+        }
 
         if (mapCursors != null) {
             for (MapCursor icon : mapCursors) {
                 int x = icon.getX() + 128;
                 int y = icon.getY() + 128;
                 double rotation = (360.0 / 16.0 * (double) icon.getDirection()) + 180.0;
-                int type = icon.getType().ordinal();
                 Component component;
                 try {
                     component = LegacyComponentSerializer.legacySection().deserializeOrNull(icon.getCaption());
@@ -951,8 +958,14 @@ public class ImageGeneration {
                     component = null;
                 }
 
-                //String name
-                BufferedImage iconImage = ImageUtils.copyAndGetSubImage(asset, type % MAP_ICON_PER_ROLE * iconWidth, type / MAP_ICON_PER_ROLE * iconWidth, iconWidth, iconWidth);
+                BufferedImage iconImage;
+                if (resourceManager.get().getNativeServerPackFormat() >= 24) {
+                    String assetName = NMSAddon.getInstance().getMapCursorTypeKey(icon).value();
+                    iconImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_MAP_DECORATION_LOCATION + assetName).getTexture();
+                } else {
+                    int typeId = icon.getType().ordinal();
+                    iconImage = ImageUtils.copyAndGetSubImage(asset, typeId % MAP_ICON_PER_ROLE * iconWidth, typeId / MAP_ICON_PER_ROLE * iconWidth, iconWidth, iconWidth);
+                }
                 BufferedImage iconImageBig = new BufferedImage(96, 96, BufferedImage.TYPE_INT_ARGB);
                 Graphics2D g3 = iconImageBig.createGraphics();
                 g3.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);

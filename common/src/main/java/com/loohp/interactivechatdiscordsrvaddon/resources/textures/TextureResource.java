@@ -37,12 +37,12 @@ public class TextureResource {
     public static final String PNG_MCMETA_SUFFIX = ".png.mcmeta";
     public static final String MCMETA_SUFFIX = ".mcmeta";
 
-    private ITextureManager manager;
-    private String resourceKey;
-    private ResourcePackFile file;
-    private boolean isTexture;
+    private final ITextureManager manager;
+    private final String resourceKey;
+    private final ResourcePackFile file;
+    private final  boolean isTexture;
     private Reference<BufferedImage> texture;
-    private UnaryOperator<BufferedImage> imageTransformFunction;
+    private final UnaryOperator<BufferedImage> imageTransformFunction;
 
     private Unsafe unsafe;
 

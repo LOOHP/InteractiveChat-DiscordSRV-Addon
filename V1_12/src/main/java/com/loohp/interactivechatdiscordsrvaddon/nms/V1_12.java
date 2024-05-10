@@ -32,6 +32,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_12_R1.AdvancementDisplay;
@@ -41,7 +42,9 @@ import net.minecraft.server.v1_12_R1.EntityLiving;
 import net.minecraft.server.v1_12_R1.EntityTypes;
 import net.minecraft.server.v1_12_R1.EnumMonsterType;
 import net.minecraft.server.v1_12_R1.IChatBaseComponent;
+import net.minecraft.server.v1_12_R1.ItemMonsterEgg;
 import net.minecraft.server.v1_12_R1.ItemRecord;
+import net.minecraft.server.v1_12_R1.Items;
 import net.minecraft.server.v1_12_R1.MinecraftServer;
 import net.minecraft.server.v1_12_R1.NBTTagCompound;
 import net.minecraft.server.v1_12_R1.NBTTagList;
@@ -88,6 +91,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.map.MapCursor;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -95,6 +99,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -122,6 +127,23 @@ public class V1_12 extends NMSAddonWrapper {
         } catch (NoSuchFieldException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public Map<ICMaterial, TintColorProvider.SpawnEggTintData> getSpawnEggColorMap() {
+        Map<ICMaterial, TintColorProvider.SpawnEggTintData> mapping = new LinkedHashMap<>();
+        for (EntityTypes.MonsterEggInfo eggInfo : EntityTypes.eggInfo.values()) {
+            net.minecraft.server.v1_12_R1.ItemStack nmsItemStack = new net.minecraft.server.v1_12_R1.ItemStack(Items.SPAWN_EGG);
+            ItemMonsterEgg.a(nmsItemStack, eggInfo.a);
+            ICMaterial icMaterial = ICMaterial.from(CraftItemStack.asCraftMirror(nmsItemStack));
+            mapping.put(icMaterial, new TintColorProvider.SpawnEggTintData(eggInfo.b, eggInfo.c));
+        }
+        return mapping;
+    }
+
+    @Override
+    public Key getMapCursorTypeKey(MapCursor mapCursor) {
+        throw new UnsupportedOperationException();
     }
 
     @SuppressWarnings("PatternValidation")

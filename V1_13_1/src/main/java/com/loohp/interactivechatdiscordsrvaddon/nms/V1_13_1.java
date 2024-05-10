@@ -32,6 +32,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_13_R2.BlockPosition;
@@ -43,6 +44,7 @@ import net.minecraft.server.v1_13_R2.EnumArmorMaterial;
 import net.minecraft.server.v1_13_R2.AdvancementDisplay;
 import net.minecraft.server.v1_13_R2.EnumMonsterType;
 import net.minecraft.server.v1_13_R2.IRegistry;
+import net.minecraft.server.v1_13_R2.ItemMonsterEgg;
 import net.minecraft.server.v1_13_R2.MinecraftServer;
 import net.minecraft.server.v1_13_R2.NBTTagCompound;
 import net.minecraft.server.v1_13_R2.NBTTagList;
@@ -94,6 +96,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.map.MapCursor;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -101,6 +104,8 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -108,6 +113,8 @@ import java.util.OptionalInt;
 @SuppressWarnings("unused")
 public class V1_13_1 extends NMSAddonWrapper {
 
+    private final Field itemMonsterEggBackgroundColorField;
+    private final Field itemMonsterEggHighlightColorField;
     private final Field enumBannerPatternTypeKeyField;
     private final Field mobEffectListAttributeModifiersField;
     private final Field mobEffectListIsDebuffField;
@@ -117,6 +124,8 @@ public class V1_13_1 extends NMSAddonWrapper {
 
     public V1_13_1() {
         try {
+            itemMonsterEggBackgroundColorField = ItemMonsterEgg.class.getDeclaredField("b");
+            itemMonsterEggHighlightColorField = ItemMonsterEgg.class.getDeclaredField("c");
             enumBannerPatternTypeKeyField = EnumBannerPatternType.class.getDeclaredField("N");
             mobEffectListAttributeModifiersField = MobEffectList.class.getDeclaredField("a");
             mobEffectListIsDebuffField = MobEffectList.class.getDeclaredField("b");
@@ -126,6 +135,32 @@ public class V1_13_1 extends NMSAddonWrapper {
         } catch (NoSuchFieldException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public Map<ICMaterial, TintColorProvider.SpawnEggTintData> getSpawnEggColorMap() {
+        try {
+            itemMonsterEggBackgroundColorField.setAccessible(true);
+            itemMonsterEggHighlightColorField.setAccessible(true);
+            Map<ICMaterial, TintColorProvider.SpawnEggTintData> mapping = new LinkedHashMap<>();
+            for (Iterator<Item> itr = IRegistry.ITEM.f().iterator(); itr.hasNext();) {
+                Item item = itr.next();
+                if (item instanceof ItemMonsterEgg) {
+                    ICMaterial icMaterial = ICMaterial.of(CraftMagicNumbers.getMaterial(item));
+                    int backgroundColor = itemMonsterEggBackgroundColorField.getInt(item);
+                    int highlightColor = itemMonsterEggHighlightColorField.getInt(item);
+                    mapping.put(icMaterial, new TintColorProvider.SpawnEggTintData(backgroundColor, highlightColor));
+                }
+            }
+            return mapping;
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Key getMapCursorTypeKey(MapCursor mapCursor) {
+        throw new UnsupportedOperationException();
     }
 
     @SuppressWarnings("PatternValidation")

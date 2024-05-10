@@ -27,6 +27,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.
 import com.loohp.interactivechat.libs.org.simpleyaml.configuration.file.YamlFile;
 import com.loohp.interactivechat.objectholders.ValueTrios;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ICacheManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
@@ -48,8 +49,6 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResour
 import com.loohp.interactivechatdiscordsrvaddon.utils.ModelUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackInfoUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils;
-import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.SpawnEggTintData;
-import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintColorProvider;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -669,7 +668,7 @@ public class BlockModelRenderer extends JFrame {
 
             TintColorProvider tintColorProvider = TintUtils.getTintProvider(trimmedKey);
 
-            SpawnEggTintData tintData = TintUtils.getSpawnEggTint(trimmedKey);
+            TintColorProvider.SpawnEggTintData tintData = TintUtils.getSpawnEggTint(trimmedKey);
             if (tintData != null) {
                 tintColorProvider = tintData;
             }

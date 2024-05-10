@@ -33,6 +33,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_10_R1.EnchantmentManager;
@@ -87,6 +88,7 @@ import org.bukkit.event.player.PlayerAchievementAwardedEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.map.MapCursor;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -94,6 +96,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -117,6 +120,23 @@ public class V1_10 extends NMSAddonWrapper {
         } catch (NoSuchFieldException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public Map<ICMaterial, TintColorProvider.SpawnEggTintData> getSpawnEggColorMap() {
+        Map<ICMaterial, TintColorProvider.SpawnEggTintData> mapping = new LinkedHashMap<>();
+        for (EntityTypes.MonsterEggInfo eggInfo : EntityTypes.eggInfo.values()) {
+            int id = EntityTypes.a(eggInfo.a);
+            ItemStack itemStack = new ItemStack(Material.MONSTER_EGG, 1, (short) id);
+            ICMaterial icMaterial = ICMaterial.from(itemStack);
+            mapping.put(icMaterial, new TintColorProvider.SpawnEggTintData(eggInfo.b, eggInfo.c));
+        }
+        return mapping;
+    }
+
+    @Override
+    public Key getMapCursorTypeKey(MapCursor mapCursor) {
+        throw new UnsupportedOperationException();
     }
 
     @SuppressWarnings("PatternValidation")

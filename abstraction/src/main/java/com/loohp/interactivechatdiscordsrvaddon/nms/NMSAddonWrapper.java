@@ -20,7 +20,6 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.nms;
 
-import com.comphenix.protocol.events.PacketContainer;
 import com.google.common.collect.Multimap;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
@@ -30,6 +29,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Location;
@@ -45,6 +45,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.map.MapCursor;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -76,9 +77,9 @@ public abstract class NMSAddonWrapper {
 
     static final ItemStack ITEM_STACK_AIR = new ItemStack(Material.AIR);
 
-    static PacketContainer p(Object packet) {
-        return PacketContainer.fromPacket(packet);
-    }
+    public abstract Map<ICMaterial, TintColorProvider.SpawnEggTintData> getSpawnEggColorMap();
+
+    public abstract Key getMapCursorTypeKey(MapCursor mapCursor);
 
     public abstract Key getPatternTypeKey(PatternType patternType);
 

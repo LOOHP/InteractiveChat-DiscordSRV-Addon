@@ -30,7 +30,7 @@ import com.loohp.interactivechat.objectholders.ICPlayer;
  */
 public class GameMessageProcessEvent extends GameMessageEvent {
 
-    private int processId;
+    private final int processId;
     private String title;
 
     public GameMessageProcessEvent(ICPlayer sender, String title, Component component, boolean cancel, int processId) {

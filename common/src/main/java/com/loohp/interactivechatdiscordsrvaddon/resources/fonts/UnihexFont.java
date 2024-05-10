@@ -104,11 +104,11 @@ public class UnihexFont extends MinecraftFont {
         }
     }
 
-    protected Optional<FontResource> missingCharacter;
+    protected final Optional<FontResource> missingCharacter;
     private Int2ObjectMap<Optional<FontResource>> charImages;
     private Int2IntMap charWidth;
-    private List<SizeOverride> sizeOverrides;
-    private String hexFileResourceLocation;
+    private final List<SizeOverride> sizeOverrides;
+    private final String hexFileResourceLocation;
 
     public UnihexFont(ResourceManager manager, FontProvider provider, List<SizeOverride> sizeOverrides, String hexFileResourceLocation) {
         super(manager, provider);

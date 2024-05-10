@@ -23,25 +23,31 @@ package com.loohp.interactivechatdiscordsrvaddon.registry;
 public class ResourceRegistry {
 
     static {
+        boolean isMinecraftServerEnvironment;
         int resourcePackVersion;
         String itemTextureLocation;
         String blockTextureLocation;
         try {
             Class.forName("org.bukkit.plugin.java.JavaPlugin");
+            isMinecraftServerEnvironment = true;
             resourcePackVersion = com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackUtils.getServerResourcePackVersion();
             itemTextureLocation = com.loohp.interactivechat.InteractiveChat.version.isLegacy() ? "minecraft:items/" : "minecraft:item/";
             blockTextureLocation = com.loohp.interactivechat.InteractiveChat.version.isLegacy() ? "minecraft:blocks/" : "minecraft:block/";
         } catch (ClassNotFoundException | NoClassDefFoundError e) {
+            isMinecraftServerEnvironment = false;
             resourcePackVersion = 32;
             itemTextureLocation = "minecraft:item/";
             blockTextureLocation = "minecraft:block/";
         }
+        IS_MINECRAFT_SERVER_ENVIRONMENT = isMinecraftServerEnvironment;
         RESOURCE_PACK_VERSION = resourcePackVersion;
         ITEM_TEXTURE_LOCATION = itemTextureLocation;
         BLOCK_TEXTURE_LOCATION = blockTextureLocation;
     }
 
     public static final String DEFAULT_NAMESPACE = "minecraft";
+    public static final boolean IS_MINECRAFT_SERVER_ENVIRONMENT;
+
     public static final String ICD_PREFIX = "minecraft:interactivechatdiscordsrvaddon/";
 
     public static final int RESOURCE_PACK_VERSION;
@@ -58,6 +64,7 @@ public class ResourceRegistry {
     public static final String MAP_TEXTURE_LOCATION = "minecraft:map/";
     public static final String COLORMAP_TEXTURE_LOCATION = "minecraft:colormap/";
     public static final String DEFAULT_SPRITE_LOCATION = "minecraft:";
+    public static final String DEFAULT_MAP_DECORATION_LOCATION = "minecraft:";
     public static final String IC_BLOCK_TEXTURE_LOCATION = ICD_PREFIX + "block/";
     public static final String IC_GUI_TEXTURE_LOCATION = ICD_PREFIX + "gui/";
     public static final String IC_MISC_TEXTURE_LOCATION = ICD_PREFIX + "misc/";

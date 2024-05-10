@@ -32,6 +32,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_8_R1.ChatSerializer;
@@ -43,6 +44,7 @@ import net.minecraft.server.v1_8_R1.EnumBannerPatternType;
 import net.minecraft.server.v1_8_R1.EnumMonsterType;
 import net.minecraft.server.v1_8_R1.ItemRecord;
 import net.minecraft.server.v1_8_R1.MinecraftServer;
+import net.minecraft.server.v1_8_R1.MonsterEggInfo;
 import net.minecraft.server.v1_8_R1.NBTTagCompound;
 import net.minecraft.server.v1_8_R1.NBTTagList;
 import net.minecraft.server.v1_8_R1.MinecraftKey;
@@ -81,12 +83,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.map.MapCursor;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -108,6 +112,23 @@ public class V1_8 extends NMSAddonWrapper {
         } catch (NoSuchFieldException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public Map<ICMaterial, TintColorProvider.SpawnEggTintData> getSpawnEggColorMap() {
+        Map<ICMaterial, TintColorProvider.SpawnEggTintData> mapping = new LinkedHashMap<>();
+        for (Object value : EntityTypes.eggInfo.values()) {
+            MonsterEggInfo eggInfo = (MonsterEggInfo) value;
+            ItemStack itemStack = new ItemStack(Material.MONSTER_EGG, 1, (short) eggInfo.a);
+            ICMaterial icMaterial = ICMaterial.from(itemStack);
+            mapping.put(icMaterial, new TintColorProvider.SpawnEggTintData(eggInfo.b, eggInfo.c));
+        }
+        return mapping;
+    }
+
+    @Override
+    public Key getMapCursorTypeKey(MapCursor mapCursor) {
+        throw new UnsupportedOperationException();
     }
 
     @SuppressWarnings("PatternValidation")

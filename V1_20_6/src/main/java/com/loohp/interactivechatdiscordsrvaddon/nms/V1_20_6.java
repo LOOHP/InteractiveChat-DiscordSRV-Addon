@@ -34,6 +34,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.EnumChatFormat;
@@ -65,6 +66,7 @@ import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.Instrument;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemArmor;
+import net.minecraft.world.item.ItemMonsterEgg;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.armortrim.TrimMaterial;
 import net.minecraft.world.item.component.CustomData;
@@ -107,14 +109,17 @@ import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.map.MapCursor;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.checkerframework.checker.units.qual.K;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -133,6 +138,26 @@ public class V1_20_6 extends NMSAddonWrapper {
         } catch (NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public Map<ICMaterial, TintColorProvider.SpawnEggTintData> getSpawnEggColorMap() {
+        Map<ICMaterial, TintColorProvider.SpawnEggTintData> mapping = new LinkedHashMap<>();
+        for (Item item : BuiltInRegistries.h) {
+            if (item instanceof ItemMonsterEgg) {
+                ItemMonsterEgg egg = (ItemMonsterEgg) item;
+                ICMaterial icMaterial = ICMaterial.of(CraftMagicNumbers.getMaterial(item));
+                mapping.put(icMaterial, new TintColorProvider.SpawnEggTintData(egg.a(0), egg.a(1)));
+            }
+        }
+        return mapping;
+    }
+
+    @SuppressWarnings("PatternValidation")
+    @Override
+    public Key getMapCursorTypeKey(MapCursor mapCursor) {
+        NamespacedKey key = mapCursor.getType().getKey();
+        return Key.key(key.getNamespace(), key.getKey());
     }
 
     @SuppressWarnings("PatternValidation")

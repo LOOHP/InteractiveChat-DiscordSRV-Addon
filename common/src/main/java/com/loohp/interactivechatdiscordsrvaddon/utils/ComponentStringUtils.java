@@ -487,9 +487,9 @@ public class ComponentStringUtils {
 
     public static class CharacterLengthProviderData {
 
-        private String character;
-        private Key font;
-        private List<TextDecoration> decorations;
+        private final String character;
+        private final Key font;
+        private final List<TextDecoration> decorations;
 
         public CharacterLengthProviderData(String character, Key font, List<TextDecoration> decorations) {
             this.character = character;

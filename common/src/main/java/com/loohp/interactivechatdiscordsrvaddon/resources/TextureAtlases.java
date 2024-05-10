@@ -157,35 +157,27 @@ public class TextureAtlases {
 
     public static final class TextureAtlasType {
 
-        public static final TextureAtlasType BLOCKS = new TextureAtlasType("blocks");
-        public static final TextureAtlasType BANNER_PATTERNS = new TextureAtlasType("banner_patterns");
-        public static final TextureAtlasType BEDS = new TextureAtlasType("beds");
-        public static final TextureAtlasType CHESTS = new TextureAtlasType("chests");
-        public static final TextureAtlasType DECORATED_POT = new TextureAtlasType("decorated_pot");
-        public static final TextureAtlasType SHIELD_PATTERNS = new TextureAtlasType("shield_patterns");
-        public static final TextureAtlasType SHULKER_BOXES = new TextureAtlasType("shulker_boxes");
-        public static final TextureAtlasType SIGNS = new TextureAtlasType("signs");
-        public static final TextureAtlasType MOB_EFFECTS = new TextureAtlasType("mob_effects");
-        public static final TextureAtlasType PAINTINGS = new TextureAtlasType("paintings");
-        public static final TextureAtlasType PARTICLES = new TextureAtlasType("particles");
-        public static final TextureAtlasType ARMOR_TRIMS = new TextureAtlasType("armor_trims");
+        private static final Map<String, TextureAtlasType> TYPES = new ConcurrentHashMap<>();
 
-        private static final Map<String, TextureAtlasType> TYPES;
+        public static final TextureAtlasType ARMOR_TRIMS = registerBuiltIn("armor_trims");
+        public static final TextureAtlasType BANNER_PATTERNS = registerBuiltIn("banner_patterns");
+        public static final TextureAtlasType BEDS = registerBuiltIn("beds");
+        public static final TextureAtlasType BLOCKS = registerBuiltIn("blocks");
+        public static final TextureAtlasType CHESTS = registerBuiltIn("chests");
+        public static final TextureAtlasType DECORATED_POT = registerBuiltIn("decorated_pot");
+        public static final TextureAtlasType GUI = registerBuiltIn("gui");
+        public static final TextureAtlasType MAP_DECORATIONS = registerBuiltIn("map_decorations");
+        public static final TextureAtlasType MOB_EFFECTS = registerBuiltIn("mob_effects");
+        public static final TextureAtlasType PAINTINGS = registerBuiltIn("paintings");
+        public static final TextureAtlasType PARTICLES = registerBuiltIn("particles");
+        public static final TextureAtlasType SHIELD_PATTERNS = registerBuiltIn("shield_patterns");
+        public static final TextureAtlasType SHULKER_BOXES = registerBuiltIn("shulker_boxes");
+        public static final TextureAtlasType SIGNS = registerBuiltIn("signs");
 
-        static {
-            TYPES = new ConcurrentHashMap<>();
-            TYPES.put(BLOCKS.name(), BLOCKS);
-            TYPES.put(BANNER_PATTERNS.name(), BANNER_PATTERNS);
-            TYPES.put(BEDS.name(), BEDS);
-            TYPES.put(CHESTS.name(), CHESTS);
-            TYPES.put(DECORATED_POT.name(), DECORATED_POT);
-            TYPES.put(SHIELD_PATTERNS.name(), SHIELD_PATTERNS);
-            TYPES.put(SHULKER_BOXES.name(), SHULKER_BOXES);
-            TYPES.put(SIGNS.name(), SIGNS);
-            TYPES.put(MOB_EFFECTS.name(), MOB_EFFECTS);
-            TYPES.put(PAINTINGS.name(), PAINTINGS);
-            TYPES.put(PARTICLES.name(), PARTICLES);
-            TYPES.put(ARMOR_TRIMS.name(), ARMOR_TRIMS);
+        private static TextureAtlasType registerBuiltIn(String name) {
+            TextureAtlasType type = new TextureAtlasType(name);
+            TYPES.put(type.name(), type);
+            return type;
         }
 
         public static Map<String, TextureAtlasType> types() {

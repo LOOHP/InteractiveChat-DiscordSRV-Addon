@@ -114,9 +114,9 @@ public class Updater implements Listener {
 
     public static class UpdaterResponse {
 
-        private String result;
-        private int spigotPluginId;
-        private boolean devBuildIsLatest;
+        private final String result;
+        private final int spigotPluginId;
+        private final boolean devBuildIsLatest;
 
         public UpdaterResponse(String result, int spigotPluginId, boolean devBuildIsLatest) {
             this.result = result;

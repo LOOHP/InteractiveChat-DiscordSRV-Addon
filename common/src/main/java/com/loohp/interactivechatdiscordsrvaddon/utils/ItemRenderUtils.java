@@ -40,6 +40,7 @@ import com.loohp.interactivechatdiscordsrvaddon.graphics.BannerGraphics.BannerAs
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RawEnchantmentGlintData;
@@ -50,8 +51,6 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.Ench
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.EnchantmentGlintType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
-import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.SpawnEggTintData;
-import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -324,10 +323,10 @@ public class ItemRenderUtils {
             predicates.put(ModelOverrideType.LEVEL, level);
         } else if (icMaterial.isMaterial(XMaterial.WOLF_ARMOR)) {
             int dyedColor = NMSAddon.getInstance().getLeatherArmorColor(item).orElse(ResourceRegistry.DEFAULT_DYE_COLOR);
-            tintColorProvider = new TintUtils.DyeTintProvider(tintIndex -> tintIndex > 0 ? dyedColor : -1);
+            tintColorProvider = new TintColorProvider.DyeTintProvider(tintIndex -> tintIndex > 0 ? dyedColor : -1);
         } else if (itemMeta instanceof LeatherArmorMeta) {
             int dyedColor = NMSAddon.getInstance().getLeatherArmorColor(item).orElse(ResourceRegistry.DEFAULT_DYE_COLOR);
-            tintColorProvider = new TintUtils.DyeTintProvider(tintIndex -> tintIndex > 0 ? -1 : dyedColor);
+            tintColorProvider = new TintColorProvider.DyeTintProvider(tintIndex -> tintIndex > 0 ? -1 : dyedColor);
         } else if (itemMeta instanceof PotionMeta) {
             PotionMeta meta = (PotionMeta) itemMeta;
             PotionType potiontype;
@@ -349,7 +348,7 @@ public class ItemRenderUtils {
                 color = PotionUtils.getPotionBaseColor(PotionType.WATER);
             }
             int finalColor = color;
-            tintColorProvider = new TintUtils.DyeTintProvider(tintIndex -> tintIndex == 0 ? finalColor : -1);
+            tintColorProvider = new TintColorProvider.DyeTintProvider(tintIndex -> tintIndex == 0 ? finalColor : -1);
 
             if (!icMaterial.isMaterial(XMaterial.TIPPED_ARROW) && potiontype != null && InteractiveChat.version.isOlderThan(MCVersion.V1_19_4)) {
                 if (!(potiontype.name().equals("WATER") || potiontype.name().equals("AWKWARD") || potiontype.name().equals("MUNDANE") || potiontype.name().equals("THICK") || potiontype.name().equals("UNCRAFTABLE"))) {
@@ -357,7 +356,7 @@ public class ItemRenderUtils {
                 }
             }
         } else if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:spawn_egg"))) {
-            SpawnEggTintData tintData = TintUtils.getSpawnEggTint(icMaterial);
+            TintColorProvider.SpawnEggTintData tintData = TintUtils.getSpawnEggTint(icMaterial);
             if (tintData != null) {
                 tintColorProvider = tintData;
             }
@@ -383,7 +382,7 @@ public class ItemRenderUtils {
                 overlayColor = (i /= is.length) << 16 | (j /= is.length) << 8 | (k /= is.length);
             }
 
-            tintColorProvider = new TintUtils.DyeTintProvider(tintIndex -> tintIndex != 1 ? -1 : overlayColor);
+            tintColorProvider = new TintColorProvider.DyeTintProvider(tintIndex -> tintIndex != 1 ? -1 : overlayColor);
         } else if (InteractiveChat.version.isLegacy() && icMaterial.isOneOf(Collections.singletonList("CONTAINS:bed"))) {
             String colorName = icMaterial.name().replace("_BED", "").toLowerCase();
             BufferedImage bedTexture = manager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "bed/" + colorName).getTexture();
