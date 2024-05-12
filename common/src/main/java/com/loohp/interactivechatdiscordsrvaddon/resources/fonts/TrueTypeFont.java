@@ -78,7 +78,7 @@ public class TrueTypeFont extends MinecraftFont {
 
     @Override
     public void reloadFonts() {
-        this.displayableCharacters = IntSets.emptySet();
+        this.displayableCharacters = IntSets.EMPTY_SET;
         if (this.internalGraphics != null) {
             this.internalGraphics.dispose();
             this.internalGraphics = null;
