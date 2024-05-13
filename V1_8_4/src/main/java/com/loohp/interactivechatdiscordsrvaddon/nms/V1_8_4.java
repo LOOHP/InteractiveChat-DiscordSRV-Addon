@@ -35,26 +35,25 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import net.md_5.bungee.api.ChatColor;
+import net.minecraft.server.v1_8_R3.Block;
+import net.minecraft.server.v1_8_R3.CombatTracker;
 import net.minecraft.server.v1_8_R3.EnchantmentManager;
 import net.minecraft.server.v1_8_R3.EntityFishingHook;
 import net.minecraft.server.v1_8_R3.EntityLiving;
+import net.minecraft.server.v1_8_R3.EntityPlayer;
 import net.minecraft.server.v1_8_R3.EntityTypes;
 import net.minecraft.server.v1_8_R3.EnumMonsterType;
 import net.minecraft.server.v1_8_R3.IChatBaseComponent;
-import net.minecraft.server.v1_8_R3.ItemRecord;
-import net.minecraft.server.v1_8_R3.MinecraftServer;
-import net.minecraft.server.v1_8_R3.NBTTagCompound;
-import net.minecraft.server.v1_8_R3.NBTTagList;
-import net.minecraft.server.v1_8_R3.MinecraftKey;
-import net.minecraft.server.v1_8_R3.EntityPlayer;
-import net.minecraft.server.v1_8_R3.CombatTracker;
-import net.minecraft.server.v1_8_R3.MobEffectList;
 import net.minecraft.server.v1_8_R3.Item;
 import net.minecraft.server.v1_8_R3.ItemArmor;
-import net.minecraft.server.v1_8_R3.Block;
+import net.minecraft.server.v1_8_R3.ItemRecord;
+import net.minecraft.server.v1_8_R3.MinecraftKey;
+import net.minecraft.server.v1_8_R3.MinecraftServer;
+import net.minecraft.server.v1_8_R3.MobEffectList;
+import net.minecraft.server.v1_8_R3.NBTTagCompound;
+import net.minecraft.server.v1_8_R3.NBTTagList;
 import net.minecraft.server.v1_8_R3.TileEntityBanner;
 import org.bukkit.Achievement;
-import org.bukkit.Art;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -288,22 +287,8 @@ public class V1_8_4 extends NMSAddonWrapper {
         return null;
     }
 
-    @SuppressWarnings("PatternValidation")
     @Override
     public PaintingVariant getPaintingVariant(ItemStack itemStack) {
-        try {
-            net.minecraft.server.v1_8_R3.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-            if (nmsItemStack.hasTag() && nmsItemStack.getTag().hasKey("EntityTag")) {
-                String variant = nmsItemStack.getTag().getCompound("EntityTag").getString("variant");
-                String name = variant;
-                if (name.contains(":")) {
-                    name = name.substring(name.indexOf(":") + 1);
-                }
-                Art art = Art.getByName(name);
-                return new PaintingVariant(Key.key(variant), art.getBlockWidth(), art.getBlockHeight());
-            }
-        } catch (Exception ignored) {
-        }
         return null;
     }
 

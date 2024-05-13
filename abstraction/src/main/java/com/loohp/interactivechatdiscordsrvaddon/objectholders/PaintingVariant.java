@@ -25,24 +25,48 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 public class PaintingVariant {
 
     private final Key key;
-    private final int width;
-    private final int height;
+    private final int offsetX;
+    private final int offsetY;
+    private final int blockWidth;
+    private final int blockHeight;
 
-    public PaintingVariant(Key key, int width, int height) {
+    public PaintingVariant(Key key, int blockWidth, int blockHeight) {
+        this(key, 0, 0, blockWidth, blockHeight);
+    }
+
+    public PaintingVariant(Key key, int offsetX, int offsetY, int blockWidth, int blockHeight) {
         this.key = key;
-        this.width = width;
-        this.height = height;
+        this.offsetX = offsetX;
+        this.offsetY = offsetY;
+        this.blockWidth = blockWidth;
+        this.blockHeight = blockHeight;
     }
 
     public Key getKey() {
         return key;
     }
 
-    public int getWidth() {
-        return width;
+    public int getOffsetX() {
+        return offsetX;
     }
 
-    public int getHeight() {
-        return height;
+    public int getOffsetY() {
+        return offsetY;
+    }
+
+    public int getPixelWidth() {
+        return blockWidth * 16;
+    }
+
+    public int getPixelHeight() {
+        return blockHeight * 16;
+    }
+
+    public int getBlockWidth() {
+        return blockWidth;
+    }
+
+    public int getBlockHeight() {
+        return blockHeight;
     }
 }

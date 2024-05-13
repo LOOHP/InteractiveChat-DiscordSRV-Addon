@@ -69,6 +69,8 @@ public class ResourceRegistry {
     public static final String IC_GUI_TEXTURE_LOCATION = ICD_PREFIX + "gui/";
     public static final String IC_MISC_TEXTURE_LOCATION = ICD_PREFIX + "misc/";
 
+    public static final String LEGACY_PAINTINGS_LOCATION = "minecraft:paintings/";
+
     public static final String ARMOR_TEXTURE_LOCATION = "models/armor/";
 
     public static final String IC_OLD_BASE_BLOCK_MODEL = ICD_PREFIX + "block/block";
@@ -91,6 +93,8 @@ public class ResourceRegistry {
     public static final String BANNER_PATTERNS_TEXTURE_PLACEHOLDER = ICD_PREFIX + "banner_patterns";
     public static final String SHIELD_BASE_TEXTURE_PLACEHOLDER = ICD_PREFIX + "shield_base";
     public static final String SHIELD_PATTERNS_TEXTURE_PLACEHOLDER = ICD_PREFIX + "shield_patterns";
+
+    public static final String LEGACY_SINGLE_PAINTING_LOCATION = "minecraft:painting/paintings_kristoffer_zetterstrand";
 
     public static final String LEGACY_BED_TEXTURE_PLACEHOLDER = ICD_PREFIX + "legacy_bed";
 

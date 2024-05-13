@@ -100,12 +100,12 @@ public class TranslationKeyUtils {
 
     public static String getPaintingTitle(PaintingVariant paintingVariant) {
         Key key = paintingVariant.getKey();
-        return "painting." + key.namespace() + "." + key.key() + ".title";
+        return "painting." + key.namespace() + "." + key.value() + ".title";
     }
 
     public static String getPaintingAuthor(PaintingVariant paintingVariant) {
         Key key = paintingVariant.getKey();
-        return "painting." + key.namespace() + "." + key.key() + ".author";
+        return "painting." + key.namespace() + "." + key.value() + ".author";
     }
 
     public static String getPaintingDimension() {
@@ -479,7 +479,7 @@ public class TranslationKeyUtils {
     }
 
     public static String getGoatHornInstrument(Key instrument) {
-        return "instrument." + instrument.namespace() + "." + instrument.key();
+        return "instrument." + instrument.namespace() + "." + instrument.value();
     }
 
 }

@@ -35,33 +35,32 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import net.md_5.bungee.api.ChatColor;
+import net.minecraft.server.v1_13_R1.AdvancementDisplay;
+import net.minecraft.server.v1_13_R1.AttributeBase;
+import net.minecraft.server.v1_13_R1.BiomeBase;
+import net.minecraft.server.v1_13_R1.Block;
 import net.minecraft.server.v1_13_R1.BlockPosition;
+import net.minecraft.server.v1_13_R1.CombatTracker;
 import net.minecraft.server.v1_13_R1.EnchantmentManager;
 import net.minecraft.server.v1_13_R1.EntityFishingHook;
 import net.minecraft.server.v1_13_R1.EntityLiving;
+import net.minecraft.server.v1_13_R1.EntityPlayer;
 import net.minecraft.server.v1_13_R1.EntityTypes;
 import net.minecraft.server.v1_13_R1.EnumArmorMaterial;
-import net.minecraft.server.v1_13_R1.AdvancementDisplay;
-import net.minecraft.server.v1_13_R1.EnumMonsterType;
-import net.minecraft.server.v1_13_R1.ItemMonsterEgg;
-import net.minecraft.server.v1_13_R1.MinecraftServer;
-import net.minecraft.server.v1_13_R1.NBTTagCompound;
-import net.minecraft.server.v1_13_R1.NBTTagList;
-import net.minecraft.server.v1_13_R1.MinecraftKey;
-import net.minecraft.server.v1_13_R1.EntityPlayer;
-import net.minecraft.server.v1_13_R1.WorldServer;
-import net.minecraft.server.v1_13_R1.CombatTracker;
-import net.minecraft.server.v1_13_R1.MobEffect;
-import net.minecraft.server.v1_13_R1.MobEffectList;
+import net.minecraft.server.v1_13_R1.EnumBannerPatternType;
 import net.minecraft.server.v1_13_R1.EnumItemSlot;
-import net.minecraft.server.v1_13_R1.AttributeBase;
-import net.minecraft.server.v1_13_R1.Paintings;
+import net.minecraft.server.v1_13_R1.EnumMonsterType;
 import net.minecraft.server.v1_13_R1.Item;
 import net.minecraft.server.v1_13_R1.ItemArmor;
+import net.minecraft.server.v1_13_R1.ItemMonsterEgg;
+import net.minecraft.server.v1_13_R1.MinecraftKey;
+import net.minecraft.server.v1_13_R1.MinecraftServer;
+import net.minecraft.server.v1_13_R1.MobEffect;
+import net.minecraft.server.v1_13_R1.MobEffectList;
+import net.minecraft.server.v1_13_R1.NBTTagCompound;
+import net.minecraft.server.v1_13_R1.NBTTagList;
 import net.minecraft.server.v1_13_R1.PotionUtil;
-import net.minecraft.server.v1_13_R1.BiomeBase;
-import net.minecraft.server.v1_13_R1.Block;
-import net.minecraft.server.v1_13_R1.EnumBannerPatternType;
+import net.minecraft.server.v1_13_R1.WorldServer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -335,19 +334,8 @@ public class V1_13 extends NMSAddonWrapper {
         return null;
     }
 
-    @SuppressWarnings("PatternValidation")
     @Override
     public PaintingVariant getPaintingVariant(ItemStack itemStack) {
-        try {
-            net.minecraft.server.v1_13_R1.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-            if (nmsItemStack.hasTag() && nmsItemStack.getTag().hasKey("EntityTag")) {
-                String variant = nmsItemStack.getTag().getCompound("EntityTag").getString("variant");
-                MinecraftKey key = new MinecraftKey(variant);
-                Paintings paintingVariant = Paintings.a.get(key);
-                return new PaintingVariant(Key.key(key.b(), key.getKey()), paintingVariant.b() / 16, paintingVariant.c() / 16);
-            }
-        } catch (Exception ignored) {
-        }
         return null;
     }
 

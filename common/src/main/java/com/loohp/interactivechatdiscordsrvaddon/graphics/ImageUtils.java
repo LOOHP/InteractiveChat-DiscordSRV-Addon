@@ -591,7 +591,7 @@ public class ImageUtils {
         g3.drawImage(background, 0, 0, null);
         g3.drawImage(textImage, x - centerX, (int) (y - (height / 5) + Math.max(1, 1 * (fontSize / 8))) - image.getHeight(), null);
         g3.dispose();
-        return new ComponentPrintResult(image, x - lastSpaceWidth);
+        return new ComponentPrintResult(image, x - lastSpaceWidth - centerX);
     }
 
     public static ComponentPrintResult printComponentRightAligned(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize) {
@@ -704,7 +704,7 @@ public class ImageUtils {
         Graphics2D g = image.createGraphics();
         g.drawImage(textImage, 0, topY - image.getHeight(), null);
         g.dispose();
-        return new ComponentPrintResult(image, x - lastSpaceWidth);
+        return new ComponentPrintResult(image, x - lastSpaceWidth - topX);
     }
 
     public static class ComponentPrintResult {

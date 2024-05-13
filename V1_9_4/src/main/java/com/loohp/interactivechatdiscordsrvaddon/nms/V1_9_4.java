@@ -36,30 +36,29 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import net.md_5.bungee.api.ChatColor;
+import net.minecraft.server.v1_9_R2.AttributeBase;
+import net.minecraft.server.v1_9_R2.Block;
+import net.minecraft.server.v1_9_R2.CombatTracker;
 import net.minecraft.server.v1_9_R2.EnchantmentManager;
 import net.minecraft.server.v1_9_R2.EntityFishingHook;
 import net.minecraft.server.v1_9_R2.EntityLiving;
+import net.minecraft.server.v1_9_R2.EntityPlayer;
 import net.minecraft.server.v1_9_R2.EntityTypes;
+import net.minecraft.server.v1_9_R2.EnumItemSlot;
 import net.minecraft.server.v1_9_R2.EnumMonsterType;
 import net.minecraft.server.v1_9_R2.IChatBaseComponent;
-import net.minecraft.server.v1_9_R2.ItemRecord;
-import net.minecraft.server.v1_9_R2.MinecraftServer;
-import net.minecraft.server.v1_9_R2.NBTTagCompound;
-import net.minecraft.server.v1_9_R2.NBTTagList;
-import net.minecraft.server.v1_9_R2.MinecraftKey;
-import net.minecraft.server.v1_9_R2.EntityPlayer;
-import net.minecraft.server.v1_9_R2.CombatTracker;
-import net.minecraft.server.v1_9_R2.MobEffect;
-import net.minecraft.server.v1_9_R2.MobEffectList;
-import net.minecraft.server.v1_9_R2.EnumItemSlot;
-import net.minecraft.server.v1_9_R2.AttributeBase;
 import net.minecraft.server.v1_9_R2.Item;
 import net.minecraft.server.v1_9_R2.ItemArmor;
+import net.minecraft.server.v1_9_R2.ItemRecord;
+import net.minecraft.server.v1_9_R2.MinecraftKey;
+import net.minecraft.server.v1_9_R2.MinecraftServer;
+import net.minecraft.server.v1_9_R2.MobEffect;
+import net.minecraft.server.v1_9_R2.MobEffectList;
+import net.minecraft.server.v1_9_R2.NBTTagCompound;
+import net.minecraft.server.v1_9_R2.NBTTagList;
 import net.minecraft.server.v1_9_R2.PotionUtil;
-import net.minecraft.server.v1_9_R2.Block;
 import net.minecraft.server.v1_9_R2.TileEntityBanner;
 import org.bukkit.Achievement;
-import org.bukkit.Art;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -314,22 +313,8 @@ public class V1_9_4 extends NMSAddonWrapper {
         return null;
     }
 
-    @SuppressWarnings("PatternValidation")
     @Override
     public PaintingVariant getPaintingVariant(ItemStack itemStack) {
-        try {
-            net.minecraft.server.v1_9_R2.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-            if (nmsItemStack.hasTag() && nmsItemStack.getTag().hasKey("EntityTag")) {
-                String variant = nmsItemStack.getTag().getCompound("EntityTag").getString("variant");
-                String name = variant;
-                if (name.contains(":")) {
-                    name = name.substring(name.indexOf(":") + 1);
-                }
-                Art art = Art.getByName(name);
-                return new PaintingVariant(Key.key(variant), art.getBlockWidth(), art.getBlockHeight());
-            }
-        } catch (Exception ignored) {
-        }
         return null;
     }
 

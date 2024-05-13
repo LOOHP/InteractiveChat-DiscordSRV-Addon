@@ -314,22 +314,8 @@ public class V1_10 extends NMSAddonWrapper {
         return null;
     }
 
-    @SuppressWarnings("PatternValidation")
     @Override
     public PaintingVariant getPaintingVariant(ItemStack itemStack) {
-        try {
-            net.minecraft.server.v1_10_R1.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-            if (nmsItemStack.hasTag() && nmsItemStack.getTag().hasKey("EntityTag")) {
-                String variant = nmsItemStack.getTag().getCompound("EntityTag").getString("variant");
-                String name = variant;
-                if (name.contains(":")) {
-                    name = name.substring(name.indexOf(":") + 1);
-                }
-                Art art = Art.getByName(name);
-                return new PaintingVariant(Key.key(variant), art.getBlockWidth(), art.getBlockHeight());
-            }
-        } catch (Exception ignored) {
-        }
         return null;
     }
 

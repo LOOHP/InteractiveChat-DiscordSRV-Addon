@@ -320,11 +320,12 @@ public class DiscordItemStackUtils {
         }
 
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && icMaterial.isMaterial(XMaterial.PAINTING)) {
-            PaintingVariant art = NMSAddon.getInstance().getPaintingVariant(item);
-            if (art != null) {
-                prints.add(tooltipText(translatable(getPaintingTitle(art)).color(YELLOW)));
-                prints.add(tooltipText(translatable(getPaintingAuthor(art)).color(GRAY)));
-                prints.add(tooltipText(translatable(getPaintingDimension()).arguments(text(art.getWidth()), text(art.getHeight())).color(WHITE)));
+            PaintingVariant paintingVariant = NMSAddon.getInstance().getPaintingVariant(item);
+            if (paintingVariant != null) {
+                prints.add(tooltipText(translatable(getPaintingTitle(paintingVariant)).color(YELLOW)));
+                prints.add(tooltipText(translatable(getPaintingAuthor(paintingVariant)).color(GRAY)));
+                prints.add(tooltipText(translatable(getPaintingDimension()).arguments(text(paintingVariant.getBlockWidth()), text(paintingVariant.getBlockHeight())).color(WHITE)));
+                prints.add(tooltipImage(ImageGeneration.getPaintingImage(paintingVariant)));
             }
         }
 

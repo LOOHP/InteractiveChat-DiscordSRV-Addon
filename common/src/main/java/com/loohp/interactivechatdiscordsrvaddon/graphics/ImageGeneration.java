@@ -49,6 +49,7 @@ import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent.ToolTipType;
@@ -1059,10 +1060,14 @@ public class ImageGeneration {
                 currentY += 5;
                 BufferedImage componentImage = print.getToolTipComponent(ToolTipType.IMAGE);
                 g.drawImage(componentImage, topX + 8, currentY, null);
+                if (componentImage.getWidth() > maxX) {
+                    maxX = componentImage.getWidth();
+                }
                 currentY += componentImage.getHeight() + 11;
             }
         }
         g.dispose();
+        maxX += 14;
 
         int firstX = 0;
         outer:
@@ -1105,8 +1110,7 @@ public class ImageGeneration {
             }
         }
         firstY = Math.max(0, firstY - 8);
-
-        BufferedImage background = new BufferedImage(maxX + 9, currentY - 191, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage background = new BufferedImage(maxX + 4, currentY - 196, BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D g2 = background.createGraphics();
         g2.setColor(TOOLTIP_BACKGROUND_COLOR);
@@ -1124,9 +1128,9 @@ public class ImageGeneration {
         g2.dispose();
 
         int offsetX = Math.max(topX - firstX, 0);
-        BufferedImage output = new BufferedImage(offsetX + lastX - topX + 9, lastY - firstY + 9, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage output = new BufferedImage(offsetX + lastX - topX + 9, lastY - firstY + 7, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g3 = output.createGraphics();
-        g3.drawImage(background, offsetX, 200 - firstY, null);
+        g3.drawImage(background, offsetX, 201 - firstY, null);
         g3.drawImage(image, -firstX, -firstY, null);
         g3.dispose();
 
@@ -1645,6 +1649,21 @@ public class ImageGeneration {
         }
 
         return result;
+    }
+
+    public static BufferedImage getPaintingImage(PaintingVariant paintingVariant) {
+        BufferedImage originalPaintingImage;
+        if (resourceManager.get().getNativeServerPackFormat() >= 24) {
+            originalPaintingImage = resourceManager.get().getTextureManager().getTexture(paintingVariant.getKey().asString()).getTexture();
+        } else if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_14)) {
+            originalPaintingImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.LEGACY_PAINTINGS_LOCATION + paintingVariant.getKey().value()).getTexture();
+        } else {
+            BufferedImage base = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.LEGACY_SINGLE_PAINTING_LOCATION).getTexture();
+            int scale = base.getWidth() / 256;
+            originalPaintingImage = base.getSubimage(paintingVariant.getOffsetX() * scale, paintingVariant.getOffsetY() * scale, paintingVariant.getPixelWidth() * scale, paintingVariant.getPixelHeight() * scale);
+        }
+        int width = Math.min(243, paintingVariant.getPixelWidth() * 7);
+        return ImageUtils.resizeImageFillWidth(originalPaintingImage, width);
     }
 
     public static class GenericContainerBackgroundResult {

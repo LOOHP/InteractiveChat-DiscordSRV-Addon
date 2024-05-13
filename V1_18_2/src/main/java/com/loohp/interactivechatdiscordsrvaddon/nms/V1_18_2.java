@@ -403,7 +403,7 @@ public class V1_18_2 extends NMSAddonWrapper {
         try {
             net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
             if (nmsItemStack.s() && nmsItemStack.t().e("EntityTag")) {
-                String variant = nmsItemStack.t().p("EntityTag").l("variant");
+                String variant = nmsItemStack.t().p("EntityTag").l("Motive");
                 MinecraftKey key = new MinecraftKey(variant);
                 Paintings paintingVariant = IRegistry.ab.a(key);
                 return new PaintingVariant(Key.key(key.b(), key.a()), paintingVariant.a() / 16, paintingVariant.b() / 16);
