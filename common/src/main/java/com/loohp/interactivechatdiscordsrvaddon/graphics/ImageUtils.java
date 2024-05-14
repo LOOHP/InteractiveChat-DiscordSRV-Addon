@@ -617,6 +617,25 @@ public class ImageUtils {
         return new ComponentPrintResult(image, printResult.getTextWidth());
     }
 
+    public static ComponentPrintResult printComponentRightAlignedShadowless(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize) {
+        BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        ComponentPrintResult printResult = printComponentShadowless(manager, textImage, component, language, legacyRGB, 0, 0, fontSize);
+        textImage = printResult.getImage();
+        int lastX = 0;
+        for (int x = 0; x < textImage.getWidth() - 9; x++) {
+            for (int y = 0; y < textImage.getHeight(); y++) {
+                if (textImage.getRGB(x, y) != 0) {
+                    lastX = x;
+                    break;
+                }
+            }
+        }
+        Graphics2D g = image.createGraphics();
+        g.drawImage(textImage, topX - lastX, topY, null);
+        g.dispose();
+        return new ComponentPrintResult(image, printResult.getTextWidth());
+    }
+
     public static ComponentPrintResult printComponentGlowing(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize) {
         BufferedImage temp = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
         ComponentPrintResult printResult = printComponent0(manager, temp, component, language, legacyRGB, topX, topY, fontSize, 1);

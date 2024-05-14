@@ -161,7 +161,7 @@ public class LegacyUnicodeFont extends MinecraftFont {
                         g.dispose();
                         break;
                     case BOLD:
-                        BufferedImage boldImage = new BufferedImage(charImage.getWidth() + 2, charImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
+                        BufferedImage boldImage = new BufferedImage(charImage.getWidth() + boldSize, charImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
                         for (int x0 = 0; x0 < charImage.getWidth(); x0++) {
                             for (int y0 = 0; y0 < charImage.getHeight(); y0++) {
                                 int pixelColor = charImage.getRGB(x0, y0);
