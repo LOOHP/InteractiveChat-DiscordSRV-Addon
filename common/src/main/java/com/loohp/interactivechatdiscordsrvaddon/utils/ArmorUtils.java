@@ -34,6 +34,9 @@ public class ArmorUtils {
             return ArmorTextureResult.NONE;
         }
         Key key = NMSAddon.getInstance().getArmorMaterialKey(armorItem);
+        if (key == null) {
+            return ArmorTextureResult.NONE;
+        }
         String armorMaterialName = key.value();
         String namespace = key.namespace();
         int layer = slot.equals(EquipmentSlot.LEGS) ? 2 : 1;
