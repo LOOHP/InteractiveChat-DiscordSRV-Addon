@@ -1414,7 +1414,7 @@ public class ImageGeneration {
         if (resourceManager.get().getNativeServerPackFormat() < 16) {
             BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "icons").getTexture();
             int scale = icons.getWidth() / 256;
-            if (ms < 0) {
+            if (useNoConnectionIcon && ms < 0) {
                 return icons.getSubimage(0, 55 * scale, 10 * scale, 8 * scale);
             } else if (ms < 150) {
                 return icons.getSubimage(0, 15 * scale, 10 * scale, 8 * scale);
@@ -1422,14 +1422,14 @@ public class ImageGeneration {
                 return icons.getSubimage(0, 24 * scale, 10 * scale, 8 * scale);
             } else if (ms < 600) {
                 return icons.getSubimage(0, 31 * scale, 10 * scale, 8 * scale);
-            } else if (!useNoConnectionIcon || ms < 1000) {
+            } else if (ms < 1000) {
                 return icons.getSubimage(0, 39 * scale, 10 * scale, 8 * scale);
             } else {
                 return icons.getSubimage(0, 47 * scale, 10 * scale, 8 * scale);
             }
         } else {
             String location = ResourceRegistry.DEFAULT_SPRITE_LOCATION + "icon/";
-            if (ms < 0) {
+            if (useNoConnectionIcon && ms < 0) {
                 location += "ping_unknown";
             } else if (ms < 150) {
                 location += "ping_5";
@@ -1437,7 +1437,7 @@ public class ImageGeneration {
                 location += "ping_4";
             } else if (ms < 600) {
                 location += "ping_3";
-            } else if (!useNoConnectionIcon || ms < 1000) {
+            } else if (ms < 1000) {
                 location += "ping_2";
             } else {
                 location += "ping_1";
