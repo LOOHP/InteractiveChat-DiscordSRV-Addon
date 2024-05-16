@@ -564,7 +564,7 @@ public class OutboundToDiscordEvents implements Listener {
         }
 
         DiscordSRV srv = InteractiveChatDiscordSrvAddon.discordsrv;
-        if (InteractiveChatDiscordSrvAddon.plugin.translateMentions) {
+        if (InteractiveChatDiscordSrvAddon.plugin.sendDiscordMention) {
             Debug.debug("onGameToDiscord processing mentions");
             boolean hasMentionPermission = PlayerUtils.hasPermission(icSender.getUniqueId(), "interactivechat.mention.player", true, 200);
             if (hasMentionPermission) {

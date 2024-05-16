@@ -186,6 +186,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public boolean imageWhitelistEnabled = false;
     public List<String> whitelistedImageUrls = new ArrayList<>();
     public boolean translateMentions = true;
+    public boolean sendDiscordMention = true;
     public String mentionHighlight = "";
     public boolean deathMessageItem = true;
     public boolean deathMessageTranslated = true;
@@ -545,6 +546,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         advancementDescription = config.getConfiguration().getBoolean("Advancements.ShowDescription");
 
         translateMentions = config.getConfiguration().getBoolean("DiscordMention.TranslateMentions");
+        sendDiscordMention = config.getConfiguration().getBoolean("DiscordMention.DiscordMentionSend");
         mentionHighlight = ChatColorUtils.translateAlternateColorCodes('&', config.getConfiguration().getString("DiscordMention.MentionHighlight"));
 
         playbackBarEnabled = config.getConfiguration().getBoolean("DiscordAttachments.PlaybackBar.Enabled");

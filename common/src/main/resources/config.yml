@@ -282,6 +282,8 @@ DiscordMention:
   #Use {TextChannel} for the pinged channel name
   #Use {Guild} for the pinged guild name
   DiscordMentionSubtitle: "&9{DiscordUser} &fmentioned you in &9{TextChannel}!"
+  #Send mention on discord, If the option is true and someone pings you in-game, It will ping you on Discord.
+  DiscordMentionSend: true
   DiscordMentionActionbar: ""
 
   #Highlight the mentioned playername for the player mentioned
