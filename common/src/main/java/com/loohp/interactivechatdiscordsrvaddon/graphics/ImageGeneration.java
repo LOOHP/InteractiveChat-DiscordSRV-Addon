@@ -181,7 +181,8 @@ public class ImageGeneration {
                 if (animation.hasWidth() && animation.hasHeight()) {
                     tintOriginal = tintOriginal.getSubimage(0, 0, animation.getWidth(), animation.getHeight());
                 } else {
-                    tintOriginal = tintOriginal.getSubimage(0, 0, tintOriginal.getWidth(), tintOriginal.getWidth());
+                    int size = Math.min(tintOriginal.getWidth(), tintOriginal.getHeight());
+                    tintOriginal = tintOriginal.getSubimage(0, 0, size, size);
                 }
             }
         }

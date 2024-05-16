@@ -34,8 +34,8 @@ import java.util.function.UnaryOperator;
 
 public class TextureResource {
 
-    public static final String PNG_MCMETA_SUFFIX = ".png.mcmeta";
     public static final String MCMETA_SUFFIX = ".mcmeta";
+    public static final String PNG_MCMETA_SUFFIX = ".png" + MCMETA_SUFFIX;
 
     private final ITextureManager manager;
     private final String resourceKey;
@@ -118,7 +118,8 @@ public class TextureResource {
                 if (animation.hasWidth() && animation.hasHeight()) {
                     image = ImageUtils.copyAndGetSubImage(image, 0, 0, animation.getWidth(), animation.getHeight());
                 } else {
-                    image = ImageUtils.copyAndGetSubImage(image, 0, 0, image.getWidth(), image.getWidth());
+                    int size = Math.min(image.getWidth(), image.getHeight());
+                    image = ImageUtils.copyAndGetSubImage(image, 0, 0, size, size);
                 }
             }
         }
@@ -146,7 +147,8 @@ public class TextureResource {
                 if (animation.hasWidth() && animation.hasHeight()) {
                     image = ImageUtils.copyAndGetSubImage(image, 0, 0, animation.getWidth(), animation.getHeight());
                 } else {
-                    image = ImageUtils.copyAndGetSubImage(image, 0, 0, image.getWidth(), image.getWidth());
+                    int size = Math.min(image.getWidth(), image.getHeight());
+                    image = ImageUtils.copyAndGetSubImage(image, 0, 0, size, size);
                 }
             }
         }

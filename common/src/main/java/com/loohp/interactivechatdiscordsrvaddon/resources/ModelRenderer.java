@@ -220,7 +220,8 @@ public class ModelRenderer implements AutoCloseable {
                                 if (animation.hasWidth() && animation.hasHeight()) {
                                     texture = ImageUtils.copyAndGetSubImage(texture, 0, 0, animation.getWidth(), animation.getHeight());
                                 } else {
-                                    texture = ImageUtils.copyAndGetSubImage(texture, 0, 0, texture.getWidth(), texture.getWidth());
+                                    int size = Math.min(texture.getWidth(), texture.getHeight());
+                                    texture = ImageUtils.copyAndGetSubImage(texture, 0, 0, size, size);
                                 }
                             }
                         }
@@ -360,7 +361,8 @@ public class ModelRenderer implements AutoCloseable {
                         if (animation.hasWidth() && animation.hasHeight()) {
                             texture = ImageUtils.copyAndGetSubImage(texture, 0, 0, animation.getWidth(), animation.getHeight());
                         } else {
-                            texture = ImageUtils.copyAndGetSubImage(texture, 0, 0, texture.getWidth(), texture.getWidth());
+                            int size = Math.min(texture.getWidth(), texture.getHeight());
+                            texture = ImageUtils.copyAndGetSubImage(texture, 0, 0, size, size);
                         }
                     }
                 }
@@ -494,7 +496,8 @@ public class ModelRenderer implements AutoCloseable {
                                         if (animation.hasWidth() && animation.hasHeight()) {
                                             cached = ImageUtils.copyAndGetSubImage(cached, 0, 0, animation.getWidth(), animation.getHeight());
                                         } else {
-                                            cached = ImageUtils.copyAndGetSubImage(cached, 0, 0, cached.getWidth(), cached.getWidth());
+                                            int size = Math.min(cached.getWidth(), cached.getHeight());
+                                            cached = ImageUtils.copyAndGetSubImage(cached, 0, 0, size, size);
                                         }
                                     }
                                 }

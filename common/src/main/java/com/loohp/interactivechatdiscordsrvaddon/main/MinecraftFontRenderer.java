@@ -378,7 +378,8 @@ public class MinecraftFontRenderer extends JFrame {
                 if (animation.hasWidth() && animation.hasHeight()) {
                     tintOriginal = ImageUtils.copyAndGetSubImage(tintOriginal, 0, 0, animation.getWidth(), animation.getHeight());
                 } else {
-                    tintOriginal = ImageUtils.copyAndGetSubImage(tintOriginal, 0, 0, tintOriginal.getWidth(), tintOriginal.getWidth());
+                    int size = Math.min(tintOriginal.getWidth(), tintOriginal.getHeight());
+                    tintOriginal = ImageUtils.copyAndGetSubImage(tintOriginal, 0, 0, size, size);
                 }
             }
         }

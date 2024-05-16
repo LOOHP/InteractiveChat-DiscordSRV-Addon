@@ -157,11 +157,11 @@ public class TextureManager extends AbstractManager implements ITextureManager {
                         }
                     }
                 } else if (extension.equalsIgnoreCase("mcmeta")) {
-                    InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8);
-                    JSONObject rootJson = (JSONObject) parser.parse(reader);
-                    reader.close();
-                    TextureMeta textureMeta = TextureMeta.fromJson(this, key + "." + extension, file, rootJson);
-                    textures.put(key + "." + extension, textureMeta);
+                    try (InputStreamReader reader = new InputStreamReader(new BOMInputStream(file.getInputStream()), StandardCharsets.UTF_8)) {
+                        JSONObject rootJson = (JSONObject) parser.parse(reader);
+                        TextureMeta textureMeta = TextureMeta.fromJson(this, key + "." + extension, file, rootJson);
+                        textures.put(key + "." + extension, textureMeta);
+                    }
                 } else {
                     textures.put(key + "." + extension, new TextureResource(this, key, file));
                 }
