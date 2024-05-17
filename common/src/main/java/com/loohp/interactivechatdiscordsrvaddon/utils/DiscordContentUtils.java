@@ -50,6 +50,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.InteractionHandler
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordToolTip;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.TitledInventoryWrapper;
@@ -201,17 +202,17 @@ public class DiscordContentUtils {
                             if (pages.isEmpty()) {
                                 pages = Collections.singletonList(Component.empty());
                             }
-                            List<Supplier<BufferedImage>> images = ImageGeneration.getBookInterfaceSuppliers(pages);
-                            byte[][] cachedImages = new byte[images.size()][];
-                            cachedImages[0] = ImageUtils.toArray(images.get(0).get());
-                            if (!images.isEmpty()) {
+                            List<Supplier<BufferedImage>> pageImages = ImageGeneration.getBookInterfaceSuppliers(pages);
+                            byte[][] cachedPageImages = new byte[pageImages.size()][];
+                            cachedPageImages[0] = ImageUtils.toArray(pageImages.get(0).get());
+                            if (!pageImages.isEmpty()) {
                                 UUID interactionUuid = UUID.randomUUID();
                                 interactionsToRegister.add(ActionRow.of(Button.secondary(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "open_book_" + interactionUuid, BOOK_EMOJI)));
                                 interactions.add(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "open_book_" + interactionUuid);
                                 interactions.add(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "left_book_" + interactionUuid);
                                 interactions.add(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "right_book_" + interactionUuid);
                                 interactions.add(DiscordInteractionEvents.INTERACTION_ID_PREFIX + "selection_book_" + interactionUuid);
-                                interactionConsumer = interactionConsumer.andThen(getBookHandler(interactionUuid, color, images, cachedImages));
+                                interactionConsumer = interactionConsumer.andThen(getBookHandler(interactionUuid, color, pageImages, cachedPageImages));
                             }
                         }
                     } catch (Exception e) {
@@ -248,7 +249,7 @@ public class DiscordContentUtils {
                         content.addAttachment("Inventory_" + i + ".png", imageData);
                         if (type.equals(ImageDisplayType.INVENTORY) && InteractiveChatDiscordSrvAddon.plugin.invShowLevel) {
                             int level = iData.getPlayer().getExperienceLevel();
-                            byte[] bottleData = ImageUtils.toArray(InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, InteractiveChatDiscordSrvAddon.plugin.getResourceManager(), InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction("minecraft:item/experience_bottle", null, XMaterial.EXPERIENCE_BOTTLE.parseItem(), InteractiveChat.version.isOld(), null, null, null, null, InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)).orElse(null), InteractiveChat.version.isOld(), "minecraft:item/experience_bottle", ModelDisplayPosition.GUI, false, null, null).getImage());
+                            byte[] bottleData = ImageUtils.toArray(InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, ModelRenderer.SINGLE_RENDER, InteractiveChatDiscordSrvAddon.plugin.getResourceManager(), InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction("minecraft:item/experience_bottle", null, XMaterial.EXPERIENCE_BOTTLE.parseItem(), InteractiveChat.version.isOld(), null, null, null, null, InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)).orElse(null), InteractiveChat.version.isOld(), "minecraft:item/experience_bottle", ModelDisplayPosition.GUI, false, null, null).getImage(0));
                             content.addAttachment("Level_" + i + ".png", bottleData);
                             content.setFooter(ComponentStringUtils.convertFormattedString(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language), level));
                             content.setFooterImageUrl("attachment://Level_" + i + ".png");

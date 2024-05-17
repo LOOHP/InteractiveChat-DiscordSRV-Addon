@@ -33,6 +33,7 @@ import com.loohp.interactivechat.utils.CustomArrayUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.BlendingUtils;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.SteppedIntegerRange;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
@@ -49,11 +50,11 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.M
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.TextureUV;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.EnchantmentGlintType;
-import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimation;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.utils.AnimatedTextureUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ModelUtils;
 
 import java.awt.Graphics2D;
@@ -82,15 +83,18 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.IntSupplier;
 import java.util.function.LongSupplier;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class ModelRenderer implements AutoCloseable {
 
     public static final Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> DEFAULT_POST_RESOLVE_FUNCTION = blockModel -> new ValuePairs<>(blockModel, Collections.emptyMap());
+
+    public static final SteppedIntegerRange SINGLE_RENDER = new SteppedIntegerRange(0);
 
     public static final int INTERNAL_W = 64;
     public static final int INTERNAL_H = 64;
@@ -154,13 +158,11 @@ public class ModelRenderer implements AutoCloseable {
         this.renderingService.setCorePoolSize(renderThreadSize);
     }
 
-    public RenderResult renderPlayer(int width, int height, ResourceManager manager, boolean post1_8, boolean slim, Map<String, TextureResource> providedTextures, TintColorProvider tintColorProvider, Map<PlayerModelItemPosition, PlayerModelItem> modelItems) {
+    public RenderResult renderPlayer(int width, int height, SteppedIntegerRange animationSpec, ResourceManager manager, boolean post1_8, boolean slim, Map<String, TextureResource> providedTextures, TintColorProvider tintColorProvider, Map<PlayerModelItemPosition, PlayerModelItem> modelItems) {
         BlockModel playerModel = manager.getModelManager().resolveBlockModel(slim ? PLAYER_MODEL_SLIM_RESOURCELOCATION : PLAYER_MODEL_RESOURCELOCATION, InteractiveChat.version.isOld(), Collections.emptyMap());
         if (playerModel == null) {
             return new RenderResult(MODEL_NOT_FOUND);
         }
-        Model playerRenderModel = generateStandardRenderModel(playerModel, manager, providedTextures, Collections.emptyMap(), tintColorProvider, false, true, null);
-
         Map<PlayerModelItem, ValueTrios<BlockModel, Map<String, TextureResource>, TintColorProvider>> resolvedItems = new HashMap<>();
         for (PlayerModelItem playerModelItem : modelItems.values()) {
             BlockModel itemBlockModel = playerModelItem.getModelKey() == null ? null : manager.getModelManager().resolveBlockModel(playerModelItem.getModelKey(), InteractiveChat.version.isOld(), playerModelItem.getPredicate());
@@ -170,7 +172,7 @@ public class ModelRenderer implements AutoCloseable {
             resolvedItems.put(playerModelItem, new ValueTrios<>(itemBlockModel, overrideTextures, playerModelItem.getTintColorProvider()));
         }
 
-        String cacheKey = cacheKey(width, height, manager.getUuid(), slim, cacheKeyResolvedItems(resolvedItems), cacheKeyProvidedTextures(providedTextures));
+        String cacheKey = cacheKey(width, height, animationSpec, manager.getUuid(), slim, cacheKeyResolvedItems(resolvedItems), cacheKeyProvidedTextures(providedTextures));
         if (manager.hasResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class)) {
             CacheObject<?> cachedRender = manager.getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).getCache(cacheKey);
             if (cachedRender != null) {
@@ -181,131 +183,133 @@ public class ModelRenderer implements AutoCloseable {
             }
         }
 
-        for (Entry<PlayerModelItem, ValueTrios<BlockModel, Map<String, TextureResource>, TintColorProvider>> entry : resolvedItems.entrySet()) {
-            PlayerModelItem playerModelItem = entry.getKey();
-            BlockModel itemBlockModel = entry.getValue().getFirst();
-            Map<String, TextureResource> overrideTextures = entry.getValue().getSecond();
-            Model itemRenderModel = null;
-            if (itemBlockModel != null) {
-                if (itemBlockModel.getParent() == null || !itemBlockModel.getParent().contains("/")) {
-                    itemRenderModel = generateStandardRenderModel(itemBlockModel, manager, playerModelItem.getProvidedTextures(), overrideTextures, playerModelItem.getTintColorProvider(), playerModelItem.isEnchanted(), false, playerModelItem.getRawEnchantmentGlintProvider());
-                } else if (itemBlockModel.getParent().equals(ModelManager.ITEM_BASE)) {
-                    BufferedImage image = new BufferedImage(INTERNAL_W, INTERNAL_H, BufferedImage.TYPE_INT_ARGB);
-                    Graphics2D g = image.createGraphics();
-                    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-                    for (int i = 0; itemBlockModel.getTextures().containsKey(ModelManager.ITEM_BASE_LAYER + i); i++) {
-                        TextureResource resource = overrideTextures.getOrDefault("", overrideTextures.get(ModelManager.ITEM_BASE_LAYER + i));
-                        String resourceLocation = itemBlockModel.getTextures().get(ModelManager.ITEM_BASE_LAYER + i);
-                        if (!resourceLocation.contains(":")) {
-                            resourceLocation = ResourceRegistry.DEFAULT_NAMESPACE + ":" + resourceLocation;
-                        }
-                        if (resource == null) {
-                            resource = providedTextures.get(resourceLocation);
-                        }
-                        if (resource == null) {
-                            resource = manager.getTextureManager().getTexture(resourceLocation);
-                        }
-                        BufferedImage texture = resource.getTexture();
-                        texture = entry.getValue().getThird().applyTint(texture, i);
-                        if (resource.hasTextureMeta()) {
-                            TextureMeta meta = resource.getTextureMeta();
-                            if (meta.hasProperties()) {
-                                TextureProperties properties = meta.getProperties();
-                                if (properties.isBlur()) {
-                                    texture = ImageUtils.applyGaussianBlur(texture);
+        List<BufferedImage> images = Stream.generate(() -> new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)).limit(animationSpec.getTotalSteps()).collect(Collectors.toList());
+        int index = 0;
+        for (int tick : animationSpec) {
+            Model playerRenderModel = generateStandardRenderModel(tick, playerModel, manager, providedTextures, Collections.emptyMap(), tintColorProvider, false, true, null);
+
+            for (Entry<PlayerModelItem, ValueTrios<BlockModel, Map<String, TextureResource>, TintColorProvider>> entry : resolvedItems.entrySet()) {
+                PlayerModelItem playerModelItem = entry.getKey();
+                BlockModel itemBlockModel = entry.getValue().getFirst();
+                Map<String, TextureResource> overrideTextures = entry.getValue().getSecond();
+                Model itemRenderModel = null;
+                if (itemBlockModel != null) {
+                    if (itemBlockModel.getParent() == null || !itemBlockModel.getParent().contains("/")) {
+                        itemRenderModel = generateStandardRenderModel(tick, itemBlockModel, manager, playerModelItem.getProvidedTextures(), overrideTextures, playerModelItem.getTintColorProvider(), playerModelItem.isEnchanted(), false, playerModelItem.getRawEnchantmentGlintProvider());
+                    } else if (itemBlockModel.getParent().equals(ModelManager.ITEM_BASE)) {
+                        BufferedImage image = new BufferedImage(INTERNAL_W, INTERNAL_H, BufferedImage.TYPE_INT_ARGB);
+                        Graphics2D g = image.createGraphics();
+                        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+                        for (int i = 0; itemBlockModel.getTextures().containsKey(ModelManager.ITEM_BASE_LAYER + i); i++) {
+                            TextureResource resource = overrideTextures.getOrDefault("", overrideTextures.get(ModelManager.ITEM_BASE_LAYER + i));
+                            String resourceLocation = itemBlockModel.getTextures().get(ModelManager.ITEM_BASE_LAYER + i);
+                            if (!resourceLocation.contains(":")) {
+                                resourceLocation = ResourceRegistry.DEFAULT_NAMESPACE + ":" + resourceLocation;
+                            }
+                            if (resource == null) {
+                                resource = providedTextures.get(resourceLocation);
+                            }
+                            if (resource == null) {
+                                resource = manager.getTextureManager().getTexture(resourceLocation);
+                            }
+                            BufferedImage texture = resource.getTexture();
+                            texture = entry.getValue().getThird().applyTint(texture, i);
+                            if (resource.hasTextureMeta()) {
+                                TextureMeta meta = resource.getTextureMeta();
+                                if (meta.hasProperties()) {
+                                    TextureProperties properties = meta.getProperties();
+                                    if (properties.isBlur()) {
+                                        texture = ImageUtils.applyGaussianBlur(texture);
+                                    }
+                                }
+                                if (meta.hasAnimation()) {
+                                    texture = AnimatedTextureUtils.getCurrentAnimationFrame(texture, meta.getAnimation(), tick);
                                 }
                             }
-                            if (meta.hasAnimation()) {
-                                TextureAnimation animation = meta.getAnimation();
-                                if (animation.hasWidth() && animation.hasHeight()) {
-                                    texture = ImageUtils.copyAndGetSubImage(texture, 0, 0, animation.getWidth(), animation.getHeight());
-                                } else {
-                                    int size = Math.min(texture.getWidth(), texture.getHeight());
-                                    texture = ImageUtils.copyAndGetSubImage(texture, 0, 0, size, size);
-                                }
-                            }
+                            g.drawImage(texture, 0, 0, image.getWidth(), image.getHeight(), null);
                         }
-                        g.drawImage(texture, 0, 0, image.getWidth(), image.getHeight(), null);
+                        g.dispose();
+                        if (playerModelItem.isEnchanted()) {
+                            image = playerModelItem.getEnchantmentGlintProvider().apply(new RawEnchantmentGlintParameters(image, EnchantmentGlintType.ITEM, tick));
+                        }
+                        itemRenderModel = generateItemRenderModel(16, 16, 16, image);
                     }
-                    g.dispose();
-                    if (playerModelItem.isEnchanted()) {
-                        image = playerModelItem.getEnchantmentGlintProvider().apply(image, EnchantmentGlintType.ITEM);
+                }
+
+                if (itemRenderModel != null) {
+                    itemRenderModel.translate(-16 / 2.0, -16 / 2.0, -16 / 2.0);
+                    ModelDisplay displayData = itemBlockModel.getRawDisplay().get(playerModelItem.getPosition().getModelDisplayPosition());
+                    boolean flipX = playerModelItem.getPosition().isLiteralFlipped();
+                    boolean isMirror = false;
+                    if (displayData == null && playerModelItem.getPosition().getModelDisplayPosition().hasFallback()) {
+                        displayData = itemBlockModel.getRawDisplay().get(playerModelItem.getPosition().getModelDisplayPosition().getFallback());
+                        isMirror = true;
                     }
-                    itemRenderModel = generateItemRenderModel(16, 16, 16, image);
+                    if (isMirror || !flipX) {
+                        if (displayData != null) {
+                            Coordinates3D scale = displayData.getScale();
+                            itemRenderModel.scale(scale.getX(), scale.getY(), scale.getZ());
+                            Coordinates3D rotation = displayData.getRotation();
+                            itemRenderModel.rotate(rotation.getX(), rotation.getY(), rotation.getZ() + (post1_8 ? 10 : 0), false);
+                            Coordinates3D transform = displayData.getTranslation();
+                            itemRenderModel.translate(transform.getX(), transform.getY() + (post1_8 ? -10 : 0), transform.getZ() + (post1_8 ? -2.75 : 0));
+                        }
+                        if (flipX) {
+                            itemRenderModel.flipAboutPlane(false, true, true);
+                        }
+                    } else {
+                        if (displayData != null) {
+                            Coordinates3D scale = displayData.getScale();
+                            itemRenderModel.scale(scale.getX(), scale.getY(), scale.getZ());
+                            Coordinates3D rotation = displayData.getRotation();
+                            itemRenderModel.rotate(rotation.getX(), -rotation.getY(), -rotation.getZ(), false);
+                            Coordinates3D transform = displayData.getTranslation();
+                            itemRenderModel.translate(-transform.getX(), transform.getY(), transform.getZ());
+                        }
+                    }
+                    if (playerModelItem.getPosition().yIsZAxis()) {
+                        if (post1_8) {
+                            itemRenderModel.rotate(180, 180, 0, false);
+                        } else {
+                            itemRenderModel.rotate(90, 0, 0, true);
+                        }
+                    }
+                    double scale = playerModelItem.getPosition().getScale();
+                    itemRenderModel.scale(scale, scale, scale);
+                    itemRenderModel.translate((16 * scale) / 2, (16 * scale) / 2, (16 * scale) / 2);
+                    Coordinates3D defaultTranslation = playerModelItem.getPosition().getDefaultTranslate();
+                    itemRenderModel.translate(defaultTranslation.getX(), defaultTranslation.getY(), defaultTranslation.getZ());
+                    playerRenderModel.append(itemRenderModel);
                 }
             }
 
-            if (itemRenderModel != null) {
-                itemRenderModel.translate(-16 / 2.0, -16 / 2.0, -16 / 2.0);
-                ModelDisplay displayData = itemBlockModel.getRawDisplay().get(playerModelItem.getPosition().getModelDisplayPosition());
-                boolean flipX = playerModelItem.getPosition().isLiteralFlipped();
-                boolean isMirror = false;
-                if (displayData == null && playerModelItem.getPosition().getModelDisplayPosition().hasFallback()) {
-                    displayData = itemBlockModel.getRawDisplay().get(playerModelItem.getPosition().getModelDisplayPosition().getFallback());
-                    isMirror = true;
-                }
-                if (isMirror || !flipX) {
-                    if (displayData != null) {
-                        Coordinates3D scale = displayData.getScale();
-                        itemRenderModel.scale(scale.getX(), scale.getY(), scale.getZ());
-                        Coordinates3D rotation = displayData.getRotation();
-                        itemRenderModel.rotate(rotation.getX(), rotation.getY(), rotation.getZ() + (post1_8 ? 10 : 0), false);
-                        Coordinates3D transform = displayData.getTranslation();
-                        itemRenderModel.translate(transform.getX(), transform.getY() + (post1_8 ? -10 : 0), transform.getZ() + (post1_8 ? -2.75 : 0));
-                    }
-                    if (flipX) {
-                        itemRenderModel.flipAboutPlane(false, true, true);
-                    }
-                } else {
-                    if (displayData != null) {
-                        Coordinates3D scale = displayData.getScale();
-                        itemRenderModel.scale(scale.getX(), scale.getY(), scale.getZ());
-                        Coordinates3D rotation = displayData.getRotation();
-                        itemRenderModel.rotate(rotation.getX(), -rotation.getY(), -rotation.getZ(), false);
-                        Coordinates3D transform = displayData.getTranslation();
-                        itemRenderModel.translate(-transform.getX(), transform.getY(), transform.getZ());
-                    }
-                }
-                if (playerModelItem.getPosition().yIsZAxis()) {
-                    if (post1_8) {
-                        itemRenderModel.rotate(180, 180, 0, false);
-                    } else {
-                        itemRenderModel.rotate(90, 0, 0, true);
-                    }
-                }
-                double scale = playerModelItem.getPosition().getScale();
-                itemRenderModel.scale(scale, scale, scale);
-                itemRenderModel.translate((16 * scale) / 2, (16 * scale) / 2, (16 * scale) / 2);
-                Coordinates3D defaultTranslation = playerModelItem.getPosition().getDefaultTranslate();
-                itemRenderModel.translate(defaultTranslation.getX(), defaultTranslation.getY(), defaultTranslation.getZ());
-                playerRenderModel.append(itemRenderModel);
-            }
+            playerRenderModel.translate(-16 / 2.0, -16 / 2.0, -16 / 2.0);
+            playerRenderModel.rotate(0, 180, 0, false);
+            playerRenderModel.translate(16 / 2.0, 16 / 2.0, 16 / 2.0);
+
+            renderPlayerModel(playerRenderModel, images.get(index), playerModel.getGUILight());
+
+            index++;
         }
 
-        playerRenderModel.translate(-16 / 2.0, -16 / 2.0, -16 / 2.0);
-        playerRenderModel.rotate(0, 180, 0, false);
-        playerRenderModel.translate(16 / 2.0, 16 / 2.0, 16 / 2.0);
-
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        renderPlayerModel(playerRenderModel, image, playerModel.getGUILight());
-        RenderResult result = new RenderResult(image);
+        RenderResult result = new RenderResult(images);
         manager.getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).putCache(cacheKey, result);
         return result;
     }
 
-    public RenderResult render(int width, int height, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, boolean enchanted, BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintProvider, BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
-        return render(width, height, manager, postResolveFunction, post1_8, modelKey, displayPosition, Collections.emptyMap(), Collections.emptyMap(), TintColorProvider.EMPTY_INSTANCE, enchanted, enchantmentGlintProvider, rawEnchantmentGlintProvider);
+    public RenderResult render(int width, int height, SteppedIntegerRange animationSpec, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, boolean enchanted, Function<RawEnchantmentGlintParameters, BufferedImage> enchantmentGlintProvider, Function<RawEnchantmentGlintParameters, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
+        return render(width, height, animationSpec, manager, postResolveFunction, post1_8, modelKey, displayPosition, Collections.emptyMap(), Collections.emptyMap(), TintColorProvider.EMPTY_INSTANCE, enchanted, enchantmentGlintProvider, rawEnchantmentGlintProvider);
     }
 
-    public RenderResult render(int width, int height, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintColorProvider tintColorProvider, boolean enchanted, BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintProvider, BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
-        return render(width, height, INTERNAL_W, INTERNAL_H, manager, postResolveFunction, post1_8, modelKey, displayPosition, predicate, providedTextures, tintColorProvider, enchanted, enchantmentGlintProvider, rawEnchantmentGlintProvider);
+    public RenderResult render(int width, int height, SteppedIntegerRange animationSpec, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintColorProvider tintColorProvider, boolean enchanted, Function<RawEnchantmentGlintParameters, BufferedImage> enchantmentGlintProvider, Function<RawEnchantmentGlintParameters, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
+        return render(width, height, INTERNAL_W, INTERNAL_H, animationSpec, manager, postResolveFunction, post1_8, modelKey, displayPosition, predicate, providedTextures, tintColorProvider, enchanted, enchantmentGlintProvider, rawEnchantmentGlintProvider);
     }
 
-    public RenderResult render(int width, int height, int internalWidth, int internalHeight, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintColorProvider tintColorProvider, boolean enchanted, BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintProvider, BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
-        return render(width, height, internalWidth, internalHeight, manager, postResolveFunction, post1_8, modelKey, displayPosition, predicate, providedTextures, tintColorProvider, enchanted, false, enchantmentGlintProvider, rawEnchantmentGlintProvider);
+    public RenderResult render(int width, int height, int internalWidth, int internalHeight, SteppedIntegerRange animationSpec, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintColorProvider tintColorProvider, boolean enchanted, Function<RawEnchantmentGlintParameters, BufferedImage> enchantmentGlintProvider, Function<RawEnchantmentGlintParameters, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
+        return render(width, height, internalWidth, internalHeight, animationSpec, manager, postResolveFunction, post1_8, modelKey, displayPosition, predicate, providedTextures, tintColorProvider, enchanted, false, enchantmentGlintProvider, rawEnchantmentGlintProvider);
     }
 
-    public RenderResult render(int width, int height, int internalWidth, int internalHeight, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintColorProvider tintColorProvider, boolean enchanted, boolean usePlayerModelPosition, BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintProvider, BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
+    public RenderResult render(int width, int height, int internalWidth, int internalHeight, SteppedIntegerRange animationSpec, ResourceManager manager, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, boolean post1_8, String modelKey, ModelDisplayPosition displayPosition, Map<ModelOverrideType, Float> predicate, Map<String, TextureResource> providedTextures, TintColorProvider tintColorProvider, boolean enchanted, boolean usePlayerModelPosition, Function<RawEnchantmentGlintParameters, BufferedImage> enchantmentGlintProvider, Function<RawEnchantmentGlintParameters, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
         if (postResolveFunction == null) {
             postResolveFunction = DEFAULT_POST_RESOLVE_FUNCTION;
         }
@@ -319,7 +323,7 @@ public class ModelRenderer implements AutoCloseable {
             return new RenderResult(MODEL_NOT_FOUND);
         }
 
-        String cacheKey = cacheKey(width, height, manager.getUuid(), postResolveFunction.hashCode(), modelKey, displayPosition, predicate, cacheKeyProvidedTextures(providedTextures), cacheKeyProvidedTextures(overrideTextures), enchanted);
+        String cacheKey = cacheKey(width, height, animationSpec, manager.getUuid(), postResolveFunction.hashCode(), modelKey, displayPosition, predicate, cacheKeyProvidedTextures(providedTextures), cacheKeyProvidedTextures(overrideTextures), enchanted);
         CacheObject<?> cachedRender = manager.getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).getCache(cacheKey);
         if (cachedRender != null) {
             RenderResult cachedResult = (RenderResult) cachedRender.getObject();
@@ -328,58 +332,62 @@ public class ModelRenderer implements AutoCloseable {
             }
         }
 
-        BufferedImage image = new BufferedImage(internalWidth, internalHeight, BufferedImage.TYPE_INT_ARGB);
+        List<BufferedImage> images = Stream.generate(() -> new BufferedImage(internalWidth, internalHeight, BufferedImage.TYPE_INT_ARGB)).limit(animationSpec.getTotalSteps()).collect(Collectors.toList());
         if (blockModel.getParent() == null || !blockModel.getParent().contains("/")) {
-            renderBlockModel(generateStandardRenderModel(blockModel, manager, providedTextures, overrideTextures, tintColorProvider, enchanted, false, rawEnchantmentGlintProvider), image, blockModel.getDisplay(displayPosition), blockModel.getGUILight(), usePlayerModelPosition);
-        } else if (blockModel.getParent().equals(ModelManager.ITEM_BASE)) {
-            Graphics2D g = image.createGraphics();
-            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-            for (int i = 0; blockModel.getTextures().containsKey(ModelManager.ITEM_BASE_LAYER + i); i++) {
-                TextureResource resource = overrideTextures.getOrDefault("", overrideTextures.get(ModelManager.ITEM_BASE_LAYER + i));
-                String resourceLocation = blockModel.getTextures().get(ModelManager.ITEM_BASE_LAYER + i);
-                if (!resourceLocation.contains(":")) {
-                    resourceLocation = ResourceRegistry.DEFAULT_NAMESPACE + ":" + resourceLocation;
-                }
-                if (resource == null) {
-                    resource = providedTextures.get(resourceLocation);
-                }
-                if (resource == null) {
-                    resource = manager.getTextureManager().getTexture(resourceLocation);
-                }
-                BufferedImage texture = resource.getTexture();
-                texture = tintColorProvider.applyTint(texture, i);
-                if (resource.hasTextureMeta()) {
-                    TextureMeta meta = resource.getTextureMeta();
-                    if (meta.hasProperties()) {
-                        TextureProperties properties = meta.getProperties();
-                        if (properties.isBlur()) {
-                            texture = ImageUtils.applyGaussianBlur(texture);
-                        }
-                    }
-                    if (meta.hasAnimation()) {
-                        TextureAnimation animation = meta.getAnimation();
-                        if (animation.hasWidth() && animation.hasHeight()) {
-                            texture = ImageUtils.copyAndGetSubImage(texture, 0, 0, animation.getWidth(), animation.getHeight());
-                        } else {
-                            int size = Math.min(texture.getWidth(), texture.getHeight());
-                            texture = ImageUtils.copyAndGetSubImage(texture, 0, 0, size, size);
-                        }
-                    }
-                }
-                g.drawImage(texture, 0, 0, image.getWidth(), image.getHeight(), null);
+            int index = 0;
+            for (int tick : animationSpec) {
+                renderBlockModel(generateStandardRenderModel(tick, blockModel, manager, providedTextures, overrideTextures, tintColorProvider, enchanted, false, rawEnchantmentGlintProvider), images.get(index), blockModel.getDisplay(displayPosition), blockModel.getGUILight(), usePlayerModelPosition);
+                index++;
             }
-            g.dispose();
-            if (enchanted) {
-                image = enchantmentGlintProvider.apply(image, EnchantmentGlintType.ITEM);
+        } else if (blockModel.getParent().equals(ModelManager.ITEM_BASE)) {
+            int index = 0;
+            for (int tick : animationSpec) {
+                BufferedImage image = images.get(index);
+                Graphics2D g = image.createGraphics();
+                g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+                for (int i = 0; blockModel.getTextures().containsKey(ModelManager.ITEM_BASE_LAYER + i); i++) {
+                    TextureResource resource = overrideTextures.getOrDefault("", overrideTextures.get(ModelManager.ITEM_BASE_LAYER + i));
+                    String resourceLocation = blockModel.getTextures().get(ModelManager.ITEM_BASE_LAYER + i);
+                    if (!resourceLocation.contains(":")) {
+                        resourceLocation = ResourceRegistry.DEFAULT_NAMESPACE + ":" + resourceLocation;
+                    }
+                    if (resource == null) {
+                        resource = providedTextures.get(resourceLocation);
+                    }
+                    if (resource == null) {
+                        resource = manager.getTextureManager().getTexture(resourceLocation);
+                    }
+                    BufferedImage texture = resource.getTexture();
+                    texture = tintColorProvider.applyTint(texture, i);
+                    if (resource.hasTextureMeta()) {
+                        TextureMeta meta = resource.getTextureMeta();
+                        if (meta.hasProperties()) {
+                            TextureProperties properties = meta.getProperties();
+                            if (properties.isBlur()) {
+                                texture = ImageUtils.applyGaussianBlur(texture);
+                            }
+                        }
+                        if (meta.hasAnimation()) {
+                            texture = AnimatedTextureUtils.getCurrentAnimationFrame(texture, meta.getAnimation(), tick);
+                        }
+                    }
+                    g.drawImage(texture, 0, 0, image.getWidth(), image.getHeight(), null);
+                }
+                g.dispose();
+                if (enchanted) {
+                    image = enchantmentGlintProvider.apply(new RawEnchantmentGlintParameters(image, EnchantmentGlintType.ITEM, tick));
+                }
+                index++;
             }
         } else {
             rejectedReason = blockModel.getParent();
         }
         RenderResult result;
         if (rejectedReason == null) {
-            result = new RenderResult(ImageUtils.resizeImageQuality(image, width, height));
+            images.replaceAll(image -> ImageUtils.resizeImageQuality(image, width, height));
+            result = new RenderResult(images);
         } else {
-            result = new RenderResult(rejectedReason == null ? "null" : rejectedReason);
+            result = new RenderResult(rejectedReason);
         }
         manager.getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).putCache(cacheKey, result);
         return result;
@@ -419,7 +427,7 @@ public class ModelRenderer implements AutoCloseable {
     }
 
     @SuppressWarnings("SuspiciousNameCombination")
-    private Model generateStandardRenderModel(BlockModel blockModel, ResourceManager manager, Map<String, TextureResource> providedTextures, Map<String, TextureResource> overrideTextures, TintColorProvider tintColorProvider, boolean enchanted, boolean skin, BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
+    private Model generateStandardRenderModel(int animationTick, BlockModel blockModel, ResourceManager manager, Map<String, TextureResource> providedTextures, Map<String, TextureResource> overrideTextures, TintColorProvider tintColorProvider, boolean enchanted, boolean skin, Function<RawEnchantmentGlintParameters, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
         Map<String, BufferedImage> cachedResize = new ConcurrentHashMap<>();
         Map<String, RawEnchantmentGlintData> cachedEnchantmentGlint = new ConcurrentHashMap<>();
         List<ModelElement> elements = new ArrayList<>(blockModel.getElements());
@@ -492,13 +500,7 @@ public class ModelRenderer implements AutoCloseable {
                                         }
                                     }
                                     if (meta.hasAnimation()) {
-                                        TextureAnimation animation = meta.getAnimation();
-                                        if (animation.hasWidth() && animation.hasHeight()) {
-                                            cached = ImageUtils.copyAndGetSubImage(cached, 0, 0, animation.getWidth(), animation.getHeight());
-                                        } else {
-                                            int size = Math.min(cached.getWidth(), cached.getHeight());
-                                            cached = ImageUtils.copyAndGetSubImage(cached, 0, 0, size, size);
-                                        }
+                                        cached = AnimatedTextureUtils.getCurrentAnimationFrame(cached, meta.getAnimation(), animationTick);
                                     }
                                 }
                                 if (cached.getWidth() > cached.getHeight()) {
@@ -595,7 +597,7 @@ public class ModelRenderer implements AutoCloseable {
                                 String key = image.getWidth() + "x" + image.getHeight();
                                 RawEnchantmentGlintData overlayResult = cachedEnchantmentGlint.get(key);
                                 if (overlayResult == null) {
-                                    cachedEnchantmentGlint.put(key, overlayResult = rawEnchantmentGlintProvider.apply(image, EnchantmentGlintType.ITEM));
+                                    cachedEnchantmentGlint.put(key, overlayResult = rawEnchantmentGlintProvider.apply(new RawEnchantmentGlintParameters(image, EnchantmentGlintType.ITEM, animationTick)));
                                 }
                                 overlayImages[i] = overlayResult.getOverlay().toArray(EMPTY_IMAGE_ARRAY);
                                 overlayBlendMode[i] = overlayResult.getBlending().stream().map(each -> BlendingUtils.convert(each)).toArray(BlendingModes[]::new);
@@ -805,10 +807,10 @@ public class ModelRenderer implements AutoCloseable {
         private final boolean enchanted;
         private final Map<String, TextureResource> providedTextures;
         private final TintColorProvider tintColorProvider;
-        private final BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintProvider;
-        private final BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintProvider;
+        private final Function<RawEnchantmentGlintParameters, BufferedImage> enchantmentGlintProvider;
+        private final Function<RawEnchantmentGlintParameters, RawEnchantmentGlintData> rawEnchantmentGlintProvider;
 
-        public PlayerModelItem(PlayerModelItemPosition position, String modelKey, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, Map<ModelOverrideType, Float> predicate, boolean enchanted, Map<String, TextureResource> providedTextures, TintColorProvider tintColorProvider, BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintProvider, BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
+        public PlayerModelItem(PlayerModelItemPosition position, String modelKey, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, Map<ModelOverrideType, Float> predicate, boolean enchanted, Map<String, TextureResource> providedTextures, TintColorProvider tintColorProvider, Function<RawEnchantmentGlintParameters, BufferedImage> enchantmentGlintProvider, Function<RawEnchantmentGlintParameters, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
             this.position = position;
             this.modelKey = modelKey;
             if (postResolveFunction == null) {
@@ -852,14 +854,39 @@ public class ModelRenderer implements AutoCloseable {
             return tintColorProvider;
         }
 
-        public BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> getEnchantmentGlintProvider() {
+        public Function<RawEnchantmentGlintParameters, BufferedImage> getEnchantmentGlintProvider() {
             return enchantmentGlintProvider;
         }
 
-        public BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> getRawEnchantmentGlintProvider() {
+        public Function<RawEnchantmentGlintParameters, RawEnchantmentGlintData> getRawEnchantmentGlintProvider() {
             return rawEnchantmentGlintProvider;
         }
 
+    }
+
+    public static class RawEnchantmentGlintParameters {
+
+        private final BufferedImage image;
+        private final EnchantmentGlintType glintType;
+        private final int tick;
+
+        public RawEnchantmentGlintParameters(BufferedImage image, EnchantmentGlintType glintType, int tick) {
+            this.image = image;
+            this.glintType = glintType;
+            this.tick = tick;
+        }
+
+        public BufferedImage getImage() {
+            return image;
+        }
+
+        public EnchantmentGlintType getGlintType() {
+            return glintType;
+        }
+
+        public int getTick() {
+            return tick;
+        }
     }
 
     public static class RawEnchantmentGlintData {
@@ -884,25 +911,33 @@ public class ModelRenderer implements AutoCloseable {
 
     public static class RenderResult {
 
-        private final BufferedImage image;
+        private final List<BufferedImage> images;
         private final String rejectedReason;
 
-        public RenderResult(BufferedImage image) {
-            this.image = image;
+        public RenderResult(List<BufferedImage> images) {
+            this.images = images;
             this.rejectedReason = null;
         }
 
         public RenderResult(String rejectedReason) {
-            this.image = null;
+            this.images = null;
             this.rejectedReason = rejectedReason;
         }
 
         public boolean isSuccessful() {
-            return image != null;
+            return images != null;
         }
 
-        public BufferedImage getImage() {
-            return ImageUtils.copyImage(image);
+        public int getTotalImages() {
+            return images == null ? 0 : images.size();
+        }
+
+        public BufferedImage getImage(int index) {
+            return ImageUtils.copyImage(images.get(index));
+        }
+
+        public List<BufferedImage> getImages() {
+            return IntStream.range(0, getTotalImages()).mapToObj(i -> getImage(i)).collect(Collectors.toList());
         }
 
         public String getRejectedReason() {

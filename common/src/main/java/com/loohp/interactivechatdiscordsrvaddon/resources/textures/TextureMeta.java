@@ -37,7 +37,7 @@ public class TextureMeta extends TextureResource {
             boolean interpolate = Boolean.parseBoolean(animationJson.getOrDefault("interpolate", false).toString());
             int width = ((Number) animationJson.getOrDefault("width", -1)).intValue();
             int height = ((Number) animationJson.getOrDefault("height", -1)).intValue();
-            int frametime = ((Number) animationJson.getOrDefault("frametime", -1)).intValue();
+            int frametime = ((Number) animationJson.getOrDefault("frametime", 1)).intValue();
             JSONArray framesArray = ((JSONArray) animationJson.getOrDefault("frames", new JSONArray()));
             List<TextureAnimationFrames> frames = new ArrayList<>();
             for (Object obj : framesArray) {

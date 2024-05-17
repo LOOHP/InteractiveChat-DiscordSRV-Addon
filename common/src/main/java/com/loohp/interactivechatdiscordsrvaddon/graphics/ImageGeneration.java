@@ -50,6 +50,7 @@ import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.SteppedIntegerRange;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent.ToolTipType;
@@ -57,6 +58,7 @@ import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CacheObject;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ICacheManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.PlayerModelItem;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.PlayerModelItemPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RawEnchantmentGlintData;
@@ -68,11 +70,11 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.M
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.EnchantmentGlintType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
-import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimation;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.utils.AnimatedTextureUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ArmorUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.BundleUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
@@ -118,7 +120,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
 import java.util.function.UnaryOperator;
@@ -162,7 +164,7 @@ public class ImageGeneration {
         return TextureManager.getMissingImage(width, length);
     }
 
-    public static BufferedImage getRawEnchantedImage(TextureResource tintResource, BufferedImage source) {
+    public static BufferedImage getRawEnchantedImage(TextureResource tintResource, BufferedImage source, int tick) {
         BufferedImage tintOriginal = tintResource.getTexture();
         if (version.get().isOlderOrEqualTo(MCVersion.V1_14)) {
             BufferedImage tinted = ImageUtils.changeColorTo(ImageUtils.copyImage(tintOriginal), ENCHANTMENT_GLINT_LEGACY_COLOR);
@@ -177,13 +179,7 @@ public class ImageGeneration {
                 }
             }
             if (meta.hasAnimation()) {
-                TextureAnimation animation = meta.getAnimation();
-                if (animation.hasWidth() && animation.hasHeight()) {
-                    tintOriginal = tintOriginal.getSubimage(0, 0, animation.getWidth(), animation.getHeight());
-                } else {
-                    int size = Math.min(tintOriginal.getWidth(), tintOriginal.getHeight());
-                    tintOriginal = tintOriginal.getSubimage(0, 0, size, size);
-                }
+                tintOriginal = AnimatedTextureUtils.getCurrentAnimationFrame(tintOriginal, meta.getAnimation(), 0);
             }
         }
 
@@ -198,18 +194,18 @@ public class ImageGeneration {
         g3.drawImage(tintOriginal, 0, 0, null);
         g3.dispose();
 
-        return tintImage;
+        return AnimatedTextureUtils.getEnchantedImageFrame(tintImage, tick, 1.0, 1.0);
     }
 
-    public static BufferedImage getEnchantedImage(List<ValuePairs<TextureResource, OpenGLBlending>> tintResources, BufferedImage source) {
+    public static BufferedImage getEnchantedImage(List<ValuePairs<TextureResource, OpenGLBlending>> tintResources, BufferedImage source, int tick) {
         for (ValuePairs<TextureResource, OpenGLBlending> tintResource : tintResources) {
-            source = getEnchantedImage(tintResource.getFirst(), source, BlendingUtils.convert(tintResource.getSecond()));
+            source = getEnchantedImage(tintResource.getFirst(), source, BlendingUtils.convert(tintResource.getSecond()), tick);
         }
         return source;
     }
 
-    public static BufferedImage getEnchantedImage(TextureResource tintResource, BufferedImage source, BlendingModes blendingModes) {
-        BufferedImage overlay = getRawEnchantedImage(tintResource, source);
+    public static BufferedImage getEnchantedImage(TextureResource tintResource, BufferedImage source, BlendingModes blendingModes, int tick) {
+        BufferedImage overlay = getRawEnchantedImage(tintResource, source, tick);
         return ImageUtils.transformRGB(source, (x, y, colorValue) -> {
             return ColorUtils.composite(overlay.getRGB(x, y), colorValue, blendingModes);
         });
@@ -221,7 +217,7 @@ public class ImageGeneration {
 
     public static BufferedImage getAdvancementIcon(ItemStack item, AdvancementType advancementType, boolean completed, OfflineICPlayer player) throws IOException {
         BufferedImage frame = ImageUtils.resizeImageAbs(getAdvancementFrame(advancementType, completed), 52, 52);
-        BufferedImage itemImage = getRawItemImage(item, player);
+        BufferedImage itemImage = getSingleRawItemImage(item, player);
         Graphics2D g = frame.createGraphics();
         g.drawImage(itemImage, 10, 10, null);
         g.dispose();
@@ -250,6 +246,7 @@ public class ImageGeneration {
         Graphics2D g = background.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 
+
         BufferedImage itemImage;
         if (item == null || item.getType().equals(Material.AIR)) {
             if (alternateAir) {
@@ -259,12 +256,10 @@ public class ImageGeneration {
                 return background;
             }
         } else {
-            itemImage = getRawItemImage(item, player, renderSize);
+            itemImage = getSingleRawItemImage(item, player, renderSize);
         }
 
-        if (itemImage != null) {
-            g.drawImage(itemImage, 0, 0, null);
-        }
+        g.drawImage(itemImage, 0, 0, null);
         g.dispose();
 
         return background;
@@ -305,7 +300,7 @@ public class ImageGeneration {
                 continue;
             }
 
-            BufferedImage itemImage = getRawItemImage(item, player);
+            BufferedImage itemImage = getSingleRawItemImage(item, player);
 
             if (itemImage != null) {
                 g.drawImage(itemImage, result.getExpandedX() + 18 + (SPACING * (i % 9)), result.getExpandedY() + 38 + (SPACING * (i / 9)), null);
@@ -364,7 +359,7 @@ public class ImageGeneration {
                 continue;
             }
 
-            BufferedImage itemImage = getRawItemImage(item, player);
+            BufferedImage itemImage = getSingleRawItemImage(item, player);
 
             if (itemImage != null) {
                 g.drawImage(itemImage, 18 + (SPACING * (i % 9)), 286 + (SPACING * (i / 9)), null);
@@ -378,7 +373,7 @@ public class ImageGeneration {
                 continue;
             }
 
-            BufferedImage itemImage = getRawItemImage(item, player);
+            BufferedImage itemImage = getSingleRawItemImage(item, player);
 
             if (itemImage != null) {
                 g.drawImage(itemImage, 18 + (SPACING * (i % 9)), 170 + (SPACING * ((i - 9) / 9)), null);
@@ -390,7 +385,7 @@ public class ImageGeneration {
         if (boots == null || boots.getType().equals(Material.AIR)) {
             g.drawImage(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_boots").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
         } else {
-            BufferedImage itemImage = getRawItemImage(boots, player);
+            BufferedImage itemImage = getSingleRawItemImage(boots, player);
             if (itemImage != null) {
                 g.drawImage(itemImage, 18, 126 - (SPACING * (i - 36)), null);
             }
@@ -402,7 +397,7 @@ public class ImageGeneration {
         if (leggings == null || leggings.getType().equals(Material.AIR)) {
             g.drawImage(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_leggings").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
         } else {
-            BufferedImage itemImage = getRawItemImage(leggings, player);
+            BufferedImage itemImage = getSingleRawItemImage(leggings, player);
             if (itemImage != null) {
                 g.drawImage(itemImage, 18, 126 - (SPACING * (i - 36)), null);
             }
@@ -414,7 +409,7 @@ public class ImageGeneration {
         if (chestplate == null || chestplate.getType().equals(Material.AIR)) {
             g.drawImage(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_chestplate").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
         } else {
-            BufferedImage itemImage = getRawItemImage(chestplate, player);
+            BufferedImage itemImage = getSingleRawItemImage(chestplate, player);
             if (itemImage != null) {
                 g.drawImage(itemImage, 18, 126 - (SPACING * (i - 36)), null);
             }
@@ -426,7 +421,7 @@ public class ImageGeneration {
         if (helmet == null || helmet.getType().equals(Material.AIR)) {
             g.drawImage(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_helmet").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
         } else {
-            BufferedImage itemImage = getRawItemImage(helmet, player);
+            BufferedImage itemImage = getSingleRawItemImage(helmet, player);
             if (itemImage != null) {
                 g.drawImage(itemImage, 18, 126 - (SPACING * (i - 36)), null);
             }
@@ -439,7 +434,7 @@ public class ImageGeneration {
             if (offhand == null || offhand.getType().equals(Material.AIR)) {
                 g.drawImage(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_shield").getTexture(32, 32), 162, 126, 32, 32, null);
             } else {
-                BufferedImage itemImage = getRawItemImage(offhand, player);
+                BufferedImage itemImage = getSingleRawItemImage(offhand, player);
                 if (itemImage != null) {
                     g.drawImage(itemImage, 162, 126, null);
                 }
@@ -577,7 +572,7 @@ public class ImageGeneration {
                     }
                 }
                 if (!leggings.getEnchantments().isEmpty()) {
-                    leggingsImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.LEGS, leggings, () -> getDefaultEnchantmentTint(EnchantmentGlintType.ENTITY), translateFunction.get()), leggingsImage);
+                    leggingsImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.LEGS, leggings, () -> getDefaultEnchantmentTint(EnchantmentGlintType.ENTITY), translateFunction.get()), leggingsImage, 0);
                 }
                 providedTextures.put(ResourceRegistry.LEGGINGS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(resourceManager.get(), leggingsImage));
             }
@@ -615,7 +610,7 @@ public class ImageGeneration {
                     }
                 }
                 if (!boots.getEnchantments().isEmpty()) {
-                    bootsImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.FEET, boots, () -> getDefaultEnchantmentTint(EnchantmentGlintType.ENTITY), translateFunction.get()), bootsImage);
+                    bootsImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.FEET, boots, () -> getDefaultEnchantmentTint(EnchantmentGlintType.ENTITY), translateFunction.get()), bootsImage, 0);
                 }
                 providedTextures.put(ResourceRegistry.BOOTS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(resourceManager.get(), bootsImage));
             }
@@ -651,7 +646,7 @@ public class ImageGeneration {
             g3.dispose();
 
             if (!chestplate.getEnchantments().isEmpty()) {
-                chestplateImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.CHEST, chestplate, () -> getDefaultEnchantmentTint(EnchantmentGlintType.ENTITY), translateFunction.get()), chestplateImage);
+                chestplateImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.CHEST, chestplate, () -> getDefaultEnchantmentTint(EnchantmentGlintType.ENTITY), translateFunction.get()), chestplateImage, 0);
             }
             elytraImage = chestplateImage;
         } else if ((chestplateArmorResult = ArmorUtils.getArmorTexture(chestplate, EquipmentSlot.CHEST)).hasArmorTexture()) {
@@ -684,7 +679,7 @@ public class ImageGeneration {
                     }
                 }
                 if (!chestplate.getEnchantments().isEmpty()) {
-                    chestplateImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.CHEST, chestplate, () -> getDefaultEnchantmentTint(EnchantmentGlintType.ENTITY), translateFunction.get()), chestplateImage);
+                    chestplateImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.CHEST, chestplate, () -> getDefaultEnchantmentTint(EnchantmentGlintType.ENTITY), translateFunction.get()), chestplateImage, 0);
                 }
 
                 providedTextures.put(ResourceRegistry.CHESTPLATE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(resourceManager.get(), chestplateImage));
@@ -720,10 +715,10 @@ public class ImageGeneration {
                         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
                         g2.drawImage(trim, 0, 0, helmetImage.getWidth(), helmetImage.getHeight(), null);
                         g2.dispose();
+                    }
                 }
-}
                 if (!helmet.getEnchantments().isEmpty()) {
-                    helmetImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.HEAD, helmet, () -> getDefaultEnchantmentTint(EnchantmentGlintType.ENTITY), translateFunction.get()), helmetImage);
+                    helmetImage = getEnchantedImage(resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.HEAD, helmet, () -> getDefaultEnchantmentTint(EnchantmentGlintType.ENTITY), translateFunction.get()), helmetImage, 0);
                 }
                 providedTextures.put(ResourceRegistry.HELMET_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(resourceManager.get(), helmetImage));
             }
@@ -735,8 +730,8 @@ public class ImageGeneration {
             Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
             TintColorProvider tintColorProvider = itemProcessResult.getTintColorProvider();
             List<ValuePairs<TextureResource, OpenGLBlending>> enchantmentGlintResource = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(EquipmentSlot.HEAD, helmet, () -> getDefaultEnchantmentTint(EnchantmentGlintType.ITEM), translateFunction.get());
-            BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintFunction = (img, glintType) -> getEnchantedImage(enchantmentGlintResource, img);
-            BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintFunction = (img, glintType) -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> getRawEnchantedImage(each.getFirst(), img)).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
+            Function<ModelRenderer.RawEnchantmentGlintParameters, BufferedImage> enchantmentGlintFunction = parameters -> getEnchantedImage(enchantmentGlintResource, parameters.getImage(), parameters.getTick());
+            Function<ModelRenderer.RawEnchantmentGlintParameters, RawEnchantmentGlintData> rawEnchantmentGlintFunction = parameters -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> getRawEnchantedImage(each.getFirst(), parameters.getImage(), parameters.getTick())).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
             modelItems.put(PlayerModelItemPosition.HELMET, new PlayerModelItem(PlayerModelItemPosition.HELMET, modelKey, resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, EquipmentSlot.HEAD, helmet, version.get().isOld(), predicate, player, world, livingEntity, translateFunction.get()).orElse(null), predicate, enchanted, itemProvidedTextures, tintColorProvider, enchantmentGlintFunction, rawEnchantmentGlintFunction));
         }
 
@@ -750,8 +745,8 @@ public class ImageGeneration {
                 Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
                 TintColorProvider tintColorProvider = itemProcessResult.getTintColorProvider();
                 List<ValuePairs<TextureResource, OpenGLBlending>> enchantmentGlintResource = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(slot, rightHand, () -> getDefaultEnchantmentTint(EnchantmentGlintType.ITEM), translateFunction.get());
-                BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintFunction = (img, glintType) -> getEnchantedImage(enchantmentGlintResource, img);
-                BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintFunction = (img, glintType) -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> getRawEnchantedImage(each.getFirst(), img)).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
+                Function<ModelRenderer.RawEnchantmentGlintParameters, BufferedImage> enchantmentGlintFunction = parameters -> getEnchantedImage(enchantmentGlintResource, parameters.getImage(), parameters.getTick());
+                Function<ModelRenderer.RawEnchantmentGlintParameters, RawEnchantmentGlintData> rawEnchantmentGlintFunction = parameters -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> getRawEnchantedImage(each.getFirst(), parameters.getImage(), parameters.getTick())).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
                 modelItems.put(PlayerModelItemPosition.RIGHT_HAND, new PlayerModelItem(PlayerModelItemPosition.RIGHT_HAND, modelKey, resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, slot, rightHand, version.get().isOld(), predicate, player, world, livingEntity, translateFunction.get()).orElse(null), predicate, enchanted, itemProvidedTextures, tintColorProvider, enchantmentGlintFunction, rawEnchantmentGlintFunction));
             }
             if (leftHand != null && !leftHand.getType().equals(Material.AIR)) {
@@ -763,17 +758,17 @@ public class ImageGeneration {
                 Map<String, TextureResource> itemProvidedTextures = itemProcessResult.getProvidedTextures();
                 TintColorProvider tintColorProvider = itemProcessResult.getTintColorProvider();
                 List<ValuePairs<TextureResource, OpenGLBlending>> enchantmentGlintResource = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(slot, leftHand, () -> getDefaultEnchantmentTint(EnchantmentGlintType.ITEM), translateFunction.get());
-                BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintFunction = (img, glintType) -> getEnchantedImage(enchantmentGlintResource, img);
-                BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintFunction = (img, glintType) -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> getRawEnchantedImage(each.getFirst(), img)).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
+                Function<ModelRenderer.RawEnchantmentGlintParameters, BufferedImage> enchantmentGlintFunction = parameters -> getEnchantedImage(enchantmentGlintResource, parameters.getImage(), parameters.getTick());
+                Function<ModelRenderer.RawEnchantmentGlintParameters, RawEnchantmentGlintData> rawEnchantmentGlintFunction = parameters -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> getRawEnchantedImage(each.getFirst(), parameters.getImage(), parameters.getTick())).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
                 modelItems.put(PlayerModelItemPosition.LEFT_HAND, new PlayerModelItem(PlayerModelItemPosition.LEFT_HAND, modelKey, resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, slot, leftHand, version.get().isOld(), predicate, player, world, livingEntity, translateFunction.get()).orElse(null), predicate, enchanted, itemProvidedTextures, tintColorProvider, enchantmentGlintFunction, rawEnchantmentGlintFunction));
             }
         }
 
         boolean upsideDown = ModelUtils.isRenderedUpsideDown(player.getName(), cape != null);
 
-        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.renderPlayer(image.getWidth(), image.getHeight(), resourceManager.get(), version.get().isOld(), slim, providedTextures, TintColorProvider.EMPTY_INSTANCE, modelItems);
+        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.renderPlayer(image.getWidth(), image.getHeight(), ModelRenderer.SINGLE_RENDER, resourceManager.get(), version.get().isOld(), slim, providedTextures, TintColorProvider.EMPTY_INSTANCE, modelItems);
         Graphics2D g = image.createGraphics();
-        BufferedImage resizedImage = ImageUtils.resizeImageAbs(renderResult.getImage(), 117, 159);
+        BufferedImage resizedImage = ImageUtils.resizeImageAbs(renderResult.getImage(0), 117, 159);
         if (upsideDown) {
             resizedImage = ImageUtils.rotateImageByDegrees(resizedImage, 180);
         }
@@ -791,11 +786,19 @@ public class ImageGeneration {
         return image;
     }
 
-    private static BufferedImage getRawItemImage(ItemStack item, OfflineICPlayer player) throws IOException {
-        return getRawItemImage(item, player, DEFAULT_ITEM_RENDER_SIZE);
+    private static BufferedImage getSingleRawItemImage(ItemStack item, OfflineICPlayer player) throws IOException {
+        return getSingleRawItemImage(item, player, DEFAULT_ITEM_RENDER_SIZE);
     }
 
-    private static BufferedImage getRawItemImage(ItemStack item, OfflineICPlayer player, int size) throws IOException {
+    private static BufferedImage getSingleRawItemImage(ItemStack item, OfflineICPlayer player, int size) throws IOException {
+        return getRawItemImage(item, player, size, ModelRenderer.SINGLE_RENDER).get(0);
+    }
+
+    private static List<BufferedImage> getRawItemImage(ItemStack item, OfflineICPlayer player) throws IOException {
+        return getRawItemImage(item, player, DEFAULT_ITEM_RENDER_SIZE, ModelRenderer.SINGLE_RENDER);
+    }
+
+    private static List<BufferedImage> getRawItemImage(ItemStack item, OfflineICPlayer player, int size, SteppedIntegerRange animationSpec) throws IOException {
         InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
         Debug.debug("ImageGeneration creating raw item stack image " + (item == null ? "null" : ItemNBTUtils.getNMSItemStackJson(item)));
 
@@ -813,61 +816,63 @@ public class ImageGeneration {
 
         Debug.debug("ImageGeneration rendering with model key " + modelKey);
 
-        BufferedImage itemImage;
-        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(size, size, resourceManager.get(), processResult.getPostResolveFunction(), version.get().isOld(), modelKey, ModelDisplayPosition.GUI, predicates, providedTextures, tintColorProvider, requiresEnchantmentGlint, processResult.getEnchantmentGlintFunction(), processResult.getRawEnchantmentGlintFunction());
+        List<BufferedImage> itemImages;
+        RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(size, size, animationSpec, resourceManager.get(), processResult.getPostResolveFunction(), version.get().isOld(), modelKey, ModelDisplayPosition.GUI, predicates, providedTextures, tintColorProvider, requiresEnchantmentGlint, processResult.getEnchantmentGlintFunction(), processResult.getRawEnchantmentGlintFunction());
         if (renderResult.isSuccessful()) {
-            itemImage = renderResult.getImage();
+            itemImages = renderResult.getImages();
         } else {
             Debug.debug("ImageGeneration creating missing Image for material " + icMaterial);
-            itemImage = TextureManager.getMissingImage(size, size);
+            itemImages = Collections.singletonList(TextureManager.getMissingImage(size, size));
         }
 
-        if (item.getType().getMaxDurability() > 0) {
-            int maxDur = item.getType().getMaxDurability();
-            int durability = maxDur - (version.get().isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
-            double percentage = Math.max(0.0, Math.min(1.0, ((double) durability / (double) maxDur)));
-            if (percentage < 1) {
-                int hue = (int) (125 * percentage);
-                int length = (int) Math.round(26 * scale * percentage);
-                Color color = Color.getHSBColor((float) hue / 360, 1, 1);
+        for (BufferedImage itemImage : itemImages) {
+            if (item.getType().getMaxDurability() > 0) {
+                int maxDur = item.getType().getMaxDurability();
+                int durability = maxDur - (version.get().isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
+                double percentage = Math.max(0.0, Math.min(1.0, ((double) durability / (double) maxDur)));
+                if (percentage < 1) {
+                    int hue = (int) (125 * percentage);
+                    int length = (int) Math.round(26 * scale * percentage);
+                    Color color = Color.getHSBColor((float) hue / 360, 1, 1);
+
+                    Graphics2D g4 = itemImage.createGraphics();
+                    g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+                    g4.setColor(Color.BLACK);
+                    g4.fillPolygon(new int[] {(int) Math.round(4 * scale), (int) Math.round(30 * scale), (int) Math.round(30 * scale), (int) Math.round(4 * scale)}, new int[] {(int) Math.round(26 * scale), (int) Math.round(26 * scale), (int) Math.round(30 * scale), (int) Math.round(30 * scale)}, 4);
+                    g4.setColor(color);
+                    g4.fillPolygon(new int[] {(int) Math.round(4 * scale), (int) Math.round(4 * scale + length), (int) Math.round(4 * scale + length), (int) Math.round(4 * scale)}, new int[] {(int) Math.round(26 * scale), (int) Math.round(26 * scale), (int) Math.round(28 * scale), (int) Math.round(28 * scale)}, 4);
+                    g4.dispose();
+                }
+            }
+            if (icMaterial.isMaterial(XMaterial.BUNDLE)) {
+                double fullness = Math.max(0.0, Math.min(1.0, BundleUtils.getFullnessPercentage(((BundleMeta) item.getItemMeta()).getItems())));
+                int length = (int) Math.round(26 * scale * fullness);
 
                 Graphics2D g4 = itemImage.createGraphics();
                 g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
                 g4.setColor(Color.BLACK);
                 g4.fillPolygon(new int[] {(int) Math.round(4 * scale), (int) Math.round(30 * scale), (int) Math.round(30 * scale), (int) Math.round(4 * scale)}, new int[] {(int) Math.round(26 * scale), (int) Math.round(26 * scale), (int) Math.round(30 * scale), (int) Math.round(30 * scale)}, 4);
-                g4.setColor(color);
+                g4.setColor(BUNDLE_FULLNESS_BAR_COLOR);
                 g4.fillPolygon(new int[] {(int) Math.round(4 * scale), (int) Math.round(4 * scale + length), (int) Math.round(4 * scale + length), (int) Math.round(4 * scale)}, new int[] {(int) Math.round(26 * scale), (int) Math.round(26 * scale), (int) Math.round(28 * scale), (int) Math.round(28 * scale)}, 4);
                 g4.dispose();
             }
-        }
-        if (icMaterial.isMaterial(XMaterial.BUNDLE)) {
-            double fullness = Math.max(0.0, Math.min(1.0, BundleUtils.getFullnessPercentage(((BundleMeta) item.getItemMeta()).getItems())));
-            int length = (int) Math.round(26 * scale * fullness);
 
-            Graphics2D g4 = itemImage.createGraphics();
-            g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-            g4.setColor(Color.BLACK);
-            g4.fillPolygon(new int[] {(int) Math.round(4 * scale), (int) Math.round(30 * scale), (int) Math.round(30 * scale), (int) Math.round(4 * scale)}, new int[] {(int) Math.round(26 * scale), (int) Math.round(26 * scale), (int) Math.round(30 * scale), (int) Math.round(30 * scale)}, 4);
-            g4.setColor(BUNDLE_FULLNESS_BAR_COLOR);
-            g4.fillPolygon(new int[] {(int) Math.round(4 * scale), (int) Math.round(4 * scale + length), (int) Math.round(4 * scale + length), (int) Math.round(4 * scale)}, new int[] {(int) Math.round(26 * scale), (int) Math.round(26 * scale), (int) Math.round(28 * scale), (int) Math.round(28 * scale)}, 4);
-            g4.dispose();
-        }
-
-        if (amount != 1) {
-            BufferedImage newItemImage = new BufferedImage((int) Math.round(40 * scale), (int) Math.round(40 * scale), BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g4 = newItemImage.createGraphics();
-            g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-            g4.drawImage(itemImage, 0, 0, null);
-            Component component = Component.text(amount);
-            if (amount <= 0) {
-                component = component.color(NamedTextColor.RED);
+            if (amount != 1) {
+                BufferedImage newItemImage = new BufferedImage((int) Math.round(40 * scale), (int) Math.round(40 * scale), BufferedImage.TYPE_INT_ARGB);
+                Graphics2D g4 = newItemImage.createGraphics();
+                g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+                g4.drawImage(itemImage, 0, 0, null);
+                Component component = Component.text(amount);
+                if (amount <= 0) {
+                    component = component.color(NamedTextColor.RED);
+                }
+                newItemImage = ImageUtils.printComponentRightAligned(resourceManager.get(), newItemImage, component, InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), (int) Math.round(33 * scale), (int) Math.round(17 * scale), (float) (16 * scale), ITEM_AMOUNT_TEXT_DARKEN_FACTOR).getImage();
+                g4.dispose();
+                itemImage = newItemImage;
             }
-            newItemImage = ImageUtils.printComponentRightAligned(resourceManager.get(), newItemImage, component, InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), (int) Math.round(33 * scale), (int) Math.round(17 * scale), (float) (16 * scale), ITEM_AMOUNT_TEXT_DARKEN_FACTOR).getImage();
-            g4.dispose();
-            itemImage = newItemImage;
         }
 
-        return itemImage;
+        return itemImages;
     }
 
     public static Future<BufferedImage> getMapImage(ItemStack item, Player player) {
@@ -1521,7 +1526,7 @@ public class ImageGeneration {
                     i++;
                     if (i < items.size()) {
                         g.drawImage(slot, x, y, null);
-                        BufferedImage itemImage = getRawItemImage(items.get(i), offlineICPlayer);
+                        BufferedImage itemImage = getSingleRawItemImage(items.get(i), offlineICPlayer);
                         g.drawImage(itemImage, x + 2, y + 2, null);
                     } else {
                         g.drawImage(isFull ? fullSlot : slot, x, y, null);
@@ -1564,7 +1569,7 @@ public class ImageGeneration {
                     i++;
                     if (i < items.size()) {
                         g.drawImage(slot, x, y, null);
-                        BufferedImage itemImage = getRawItemImage(items.get(i), offlineICPlayer);
+                        BufferedImage itemImage = getSingleRawItemImage(items.get(i), offlineICPlayer);
                         g.drawImage(itemImage, x + 2, y + 2, null);
                     } else {
                         g.drawImage(isFull ? fullSlot : slot, x, y, null);

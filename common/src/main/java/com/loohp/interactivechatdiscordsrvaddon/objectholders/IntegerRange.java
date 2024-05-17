@@ -104,6 +104,11 @@ public class IntegerRange {
     }
 
     @Override
+    public String toString() {
+        return min + ".." + max;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;

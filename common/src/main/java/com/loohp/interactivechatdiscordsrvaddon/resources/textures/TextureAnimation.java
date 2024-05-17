@@ -63,8 +63,8 @@ public class TextureAnimation {
         return masterFrametime;
     }
 
-    public boolean hasMasterFrametime() {
-        return masterFrametime >= 0;
+    public boolean hasFrames() {
+        return !frames.isEmpty();
     }
 
     public List<TextureAnimationFrames> getFrames() {

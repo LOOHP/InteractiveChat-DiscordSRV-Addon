@@ -22,6 +22,7 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.textures;
 
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
+import com.loohp.interactivechatdiscordsrvaddon.utils.AnimatedTextureUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -114,13 +115,7 @@ public class TextureResource {
         if (clearAnimation && hasTextureMeta()) {
             TextureMeta meta = getTextureMeta();
             if (meta.hasAnimation()) {
-                TextureAnimation animation = meta.getAnimation();
-                if (animation.hasWidth() && animation.hasHeight()) {
-                    image = ImageUtils.copyAndGetSubImage(image, 0, 0, animation.getWidth(), animation.getHeight());
-                } else {
-                    int size = Math.min(image.getWidth(), image.getHeight());
-                    image = ImageUtils.copyAndGetSubImage(image, 0, 0, size, size);
-                }
+                image = AnimatedTextureUtils.getCurrentAnimationFrame(image, meta.getAnimation(), 0);
             }
         }
         if (image.getWidth() != w || image.getHeight() != h) {
@@ -143,13 +138,7 @@ public class TextureResource {
         if (clearAnimation && hasTextureMeta()) {
             TextureMeta meta = getTextureMeta();
             if (meta.hasAnimation()) {
-                TextureAnimation animation = meta.getAnimation();
-                if (animation.hasWidth() && animation.hasHeight()) {
-                    image = ImageUtils.copyAndGetSubImage(image, 0, 0, animation.getWidth(), animation.getHeight());
-                } else {
-                    int size = Math.min(image.getWidth(), image.getHeight());
-                    image = ImageUtils.copyAndGetSubImage(image, 0, 0, size, size);
-                }
+                image = AnimatedTextureUtils.getCurrentAnimationFrame(image, meta.getAnimation(), 0);
             }
         }
         return ImageUtils.copyImage(image);

@@ -41,11 +41,6 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageManager;
-import com.loohp.interactivechatdiscordsrvaddon.resources.textures.EnchantmentGlintType;
-import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimation;
-import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;
-import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureProperties;
-import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackInfoUtils;
 
 import javax.imageio.ImageIO;
@@ -74,10 +69,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.Insets;
-import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.event.ComponentAdapter;
@@ -360,39 +353,6 @@ public class MinecraftFontRenderer extends JFrame {
         } finally {
             repaintLock.unlock();
         }
-    }
-
-    public BufferedImage getRawEnchantedImage(BufferedImage source, EnchantmentGlintType type) {
-        TextureResource resource = resourceManager.getTextureManager().getTexture(type.getResourceLocation());
-        BufferedImage tintOriginal = resource.getTexture();
-        if (resource.hasTextureMeta()) {
-            TextureMeta meta = resource.getTextureMeta();
-            if (meta.hasProperties()) {
-                TextureProperties properties = meta.getProperties();
-                if (properties.isBlur()) {
-                    tintOriginal = ImageUtils.applyGaussianBlur(tintOriginal);
-                }
-            }
-            if (meta.hasAnimation()) {
-                TextureAnimation animation = meta.getAnimation();
-                if (animation.hasWidth() && animation.hasHeight()) {
-                    tintOriginal = ImageUtils.copyAndGetSubImage(tintOriginal, 0, 0, animation.getWidth(), animation.getHeight());
-                } else {
-                    int size = Math.min(tintOriginal.getWidth(), tintOriginal.getHeight());
-                    tintOriginal = ImageUtils.copyAndGetSubImage(tintOriginal, 0, 0, size, size);
-                }
-            }
-        }
-        BufferedImage tintImage = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g3 = tintImage.createGraphics();
-        g3.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        g3.drawImage(tintOriginal, 0, 0, tintImage.getWidth() * 4, tintImage.getHeight() * 4, null);
-        g3.dispose();
-        return tintImage;
-    }
-
-    public BufferedImage getEnchantedImage(BufferedImage source, EnchantmentGlintType type) {
-        return ImageUtils.additionNonTransparent(source, getRawEnchantedImage(source, type), ResourceRegistry.ENCHANTMENT_GLINT_FACTOR);
     }
 
     public Color hex2Rgb(String colorStr) {

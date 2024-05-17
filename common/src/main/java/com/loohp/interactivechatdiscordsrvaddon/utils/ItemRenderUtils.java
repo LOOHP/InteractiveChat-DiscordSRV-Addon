@@ -43,6 +43,7 @@ import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RawEnchantmentGlintData;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
@@ -89,7 +90,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -117,13 +117,15 @@ public class ItemRenderUtils {
             requiresEnchantmentGlint = true;
         } else if (icMaterial.isMaterial(XMaterial.ENCHANTED_BOOK)) {
             requiresEnchantmentGlint = true;
+        } else if (icMaterial.isMaterial(XMaterial.NETHER_STAR)) {
+            requiresEnchantmentGlint = true;
         } else if (!item.getEnchantments().isEmpty()) {
             requiresEnchantmentGlint = true;
         }
 
         List<ValuePairs<TextureResource, OpenGLBlending>> enchantmentGlintResource = manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getEnchantmentGlintOverrideTextures(null, item, () -> ImageGeneration.getDefaultEnchantmentTint(EnchantmentGlintType.ITEM), manager.getLanguageManager().getTranslateFunction().ofLanguage(language));
-        BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintFunction = (image, type) -> ImageGeneration.getEnchantedImage(enchantmentGlintResource, image);
-        BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintFunction = (image, type) -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> ImageGeneration.getRawEnchantedImage(each.getFirst(), image)).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
+        Function<ModelRenderer.RawEnchantmentGlintParameters, BufferedImage> enchantmentGlintFunction = parameters -> ImageGeneration.getEnchantedImage(enchantmentGlintResource, parameters.getImage(), parameters.getTick());
+        Function<ModelRenderer.RawEnchantmentGlintParameters, RawEnchantmentGlintData> rawEnchantmentGlintFunction = parameters -> new RawEnchantmentGlintData(enchantmentGlintResource.stream().map(each -> ImageGeneration.getRawEnchantedImage(each.getFirst(), parameters.getImage(), parameters.getTick())).collect(Collectors.toList()), enchantmentGlintResource.stream().map(each -> each.getSecond()).collect(Collectors.toList()));
 
         TintColorProvider tintColorProvider = TintUtils.getTintProvider(icMaterial);
         Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
@@ -493,10 +495,10 @@ public class ItemRenderUtils {
         private final TintColorProvider tintColorProvider;
         private final String modelKey;
         private final Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction;
-        private final BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintFunction;
-        private final BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintFunction;
+        private final Function<ModelRenderer.RawEnchantmentGlintParameters, BufferedImage> enchantmentGlintFunction;
+        private final Function<ModelRenderer.RawEnchantmentGlintParameters, RawEnchantmentGlintData> rawEnchantmentGlintFunction;
 
-        public ItemStackProcessResult(boolean requiresEnchantmentGlint, Map<ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintColorProvider tintColorProvider, String modelKey, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> enchantmentGlintFunction, BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> rawEnchantmentGlintFunction) {
+        public ItemStackProcessResult(boolean requiresEnchantmentGlint, Map<ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintColorProvider tintColorProvider, String modelKey, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, Function<ModelRenderer.RawEnchantmentGlintParameters, BufferedImage> enchantmentGlintFunction, Function<ModelRenderer.RawEnchantmentGlintParameters, RawEnchantmentGlintData> rawEnchantmentGlintFunction) {
             this.requiresEnchantmentGlint = requiresEnchantmentGlint;
             this.predicates = predicates;
             this.providedTextures = providedTextures;
@@ -531,11 +533,11 @@ public class ItemRenderUtils {
             return postResolveFunction;
         }
 
-        public BiFunction<BufferedImage, EnchantmentGlintType, BufferedImage> getEnchantmentGlintFunction() {
+        public Function<ModelRenderer.RawEnchantmentGlintParameters, BufferedImage> getEnchantmentGlintFunction() {
             return enchantmentGlintFunction;
         }
 
-        public BiFunction<BufferedImage, EnchantmentGlintType, RawEnchantmentGlintData> getRawEnchantmentGlintFunction() {
+        public Function<ModelRenderer.RawEnchantmentGlintParameters, RawEnchantmentGlintData> getRawEnchantmentGlintFunction() {
             return rawEnchantmentGlintFunction;
         }
 

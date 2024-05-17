@@ -34,6 +34,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CacheObject<T> {
 
@@ -53,11 +55,18 @@ public class CacheObject<T> {
                     return new CacheObject<>(timeCreated, ImageUtils.fromArray(dataArray));
                 }
                 case 2: {
-                    byte[] dataArray = new byte[data.length - 10];
-                    inputStream.readFully(dataArray);
                     if (inputStream.readBoolean()) {
-                        return new CacheObject<>(timeCreated, new RenderResult(ImageUtils.fromArray(dataArray)));
+                        int size = inputStream.readInt();
+                        List<BufferedImage> images = new ArrayList<>();
+                        for (int i = 0; i < size; i++) {
+                            byte[] array = new byte[inputStream.readInt()];
+                            inputStream.readFully(array);
+                            images.add(ImageUtils.fromArray(array));
+                        }
+                        return new CacheObject<>(timeCreated, new RenderResult(images));
                     } else {
+                        byte[] dataArray = new byte[data.length - 10];
+                        inputStream.readFully(dataArray);
                         return new CacheObject<>(timeCreated, new RenderResult(new String(dataArray, StandardCharsets.UTF_8)));
                     }
                 }
@@ -113,7 +122,12 @@ public class CacheObject<T> {
                 RenderResult renderResult = (RenderResult) object;
                 if (renderResult.isSuccessful()) {
                     dataOutputStream.writeBoolean(true);
-                    dataOutputStream.write(ImageUtils.toArray(renderResult.getImage()));
+                    dataOutputStream.writeInt(renderResult.getTotalImages());
+                    for (int i = 0; i < renderResult.getTotalImages(); i++) {
+                        byte[] array = ImageUtils.toArray(renderResult.getImage(i));
+                        dataOutputStream.writeInt(array.length);
+                        dataOutputStream.write(array);
+                    }
                 } else {
                     dataOutputStream.writeBoolean(false);
                     dataOutputStream.write(renderResult.getRejectedReason().getBytes(StandardCharsets.UTF_8));

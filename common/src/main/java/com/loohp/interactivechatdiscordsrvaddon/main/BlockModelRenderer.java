@@ -27,6 +27,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.
 import com.loohp.interactivechat.libs.org.simpleyaml.configuration.file.YamlFile;
 import com.loohp.interactivechat.objectholders.ValueTrios;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.SteppedIntegerRange;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ICacheManager;
@@ -42,10 +43,10 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.M
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.EnchantmentGlintType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.GeneratedTextureResource;
-import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimation;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureMeta;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
+import com.loohp.interactivechatdiscordsrvaddon.utils.AnimatedTextureUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ModelUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackInfoUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TintUtils;
@@ -134,6 +135,7 @@ public class BlockModelRenderer extends JFrame {
     private JTextField textFieldResourceKey;
     private JSpinner spinnerWidth;
     private JSpinner spinnerHeight;
+    private JSpinner spinnerTick;
     private JTextArea textAreaResources;
     private JButton reloadResourcesButton;
     private JButton renderModelButton;
@@ -489,6 +491,7 @@ public class BlockModelRenderer extends JFrame {
     private void createUIComponents() {
         spinnerWidth = new JSpinner(new SpinnerNumberModel(600, 1, 8192, 1));
         spinnerHeight = new JSpinner(new SpinnerNumberModel(600, 1, 8192, 1));
+        spinnerTick = new JSpinner(new SpinnerNumberModel(0, 0, Integer.MAX_VALUE, 1));
         spinnerThreads = new JSpinner(new SpinnerNumberModel(Runtime.getRuntime().availableProcessors(), 1, 1024, 1));
         imagePanel = new JPanel() {
             @Override
@@ -506,7 +509,7 @@ public class BlockModelRenderer extends JFrame {
         };
     }
 
-    public BufferedImage getRawEnchantedImage(BufferedImage source, EnchantmentGlintType type) {
+    public BufferedImage getRawEnchantedImage(BufferedImage source, EnchantmentGlintType type, int tick) {
         TextureResource resource = resourceManager.getTextureManager().getTexture(type.getResourceLocation());
         BufferedImage tintOriginal = resource.getTexture();
         if (resource.hasTextureMeta()) {
@@ -518,13 +521,7 @@ public class BlockModelRenderer extends JFrame {
                 }
             }
             if (meta.hasAnimation()) {
-                TextureAnimation animation = meta.getAnimation();
-                if (animation.hasWidth() && animation.hasHeight()) {
-                    tintOriginal = tintOriginal.getSubimage(0, 0, animation.getWidth(), animation.getHeight());
-                } else {
-                    int size = Math.min(tintOriginal.getWidth(), tintOriginal.getHeight());
-                    tintOriginal = tintOriginal.getSubimage(0, 0, size, size);
-                }
+                tintOriginal = AnimatedTextureUtils.getCurrentAnimationFrame(tintOriginal, meta.getAnimation(), 0);
             }
         }
 
@@ -539,11 +536,11 @@ public class BlockModelRenderer extends JFrame {
         g3.drawImage(tintOriginal, 0, 0, null);
         g3.dispose();
 
-        return tintImage;
+        return AnimatedTextureUtils.getEnchantedImageFrame(tintImage, tick, 1.0, 1.0);
     }
 
-    public BufferedImage getEnchantedImage(BufferedImage source, EnchantmentGlintType type) {
-        return ImageUtils.additionNonTransparent(source, getRawEnchantedImage(source, type), ResourceRegistry.ENCHANTMENT_GLINT_FACTOR);
+    public BufferedImage getEnchantedImage(BufferedImage source, EnchantmentGlintType type, int tick) {
+        return ImageUtils.additionNonTransparent(source, getRawEnchantedImage(source, type, tick), ResourceRegistry.ENCHANTMENT_GLINT_FACTOR);
     }
 
     public Color hex2Rgb(String colorStr) {
@@ -585,9 +582,9 @@ public class BlockModelRenderer extends JFrame {
                 return;
             }
 
-        if (resourceManager != null) {
-            resourceManager.close();
-        }
+            if (resourceManager != null) {
+                resourceManager.close();
+            }
 
             PrintStream original = System.err;
             try {
@@ -701,10 +698,10 @@ public class BlockModelRenderer extends JFrame {
             modelRenderer.reloadPoolSize();
             long start = System.currentTimeMillis();
             try {
-                RenderResult result = modelRenderer.render((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), (int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), resourceManager, null, false, key, ModelDisplayPosition.GUI, predicates, providedTextures, tintColorProvider, enchantedCheckBox.isSelected(), altPosBox.isSelected(), (source, type) -> getEnchantedImage(source, type), (source, type) -> new RawEnchantmentGlintData(Collections.singletonList(getRawEnchantedImage(source, type)), Collections.singletonList(OpenGLBlending.GLINT)));
+                RenderResult result = modelRenderer.render((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), (int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), new SteppedIntegerRange((int) spinnerTick.getValue()), resourceManager, null, false, key, ModelDisplayPosition.GUI, predicates, providedTextures, tintColorProvider, enchantedCheckBox.isSelected(), altPosBox.isSelected(), parameters -> getEnchantedImage(parameters.getImage(), parameters.getGlintType(), parameters.getTick()), parameters -> new RawEnchantmentGlintData(Collections.singletonList(getRawEnchantedImage(parameters.getImage(), parameters.getGlintType(), parameters.getTick())), Collections.singletonList(OpenGLBlending.GLINT)));
                 long end = System.currentTimeMillis();
                 if (result.isSuccessful()) {
-                    renderedImage = result.getImage();
+                    renderedImage = result.getImage(0);
                     imagePanel.repaint();
                     renderTimesLabel.setText((end - start) + "ms");
                     lastRenderedKey = key;
@@ -722,6 +719,7 @@ public class BlockModelRenderer extends JFrame {
             renderModelButton.setEnabled(true);
             reloadResourcesButton.setEnabled(true);
             spinnerThreads.setEnabled(true);
+            spinnerTick.setValue(Math.max((int) spinnerTick.getValue() + 1, 0));
         } finally {
             lock.unlock();
         }
@@ -788,7 +786,7 @@ public class BlockModelRenderer extends JFrame {
     private void $$$setupUI$$$() {
         createUIComponents();
         panel = new JPanel();
-        panel.setLayout(new GridLayoutManager(7, 15, new Insets(0, 0, 0, 0), -1, -1));
+        panel.setLayout(new GridLayoutManager(7, 17, new Insets(0, 0, 0, 0), -1, -1));
         final JLabel label1 = new JLabel();
         label1.setText("Model Resource Key");
         panel.add(label1, new GridConstraints(0, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
@@ -799,67 +797,71 @@ public class BlockModelRenderer extends JFrame {
         textFieldResourceKey = new JTextField();
         textFieldResourceKey.setText("minecraft:item/");
         textFieldResourceKey.setToolTipText("Example: \"minecraft:item/stone\"");
-        panel.add(textFieldResourceKey, new GridConstraints(0, 2, 1, 12, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        panel.add(textFieldResourceKey, new GridConstraints(0, 2, 1, 14, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
         final JLabel label3 = new JLabel();
         label3.setText("Height");
         panel.add(label3, new GridConstraints(1, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         panel.add(spinnerHeight, new GridConstraints(1, 4, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), new Dimension(100, -1), new Dimension(100, -1), 0, false));
         textAreaResources = new JTextArea();
         textAreaResources.setEditable(false);
-        panel.add(textAreaResources, new GridConstraints(2, 13, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(250, 50), null, 0, false));
-        panel.add(imagePanel, new GridConstraints(2, 0, 5, 13, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        panel.add(textAreaResources, new GridConstraints(2, 15, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(250, 50), null, 0, false));
+        panel.add(imagePanel, new GridConstraints(2, 0, 5, 15, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         renderModelButton = new JButton();
         renderModelButton.setText("Render Model");
-        panel.add(renderModelButton, new GridConstraints(0, 14, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(renderModelButton, new GridConstraints(0, 16, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         predicateKeyPanel = new JPanel();
         predicateKeyPanel.setLayout(new GridBagLayout());
-        panel.add(predicateKeyPanel, new GridConstraints(5, 13, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(predicateKeyPanel, new GridConstraints(5, 15, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         reloadResourcesButton = new JButton();
         reloadResourcesButton.setText("Reload Resources");
-        panel.add(reloadResourcesButton, new GridConstraints(1, 14, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(reloadResourcesButton, new GridConstraints(1, 16, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         buttonSave = new JButton();
         buttonSave.setEnabled(false);
         buttonSave.setText("Save Image");
-        panel.add(buttonSave, new GridConstraints(6, 14, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(buttonSave, new GridConstraints(6, 16, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         predicateValuePanel = new JPanel();
         predicateValuePanel.setLayout(new GridBagLayout());
         predicateValuePanel.setEnabled(true);
-        panel.add(predicateValuePanel, new GridConstraints(5, 14, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(predicateValuePanel, new GridConstraints(5, 16, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         renderTimesLabel = new JLabel();
         renderTimesLabel.setText("0ms");
-        panel.add(renderTimesLabel, new GridConstraints(6, 13, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(renderTimesLabel, new GridConstraints(6, 15, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label4 = new JLabel();
         label4.setText("Customization");
-        panel.add(label4, new GridConstraints(4, 13, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(label4, new GridConstraints(4, 15, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         providedTexturesButton = new JButton();
         providedTexturesButton.setText("Provided Textures");
-        panel.add(providedTexturesButton, new GridConstraints(4, 14, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(providedTexturesButton, new GridConstraints(4, 16, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final Spacer spacer1 = new Spacer();
-        panel.add(spacer1, new GridConstraints(1, 12, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+        panel.add(spacer1, new GridConstraints(1, 14, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
         final JLabel label5 = new JLabel();
         label5.setText("Background Color");
         label5.setToolTipText("Visual background color");
-        panel.add(label5, new GridConstraints(1, 5, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(label5, new GridConstraints(1, 7, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         backgroundColorTextField = new JTextField();
         backgroundColorTextField.setColumns(8);
         backgroundColorTextField.setHorizontalAlignment(11);
         backgroundColorTextField.setText("#000000");
         backgroundColorTextField.setToolTipText("Visual background color");
-        panel.add(backgroundColorTextField, new GridConstraints(1, 6, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(backgroundColorTextField, new GridConstraints(1, 8, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         resourceBar = new JProgressBar();
-        panel.add(resourceBar, new GridConstraints(3, 13, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(resourceBar, new GridConstraints(3, 15, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         altPosBox = new JCheckBox();
         altPosBox.setText("Alternate Position");
-        panel.add(altPosBox, new GridConstraints(1, 9, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(altPosBox, new GridConstraints(1, 11, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label6 = new JLabel();
         label6.setText("Threads");
-        panel.add(label6, new GridConstraints(1, 7, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        panel.add(spinnerThreads, new GridConstraints(1, 8, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), new Dimension(100, -1), new Dimension(100, -1), 0, false));
+        panel.add(label6, new GridConstraints(1, 9, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(spinnerThreads, new GridConstraints(1, 10, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), new Dimension(100, -1), new Dimension(100, -1), 0, false));
         final JLabel label7 = new JLabel();
         label7.setText("Default Pack Version");
-        panel.add(label7, new GridConstraints(1, 10, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(label7, new GridConstraints(1, 12, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         defaultPackVersionSpinner = new JSpinner();
-        panel.add(defaultPackVersionSpinner, new GridConstraints(1, 11, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(60, -1), new Dimension(60, -1), new Dimension(60, -1), 0, false));
+        panel.add(defaultPackVersionSpinner, new GridConstraints(1, 13, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(60, -1), new Dimension(60, -1), new Dimension(60, -1), 0, false));
+        final JLabel label8 = new JLabel();
+        label8.setText("Tick");
+        panel.add(label8, new GridConstraints(1, 5, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        panel.add(spinnerTick, new GridConstraints(1, 6, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, new Dimension(100, -1), new Dimension(100, -1), new Dimension(100, -1), 0, false));
     }
 
     /**

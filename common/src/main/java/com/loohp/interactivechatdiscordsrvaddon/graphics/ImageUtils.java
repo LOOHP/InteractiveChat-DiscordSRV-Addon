@@ -38,6 +38,7 @@ import com.loohp.interactivechatdiscordsrvaddon.utils.I18nUtils;
 import it.unimi.dsi.fastutil.chars.CharObjectPair;
 
 import javax.imageio.ImageIO;
+import javax.imageio.stream.ImageOutputStream;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -81,6 +82,25 @@ public class ImageUtils {
 
     public static BufferedImage fromArray(byte[] data) throws IOException {
         return fromInputStream(new ByteArrayInputStream(data));
+    }
+
+    public static ByteArrayOutputStream toGifOutputStream(List<BufferedImage> images, int delayMs) throws IOException {
+        int width = images.get(0).getWidth();
+        int height = images.get(0).getHeight();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try (
+            ImageOutputStream imageOutputStream = ImageIO.createImageOutputStream(outputStream);
+            GifWriter writer = new GifWriter(imageOutputStream, BufferedImage.TYPE_INT_ARGB, delayMs, true)
+        ) {
+            for (BufferedImage image : images) {
+                writer.writeToSequence(image);
+            }
+        }
+        return outputStream;
+    }
+
+    public static byte[] toGifArray(List<BufferedImage> images, int delayMs) throws IOException {
+        return toGifOutputStream(images, delayMs).toByteArray();
     }
 
     public static String hash(BufferedImage image) {
