@@ -92,16 +92,17 @@ DiscordAttachments:
   RestrictImageUrl:
     Enabled: false
     Whitelist:
-      - "https://i.imgur.com"
-      - "http://i.imgur.com"
-      - "https://storage.googleapis.com"
-      - "http://storage.googleapis.com"
-      - "https://cdn.discordapp.com"
-      - "http://cdn.discordapp.com"
-      - "https://media.discordapp.net"
-      - "http://media.discordapp.net"
-      - "https://textures.minecraft.net"
-      - "http://textures.minecraft.net"
+      - "https://tenor.com/"
+      - "https://i.imgur.com/"
+      - "http://i.imgur.com/"
+      - "https://storage.googleapis.com/"
+      - "http://storage.googleapis.com/"
+      - "https://cdn.discordapp.com/"
+      - "http://cdn.discordapp.com/"
+      - "https://media.discordapp.net/"
+      - "http://media.discordapp.net/"
+      - "https://textures.minecraft.net/"
+      - "http://textures.minecraft.net/"
   #If the attachment is larger than the defined size, it won't be downloaded for preview
   #(In Bytes)
   FileSizeLimit: 8388608

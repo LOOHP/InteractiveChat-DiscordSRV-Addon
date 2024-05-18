@@ -94,6 +94,8 @@ import java.util.stream.Collectors;
 
 public class InboundToGameEvents implements Listener {
 
+    public static final Pattern TENOR_HTML_PATTERN = Pattern.compile("<link class=\\\"dynamic\\\" rel=\\\"image_src\\\" href=\\\"https://media1\\.tenor\\.com/m/(.*?)/.*?\\\">");
+
     public static final Map<UUID, DiscordAttachmentData> DATA = new ConcurrentHashMap<>();
     public static final Map<Player, GraphicsToPacketMapWrapper> MAP_VIEWERS = new ConcurrentHashMap<>();
 
@@ -278,6 +280,7 @@ public class InboundToGameEvents implements Listener {
                                 methods.add(() -> URLRequestUtils.getInputStream0(url0));
                             }
                         }
+
                         try (InputStream stream = URLRequestUtils.retrieveUntilSuccessful(methods)) {
                             String type = imageContainer.getContentType();
                             GraphicsToPacketMapWrapper map;
@@ -316,12 +319,24 @@ public class InboundToGameEvents implements Listener {
                     Matcher matcher = URLRequestUtils.URL_PATTERN.matcher(message.getContentRaw());
                     while (matcher.find()) {
                         String url = matcher.group();
+                        String imageUrl = url;
                         if (!processedUrl.contains(url) && URLRequestUtils.isAllowed(url)) {
-                            long size = HTTPRequestUtils.getContentSize(url);
+                            if (url.startsWith("https://tenor.com/")) {
+                                try {
+                                    String html = HTTPRequestUtils.getTextResponse(url);
+                                    Matcher matcher2 = TENOR_HTML_PATTERN.matcher(html);
+                                    if (matcher2.find()) {
+                                        imageUrl = "https://c.tenor.com/" + matcher2.group(1) + "/tenor.gif";
+                                    }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            long size = HTTPRequestUtils.getContentSize(imageUrl);
                             if (size >= 0 && size <= InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsPreviewLimit) {
                                 InteractiveChatDiscordSrvAddon.plugin.attachmentImageCounter.incrementAndGet();
-                                try (InputStream stream = URLRequestUtils.getInputStream(url)) {
-                                    String type = HTTPRequestUtils.getContentType(url);
+                                try (InputStream stream = URLRequestUtils.getInputStream(imageUrl)) {
+                                    String type = HTTPRequestUtils.getContentType(imageUrl);
 
                                     if (type == null || !type.startsWith("image/")) {
                                         continue;
