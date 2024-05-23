@@ -266,6 +266,9 @@ DiscordMention:
   #Link mentions through discordsrv linked accounts
   TranslateMentions: true
 
+  #Suppress pings on discord side
+  SuppressDiscordPings: false
+
   #The sound to play when a player is mentioned
   #https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
   MentionedSound: ENTITY_EXPERIENCE_ORB_PICKUP
