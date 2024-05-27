@@ -31,6 +31,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.ScoreComponent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.StorageNBTComponent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.TextComponent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.TranslatableComponent;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.DataComponentValue;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent.ShowItem;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
@@ -54,6 +55,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.ToIntFunction;
@@ -450,12 +452,17 @@ public class ComponentStringUtils {
                         }
                     }
                 }
+                Map<Key, DataComponentValue> dataComponents = showItem.dataComponents();
                 String longNbt = showItem.nbt() == null ? null : showItem.nbt().string();
-                if (itemstack != null && longNbt != null) {
-                    try {
-                        itemstack = Bukkit.getUnsafe().modifyItemStack(itemstack, longNbt);
-                    } catch (Throwable ignored) {
+                if (dataComponents.isEmpty()) {
+                    if (itemstack != null && longNbt != null) {
+                        try {
+                            itemstack = Bukkit.getUnsafe().modifyItemStack(itemstack, longNbt);
+                        } catch (Throwable ignored) {
+                        }
                     }
+                } else {
+                    itemstack = ItemNBTUtils.getItemStackFromDataComponents(itemstack, dataComponents);
                 }
                 if (itemstack != null) {
                     return itemstack;
