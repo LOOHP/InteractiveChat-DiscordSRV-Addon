@@ -37,9 +37,22 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 
 public class BannerGraphics {
+
+    private static Method bannerMetaGetBaseColorMethod;
+
+    static {
+        try {
+            //noinspection JavaReflectionMemberAccess
+            bannerMetaGetBaseColorMethod = BannerMeta.class.getMethod("getBaseColor");
+        } catch (NoSuchMethodException e) {
+            bannerMetaGetBaseColorMethod = null;
+        }
+    }
 
     public static BannerAssetResult generateBannerAssets(ItemStack item) {
         BufferedImage baseImage = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "banner_base").getTexture(64, 64);
@@ -95,7 +108,6 @@ public class BannerGraphics {
         return new BannerAssetResult(baseImage, patternsImage);
     }
 
-    @SuppressWarnings("deprecation")
     public static BannerAssetResult generateShieldAssets(ItemStack item) {
         ItemMeta itemMeta = item.getItemMeta();
         if (itemMeta == null) {
@@ -116,9 +128,14 @@ public class BannerGraphics {
             patterns = bannerBlockMeta.getPatterns();
             baseColor = new Color(bannerBlockMeta.getBaseColor().getColor().asRGB());
         } else {
-            BannerMeta meta = (BannerMeta) itemMeta;
-            patterns = meta.getPatterns();
-            baseColor = new Color(meta.getBaseColor().getColor().asRGB());
+            try {
+                BannerMeta meta = (BannerMeta) itemMeta;
+                patterns = meta.getPatterns();
+                DyeColor dyeColor = (DyeColor) bannerMetaGetBaseColorMethod.invoke(meta);
+                baseColor = new Color(dyeColor.getColor().asRGB());
+            } catch (InvocationTargetException | IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         BufferedImage baseImage = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "shield_base").getTexture(64, 64);

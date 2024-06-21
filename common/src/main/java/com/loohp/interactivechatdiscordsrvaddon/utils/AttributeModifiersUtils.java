@@ -21,9 +21,10 @@
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import com.google.common.collect.Multimap;
+import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import org.bukkit.attribute.AttributeModifier;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Map;
@@ -34,8 +35,13 @@ public class AttributeModifiersUtils {
     public static final UUID BASE_ATTACK_DAMAGE_UUID = UUID.fromString("CB3F55D3-645C-4F38-A497-9C13A33DB5CF");
     public static final UUID BASE_ATTACK_SPEED_UUID = UUID.fromString("FA233E1C-4180-4865-B01B-BCCE9785ACA3");
 
-    public static Map<EquipmentSlot, Multimap<String, AttributeModifier>> getAttributeModifiers(ItemStack itemStack) {
-        return (Map<EquipmentSlot, Multimap<String, AttributeModifier>>) NMSAddon.getInstance().getItemAttributeModifiers(itemStack);
+    public static final Key BASE_ATTACK_DAMAGE_MODIFIER_ID = Key.key("minecraft", "base_attack_damage");
+    public static final Key BASE_ATTACK_SPEED_MODIFIER_ID = Key.key("minecraft", "base_attack_speed");
+
+    public static final String GENERIC_KNOCKBACK_RESISTANCE = "attribute.name.generic.knockback_resistance";
+
+    public static Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> getAttributeModifiers(ItemStack itemStack) {
+        return (Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>>) NMSAddon.getInstance().getItemAttributeModifiers(itemStack);
     }
 
 }

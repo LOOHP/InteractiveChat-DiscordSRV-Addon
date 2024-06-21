@@ -46,6 +46,7 @@ import com.loohp.interactivechat.utils.RarityUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent.ToolTipType;
@@ -155,6 +156,7 @@ import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getGoatHornInstrument;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getItemComponents;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getItemNbtTag;
+import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getModifierSlotGroupKey;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getModifierSlotKey;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getMusicDiscName;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getNoEffect;
@@ -263,12 +265,13 @@ public class DiscordItemStackUtils {
         prints.add(tooltipText(itemDisplayNameComponent));
 
         boolean hasMeta = item.getItemMeta() != null;
+        boolean hideAdditionalFlags = hasMeta && item.getItemMeta().hasItemFlag(NMSAddon.getInstance().getHideAdditionalItemFlag()) && (item.getItemMeta() instanceof PotionMeta || InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_20_5));
 
         if (hasMeta && item.getItemMeta().getDisplayName() != null) {
             hasCustomName = true;
         }
 
-        if (icMaterial.isMaterial(XMaterial.DECORATED_POT) && hasMeta && item.getItemMeta() instanceof BlockStateMeta) {
+        if (icMaterial.isMaterial(XMaterial.DECORATED_POT) && hasMeta && item.getItemMeta() instanceof BlockStateMeta && !hideAdditionalFlags) {
             BlockState state = ((BlockStateMeta) item.getItemMeta()).getBlockState();
             if (state instanceof DecoratedPot) {
                 DecoratedPot pot = (DecoratedPot) state;
@@ -300,7 +303,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && icMaterial.isOneOf(Collections.singletonList("CONTAINS:smithing_template"))) {
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && icMaterial.isOneOf(Collections.singletonList("CONTAINS:smithing_template")) && !hideAdditionalFlags) {
             Key key = Key.key(item.getType().getKey().toString());
             prints.add(tooltipText(translatable(getTrimPatternName(key)).color(GRAY)));
             prints.add(tooltipEmpty());
@@ -319,7 +322,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && icMaterial.isMaterial(XMaterial.PAINTING)) {
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && icMaterial.isMaterial(XMaterial.PAINTING) && !hideAdditionalFlags) {
             PaintingVariant paintingVariant = NMSAddon.getInstance().getPaintingVariant(item);
             if (paintingVariant != null) {
                 prints.add(tooltipText(translatable(getPaintingTitle(paintingVariant)).color(YELLOW)));
@@ -329,7 +332,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (InteractiveChat.version.isNewerThan(MCVersion.V1_19) && icMaterial.isMaterial(XMaterial.SPAWNER) && hasMeta && item.getItemMeta() instanceof BlockStateMeta) {
+        if (InteractiveChat.version.isNewerThan(MCVersion.V1_19) && icMaterial.isMaterial(XMaterial.SPAWNER) && hasMeta && item.getItemMeta() instanceof BlockStateMeta && !hideAdditionalFlags) {
             BlockStateMeta meta = (BlockStateMeta) item.getItemMeta();
             EntityType entityType = null;
             if (meta.hasBlockState()) {
@@ -348,14 +351,14 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (icMaterial.isMaterial(XMaterial.GOAT_HORN)) {
+        if (icMaterial.isMaterial(XMaterial.GOAT_HORN) && !hideAdditionalFlags) {
             Key instrument = NMSAddon.getInstance().getGoatHornInstrument(item);
             if (instrument != null) {
                 prints.add(tooltipText(translatable(getGoatHornInstrument(instrument)).color(GRAY)));
             }
         }
 
-        if (icMaterial.isMaterial(XMaterial.BUNDLE) && hasMeta && item.getItemMeta() instanceof BundleMeta) {
+        if (icMaterial.isMaterial(XMaterial.BUNDLE) && hasMeta && item.getItemMeta() instanceof BundleMeta && !hideAdditionalFlags) {
             BundleMeta meta = (BundleMeta) item.getItemMeta();
             List<ItemStack> items = meta.getItems();
             BufferedImage contentsImage = ImageGeneration.getBundleContainerInterface(player, items);
@@ -364,7 +367,7 @@ public class DiscordItemStackUtils {
             prints.add(tooltipText(translatable(getBundleFullness()).arguments(text(fullness), text(64)).color(GRAY)));
         }
 
-        if (icMaterial.isMaterial(XMaterial.WRITTEN_BOOK) && hasMeta && item.getItemMeta() instanceof BookMeta) {
+        if (icMaterial.isMaterial(XMaterial.WRITTEN_BOOK) && hasMeta && item.getItemMeta() instanceof BookMeta && !hideAdditionalFlags) {
             BookMeta meta = (BookMeta) item.getItemMeta();
             String author = meta.getAuthor();
             if (author != null) {
@@ -377,7 +380,7 @@ public class DiscordItemStackUtils {
             prints.add(tooltipText(translatable(getBookGeneration(generation)).color(GRAY)));
         }
 
-        if (icMaterial.isMaterial(XMaterial.SHIELD) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
+        if (icMaterial.isMaterial(XMaterial.SHIELD) && (!hideAdditionalFlags)) {
             if (NMSAddon.getInstance().hasBlockEntityTag(item)) {
                 List<Pattern> patterns = Collections.emptyList();
                 if (!(item.getItemMeta() instanceof BannerMeta)) {
@@ -404,7 +407,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:banner")) && (!hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS)))) {
+        if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:banner")) && (!hideAdditionalFlags)) {
             List<Pattern> patterns = Collections.emptyList();
             if (!(item.getItemMeta() instanceof BannerMeta)) {
                 if (item.getItemMeta() instanceof BlockStateMeta) {
@@ -427,7 +430,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (icMaterial.isMaterial(XMaterial.TROPICAL_FISH_BUCKET)) {
+        if (icMaterial.isMaterial(XMaterial.TROPICAL_FISH_BUCKET) && !hideAdditionalFlags) {
             List<String> translations = getTropicalFishBucketName(item);
             if (!translations.isEmpty()) {
                 prints.add(tooltipText(translatable(translations.get(0)).color(GRAY).decorate(TextDecoration.ITALIC)));
@@ -441,15 +444,15 @@ public class DiscordItemStackUtils {
             prints.add(tooltipText(translatable(getMusicDiscName(item)).color(GRAY)));
         }
 
-        if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:disc_fragment"))) {
+        if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:disc_fragment")) && !hideAdditionalFlags) {
             prints.add(tooltipText(translatable(getDiscFragmentName(item)).color(GRAY)));
         }
 
-        if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:banner_pattern"))) {
+        if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:banner_pattern")) && !hideAdditionalFlags) {
             prints.add(tooltipText(translatable(getBannerPatternItemName(icMaterial)).color(GRAY)));
         }
 
-        if (icMaterial.isMaterial(XMaterial.FIREWORK_ROCKET)) {
+        if (icMaterial.isMaterial(XMaterial.FIREWORK_ROCKET) && !hideAdditionalFlags) {
             if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta) {
                 FireworkMeta meta = (FireworkMeta) item.getItemMeta();
                 int flight = meta.getPower();
@@ -475,7 +478,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (icMaterial.isMaterial(XMaterial.FIREWORK_STAR) && hasMeta && item.getItemMeta() instanceof FireworkEffectMeta) {
+        if (icMaterial.isMaterial(XMaterial.FIREWORK_STAR) && hasMeta && item.getItemMeta() instanceof FireworkEffectMeta && !hideAdditionalFlags) {
             FireworkEffectMeta fireworkEffectMeta = (FireworkEffectMeta) item.getItemMeta();
             FireworkEffect fireworkEffect = fireworkEffectMeta.getEffect();
             prints.add(tooltipText(translatable(getFireworkType(fireworkEffect.getType())).color(GRAY)));
@@ -493,7 +496,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (icMaterial.isMaterial(XMaterial.CROSSBOW)) {
+        if (icMaterial.isMaterial(XMaterial.CROSSBOW) && !hideAdditionalFlags) {
             CrossbowMeta meta = (CrossbowMeta) item.getItemMeta();
             List<ItemStack> charged = meta.getChargedProjectiles();
             if (charged != null && !charged.isEmpty()) {
@@ -513,7 +516,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (InteractiveChatDiscordSrvAddon.plugin.showMapScale && InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && FilledMapUtils.isFilledMap(item)) {
+        if (InteractiveChatDiscordSrvAddon.plugin.showMapScale && InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && FilledMapUtils.isFilledMap(item) && !hideAdditionalFlags) {
             MapMeta map = (MapMeta) item.getItemMeta();
             MapView mapView = FilledMapUtils.getMapView(item);
             int id = FilledMapUtils.getMapId(item);
@@ -527,7 +530,7 @@ public class DiscordItemStackUtils {
             prints.add(tooltipText(translatable(getFilledMapLevel()).arguments(text(scale), text(4)).color(GRAY)));
         }
 
-        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && !hasMeta || (hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_POTION_EFFECTS))) {
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && !hideAdditionalFlags) {
             if (item.getItemMeta() instanceof PotionMeta) {
                 PotionMeta meta = (PotionMeta) item.getItemMeta();
                 List<PotionEffect> effects = PotionUtils.getAllPotionEffects(item);
@@ -671,54 +674,109 @@ public class DiscordItemStackUtils {
         }
 
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
-            Map<EquipmentSlot, List<ToolTipComponent<?>>> tooltips = new EnumMap<>(EquipmentSlot.class);
-            Map<EquipmentSlot, Multimap<String, AttributeModifier>> attributeList = AttributeModifiersUtils.getAttributeModifiers(item);
-            for (Entry<EquipmentSlot, Multimap<String, AttributeModifier>> entry : attributeList.entrySet()) {
-                for (Entry<String, AttributeModifier> subEntry : entry.getValue().entries()) {
-                    AttributeModifier attributemodifier = subEntry.getValue();
-                    String attributeName = subEntry.getKey();
-                    double amount = attributemodifier.getAmount();
-                    AttributeModifier.Operation operation = attributemodifier.getOperation();
+            if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_21)) {
+                Map<EquipmentSlotGroup, List<ToolTipComponent<?>>> tooltips = new EnumMap<>(EquipmentSlotGroup.class);
+                Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> attributeList = AttributeModifiersUtils.getAttributeModifiers(item);
+                for (Entry<EquipmentSlotGroup, Multimap<String, AttributeModifier>> entry : attributeList.entrySet()) {
+                    for (Entry<String, AttributeModifier> subEntry : entry.getValue().entries()) {
+                        AttributeModifier attributemodifier = subEntry.getValue();
+                        String attributeName = subEntry.getKey();
+                        double amount = attributemodifier.getAmount();
+                        AttributeModifier.Operation operation = attributemodifier.getOperation();
 
-                    boolean flag = false;
+                        boolean flag = false;
 
-                    if (bukkitPlayer != null) {
-                        if (attributemodifier.getUniqueId().equals(AttributeModifiersUtils.BASE_ATTACK_DAMAGE_UUID)) {
-                            amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).getBaseValue();
-                            amount += NMSAddon.getInstance().getEnchantmentDamageBonus(item, null);
-                            flag = true;
-                        } else if (attributemodifier.getUniqueId().equals(AttributeModifiersUtils.BASE_ATTACK_SPEED_UUID)) {
-                            amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_SPEED).getBaseValue();
-                            flag = true;
+                        if (bukkitPlayer != null) {
+                            Key attributeModifierKey = KeyUtils.toKey(attributemodifier.getKey());
+                            if (attributeModifierKey.equals(AttributeModifiersUtils.BASE_ATTACK_DAMAGE_MODIFIER_ID)) {
+                                amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).getBaseValue();
+                                flag = true;
+                            } else if (attributeModifierKey.equals(AttributeModifiersUtils.BASE_ATTACK_SPEED_MODIFIER_ID)) {
+                                amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_SPEED).getBaseValue();
+                                flag = true;
+                            }
                         }
-                    }
-
-                    if (!attributemodifier.getOperation().equals(AttributeModifier.Operation.ADD_SCALAR) && !attributemodifier.getOperation().equals(AttributeModifier.Operation.MULTIPLY_SCALAR_1)) {
-                        if (attributeName.equals("attribute.name.generic.knockback_resistance")) {
-                            amount = amount * 10.0D;
+                        if (!attributemodifier.getOperation().equals(AttributeModifier.Operation.ADD_SCALAR) && !attributemodifier.getOperation().equals(AttributeModifier.Operation.MULTIPLY_SCALAR_1)) {
+                            if (attributeName.equals(AttributeModifiersUtils.GENERIC_KNOCKBACK_RESISTANCE)) {
+                                amount = amount * 10.0D;
+                            }
+                        } else {
+                            amount = amount * 100.0D;
                         }
-                    } else {
-                        amount = amount * 100.0D;
-                    }
 
-                    if (amount != 0) {
-                        TextColor color = flag ? DARK_GREEN : (amount < 0 ? RED : BLUE);
-                        Component component = translatable(getAttributeModifierKey(flag, amount, operation.ordinal())).arguments(text(ATTRIBUTE_FORMAT.format(Math.abs(amount))), translatable(attributeName)).color(color);
-                        if (flag) {
-                            component = text(" ").append(component);
+                        if (flag || amount != 0) {
+                            TextColor color = flag ? DARK_GREEN : (amount < 0 ? RED : BLUE);
+                            Component component = translatable(getAttributeModifierKey(flag, amount, operation.ordinal())).arguments(text(ATTRIBUTE_FORMAT.format(Math.abs(amount))), translatable(attributeName)).color(color);
+                            if (flag) {
+                                component = text(" ").append(component);
+                            }
+                            ToolTipComponent<?> attributeComponent = tooltipText(component);
+                            tooltips.computeIfAbsent(entry.getKey(), k -> new LinkedList<>()).add(attributeComponent);
                         }
-                        ToolTipComponent<?> attributeComponent = tooltipText(component);
-                        tooltips.computeIfAbsent(entry.getKey(), k -> new LinkedList<>()).add(attributeComponent);
                     }
                 }
-            }
-            for (EquipmentSlot equipmentSlot : EquipmentSlot.values()) {
-                List<ToolTipComponent<?>> lines = tooltips.get(equipmentSlot);
-                if (lines != null) {
-                    String modifierSlotKey = getModifierSlotKey(equipmentSlot);
-                    prints.add(tooltipEmpty());
-                    prints.add(tooltipText(translatable(modifierSlotKey).color(GRAY)));
-                    prints.addAll(lines);
+                for (EquipmentSlotGroup equipmentSlotGroup : EquipmentSlotGroup.values()) {
+                    List<ToolTipComponent<?>> lines = tooltips.get(equipmentSlotGroup);
+                    if (lines != null) {
+                        String modifierSlotKey = getModifierSlotGroupKey(equipmentSlotGroup);
+                        prints.add(tooltipEmpty());
+                        prints.add(tooltipText(translatable(modifierSlotKey).color(GRAY)));
+                        prints.addAll(lines);
+                    }
+                }
+            } else {
+                Map<EquipmentSlot, List<ToolTipComponent<?>>> tooltips = new EnumMap<>(EquipmentSlot.class);
+                Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> attributeList = AttributeModifiersUtils.getAttributeModifiers(item);
+                for (Entry<EquipmentSlotGroup, Multimap<String, AttributeModifier>> entry : attributeList.entrySet()) {
+                    for (Entry<String, AttributeModifier> subEntry : entry.getValue().entries()) {
+                        AttributeModifier attributemodifier = subEntry.getValue();
+                        String attributeName = subEntry.getKey();
+                        double amount = attributemodifier.getAmount();
+                        AttributeModifier.Operation operation = attributemodifier.getOperation();
+
+                        boolean flag = false;
+
+                        if (bukkitPlayer != null) {
+                            if (attributemodifier.getUniqueId().equals(AttributeModifiersUtils.BASE_ATTACK_DAMAGE_UUID)) {
+                                amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).getBaseValue();
+                                amount += NMSAddon.getInstance().getEnchantmentDamageBonus(item, null);
+                                flag = true;
+                            } else if (attributemodifier.getUniqueId().equals(AttributeModifiersUtils.BASE_ATTACK_SPEED_UUID)) {
+                                amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_SPEED).getBaseValue();
+                                flag = true;
+                            }
+                        }
+
+                        if (!attributemodifier.getOperation().equals(AttributeModifier.Operation.ADD_SCALAR) && !attributemodifier.getOperation().equals(AttributeModifier.Operation.MULTIPLY_SCALAR_1)) {
+                            if (attributeName.equals(AttributeModifiersUtils.GENERIC_KNOCKBACK_RESISTANCE)) {
+                                amount = amount * 10.0D;
+                            }
+                        } else {
+                            amount = amount * 100.0D;
+                        }
+
+                        if (amount != 0) {
+                            TextColor color = flag ? DARK_GREEN : (amount < 0 ? RED : BLUE);
+                            Component component = translatable(getAttributeModifierKey(flag, amount, operation.ordinal())).arguments(text(ATTRIBUTE_FORMAT.format(Math.abs(amount))), translatable(attributeName)).color(color);
+                            if (flag) {
+                                component = text(" ").append(component);
+                            }
+                            ToolTipComponent<?> attributeComponent = tooltipText(component);
+                            List<EquipmentSlot> slots = entry.getKey().getEquipmentSlots();
+                            if (!slots.isEmpty()) {
+                                tooltips.computeIfAbsent(slots.get(0), k -> new LinkedList<>()).add(attributeComponent);
+                            }
+                        }
+                    }
+                }
+                for (EquipmentSlot equipmentSlot : EquipmentSlot.values()) {
+                    List<ToolTipComponent<?>> lines = tooltips.get(equipmentSlot);
+                    if (lines != null) {
+                        String modifierSlotKey = getModifierSlotKey(equipmentSlot);
+                        prints.add(tooltipEmpty());
+                        prints.add(tooltipText(translatable(modifierSlotKey).color(GRAY)));
+                        prints.addAll(lines);
+                    }
                 }
             }
         }

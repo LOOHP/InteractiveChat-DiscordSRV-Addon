@@ -31,9 +31,9 @@ import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.ReflectionUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
@@ -57,8 +57,6 @@ import net.minecraft.world.damagesource.CombatTracker;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectList;
 import net.minecraft.world.entity.EntityLiving;
-import net.minecraft.world.entity.EntityTypes;
-import net.minecraft.world.entity.EnumItemSlot;
 import net.minecraft.world.entity.animal.EntityTropicalFish;
 import net.minecraft.world.entity.decoration.EntityPainting;
 import net.minecraft.world.entity.projectile.EntityFishingHook;
@@ -85,20 +83,20 @@ import org.bukkit.World;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.banner.PatternType;
-import org.bukkit.craftbukkit.v1_20_R4.CraftEquipmentSlot;
-import org.bukkit.craftbukkit.v1_20_R4.CraftWorld;
-import org.bukkit.craftbukkit.v1_20_R4.advancement.CraftAdvancement;
-import org.bukkit.craftbukkit.v1_20_R4.attribute.CraftAttributeInstance;
-import org.bukkit.craftbukkit.v1_20_R4.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_20_R4.entity.CraftEntityType;
-import org.bukkit.craftbukkit.v1_20_R4.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_20_R4.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_20_R4.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v1_20_R4.inventory.trim.CraftTrimMaterial;
-import org.bukkit.craftbukkit.v1_20_R4.potion.CraftPotionEffectType;
-import org.bukkit.craftbukkit.v1_20_R4.potion.CraftPotionUtil;
-import org.bukkit.craftbukkit.v1_20_R4.util.CraftChatMessage;
-import org.bukkit.craftbukkit.v1_20_R4.util.CraftMagicNumbers;
+import org.bukkit.craftbukkit.v1_21_R1.CraftEquipmentSlot;
+import org.bukkit.craftbukkit.v1_21_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_21_R1.advancement.CraftAdvancement;
+import org.bukkit.craftbukkit.v1_21_R1.attribute.CraftAttributeInstance;
+import org.bukkit.craftbukkit.v1_21_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_21_R1.entity.CraftEntityType;
+import org.bukkit.craftbukkit.v1_21_R1.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_21_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_21_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_21_R1.inventory.trim.CraftTrimMaterial;
+import org.bukkit.craftbukkit.v1_21_R1.potion.CraftPotionEffectType;
+import org.bukkit.craftbukkit.v1_21_R1.potion.CraftPotionUtil;
+import org.bukkit.craftbukkit.v1_21_R1.util.CraftChatMessage;
+import org.bukkit.craftbukkit.v1_21_R1.util.CraftMagicNumbers;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -131,11 +129,11 @@ import java.util.OptionalLong;
 import java.util.concurrent.ExecutionException;
 
 @SuppressWarnings("unused")
-public class V1_20_5 extends NMSAddonWrapper {
+public class V1_21 extends NMSAddonWrapper {
 
     private final Field adventureModePredicatePredicatesField;
 
-    public V1_20_5() {
+    public V1_21() {
         try {
             adventureModePredicatePredicatesField = ReflectionUtils.findDeclaredField(AdventureModePredicate.class, List.class, "predicates", "h");
         } catch (NoSuchFieldException e) {
@@ -143,17 +141,10 @@ public class V1_20_5 extends NMSAddonWrapper {
         }
     }
 
-    @SuppressWarnings("PatternValidation")
-    @Override
-    public Key getMapCursorTypeKey(MapCursor mapCursor) {
-        NamespacedKey key = mapCursor.getType().getKey();
-        return Key.key(key.getNamespace(), key.getKey());
-    }
-
     @Override
     public Map<ICMaterial, TintColorProvider.SpawnEggTintData> getSpawnEggColorMap() {
         Map<ICMaterial, TintColorProvider.SpawnEggTintData> mapping = new LinkedHashMap<>();
-        for (Item item : BuiltInRegistries.h) {
+        for (Item item : BuiltInRegistries.g) {
             if (item instanceof ItemMonsterEgg) {
                 ItemMonsterEgg egg = (ItemMonsterEgg) item;
                 ICMaterial icMaterial = ICMaterial.of(CraftMagicNumbers.getMaterial(item));
@@ -161,6 +152,13 @@ public class V1_20_5 extends NMSAddonWrapper {
             }
         }
         return mapping;
+    }
+
+    @SuppressWarnings("PatternValidation")
+    @Override
+    public Key getMapCursorTypeKey(MapCursor mapCursor) {
+        NamespacedKey key = mapCursor.getType().getKey();
+        return Key.key(key.getNamespace(), key.getKey());
     }
 
     @SuppressWarnings("PatternValidation")
@@ -402,7 +400,7 @@ public class V1_20_5 extends NMSAddonWrapper {
         if (holder == null) {
             return null;
         }
-        MinecraftKey key = BuiltInRegistries.am.b(holder.a());
+        MinecraftKey key = BuiltInRegistries.ak.b(holder.a());
         return Key.key(key.b(), key.a());
     }
 
@@ -419,7 +417,7 @@ public class V1_20_5 extends NMSAddonWrapper {
             return null;
         }
         net.minecraft.world.entity.decoration.PaintingVariant paintingVariant = optional.get().a();
-        MinecraftKey key = BuiltInRegistries.l.b(paintingVariant);
+        MinecraftKey key = paintingVariant.d();
         return new PaintingVariant(Key.key(key.b(), key.a()), paintingVariant.a() / 16, paintingVariant.b() / 16);
     }
 
@@ -490,7 +488,7 @@ public class V1_20_5 extends NMSAddonWrapper {
             return null;
         }
         ArmorMaterial armorMaterial = ((ItemArmor) item).h().a();
-        MinecraftKey key = BuiltInRegistries.ar.b(armorMaterial);
+        MinecraftKey key = BuiltInRegistries.ap.b(armorMaterial);
         return Key.key(key.b(), key.a());
     }
 
@@ -498,9 +496,9 @@ public class V1_20_5 extends NMSAddonWrapper {
     public Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> getItemAttributeModifiers(ItemStack itemStack) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
         Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> result = new EnumMap<>(EquipmentSlotGroup.class);
-        for (EnumItemSlot slot : EnumItemSlot.values()) {
-            EquipmentSlotGroup equipmentSlotGroup = EquipmentSlotGroup.forEquipmentSlot(CraftEquipmentSlot.getSlot(slot));
-            nmsItemStack.a(slot, (holder, nmsAttributeModifier) -> {
+        for (net.minecraft.world.entity.EquipmentSlotGroup slotGroup : net.minecraft.world.entity.EquipmentSlotGroup.values()) {
+            EquipmentSlotGroup equipmentSlotGroup = EquipmentSlotGroup.fromName(slotGroup.c());
+            nmsItemStack.a(slotGroup, (holder, nmsAttributeModifier) -> {
                 Multimap<String, AttributeModifier> attributes = result.computeIfAbsent(equipmentSlotGroup, k -> LinkedHashMultimap.create());
                 String name = holder.a().c();
                 AttributeModifier attributeModifier = CraftAttributeInstance.convert(nmsAttributeModifier);
@@ -513,7 +511,7 @@ public class V1_20_5 extends NMSAddonWrapper {
     @Override
     public Component getDeathMessage(Player player) {
         EntityPlayer entityPlayer = ((CraftPlayer) player).getHandle();
-        CombatTracker combatTracker = entityPlayer.eP();
+        CombatTracker combatTracker = entityPlayer.eL();
         return InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(combatTracker.a()));
     }
 
@@ -525,7 +523,6 @@ public class V1_20_5 extends NMSAddonWrapper {
         MinecraftKey key = DecoratedPotPatterns.a(item).a();
         return Key.key(key.b(), key.a());
     }
-
 
     @Override
     public String getMusicDiscNameTranslationKey(ItemStack disc) {
@@ -553,7 +550,7 @@ public class V1_20_5 extends NMSAddonWrapper {
     @Override
     public FishHook getFishHook(Player player) {
         EntityPlayer entityPlayer = ((CraftPlayer) player).getHandle();
-        EntityFishingHook entityFishingHook = entityPlayer.ct;
+        EntityFishingHook entityFishingHook = entityPlayer.cv;
         return entityFishingHook == null ? null : (FishHook) entityFishingHook.getBukkitEntity();
     }
 
@@ -575,11 +572,8 @@ public class V1_20_5 extends NMSAddonWrapper {
     @Override
     public float getEnchantmentDamageBonus(ItemStack itemStack, LivingEntity livingEntity) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        if (livingEntity == null) {
-            return EnchantmentManager.a(nmsItemStack, (EntityTypes<?>) null);
-        }
         EntityLiving entityLiving = ((CraftLivingEntity) livingEntity).getHandle();
-        return EnchantmentManager.a(nmsItemStack, entityLiving.ak());
+        return EnchantmentManager.a(nmsItemStack, entityLiving);
     }
 
     @Override
@@ -592,7 +586,7 @@ public class V1_20_5 extends NMSAddonWrapper {
     public GameProfile getPlayerHeadProfile(ItemStack playerHead) {
         try {
             net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(playerHead);
-            ResolvableProfile resolvableProfile = nmsItemStack.a(DataComponents.V);
+            ResolvableProfile resolvableProfile = nmsItemStack.a(DataComponents.W);
             if (resolvableProfile == null) {
                 return null;
             }
@@ -606,5 +600,4 @@ public class V1_20_5 extends NMSAddonWrapper {
     public ItemFlag getHideAdditionalItemFlag() {
         return ItemFlag.HIDE_ADDITIONAL_TOOLTIP;
     }
-
 }

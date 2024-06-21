@@ -146,7 +146,7 @@ public class ModelManager extends AbstractManager implements IModelManager {
             }
             model = model.resolve(parent, is1_8);
         }
-        return model.resolve( is1_8);
+        return model.resolve(is1_8);
     }
 
 }

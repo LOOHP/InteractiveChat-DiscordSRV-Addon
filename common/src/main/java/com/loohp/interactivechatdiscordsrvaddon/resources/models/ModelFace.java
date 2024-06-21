@@ -59,7 +59,7 @@ public class ModelFace {
     }
 
     public String getTexture() {
-        if (texture.startsWith("#")) {
+        if (texture != null && texture.startsWith("#")) {
             return texture;
         }
         return texture == null ? null : (texture.contains(":") ? texture : ResourceRegistry.DEFAULT_NAMESPACE + ":" + texture);

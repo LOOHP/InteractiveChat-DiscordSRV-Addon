@@ -30,6 +30,7 @@ import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
@@ -97,12 +98,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.map.MapCursor;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -269,6 +273,11 @@ public class V1_20 extends NMSAddonWrapper {
             return OptionalInt.empty();
         }
         return OptionalInt.of(nbt.h("BucketVariantTag"));
+    }
+
+    @Override
+    public PotionType getBasePotionType(ItemStack potion) {
+        return ((PotionMeta) potion.getItemMeta()).getBasePotionData().getType();
     }
 
     @Override
@@ -471,14 +480,14 @@ public class V1_20 extends NMSAddonWrapper {
     }
 
     @Override
-    public Map<EquipmentSlot, Multimap<String, AttributeModifier>> getItemAttributeModifiers(ItemStack itemStack) {
+    public Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> getItemAttributeModifiers(ItemStack itemStack) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        Map<EquipmentSlot, Multimap<String, AttributeModifier>> result = new EnumMap<>(EquipmentSlot.class);
+        Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> result = new EnumMap<>(EquipmentSlotGroup.class);
         for (EnumItemSlot slot : EnumItemSlot.values()) {
-            EquipmentSlot equipmentSlot = CraftEquipmentSlot.getSlot(slot);
+            EquipmentSlotGroup equipmentSlotGroup = EquipmentSlotGroup.forEquipmentSlot(CraftEquipmentSlot.getSlot(slot));
             Multimap<AttributeBase, net.minecraft.world.entity.ai.attributes.AttributeModifier> nmsMap = nmsItemStack.a(slot);
             for (Map.Entry<AttributeBase, net.minecraft.world.entity.ai.attributes.AttributeModifier> entry : nmsMap.entries()) {
-                Multimap<String, AttributeModifier> attributes = result.computeIfAbsent(equipmentSlot, k -> LinkedHashMultimap.create());
+                Multimap<String, AttributeModifier> attributes = result.computeIfAbsent(equipmentSlotGroup, k -> LinkedHashMultimap.create());
                 String name = entry.getKey().c();
                 AttributeModifier attributeModifier = CraftAttributeInstance.convert(entry.getValue());
                 attributes.put(name, attributeModifier);
@@ -578,4 +587,10 @@ public class V1_20 extends NMSAddonWrapper {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public ItemFlag getHideAdditionalItemFlag() {
+        return ItemFlag.HIDE_POTION_EFFECTS;
+    }
+
 }

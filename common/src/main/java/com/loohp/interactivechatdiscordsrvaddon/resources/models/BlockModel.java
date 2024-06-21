@@ -125,6 +125,9 @@ public class BlockModel {
                             uv = new TextureUV(((Number) uvArray.get(0)).doubleValue(), ((Number) uvArray.get(1)).doubleValue(), ((Number) uvArray.get(2)).doubleValue(), ((Number) uvArray.get(3)).doubleValue());
                         }
                         String faceTexture = (String) faceJson.get("texture");
+                        if (texture.containsKey(faceTexture)) {
+                            faceTexture = "#" + faceTexture;
+                        }
                         Object cullfaceObj = faceJson.get("cullface");
                         ModelFaceSide cullface;
                         if (cullfaceObj != null && cullfaceObj instanceof String) {

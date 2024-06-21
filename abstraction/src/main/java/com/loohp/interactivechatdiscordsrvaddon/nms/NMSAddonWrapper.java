@@ -26,6 +26,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
@@ -44,11 +45,13 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.map.MapCursor;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 
 import java.util.List;
 import java.util.Map;
@@ -91,6 +94,8 @@ public abstract class NMSAddonWrapper {
 
     public abstract OptionalInt getTropicalFishBucketVariantTag(ItemStack bucket);
 
+    public abstract PotionType getBasePotionType(ItemStack potion);
+
     public abstract List<PotionEffect> getAllPotionEffects(ItemStack potion);
 
     public abstract ChatColor getPotionEffectChatColor(PotionEffectType type);
@@ -125,7 +130,7 @@ public abstract class NMSAddonWrapper {
 
     public abstract Key getArmorMaterialKey(ItemStack armorItem);
 
-    public abstract Map<EquipmentSlot, ? extends Multimap<String, ?>> getItemAttributeModifiers(ItemStack itemStack);
+    public abstract Map<EquipmentSlotGroup, ? extends Multimap<String, ?>> getItemAttributeModifiers(ItemStack itemStack);
 
     public abstract Component getDeathMessage(Player player);
 
@@ -152,5 +157,7 @@ public abstract class NMSAddonWrapper {
     public abstract int getItemComponentsSize(ItemStack itemStack);
 
     public abstract GameProfile getPlayerHeadProfile(ItemStack playerHead);
+
+    public abstract ItemFlag getHideAdditionalItemFlag();
 
 }

@@ -76,7 +76,6 @@ import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.trim.ArmorTrim;
 import org.bukkit.inventory.meta.trim.TrimMaterial;
-import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
@@ -331,14 +330,7 @@ public class ItemRenderUtils {
             tintColorProvider = new TintColorProvider.DyeTintProvider(tintIndex -> tintIndex > 0 ? -1 : dyedColor);
         } else if (itemMeta instanceof PotionMeta) {
             PotionMeta meta = (PotionMeta) itemMeta;
-            PotionType potiontype;
-            if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_20_5)) {
-                potiontype = meta.getBasePotionType();
-            } else if (!InteractiveChat.version.isOld()) {
-                potiontype = meta.getBasePotionData().getType();
-            } else {
-                potiontype = Potion.fromItemStack(item).getType();
-            }
+            PotionType potiontype = NMSAddon.getInstance().getBasePotionType(item);
             int color;
             try {
                 if (meta.hasColor()) {

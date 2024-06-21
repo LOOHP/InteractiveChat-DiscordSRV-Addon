@@ -44,6 +44,7 @@ import com.loohp.interactivechat.utils.ComponentFlattening;
 import com.loohp.interactivechat.utils.ComponentModernizing;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.ItemNBTUtils;
+import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontProvider;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.md_5.bungee.api.ChatColor;
@@ -436,7 +437,7 @@ public class ComponentStringUtils {
                 } else {
                     Optional<XMaterial> optXMaterial;
                     if (legacyId.hasByteId()) {
-                        optXMaterial = XMaterial.matchXMaterial(legacyId.getByteId(), legacyId.isDamageDataValue() ? (byte) legacyId.getDamage() : 0);
+                        optXMaterial = XMaterialUtils.matchXMaterial(legacyId.getByteId(), legacyId.isDamageDataValue() ? (byte) legacyId.getDamage() : 0);
                         if (optXMaterial.isPresent()) {
                             itemstack = optXMaterial.get().parseItem();
                         }

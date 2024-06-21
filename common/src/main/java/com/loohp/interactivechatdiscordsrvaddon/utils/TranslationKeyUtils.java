@@ -25,6 +25,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.org.apache.commons.text.WordUtils;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackType;
 import org.bukkit.Color;
@@ -357,6 +358,10 @@ public class TranslationKeyUtils {
             default:
                 return "item.modifiers." + slot.toString().toLowerCase();
         }
+    }
+
+    public static String getModifierSlotGroupKey(EquipmentSlotGroup slot) {
+        return "item.modifiers." + slot.asString();
     }
 
     public static String getCanDestroy() {

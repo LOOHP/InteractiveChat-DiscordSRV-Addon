@@ -29,6 +29,7 @@ import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
@@ -77,6 +78,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.player.PlayerAchievementAwardedEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
@@ -85,6 +87,7 @@ import org.bukkit.map.MapCursor;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -177,6 +180,11 @@ public class V1_8_4 extends NMSAddonWrapper {
     @Override
     public OptionalInt getTropicalFishBucketVariantTag(ItemStack bucket) {
         return OptionalInt.empty();
+    }
+
+    @Override
+    public PotionType getBasePotionType(ItemStack potion) {
+        return Potion.fromItemStack(potion).getType();
     }
 
     @Override
@@ -353,7 +361,7 @@ public class V1_8_4 extends NMSAddonWrapper {
     }
 
     @Override
-    public Map<EquipmentSlot, ? extends Multimap<String, ?>> getItemAttributeModifiers(ItemStack itemStack) {
+    public Map<EquipmentSlotGroup, ? extends Multimap<String, ?>> getItemAttributeModifiers(ItemStack itemStack) {
         throw new UnsupportedOperationException();
     }
 
@@ -457,4 +465,10 @@ public class V1_8_4 extends NMSAddonWrapper {
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public ItemFlag getHideAdditionalItemFlag() {
+        return ItemFlag.HIDE_POTION_EFFECTS;
+    }
+
 }
