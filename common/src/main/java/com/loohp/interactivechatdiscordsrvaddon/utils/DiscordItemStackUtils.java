@@ -687,7 +687,7 @@ public class DiscordItemStackUtils {
                         boolean flag = false;
 
                         if (bukkitPlayer != null) {
-                            Key attributeModifierKey = KeyUtils.toKey(attributemodifier.getKey());
+                            Key attributeModifierKey = NMSAddon.getInstance().getAttributeModifierKey(attributemodifier);
                             if (attributeModifierKey.equals(AttributeModifiersUtils.BASE_ATTACK_DAMAGE_MODIFIER_ID)) {
                                 amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).getBaseValue();
                                 flag = true;

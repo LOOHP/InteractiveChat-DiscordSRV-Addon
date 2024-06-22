@@ -600,4 +600,12 @@ public class V1_21 extends NMSAddonWrapper {
     public ItemFlag getHideAdditionalItemFlag() {
         return ItemFlag.HIDE_ADDITIONAL_TOOLTIP;
     }
+
+    @SuppressWarnings("PatternValidation")
+    @Override
+    public Key getAttributeModifierKey(Object attributeModifier) {
+        NamespacedKey namespacedKey = ((AttributeModifier) attributeModifier).getKey();
+        return Key.key(namespacedKey.getNamespace(), namespacedKey.getKey());
+    }
+
 }
