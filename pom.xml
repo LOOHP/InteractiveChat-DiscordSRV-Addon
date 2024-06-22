@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.loohp</groupId>
-    <artifactId>InteractiveChatDiscordSrvAddon-Parent</artifactId>
-    <version>4.2.11.0</version>
+    <artifactId>InteractionVisualizer-Parent</artifactId>
+    <version>1.18.10.0</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -15,14 +15,6 @@
 
     <modules>
         <module>abstraction</module>
-        <module>V1_8</module>
-        <module>V1_8_3</module>
-        <module>V1_8_4</module>
-        <module>V1_9</module>
-        <module>V1_9_4</module>
-        <module>V1_10</module>
-        <module>V1_11</module>
-        <module>V1_12</module>
         <module>V1_13</module>
         <module>V1_13_1</module>
         <module>V1_14</module>

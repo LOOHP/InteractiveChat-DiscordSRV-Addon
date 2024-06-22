@@ -160,4 +160,6 @@ public abstract class NMSAddonWrapper {
 
     public abstract ItemFlag getHideAdditionalItemFlag();
 
+    public abstract Key getAttributeModifierKey(Object attributeModifier);
+
 }

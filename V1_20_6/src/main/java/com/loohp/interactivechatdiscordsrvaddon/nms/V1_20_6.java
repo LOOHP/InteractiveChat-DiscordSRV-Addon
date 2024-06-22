@@ -606,4 +606,9 @@ public class V1_20_6 extends NMSAddonWrapper {
         return ItemFlag.HIDE_ADDITIONAL_TOOLTIP;
     }
 
+    @Override
+    public Key getAttributeModifierKey(Object attributeModifier) {
+        throw new UnsupportedOperationException();
+    }
+
 }

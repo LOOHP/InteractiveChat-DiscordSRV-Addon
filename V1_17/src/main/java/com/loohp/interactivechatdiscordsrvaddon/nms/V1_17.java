@@ -601,4 +601,9 @@ public class V1_17 extends NMSAddonWrapper {
         return ItemFlag.HIDE_POTION_EFFECTS;
     }
 
+    @Override
+    public Key getAttributeModifierKey(Object attributeModifier) {
+        throw new UnsupportedOperationException();
+    }
+
 }
