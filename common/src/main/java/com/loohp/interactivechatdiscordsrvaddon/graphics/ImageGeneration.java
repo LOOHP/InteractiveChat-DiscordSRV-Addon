@@ -559,7 +559,7 @@ public class ImageGeneration {
             }
             if (leggingsImage != null) {
                 ItemMeta meta = leggings.getItemMeta();
-                if (meta instanceof ArmorMeta) {
+                if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_20) && meta instanceof ArmorMeta) {
                     ArmorTrim armorTrim = ((ArmorMeta) meta).getTrim();
                     if (armorTrim != null) {
                         String material = armorTrim.getMaterial().getKey().getKey();
@@ -597,7 +597,7 @@ public class ImageGeneration {
             }
             if (bootsImage != null) {
                 ItemMeta meta = boots.getItemMeta();
-                if (meta instanceof ArmorMeta) {
+                if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_20) && meta instanceof ArmorMeta) {
                     ArmorTrim armorTrim = ((ArmorMeta) meta).getTrim();
                     if (armorTrim != null) {
                         String material = armorTrim.getMaterial().getKey().getKey();
@@ -666,7 +666,7 @@ public class ImageGeneration {
             }
             if (chestplateImage != null) {
                 ItemMeta meta = chestplate.getItemMeta();
-                if (meta instanceof ArmorMeta) {
+                if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_20) && meta instanceof ArmorMeta) {
                     ArmorTrim armorTrim = ((ArmorMeta) meta).getTrim();
                     if (armorTrim != null) {
                         String material = armorTrim.getMaterial().getKey().getKey();
@@ -705,7 +705,7 @@ public class ImageGeneration {
             }
             if (helmetImage != null) {
                 ItemMeta meta = helmet.getItemMeta();
-                if (meta instanceof ArmorMeta) {
+                if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_20) && meta instanceof ArmorMeta) {
                     ArmorTrim armorTrim = ((ArmorMeta) meta).getTrim();
                     if (armorTrim != null) {
                         String material = armorTrim.getMaterial().getKey().getKey();
