@@ -26,12 +26,14 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ProfileProperty;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -161,5 +163,7 @@ public abstract class NMSAddonWrapper {
     public abstract ItemFlag getHideAdditionalItemFlag();
 
     public abstract Key getAttributeModifierKey(Object attributeModifier);
+
+    public abstract ProfileProperty toProfileProperty(Property property);
 
 }

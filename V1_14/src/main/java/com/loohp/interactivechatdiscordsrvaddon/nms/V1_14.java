@@ -33,8 +33,10 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ProfileProperty;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_14_R1.BlockPosition;
 import net.minecraft.server.v1_14_R1.EnchantmentManager;
@@ -553,6 +555,11 @@ public class V1_14 extends NMSAddonWrapper {
     @Override
     public Key getAttributeModifierKey(Object attributeModifier) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ProfileProperty toProfileProperty(Property property) {
+        return new ProfileProperty(property.getName(), property.getValue(), property.getSignature());
     }
 
 }
