@@ -39,6 +39,17 @@ import java.util.stream.IntStream;
 
 public class FontProvider {
 
+    private static boolean intSetHasIntStream;
+
+    static {
+        try {
+            IntSet.class.getMethod("intStream");
+            intSetHasIntStream = true;
+        } catch (NoSuchMethodException e) {
+            intSetHasIntStream = false;
+        }
+    }
+
     private final ResourceManager manager;
     private final String key;
     private final List<MinecraftFont> providers;
@@ -69,8 +80,13 @@ public class FontProvider {
         return IntSets.unmodifiable(set);
     }
 
+    @SuppressWarnings("deprecation")
     public IntStream getDisplayableCharactersAsStream() {
-        return this.providers.stream().flatMapToInt(p -> p.getDisplayableCharacters().intStream());
+        if (intSetHasIntStream) {
+            return this.providers.stream().flatMapToInt(p -> p.getDisplayableCharacters().intStream());
+        } else {
+            return this.providers.stream().flatMap(p -> p.getDisplayableCharacters().stream()).mapToInt(i -> i);
+        }
     }
 
     public Int2ObjectMap<IntList> getDisplayableCharactersByWidth() {
