@@ -24,9 +24,11 @@ import com.loohp.interactivechat.libs.org.apache.commons.text.StringEscapeUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntLists;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
@@ -95,9 +97,16 @@ public class FontProvider {
             getDisplayableCharactersAsStream().forEach(i -> {
                 String c = new String(Character.toChars(i));
                 int width = forCharacter(c).getCharacterWidth(c);
-                charactersByWidth.computeIfAbsent(width, k -> new IntArrayList()).add(i);
+                IntList character = charactersByWidth.get(width);
+                if (character == null) {
+                    charactersByWidth.put(width, character = new IntArrayList());
+                }
+                character.add(i);
             });
-            this.getDisplayableCharactersByWidth = charactersByWidth;
+            for (Int2ObjectMap.Entry<IntList> entry : charactersByWidth.int2ObjectEntrySet()) {
+                entry.setValue(IntLists.unmodifiable(entry.getValue()));
+            }
+            this.getDisplayableCharactersByWidth = Int2ObjectMaps.unmodifiable(charactersByWidth);
         }
         return getDisplayableCharactersByWidth;
     }
