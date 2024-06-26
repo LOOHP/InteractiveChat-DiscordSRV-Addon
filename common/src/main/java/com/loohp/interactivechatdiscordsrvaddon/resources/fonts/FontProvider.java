@@ -97,11 +97,11 @@ public class FontProvider {
             getDisplayableCharactersAsStream().forEach(i -> {
                 String c = new String(Character.toChars(i));
                 int width = forCharacter(c).getCharacterWidth(c);
-                IntList character = charactersByWidth.get(width);
-                if (character == null) {
-                    charactersByWidth.put(width, character = new IntArrayList());
+                IntList characters = charactersByWidth.get(width);
+                if (characters == null) {
+                    charactersByWidth.put(width, characters = new IntArrayList());
                 }
-                character.add(i);
+                characters.add(i);
             });
             for (Int2ObjectMap.Entry<IntList> entry : charactersByWidth.int2ObjectEntrySet()) {
                 entry.setValue(IntLists.unmodifiable(entry.getValue()));
