@@ -31,6 +31,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.CompoundTag;
+import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
 import com.loohp.interactivechat.libs.org.apache.commons.text.WordUtils;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
@@ -206,7 +207,7 @@ public class DiscordItemStackUtils {
     public static Color getDiscordColor(ItemStack item) {
         if (item != null && item.getItemMeta() != null) {
             ItemMeta meta = item.getItemMeta();
-            if (meta.hasDisplayName() && !meta.getDisplayName().equals("")) {
+            if (meta.hasDisplayName() && !meta.getDisplayName().isEmpty()) {
                 String colorStr = ChatColorUtils.getFirstColors(meta.getDisplayName());
                 if (colorStr.length() > 1) {
                     ChatColor chatColor = ColorUtils.toChatColor(colorStr);
@@ -242,6 +243,7 @@ public class DiscordItemStackUtils {
         return name;
     }
 
+    @SuppressWarnings({"UnstableApiUsage", "PatternValidation"})
     public static DiscordToolTip getToolTip(ItemStack item, OfflineICPlayer player) throws Exception {
         String language = InteractiveChatDiscordSrvAddon.plugin.language;
         UnaryOperator<String> translationFunction = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(language);
@@ -359,11 +361,11 @@ public class DiscordItemStackUtils {
         }
 
         if (icMaterial.isMaterial(XMaterial.BUNDLE) && hasMeta && item.getItemMeta() instanceof BundleMeta && !hideAdditionalFlags) {
-            BundleMeta meta = (BundleMeta) item.getItemMeta();
-            List<ItemStack> items = meta.getItems();
+            List<ItemStack> items = ((BundleMeta) item.getItemMeta()).getItems();
             BufferedImage contentsImage = ImageGeneration.getBundleContainerInterface(player, items);
             prints.add(tooltipImage(contentsImage));
-            int fullness = BundleUtils.getFullness(items);
+            Fraction weight = BundleUtils.getWeight(items);
+            int fullness = weight.getNumerator() * 64 / weight.getDenominator();
             prints.add(tooltipText(translatable(getBundleFullness()).arguments(text(fullness), text(64)).color(GRAY)));
         }
 

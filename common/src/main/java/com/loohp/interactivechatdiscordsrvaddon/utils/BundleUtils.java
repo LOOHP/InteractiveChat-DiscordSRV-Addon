@@ -20,13 +20,9 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
-import org.bukkit.Material;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.EntityBlockStorage;
+import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
+import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BlockStateMeta;
-import org.bukkit.inventory.meta.BundleMeta;
-import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.List;
 
@@ -40,34 +36,16 @@ public class BundleUtils {
         return (int) Math.ceil(((double) itemCount + 1.0) / (double) getContainerGridSizeX(itemCount));
     }
 
-    public static float getFullnessPercentage(List<ItemStack> items) {
-        return (float) getContentWeight(items) / 64.0F;
-    }
-
-    public static int getFullness(List<ItemStack> items) {
-        return getContentWeight(items);
-    }
-
-    private static int getWeight(ItemStack itemStack) {
-        Material material = itemStack.getType();
-        if (material.equals(Material.BUNDLE)) {
-            return 4 + getContentWeight(((BundleMeta) itemStack.getItemMeta()).getItems());
-        } else {
-            ItemMeta itemMeta = itemStack.getItemMeta();
-            if (itemMeta instanceof BlockStateMeta) {
-                BlockState blockState = ((BlockStateMeta) itemMeta).getBlockState();
-                if (blockState instanceof EntityBlockStorage && ((EntityBlockStorage<?>) blockState).getEntityCount() > 0) {
-                    return 64;
-                }
-            }
-            return 64 / itemStack.getMaxStackSize();
+    public static Fraction getWeight(List<ItemStack> items) {
+        Fraction fraction = Fraction.ZERO;
+        for (ItemStack itemStack : items) {
+            fraction = fraction.add(getWeight(itemStack).multiplyBy(Fraction.getFraction(itemStack.getAmount(), 1)));
         }
+        return fraction;
     }
 
-    private static int getContentWeight(List<ItemStack> items) {
-        return items.stream().mapToInt(each -> {
-            return getWeight(each) * each.getAmount();
-        }).sum();
+    public static Fraction getWeight(ItemStack itemStack) {
+        return NMSAddon.getInstance().getWeightForBundle(itemStack);
     }
 
 }

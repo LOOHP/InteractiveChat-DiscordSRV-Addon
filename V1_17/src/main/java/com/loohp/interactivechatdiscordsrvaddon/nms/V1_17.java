@@ -25,13 +25,14 @@ import com.google.common.collect.Multimap;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
+import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ProfileProperty;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
@@ -60,6 +61,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeBase;
 import net.minecraft.world.entity.decoration.Paintings;
 import net.minecraft.world.entity.projectile.EntityFishingHook;
 import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.item.BundleItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemArmor;
 import net.minecraft.world.item.ItemMonsterEgg;
@@ -108,6 +110,8 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -124,6 +128,7 @@ public class V1_17 extends NMSAddonWrapper {
     private final Field dimensionManagerInfiniburnField;
     private final Field dimensionManagerAmbientLightField;
     private final Field craftMetaSkullProfileField;
+    private final Method bundleItemGetWeightMethod;
 
     public V1_17() {
         try {
@@ -131,7 +136,8 @@ public class V1_17 extends NMSAddonWrapper {
             dimensionManagerInfiniburnField = net.minecraft.world.level.dimension.DimensionManager.class.getDeclaredField("J");
             dimensionManagerAmbientLightField = net.minecraft.world.level.dimension.DimensionManager.class.getDeclaredField("L");
             craftMetaSkullProfileField = Class.forName("org.bukkit.craftbukkit.v1_17_R1.inventory.CraftMetaSkull").getDeclaredField("profile");
-        } catch (NoSuchFieldException | ClassNotFoundException e) {
+            bundleItemGetWeightMethod = BundleItem.class.getDeclaredMethod("k", net.minecraft.world.item.ItemStack.class);
+        } catch (NoSuchFieldException | ClassNotFoundException | NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
     }
@@ -611,6 +617,18 @@ public class V1_17 extends NMSAddonWrapper {
     @Override
     public ProfileProperty toProfileProperty(Property property) {
         return new ProfileProperty(property.getName(), property.getValue(), property.getSignature());
+    }
+
+    @Override
+    public Fraction getWeightForBundle(ItemStack itemStack) {
+        try {
+            net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+            bundleItemGetWeightMethod.setAccessible(true);
+            int weight = (int) bundleItemGetWeightMethod.invoke(null, nmsItemStack);
+            return Fraction.getFraction(weight, 64);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

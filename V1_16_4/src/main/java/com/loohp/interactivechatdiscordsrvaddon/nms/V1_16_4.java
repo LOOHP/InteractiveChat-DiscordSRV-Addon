@@ -25,6 +25,7 @@ import com.google.common.collect.Multimap;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
+import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
@@ -665,6 +666,11 @@ public class V1_16_4 extends NMSAddonWrapper {
     @Override
     public ProfileProperty toProfileProperty(Property property) {
         return new ProfileProperty(property.getName(), property.getValue(), property.getSignature());
+    }
+
+    @Override
+    public Fraction getWeightForBundle(ItemStack itemStack) {
+        throw new UnsupportedOperationException();
     }
 
 }

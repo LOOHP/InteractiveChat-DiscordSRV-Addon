@@ -413,7 +413,8 @@ public class ItemRenderUtils {
                 }
             }
         } else if (icMaterial.isMaterial(XMaterial.BUNDLE)) {
-            float fullness = BundleUtils.getFullnessPercentage(((BundleMeta) itemMeta).getItems());
+            @SuppressWarnings("UnstableApiUsage")
+            float fullness = BundleUtils.getWeight(((BundleMeta) itemMeta).getItems()).floatValue();
             predicates.put(ModelOverrideType.FILLED, fullness);
         } else if (FilledMapUtils.isFilledMap(item)) {
             MapMeta mapMeta = (MapMeta) itemMeta;
@@ -441,7 +442,8 @@ public class ItemRenderUtils {
                     if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_20_3)) {
                         String namespace = type.namespace();
                         String key = type.value();
-                        textureResource = manager.getTextureManager().getTexture(ResourceRegistry.DECORATED_POT_SHERD_LOCATION.replaceFirst("%s", namespace).replaceFirst("%s", key));
+                        String pattern = key.equals("blank") ? "decorated_pot_side" : key + "_pottery_pattern";
+                        textureResource = manager.getTextureManager().getTexture(ResourceRegistry.DECORATED_POT_SHERD_LOCATION.replaceFirst("%s", namespace).replaceFirst("%s", pattern));
                         providedTextures.put(ResourceRegistry.DECORATED_POT_FACE_PLACEHOLDER.replace("%s", String.valueOf(i)), textureResource);
                     } else {
                         String key = type.value();

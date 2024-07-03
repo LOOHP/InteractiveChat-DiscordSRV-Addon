@@ -35,6 +35,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import net.md_5.bungee.api.ChatColor;
+import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -165,5 +166,7 @@ public abstract class NMSAddonWrapper {
     public abstract Key getAttributeModifierKey(Object attributeModifier);
 
     public abstract ProfileProperty toProfileProperty(Property property);
+
+    public abstract Fraction getWeightForBundle(ItemStack itemStack);
 
 }

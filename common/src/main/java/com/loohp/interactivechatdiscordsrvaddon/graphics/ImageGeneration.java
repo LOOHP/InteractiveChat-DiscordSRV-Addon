@@ -28,6 +28,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
@@ -845,7 +846,8 @@ public class ImageGeneration {
                 }
             }
             if (icMaterial.isMaterial(XMaterial.BUNDLE)) {
-                double fullness = Math.max(0.0, Math.min(1.0, BundleUtils.getFullnessPercentage(((BundleMeta) item.getItemMeta()).getItems())));
+                @SuppressWarnings("UnstableApiUsage")
+                double fullness = Math.max(0.0, Math.min(1.0, BundleUtils.getWeight(((BundleMeta) item.getItemMeta()).getItems()).doubleValue()));
                 int length = (int) Math.round(26 * scale * fullness);
 
                 Graphics2D g4 = itemImage.createGraphics();
@@ -1494,9 +1496,9 @@ public class ImageGeneration {
     public static BufferedImage getBundleContainerInterface(OfflineICPlayer offlineICPlayer, List<ItemStack> items) throws IOException {
         int gridWidth = BundleUtils.getContainerGridSizeX(items.size());
         int gridHeight = BundleUtils.getContainerGridSizeY(items.size());
-        boolean isFull = BundleUtils.getFullness(items) >= 64;
+        boolean isFull = BundleUtils.getWeight(items).compareTo(Fraction.ONE) >= 0;
 
-        BufferedImage image = new BufferedImage(36 * gridWidth + 4, 40 * gridHeight + 2, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage image = new BufferedImage(36 * gridWidth + 4, 40 * gridHeight + 4, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
 
         if (resourceManager.get().getNativeServerPackFormat() < 16) {
@@ -1562,6 +1564,7 @@ public class ImageGeneration {
 
             BufferedImage slot = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/bundle/slot").getTexture(36, 40);
             BufferedImage fullSlot = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/bundle/blocked_slot").getTexture(36, 40);
+            BufferedImage between = icons.getSubimage(0, 0, 36, 4);
 
             int i = -1;
             for (int y = 2; y < image.getHeight() - 2; y += vertical.getHeight()) {
@@ -1569,10 +1572,12 @@ public class ImageGeneration {
                     i++;
                     if (i < items.size()) {
                         g.drawImage(slot, x, y, null);
+                        g.drawImage(between, x, y + 36, null);
                         BufferedImage itemImage = getSingleRawItemImage(items.get(i), offlineICPlayer);
                         g.drawImage(itemImage, x + 2, y + 2, null);
                     } else {
                         g.drawImage(isFull ? fullSlot : slot, x, y, null);
+                        g.drawImage(between, x, y + 36, null);
                     }
                 }
             }

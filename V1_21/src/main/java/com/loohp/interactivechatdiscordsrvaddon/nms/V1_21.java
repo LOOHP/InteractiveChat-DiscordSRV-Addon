@@ -26,6 +26,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
+import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.ReflectionUtils;
@@ -70,6 +71,7 @@ import net.minecraft.world.item.ItemArmor;
 import net.minecraft.world.item.ItemMonsterEgg;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.armortrim.TrimMaterial;
+import net.minecraft.world.item.component.BundleContents;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.item.component.ResolvableProfile;
@@ -118,6 +120,8 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -134,11 +138,13 @@ import java.util.concurrent.ExecutionException;
 public class V1_21 extends NMSAddonWrapper {
 
     private final Field adventureModePredicatePredicatesField;
+    private final Method bundleContentsGetWeightMethod;
 
     public V1_21() {
         try {
             adventureModePredicatePredicatesField = ReflectionUtils.findDeclaredField(AdventureModePredicate.class, List.class, "predicates", "h");
-        } catch (NoSuchFieldException e) {
+            bundleContentsGetWeightMethod = ReflectionUtils.findDeclaredMethod(BundleContents.class, new Class[] {net.minecraft.world.item.ItemStack.class}, "getWeight", "a");
+        } catch (NoSuchFieldException | NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
     }
@@ -613,6 +619,18 @@ public class V1_21 extends NMSAddonWrapper {
     @Override
     public ProfileProperty toProfileProperty(Property property) {
         return new ProfileProperty(property.name(), property.value(), property.signature());
+    }
+
+    @Override
+    public Fraction getWeightForBundle(ItemStack itemStack) {
+        try {
+            net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+            bundleContentsGetWeightMethod.setAccessible(true);
+            org.apache.commons.lang3.math.Fraction weight = (org.apache.commons.lang3.math.Fraction) bundleContentsGetWeightMethod.invoke(null, nmsItemStack);
+            return Fraction.getFraction(weight.getNumerator(), weight.getDenominator());
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
