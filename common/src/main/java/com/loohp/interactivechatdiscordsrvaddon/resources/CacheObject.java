@@ -34,8 +34,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 
 public class CacheObject<T> {
 
@@ -57,11 +55,11 @@ public class CacheObject<T> {
                 case 2: {
                     if (inputStream.readBoolean()) {
                         int size = inputStream.readInt();
-                        List<BufferedImage> images = new ArrayList<>();
+                        BufferedImage[] images = new BufferedImage[size];
                         for (int i = 0; i < size; i++) {
                             byte[] array = new byte[inputStream.readInt()];
                             inputStream.readFully(array);
-                            images.add(ImageUtils.fromArray(array));
+                            images[i] = ImageUtils.fromArray(array);
                         }
                         return new CacheObject<>(timeCreated, new RenderResult(images));
                     } else {
@@ -124,7 +122,8 @@ public class CacheObject<T> {
                     dataOutputStream.writeBoolean(true);
                     dataOutputStream.writeInt(renderResult.getTotalImages());
                     for (int i = 0; i < renderResult.getTotalImages(); i++) {
-                        byte[] array = ImageUtils.toArray(renderResult.getImage(i));
+                        @SuppressWarnings("deprecation")
+                        byte[] array = ImageUtils.toArray(renderResult.getImageUnsafe(i));
                         dataOutputStream.writeInt(array.length);
                         dataOutputStream.write(array);
                     }

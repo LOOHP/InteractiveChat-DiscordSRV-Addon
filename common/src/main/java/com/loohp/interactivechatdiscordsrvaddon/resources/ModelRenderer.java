@@ -183,7 +183,7 @@ public class ModelRenderer implements AutoCloseable {
             }
         }
 
-        List<BufferedImage> images = Stream.generate(() -> new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)).limit(animationSpec.getTotalSteps()).collect(Collectors.toList());
+        BufferedImage[] images = Stream.generate(() -> new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)).limit(animationSpec.getTotalSteps()).toArray(BufferedImage[]::new);
         int index = 0;
         for (int tick : animationSpec) {
             Model playerRenderModel = generateStandardRenderModel(tick, playerModel, manager, providedTextures, Collections.emptyMap(), tintColorProvider, false, true, null);
@@ -287,7 +287,7 @@ public class ModelRenderer implements AutoCloseable {
             playerRenderModel.rotate(0, 180, 0, false);
             playerRenderModel.translate(16 / 2.0, 16 / 2.0, 16 / 2.0);
 
-            renderPlayerModel(playerRenderModel, images.get(index), playerModel.getGUILight());
+            renderPlayerModel(playerRenderModel, images[index], playerModel.getGUILight());
 
             index++;
         }
@@ -332,17 +332,17 @@ public class ModelRenderer implements AutoCloseable {
             }
         }
 
-        List<BufferedImage> images = Stream.generate(() -> new BufferedImage(internalWidth, internalHeight, BufferedImage.TYPE_INT_ARGB)).limit(animationSpec.getTotalSteps()).collect(Collectors.toList());
+        BufferedImage[] images = Stream.generate(() -> new BufferedImage(internalWidth, internalHeight, BufferedImage.TYPE_INT_ARGB)).limit(animationSpec.getTotalSteps()).toArray(BufferedImage[]::new);
         if (blockModel.getParent() == null || !blockModel.getParent().contains("/")) {
             int index = 0;
             for (int tick : animationSpec) {
-                renderBlockModel(generateStandardRenderModel(tick, blockModel, manager, providedTextures, overrideTextures, tintColorProvider, enchanted, false, rawEnchantmentGlintProvider), images.get(index), blockModel.getDisplay(displayPosition), blockModel.getGUILight(), usePlayerModelPosition);
+                renderBlockModel(generateStandardRenderModel(tick, blockModel, manager, providedTextures, overrideTextures, tintColorProvider, enchanted, false, rawEnchantmentGlintProvider), images[index], blockModel.getDisplay(displayPosition), blockModel.getGUILight(), usePlayerModelPosition);
                 index++;
             }
         } else if (blockModel.getParent().equals(ModelManager.ITEM_BASE)) {
             int index = 0;
             for (int tick : animationSpec) {
-                BufferedImage image = images.get(index);
+                BufferedImage image = images[index];
                 Graphics2D g = image.createGraphics();
                 g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
                 for (int i = 0; blockModel.getTextures().containsKey(ModelManager.ITEM_BASE_LAYER + i); i++) {
@@ -384,7 +384,9 @@ public class ModelRenderer implements AutoCloseable {
         }
         RenderResult result;
         if (rejectedReason == null) {
-            images.replaceAll(image -> ImageUtils.resizeImageQuality(image, width, height));
+            for (int i = 0; i < images.length; i++) {
+                images[i] = ImageUtils.resizeImageQuality(images[i], width, height);
+            }
             result = new RenderResult(images);
         } else {
             result = new RenderResult(rejectedReason);
@@ -911,10 +913,10 @@ public class ModelRenderer implements AutoCloseable {
 
     public static class RenderResult {
 
-        private final List<BufferedImage> images;
+        private final BufferedImage[] images;
         private final String rejectedReason;
 
-        public RenderResult(List<BufferedImage> images) {
+        public RenderResult(BufferedImage[] images) {
             this.images = images;
             this.rejectedReason = null;
         }
@@ -929,15 +931,25 @@ public class ModelRenderer implements AutoCloseable {
         }
 
         public int getTotalImages() {
-            return images == null ? 0 : images.size();
+            return images == null ? 0 : images.length;
         }
 
         public BufferedImage getImage(int index) {
-            return ImageUtils.copyImage(images.get(index));
+            return ImageUtils.copyImage(images[index]);
         }
 
-        public List<BufferedImage> getImages() {
-            return IntStream.range(0, getTotalImages()).mapToObj(i -> getImage(i)).collect(Collectors.toList());
+        public BufferedImage[] getImages() {
+            return IntStream.range(0, getTotalImages()).mapToObj(i -> getImage(i)).toArray(BufferedImage[]::new);
+        }
+
+        @Deprecated
+        public BufferedImage getImageUnsafe(int index) {
+            return images[index];
+        }
+
+        @Deprecated
+        public BufferedImage[] getImagesUnsafe() {
+            return images;
         }
 
         public String getRejectedReason() {

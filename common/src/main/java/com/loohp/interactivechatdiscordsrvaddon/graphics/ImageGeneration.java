@@ -817,16 +817,17 @@ public class ImageGeneration {
 
         Debug.debug("ImageGeneration rendering with model key " + modelKey);
 
-        List<BufferedImage> itemImages;
+        BufferedImage[] itemImages;
         RenderResult renderResult = InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(size, size, animationSpec, resourceManager.get(), processResult.getPostResolveFunction(), version.get().isOld(), modelKey, ModelDisplayPosition.GUI, predicates, providedTextures, tintColorProvider, requiresEnchantmentGlint, processResult.getEnchantmentGlintFunction(), processResult.getRawEnchantmentGlintFunction());
         if (renderResult.isSuccessful()) {
             itemImages = renderResult.getImages();
         } else {
             Debug.debug("ImageGeneration creating missing Image for material " + icMaterial);
-            itemImages = Collections.singletonList(TextureManager.getMissingImage(size, size));
+            itemImages = new BufferedImage[] {TextureManager.getMissingImage(size, size)};
         }
 
-        for (BufferedImage itemImage : itemImages) {
+        for (int i = 0; i < itemImages.length; i++) {
+            BufferedImage itemImage = itemImages[i];
             if (item.getType().getMaxDurability() > 0) {
                 int maxDur = item.getType().getMaxDurability();
                 int durability = maxDur - (version.get().isLegacy() ? item.getDurability() : ((Damageable) item.getItemMeta()).getDamage());
@@ -864,17 +865,16 @@ public class ImageGeneration {
                 Graphics2D g4 = newItemImage.createGraphics();
                 g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
                 g4.drawImage(itemImage, 0, 0, null);
+                g4.dispose();
                 Component component = Component.text(amount);
                 if (amount <= 0) {
                     component = component.color(NamedTextColor.RED);
                 }
-                newItemImage = ImageUtils.printComponentRightAligned(resourceManager.get(), newItemImage, component, InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), (int) Math.round(33 * scale), (int) Math.round(17 * scale), (float) (16 * scale), ITEM_AMOUNT_TEXT_DARKEN_FACTOR).getImage();
-                g4.dispose();
-                itemImage = newItemImage;
+                itemImages[i] = itemImage = ImageUtils.printComponentRightAligned(resourceManager.get(), newItemImage, component, InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), (int) Math.round(33 * scale), (int) Math.round(17 * scale), (float) (16 * scale), ITEM_AMOUNT_TEXT_DARKEN_FACTOR).getImage();
             }
         }
 
-        return itemImages;
+        return Arrays.asList(itemImages);
     }
 
     public static Future<BufferedImage> getMapImage(ItemStack item, Player player) {
