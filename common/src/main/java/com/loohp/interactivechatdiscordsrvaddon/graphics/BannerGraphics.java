@@ -43,17 +43,6 @@ import java.util.List;
 
 public class BannerGraphics {
 
-    private static Method bannerMetaGetBaseColorMethod;
-
-    static {
-        try {
-            //noinspection JavaReflectionMemberAccess
-            bannerMetaGetBaseColorMethod = BannerMeta.class.getMethod("getBaseColor");
-        } catch (NoSuchMethodException e) {
-            bannerMetaGetBaseColorMethod = null;
-        }
-    }
-
     public static BannerAssetResult generateBannerAssets(ItemStack item) {
         BufferedImage baseImage = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "banner_base").getTexture(64, 64);
         BufferedImage patternsImage = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
@@ -131,9 +120,10 @@ public class BannerGraphics {
             try {
                 BannerMeta meta = (BannerMeta) itemMeta;
                 patterns = meta.getPatterns();
-                DyeColor dyeColor = (DyeColor) bannerMetaGetBaseColorMethod.invoke(meta);
+                Method getBaseColorMethod = meta.getClass().getMethod("getBaseColor");
+                DyeColor dyeColor = (DyeColor) getBaseColorMethod.invoke(meta);
                 baseColor = new Color(dyeColor.getColor().asRGB());
-            } catch (InvocationTargetException | IllegalAccessException e) {
+            } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
                 throw new RuntimeException(e);
             }
         }
