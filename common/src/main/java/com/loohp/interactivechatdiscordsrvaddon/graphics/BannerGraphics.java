@@ -122,6 +122,9 @@ public class BannerGraphics {
                 patterns = meta.getPatterns();
                 Method getBaseColorMethod = meta.getClass().getMethod("getBaseColor");
                 DyeColor dyeColor = (DyeColor) getBaseColorMethod.invoke(meta);
+                if (dyeColor == null) {
+                    return getDefaultShieldAssets();
+                }
                 baseColor = new Color(dyeColor.getColor().asRGB());
             } catch (InvocationTargetException | IllegalAccessException | NoSuchMethodException e) {
                 throw new RuntimeException(e);
