@@ -28,12 +28,12 @@ import java.util.List;
 
 public class BundleUtils {
 
-    public static int getContainerGridSizeX(int itemCount) {
+    public static int getLegacyContainerGridSizeX(int itemCount) {
         return Math.max(2, (int) Math.ceil(Math.sqrt((double) itemCount + 1.0)));
     }
 
-    public static int getContainerGridSizeY(int itemCount) {
-        return (int) Math.ceil(((double) itemCount + 1.0) / (double) getContainerGridSizeX(itemCount));
+    public static int getLegacyContainerGridSizeY(int itemCount) {
+        return (int) Math.ceil(((double) itemCount + 1.0) / (double) getLegacyContainerGridSizeX(itemCount));
     }
 
     public static Fraction getWeight(List<ItemStack> items) {

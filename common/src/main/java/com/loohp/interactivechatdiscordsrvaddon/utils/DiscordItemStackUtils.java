@@ -134,7 +134,8 @@ import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getBannerPatternName;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getBookAuthor;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getBookGeneration;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getBundleFullness;
+import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getBundleEmptyDescription;
+import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getBundleLegacyFullness;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getCanDestroy;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getCanPlace;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getCrossbowProjectile;
@@ -363,10 +364,17 @@ public class DiscordItemStackUtils {
         if (icMaterial.isMaterial(XMaterial.BUNDLE) && hasMeta && item.getItemMeta() instanceof BundleMeta && !hideAdditionalFlags) {
             List<ItemStack> items = ((BundleMeta) item.getItemMeta()).getItems();
             BufferedImage contentsImage = ImageGeneration.getBundleContainerInterface(player, items);
-            prints.add(tooltipImage(contentsImage));
             Fraction weight = BundleUtils.getWeight(items);
-            int fullness = weight.getNumerator() * 64 / weight.getDenominator();
-            prints.add(tooltipText(translatable(getBundleFullness()).arguments(text(fullness), text(64)).color(GRAY)));
+            if (InteractiveChat.version.isNewerThan(MCVersion.V1_21_1)) {
+                if (weight.compareTo(Fraction.ZERO) <= 0) {
+                    prints.add(tooltipText(translatable(getBundleEmptyDescription()).color(GRAY)));
+                    prints.add(tooltipImage(contentsImage));
+                }
+            } else {
+                prints.add(tooltipImage(contentsImage));
+                int fullness = weight.getNumerator() * 64 / weight.getDenominator();
+                prints.add(tooltipText(translatable(getBundleLegacyFullness()).arguments(text(fullness), text(64)).color(GRAY)));
+            }
         }
 
         if (icMaterial.isMaterial(XMaterial.WRITTEN_BOOK) && hasMeta && item.getItemMeta() instanceof BookMeta && !hideAdditionalFlags) {

@@ -155,6 +155,9 @@ public class ImageGeneration {
     public static final Color TOOLTIP_OUTLINE_BOTTOM_COLOR = new Color(1344798847, true);
     public static final String OPTIFINE_CAPE_URL = "https://optifine.net/capes/%s.png";
     public static final String PLAYER_INFO_URL = "https://sessionserver.mojang.com/session/minecraft/profile/%s";
+    public static final Color BUNDLE_WEIGHT_OUTLINE_COLOR = new Color(55, 55, 55);
+    public static final Color BUNDLE_WEIGHT_COLOR = new Color(85, 85, 255);
+    public static final Color BUNDLE_WEIGHT_FULL_COLOR = new Color(255, 85, 85);
 
     private static Supplier<ResourceManager> resourceManager = () -> InteractiveChatDiscordSrvAddon.plugin.getResourceManager();
     private static Supplier<MCVersion> version = () -> InteractiveChat.version;
@@ -1136,7 +1139,7 @@ public class ImageGeneration {
         g2.dispose();
 
         int offsetX = Math.max(topX - firstX, 0);
-        BufferedImage output = new BufferedImage(offsetX + lastX - topX + 9, lastY - firstY + 7, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage output = new BufferedImage(Math.max(offsetX + lastX - topX + 9, background.getWidth()), Math.max(lastY - firstY + 7, background.getHeight()), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g3 = output.createGraphics();
         g3.drawImage(background, offsetX, 201 - firstY, null);
         g3.drawImage(image, -firstX, -firstY, null);
@@ -1494,106 +1497,164 @@ public class ImageGeneration {
     }
 
     public static BufferedImage getBundleContainerInterface(OfflineICPlayer offlineICPlayer, List<ItemStack> items) throws IOException {
-        int gridWidth = BundleUtils.getContainerGridSizeX(items.size());
-        int gridHeight = BundleUtils.getContainerGridSizeY(items.size());
-        boolean isFull = BundleUtils.getWeight(items).compareTo(Fraction.ONE) >= 0;
+        int packFormat = resourceManager.get().getNativeServerPackFormat();
 
-        BufferedImage image = new BufferedImage(36 * gridWidth + 4, 40 * gridHeight + 4, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = image.createGraphics();
+        if (packFormat >= 39) {
+            Fraction weight = BundleUtils.getWeight(items);
+            int h = items.size() / 4;
+            int padToFour = items.size() % 4;
+            if (padToFour != 0) {
+                padToFour = 4 - padToFour;
+                h++;
+            }
+            BufferedImage image = new BufferedImage(192, 48 * h + 42, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = image.createGraphics();
+            for (int i = 0; i < items.size(); i++) {
+                BufferedImage itemImage = getSingleRawItemImage(items.get(i), offlineICPlayer);
+                int gridPosition = i + padToFour;
+                g.drawImage(itemImage, gridPosition % 4 * 48 + 8, gridPosition / 4 * 48 + 12, null);
+            }
+            g.setColor(weight.compareTo(Fraction.ONE) >= 0 ? BUNDLE_WEIGHT_FULL_COLOR : BUNDLE_WEIGHT_COLOR);
+            g.fillRect(2, image.getHeight() - 28, Math.round(weight.floatValue() * 188), 22);
+            g.setColor(BUNDLE_WEIGHT_OUTLINE_COLOR);
+            g.fillRect(2, image.getHeight() - 30, 188, 2);
+            g.fillRect(0, image.getHeight() - 28, 2, 22);
+            g.fillRect(2, image.getHeight() - 28, 2, 2);
+            g.fillRect(2, image.getHeight() - 8, 2, 2);
+            g.fillRect(2, image.getHeight() - 6, 188, 2);
+            g.fillRect(image.getWidth() - 2, image.getHeight() - 28, 2, 22);
+            g.fillRect(image.getWidth() - 4, image.getHeight() - 28, 2, 2);
+            g.fillRect(image.getWidth() - 4, image.getHeight() - 8, 2, 2);
 
-        if (resourceManager.get().getNativeServerPackFormat() < 16) {
-            BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "container/bundle").getTexture(256, 256);
-
-            BufferedImage topCorner = icons.getSubimage(0, 40, 2, 2);
-            g.drawImage(topCorner, 0, 0, null);
-            g.drawImage(topCorner, image.getWidth() - 2, 0, null);
-
-            BufferedImage horizontalTop = icons.getSubimage(0, 40, 36, 2);
-            for (int x = 2; x < image.getWidth() - 2; x += horizontalTop.getWidth()) {
-                g.drawImage(horizontalTop, x, 0, null);
+            Component bundleFullnessMessage;
+            if (weight.compareTo(Fraction.ONE) >= 0) {
+                bundleFullnessMessage = Component.translatable(TranslationKeyUtils.getBundleFull());
+            } else if (weight.compareTo(Fraction.ZERO) <= 0) {
+                bundleFullnessMessage = Component.translatable(TranslationKeyUtils.getBundleEmpty());
+            } else {
+                bundleFullnessMessage = null;
             }
 
-            BufferedImage vertical = icons.getSubimage(0, 36, 2, 40);
-            for (int y = 2; y < image.getHeight() - 2; y += vertical.getHeight()) {
-                g.drawImage(vertical, 0, y, null);
-                g.drawImage(vertical, image.getWidth() - 2, y, null);
-            }
-
-            BufferedImage slot = icons.getSubimage(0, 0, 36, 40);
-            BufferedImage fullSlot = icons.getSubimage(0, 80, 36, 40);
-
-            int i = -1;
-            for (int y = 2; y < image.getHeight() - 2; y += vertical.getHeight()) {
-                for (int x = 2; x < image.getWidth() - 2; x += horizontalTop.getWidth()) {
-                    i++;
-                    if (i < items.size()) {
-                        g.drawImage(slot, x, y, null);
-                        BufferedImage itemImage = getSingleRawItemImage(items.get(i), offlineICPlayer);
-                        g.drawImage(itemImage, x + 2, y + 2, null);
-                    } else {
-                        g.drawImage(isFull ? fullSlot : slot, x, y, null);
+            if (bundleFullnessMessage != null) {
+                BufferedImage textImage = new BufferedImage(2048, 512, BufferedImage.TYPE_INT_ARGB);
+                ImageUtils.printComponent(resourceManager.get(), textImage, bundleFullnessMessage, InteractiveChatDiscordSrvAddon.plugin.language, version.get().isLegacyRGB(), 512, 256, 16);
+                int lastX = 512;
+                for (int x = 512; x < textImage.getWidth(); x++) {
+                    for (int y = 0; y < textImage.getHeight(); y++) {
+                        if (textImage.getRGB(x, y) != 0) {
+                            lastX = x;
+                            break;
+                        }
                     }
                 }
+                int textCenter = (lastX - 512) / 2 + 512;
+                g.drawImage(textImage, 96 - textCenter, image.getHeight() - 280, null);
             }
 
-            BufferedImage horizontalBottom = icons.getSubimage(0, 120, 36, 2);
-            for (int x = 2; x < image.getWidth() - 2; x += horizontalTop.getWidth()) {
-                g.drawImage(horizontalBottom, x, image.getHeight() - 2, null);
-            }
-
-            BufferedImage bottomCorner = icons.getSubimage(0, 120, 2, 2);
-            g.drawImage(bottomCorner, 0, image.getHeight() - 2, null);
-            g.drawImage(bottomCorner, image.getWidth() - 2, image.getHeight() - 2, null);
+            g.dispose();
+            return image;
         } else {
-            BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/bundle/background").getTexture(64, 64);
+            int gridWidth = BundleUtils.getLegacyContainerGridSizeX(items.size());
+            int gridHeight = BundleUtils.getLegacyContainerGridSizeY(items.size());
+            boolean isFull = BundleUtils.getWeight(items).compareTo(Fraction.ONE) >= 0;
 
-            BufferedImage topCorner = icons.getSubimage(0, 0, 2, 2);
-            g.drawImage(topCorner, 0, 0, null);
-            g.drawImage(topCorner, image.getWidth() - 2, 0, null);
+            BufferedImage image = new BufferedImage(36 * gridWidth + 4, 40 * gridHeight + 4, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = image.createGraphics();
 
-            BufferedImage horizontalTop = icons.getSubimage(0, 0, 36, 2);
-            for (int x = 2; x < image.getWidth() - 2; x += horizontalTop.getWidth()) {
-                g.drawImage(horizontalTop, x, 0, null);
-            }
+            if (packFormat < 16) {
+                BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "container/bundle").getTexture(256, 256);
 
-            BufferedImage vertical = icons.getSubimage(0, 0, 2, 40);
-            for (int y = 2; y < image.getHeight() - 2; y += vertical.getHeight()) {
-                g.drawImage(vertical, 0, y, null);
-                g.drawImage(vertical, image.getWidth() - 2, y, null);
-            }
+                BufferedImage topCorner = icons.getSubimage(0, 40, 2, 2);
+                g.drawImage(topCorner, 0, 0, null);
+                g.drawImage(topCorner, image.getWidth() - 2, 0, null);
 
-            BufferedImage slot = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/bundle/slot").getTexture(36, 40);
-            BufferedImage fullSlot = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/bundle/blocked_slot").getTexture(36, 40);
-            BufferedImage between = icons.getSubimage(0, 0, 36, 4);
-
-            int i = -1;
-            for (int y = 2; y < image.getHeight() - 2; y += vertical.getHeight()) {
+                BufferedImage horizontalTop = icons.getSubimage(0, 40, 36, 2);
                 for (int x = 2; x < image.getWidth() - 2; x += horizontalTop.getWidth()) {
-                    i++;
-                    if (i < items.size()) {
-                        g.drawImage(slot, x, y, null);
-                        g.drawImage(between, x, y + 36, null);
-                        BufferedImage itemImage = getSingleRawItemImage(items.get(i), offlineICPlayer);
-                        g.drawImage(itemImage, x + 2, y + 2, null);
-                    } else {
-                        g.drawImage(isFull ? fullSlot : slot, x, y, null);
-                        g.drawImage(between, x, y + 36, null);
+                    g.drawImage(horizontalTop, x, 0, null);
+                }
+
+                BufferedImage vertical = icons.getSubimage(0, 36, 2, 40);
+                for (int y = 2; y < image.getHeight() - 2; y += vertical.getHeight()) {
+                    g.drawImage(vertical, 0, y, null);
+                    g.drawImage(vertical, image.getWidth() - 2, y, null);
+                }
+
+                BufferedImage slot = icons.getSubimage(0, 0, 36, 40);
+                BufferedImage fullSlot = icons.getSubimage(0, 80, 36, 40);
+
+                int i = -1;
+                for (int y = 2; y < image.getHeight() - 2; y += vertical.getHeight()) {
+                    for (int x = 2; x < image.getWidth() - 2; x += horizontalTop.getWidth()) {
+                        i++;
+                        if (i < items.size()) {
+                            g.drawImage(slot, x, y, null);
+                            BufferedImage itemImage = getSingleRawItemImage(items.get(i), offlineICPlayer);
+                            g.drawImage(itemImage, x + 2, y + 2, null);
+                        } else {
+                            g.drawImage(isFull ? fullSlot : slot, x, y, null);
+                        }
                     }
                 }
+
+                BufferedImage horizontalBottom = icons.getSubimage(0, 120, 36, 2);
+                for (int x = 2; x < image.getWidth() - 2; x += horizontalTop.getWidth()) {
+                    g.drawImage(horizontalBottom, x, image.getHeight() - 2, null);
+                }
+
+                BufferedImage bottomCorner = icons.getSubimage(0, 120, 2, 2);
+                g.drawImage(bottomCorner, 0, image.getHeight() - 2, null);
+                g.drawImage(bottomCorner, image.getWidth() - 2, image.getHeight() - 2, null);
+            } else {
+                BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/bundle/background").getTexture(64, 64);
+
+                BufferedImage topCorner = icons.getSubimage(0, 0, 2, 2);
+                g.drawImage(topCorner, 0, 0, null);
+                g.drawImage(topCorner, image.getWidth() - 2, 0, null);
+
+                BufferedImage horizontalTop = icons.getSubimage(0, 0, 36, 2);
+                for (int x = 2; x < image.getWidth() - 2; x += horizontalTop.getWidth()) {
+                    g.drawImage(horizontalTop, x, 0, null);
+                }
+
+                BufferedImage vertical = icons.getSubimage(0, 0, 2, 40);
+                for (int y = 2; y < image.getHeight() - 2; y += vertical.getHeight()) {
+                    g.drawImage(vertical, 0, y, null);
+                    g.drawImage(vertical, image.getWidth() - 2, y, null);
+                }
+
+                BufferedImage slot = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/bundle/slot").getTexture(36, 40);
+                BufferedImage fullSlot = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/bundle/blocked_slot").getTexture(36, 40);
+                BufferedImage between = icons.getSubimage(0, 0, 36, 4);
+
+                int i = -1;
+                for (int y = 2; y < image.getHeight() - 2; y += vertical.getHeight()) {
+                    for (int x = 2; x < image.getWidth() - 2; x += horizontalTop.getWidth()) {
+                        i++;
+                        if (i < items.size()) {
+                            g.drawImage(slot, x, y, null);
+                            g.drawImage(between, x, y + 36, null);
+                            BufferedImage itemImage = getSingleRawItemImage(items.get(i), offlineICPlayer);
+                            g.drawImage(itemImage, x + 2, y + 2, null);
+                        } else {
+                            g.drawImage(isFull ? fullSlot : slot, x, y, null);
+                            g.drawImage(between, x, y + 36, null);
+                        }
+                    }
+                }
+
+                BufferedImage horizontalBottom = icons.getSubimage(0, 62, 36, 2);
+                for (int x = 2; x < image.getWidth() - 2; x += horizontalTop.getWidth()) {
+                    g.drawImage(horizontalBottom, x, image.getHeight() - 2, null);
+                }
+
+                BufferedImage bottomCorner = icons.getSubimage(0, 62, 2, 2);
+                g.drawImage(bottomCorner, 0, image.getHeight() - 2, null);
+                g.drawImage(bottomCorner, image.getWidth() - 2, image.getHeight() - 2, null);
             }
 
-            BufferedImage horizontalBottom = icons.getSubimage(0, 62, 36, 2);
-            for (int x = 2; x < image.getWidth() - 2; x += horizontalTop.getWidth()) {
-                g.drawImage(horizontalBottom, x, image.getHeight() - 2, null);
-            }
-
-            BufferedImage bottomCorner = icons.getSubimage(0, 62, 2, 2);
-            g.drawImage(bottomCorner, 0, image.getHeight() - 2, null);
-            g.drawImage(bottomCorner, image.getWidth() - 2, image.getHeight() - 2, null);
+            g.dispose();
+            return image;
         }
-
-        g.dispose();
-        return image;
     }
 
     public static Future<List<BufferedImage>> getBookInterface(List<Component> pages) {

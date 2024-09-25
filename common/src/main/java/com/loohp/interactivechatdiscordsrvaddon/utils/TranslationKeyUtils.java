@@ -46,6 +46,22 @@ import java.util.OptionalInt;
 
 public class TranslationKeyUtils {
 
+    public static String getBundleEmptyDescription() {
+        return "item.minecraft.bundle.empty.description";
+    }
+
+    public static String getBundleEmpty() {
+        return "item.minecraft.bundle.empty";
+    }
+
+    public static String getBundleFull() {
+        return "item.minecraft.bundle.full";
+    }
+
+    public static String getBundleLegacyFullness() {
+        return "item.minecraft.bundle.fullness";
+    }
+
     public static String getPotterySherdName(Key material) {
         return "item." + material.namespace() + "." + material.value();
     }
@@ -400,10 +416,6 @@ public class TranslationKeyUtils {
 
     public static String getEnderChestContainerTitle() {
         return "container.enderchest";
-    }
-
-    public static String getBundleFullness() {
-        return "item.minecraft.bundle.fullness";
     }
 
     public static String getFireworkType(FireworkEffect.Type type) {
