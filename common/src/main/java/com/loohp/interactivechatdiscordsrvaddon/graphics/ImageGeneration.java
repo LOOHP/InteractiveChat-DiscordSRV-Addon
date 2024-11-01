@@ -146,7 +146,6 @@ public class ImageGeneration {
     public static final int TABLIST_INTERNAL_HEIGHT = 146;
     public static final Color TABLIST_BACKGROUND = new Color(68, 68, 68);
     public static final Color TABLIST_PLAYER_BACKGROUND = new Color(107, 107, 107);
-    public static final Color BUNDLE_FULLNESS_BAR_COLOR = new Color(6711039);
     public static final TextColor INVENTORY_DEFAULT_FONT_COLOR = TextColor.color(4210752);
     public static final int BOOK_LINE_LIMIT = 230;
     public static final int BOOK_MAX_LINES = 14;
@@ -851,14 +850,15 @@ public class ImageGeneration {
             }
             if (icMaterial.isMaterial(XMaterial.BUNDLE)) {
                 @SuppressWarnings("UnstableApiUsage")
-                double fullness = Math.max(0.0, Math.min(1.0, BundleUtils.getWeight(((BundleMeta) item.getItemMeta()).getItems()).doubleValue()));
-                int length = (int) Math.round(26 * scale * fullness);
+                Fraction fraction = BundleUtils.getWeight(((BundleMeta) item.getItemMeta()).getItems());
+                double fullness = Math.max(0.0, Math.min(1.0, fraction.doubleValue()));
+                int length = (int) Math.ceil(26 * scale * fullness);
 
                 Graphics2D g4 = itemImage.createGraphics();
                 g4.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
                 g4.setColor(Color.BLACK);
                 g4.fillPolygon(new int[] {(int) Math.round(4 * scale), (int) Math.round(30 * scale), (int) Math.round(30 * scale), (int) Math.round(4 * scale)}, new int[] {(int) Math.round(26 * scale), (int) Math.round(26 * scale), (int) Math.round(30 * scale), (int) Math.round(30 * scale)}, 4);
-                g4.setColor(BUNDLE_FULLNESS_BAR_COLOR);
+                g4.setColor(fraction.compareTo(Fraction.ONE) >= 0 ? BUNDLE_WEIGHT_FULL_COLOR : BUNDLE_WEIGHT_COLOR);
                 g4.fillPolygon(new int[] {(int) Math.round(4 * scale), (int) Math.round(4 * scale + length), (int) Math.round(4 * scale + length), (int) Math.round(4 * scale)}, new int[] {(int) Math.round(26 * scale), (int) Math.round(26 * scale), (int) Math.round(28 * scale), (int) Math.round(28 * scale)}, 4);
                 g4.dispose();
             }
@@ -1515,7 +1515,7 @@ public class ImageGeneration {
                 g.drawImage(itemImage, gridPosition % 4 * 48 + 8, gridPosition / 4 * 48 + 12, null);
             }
             g.setColor(weight.compareTo(Fraction.ONE) >= 0 ? BUNDLE_WEIGHT_FULL_COLOR : BUNDLE_WEIGHT_COLOR);
-            g.fillRect(2, image.getHeight() - 28, Math.round(weight.floatValue() * 188), 22);
+            g.fillRect(2, image.getHeight() - 28, (int) Math.ceil(weight.doubleValue() * 188), 22);
             g.setColor(BUNDLE_WEIGHT_OUTLINE_COLOR);
             g.fillRect(2, image.getHeight() - 30, 188, 2);
             g.fillRect(0, image.getHeight() - 28, 2, 22);

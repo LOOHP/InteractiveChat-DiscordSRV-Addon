@@ -361,15 +361,15 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (icMaterial.isMaterial(XMaterial.BUNDLE) && hasMeta && item.getItemMeta() instanceof BundleMeta && !hideAdditionalFlags) {
+        if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:bundle")) && hasMeta && item.getItemMeta() instanceof BundleMeta && !hideAdditionalFlags) {
             List<ItemStack> items = ((BundleMeta) item.getItemMeta()).getItems();
             BufferedImage contentsImage = ImageGeneration.getBundleContainerInterface(player, items);
             Fraction weight = BundleUtils.getWeight(items);
             if (InteractiveChat.version.isNewerThan(MCVersion.V1_21_1)) {
                 if (weight.compareTo(Fraction.ZERO) <= 0) {
                     prints.add(tooltipText(translatable(getBundleEmptyDescription()).color(GRAY)));
-                    prints.add(tooltipImage(contentsImage));
                 }
+                prints.add(tooltipImage(contentsImage));
             } else {
                 prints.add(tooltipImage(contentsImage));
                 int fullness = weight.getNumerator() * 64 / weight.getDenominator();

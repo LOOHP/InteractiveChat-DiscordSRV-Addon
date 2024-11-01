@@ -111,8 +111,8 @@ public class ResourceRegistry {
     public static final String DECORATED_POT_FACE_PLACEHOLDER = ICD_PREFIX + "decorated_pot/face_%s";
 
     public static final String TRIM_TEXTURE_LOCATION = "minecraft:trims/";
-    public static final String ARMOR_TRIM_LOCATION = TRIM_TEXTURE_LOCATION + "models/armor/%s_%s";
-    public static final String ARMOR_TRIM_LEGGINGS_LOCATION = TRIM_TEXTURE_LOCATION + "models/armor/%s_leggings_%s";
+    public static final String ARMOR_TRIM_LOCATION = TRIM_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION < 39 ? "models/armor/%s_%s" : "entity/humanoid/%s_%s");
+    public static final String ARMOR_TRIM_LEGGINGS_LOCATION = TRIM_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION < 39 ? "models/armor/%s_leggings_%s" : "entity/humanoid_leggings/%s_%s");
 
     public static final double ENCHANTMENT_GLINT_FACTOR = 190.0 / 255.0;
 
