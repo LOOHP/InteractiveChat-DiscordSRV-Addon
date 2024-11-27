@@ -451,7 +451,7 @@ public class DiscordItemStackUtils {
         }
 
         if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:music_disc"))) {
-            prints.add(tooltipText(translatable(getMusicDiscName(item)).color(GRAY)));
+            prints.add(tooltipText(getMusicDiscName(item).color(GRAY)));
         }
 
         if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:disc_fragment")) && !hideAdditionalFlags) {

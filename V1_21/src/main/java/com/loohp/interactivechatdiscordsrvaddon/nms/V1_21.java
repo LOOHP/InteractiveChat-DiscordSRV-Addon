@@ -49,6 +49,7 @@ import net.minecraft.advancements.critereon.CriterionConditionBlock;
 import net.minecraft.core.BlockPosition;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
+import net.minecraft.core.IRegistryCustom;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.NBTTagCompound;
@@ -69,6 +70,7 @@ import net.minecraft.world.item.Instrument;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemArmor;
 import net.minecraft.world.item.ItemMonsterEgg;
+import net.minecraft.world.item.JukeboxPlayable;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.armortrim.TrimMaterial;
 import net.minecraft.world.item.component.BundleContents;
@@ -533,9 +535,14 @@ public class V1_21 extends NMSAddonWrapper {
     }
 
     @Override
-    public String getMusicDiscNameTranslationKey(ItemStack disc) {
-        NamespacedKey namespacedKey = disc.getType().getKey();
-        return "item." + namespacedKey.getNamespace() + "." + namespacedKey.getKey() + ".desc";
+    public Component getMusicDiscNameTranslationKey(ItemStack disc) {
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(disc);
+        JukeboxPlayable jukeboxPlayable = nmsItemStack.a(DataComponents.R);
+        if (jukeboxPlayable == null) {
+            return null;
+        }
+        IRegistryCustom registryAccess = ((CraftWorld) Bukkit.getWorlds().get(0)).getHandle().H_();
+        return jukeboxPlayable.a().a(registryAccess).map(h -> InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(h.a().c()))).orElse(null);
     }
 
     @Override

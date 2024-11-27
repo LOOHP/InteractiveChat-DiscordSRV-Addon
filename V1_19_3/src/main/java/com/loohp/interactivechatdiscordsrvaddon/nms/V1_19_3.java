@@ -503,9 +503,9 @@ public class V1_19_3 extends NMSAddonWrapper {
     }
 
     @Override
-    public String getMusicDiscNameTranslationKey(ItemStack disc) {
+    public Component getMusicDiscNameTranslationKey(ItemStack disc) {
         NamespacedKey namespacedKey = disc.getType().getKey();
-        return "item." + namespacedKey.getNamespace() + "." + namespacedKey.getKey() + ".desc";
+        return Component.translatable("item." + namespacedKey.getNamespace() + "." + namespacedKey.getKey() + ".desc");
     }
 
     @Override

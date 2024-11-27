@@ -22,6 +22,7 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.org.apache.commons.text.WordUtils;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
@@ -300,7 +301,7 @@ public class TranslationKeyUtils {
         }
     }
 
-    public static String getMusicDiscName(ItemStack disc) {
+    public static Component getMusicDiscName(ItemStack disc) {
         return NMSAddon.getInstance().getMusicDiscNameTranslationKey(disc);
     }
 

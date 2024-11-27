@@ -139,7 +139,7 @@ public abstract class NMSAddonWrapper {
 
     public abstract Key getDecoratedPotSherdPatternName(ItemStack itemStack);
 
-    public abstract String getMusicDiscNameTranslationKey(ItemStack disc);
+    public abstract Component getMusicDiscNameTranslationKey(ItemStack disc);
 
     public abstract String getEnchantmentTranslationKey(Enchantment enchantment);
 

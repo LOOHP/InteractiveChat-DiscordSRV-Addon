@@ -431,12 +431,12 @@ public class V1_11 extends NMSAddonWrapper {
     }
 
     @Override
-    public String getMusicDiscNameTranslationKey(ItemStack disc) {
+    public Component getMusicDiscNameTranslationKey(ItemStack disc) {
         try {
             itemRecordTranslationKeyField.setAccessible(true);
             net.minecraft.server.v1_11_R1.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(disc);
             ItemRecord itemRecord = (ItemRecord) nmsItemStack.getItem();
-            return (String) itemRecordTranslationKeyField.get(itemRecord);
+            return Component.translatable((String) itemRecordTranslationKeyField.get(itemRecord));
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
