@@ -23,13 +23,20 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.definitions.equipment.EquipmentModelDefinition;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.OptionalInt;
+
 public class ArmorUtils {
 
-    public static ArmorTextureResult getArmorTexture(ItemStack armorItem, EquipmentSlot slot) {
+    public static ArmorTextureResult getArmorTexture(ResourceManager manager, ItemStack armorItem, EquipmentSlot slot) {
         if (armorItem == null || slot.equals(EquipmentSlot.HAND) || slot.equals(EquipmentSlot.OFF_HAND)) {
             return ArmorTextureResult.NONE;
         }
@@ -39,62 +46,75 @@ public class ArmorUtils {
         }
         String armorMaterialName = key.value();
         String namespace = key.namespace();
-        int layer = slot.equals(EquipmentSlot.LEGS) ? 2 : 1;
-        String base = armorMaterialName + "_layer_" + layer;
-        if (armorItem.getItemMeta() instanceof LeatherArmorMeta) {
-            int color = NMSAddon.getInstance().getLeatherArmorColor(armorItem).orElse(ResourceRegistry.DEFAULT_DYE_COLOR);
-            return ArmorTextureResult.result(namespace, base, base + "_overlay", color);
+        EquipmentModelDefinition equipmentModelDefinition = manager.getEquipmentModelDefinitionManager().getEquipmentModelDefinition(key.asString());
+        if (equipmentModelDefinition != null && equipmentModelDefinition.getLayers().containsKey(EquipmentModelDefinition.EquipmentLayerType.IC_LEGACY)) {
+            int layer = slot.equals(EquipmentSlot.LEGS) ? 2 : 1;
+            String base = armorMaterialName + "_layer_" + layer;
+            if (armorItem.getItemMeta() instanceof LeatherArmorMeta) {
+                int color = NMSAddon.getInstance().getLeatherArmorColor(armorItem).orElse(ResourceRegistry.DEFAULT_DYE_COLOR);
+                return ArmorTextureResult.result(namespace, base, base + "_overlay", color);
+            } else {
+                return ArmorTextureResult.result(namespace, base);
+            }
         } else {
-            return ArmorTextureResult.result(namespace, base);
+            EquipmentModelDefinition.EquipmentLayerType equipmentLayerType = slot.equals(EquipmentSlot.LEGS) ? EquipmentModelDefinition.EquipmentLayerType.HUMANOID_LEGGINGS : EquipmentModelDefinition.EquipmentLayerType.HUMANOID;
+            if (equipmentModelDefinition == null || equipmentModelDefinition.getLayers(equipmentLayerType).isEmpty()) {
+                return ArmorTextureResult.NONE;
+            } else {
+                List<EquipmentModelDefinition.EquipmentLayer> layers = equipmentModelDefinition.getLayers(equipmentLayerType);
+                if (armorItem.getItemMeta() instanceof LeatherArmorMeta) {
+                    int color = NMSAddon.getInstance().getLeatherArmorColor(armorItem).orElse(ResourceRegistry.DEFAULT_DYE_COLOR);
+                    return ArmorTextureResult.result(layers, color);
+                } else {
+                    return ArmorTextureResult.result(layers);
+                }
+            }
         }
     }
 
     public static class ArmorTextureResult {
 
-        public static ArmorTextureResult NONE = new ArmorTextureResult(null, null, null, Integer.MIN_VALUE);
+        public static ArmorTextureResult NONE = new ArmorTextureResult(Collections.emptyList(), OptionalInt.empty());
 
         public static ArmorTextureResult result(String namespace, String base) {
-            return new ArmorTextureResult(namespace, base, null, Integer.MIN_VALUE);
+            return new ArmorTextureResult(Collections.singletonList(new EquipmentModelDefinition.EquipmentLayer(namespace + ":" + base)), OptionalInt.empty());
         }
 
         public static ArmorTextureResult result(String namespace, String base, String overlay, int overlayColor) {
-            return new ArmorTextureResult(namespace, base, overlay, overlayColor);
+            List<EquipmentModelDefinition.EquipmentLayer> layers = Arrays.asList(new EquipmentModelDefinition.EquipmentLayer(namespace + ":" + base), new EquipmentModelDefinition.EquipmentLayer(namespace + ":" + overlay, new EquipmentModelDefinition.EquipmentLayerDyeable(overlayColor)));
+            return new ArmorTextureResult(layers, OptionalInt.of(overlayColor));
         }
 
-        private final String namespace;
-        private final String base;
-        private final String overlay;
-        private final int overlayColor;
+        public static ArmorTextureResult result(List<EquipmentModelDefinition.EquipmentLayer> layers) {
+            return new ArmorTextureResult(layers, OptionalInt.empty());
+        }
 
-        private ArmorTextureResult(String namespace, String base, String overlay, int overlayColor) {
-            this.namespace = namespace;
-            this.base = base;
-            this.overlay = overlay;
-            this.overlayColor = overlayColor;
+        public static ArmorTextureResult result(List<EquipmentModelDefinition.EquipmentLayer> layers, int dyeableColor) {
+            return new ArmorTextureResult(layers, OptionalInt.of(dyeableColor));
+        }
+
+        private final List<EquipmentModelDefinition.EquipmentLayer> layers;
+        private final OptionalInt dyeableColor;
+
+        private ArmorTextureResult(List<EquipmentModelDefinition.EquipmentLayer> layers, OptionalInt dyeableColor) {
+            this.layers = layers;
+            this.dyeableColor = dyeableColor;
         }
 
         public boolean hasArmorTexture() {
-            return namespace != null && base != null;
+            return !layers.isEmpty();
         }
 
-        public String getNamespace() {
-            return namespace;
+        public List<EquipmentModelDefinition.EquipmentLayer> getLayers() {
+            return layers;
         }
 
-        public String getBase() {
-            return base;
+        public boolean hasDyeableColor() {
+            return dyeableColor.isPresent();
         }
 
-        public boolean hasOverlay() {
-            return hasArmorTexture() && overlay != null;
-        }
-
-        public String getOverlay() {
-            return overlay;
-        }
-
-        public int getOverlayColor() {
-            return overlayColor;
+        public int getDyeableColor() {
+            return dyeableColor.getAsInt();
         }
     }
 

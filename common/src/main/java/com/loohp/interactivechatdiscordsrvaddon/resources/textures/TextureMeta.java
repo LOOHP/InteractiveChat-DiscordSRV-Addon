@@ -30,6 +30,7 @@ import java.util.List;
 
 public class TextureMeta extends TextureResource {
 
+    @SuppressWarnings("DuplicateBranchesInSwitch")
     public static TextureMeta fromJson(ITextureManager manager, String resourceKey, ResourcePackFile file, JSONObject rootJson) {
         TextureAnimation animation = null;
         if (rootJson.containsKey("animation")) {
@@ -79,6 +80,7 @@ public class TextureMeta extends TextureResource {
                     case "nine_slice": {
                         int width = ((Number) scalingJson.get("width")).intValue();
                         int height = ((Number) scalingJson.get("height")).intValue();
+                        boolean stretchInner = (boolean) scalingJson.getOrDefault("stretch_inner", false);
                         int borderLeft;
                         int borderTop;
                         int borderRight;
@@ -99,7 +101,11 @@ public class TextureMeta extends TextureResource {
                         } else {
                             throw new IllegalArgumentException("Invalid type for boarder properties \"" + border.getClass() + "\"");
                         }
-                        scaling = new TextureGui.Scaling<>(TextureGui.ScalingType.NINE_SLICE, new TextureGui.NineSliceScalingProperty(width, height, borderLeft, borderTop, borderRight, borderBottom));
+                        scaling = new TextureGui.Scaling<>(TextureGui.ScalingType.NINE_SLICE, new TextureGui.NineSliceScalingProperty(width, height, borderLeft, borderTop, borderRight, borderBottom, stretchInner));
+                        break;
+                    }
+                    default: {
+                        scaling = new TextureGui.Scaling<>(TextureGui.ScalingType.STRETCH, new TextureGui.StretchScalingProperty());
                         break;
                     }
                 }

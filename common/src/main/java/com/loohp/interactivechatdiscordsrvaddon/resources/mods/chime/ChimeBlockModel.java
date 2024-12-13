@@ -39,6 +39,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.TextureUV;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimeModelOverride.ChimeModelOverrideType;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -47,7 +48,7 @@ import java.util.Map;
 
 public class ChimeBlockModel extends BlockModel {
 
-    public static ChimeBlockModel fromJson(IModelManager manager, String resourceLocation, JSONObject rootJson) {
+    public static ChimeBlockModel fromJson(IModelManager manager, String resourceLocation, JSONObject rootJson, boolean useLegacyOverrides) {
         String parent = (String) rootJson.getOrDefault("parent", null);
         boolean ambientocclusion = (boolean) rootJson.getOrDefault("ambientocclusion", true);
         ModelGUILight guiLight = rootJson.containsKey("gui_light") ? ModelGUILight.fromKey((String) rootJson.get("gui_light")) : null;
@@ -150,31 +151,36 @@ public class ChimeBlockModel extends BlockModel {
                 elements.add(new ModelElement(name, from, to, rotation, shade, face));
             }
         }
-        List<ChimeModelOverride> overrides = new ArrayList<>();
-        JSONArray overridesArray = (JSONArray) rootJson.get("overrides");
-        if (overridesArray != null) {
-            ListIterator<Object> itr = overridesArray.listIterator(overridesArray.size());
-            while (itr.hasPrevious()) {
-                JSONObject overrideJson = (JSONObject) itr.previous();
-                JSONObject predicateJson = (JSONObject) overrideJson.get("predicate");
-                Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
-                for (Object obj1 : predicateJson.keySet()) {
-                    String predicateTypeKey = obj1.toString();
-                    ModelOverrideType type = ModelOverrideType.fromKey(predicateTypeKey);
-                    if (type != null) {
-                        Object value = predicateJson.get(predicateTypeKey);
-                        predicates.put(type, ((Number) value).floatValue());
+        List<ChimeModelOverride> overrides;
+        if (useLegacyOverrides) {
+            overrides = new ArrayList<>();
+            JSONArray overridesArray = (JSONArray) rootJson.get("overrides");
+            if (overridesArray != null) {
+                ListIterator<Object> itr = overridesArray.listIterator(overridesArray.size());
+                while (itr.hasPrevious()) {
+                    JSONObject overrideJson = (JSONObject) itr.previous();
+                    JSONObject predicateJson = (JSONObject) overrideJson.get("predicate");
+                    Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
+                    for (Object obj1 : predicateJson.keySet()) {
+                        String predicateTypeKey = obj1.toString();
+                        ModelOverrideType type = ModelOverrideType.fromKey(predicateTypeKey);
+                        if (type != null) {
+                            Object value = predicateJson.get(predicateTypeKey);
+                            predicates.put(type, ((Number) value).floatValue());
+                        }
+                    }
+                    Map<ChimeModelOverrideType, Object> chimePredicates = ChimeUtils.getAllPredicates(predicateJson);
+                    String model = (String) overrideJson.get("model");
+                    if (overrideJson.containsKey("texture")) {
+                        String armorTexture = (String) overrideJson.get("texture");
+                        overrides.add(new ChimeModelOverride(predicates, chimePredicates, model, armorTexture));
+                    } else {
+                        overrides.add(new ChimeModelOverride(predicates, chimePredicates, model));
                     }
                 }
-                Map<ChimeModelOverrideType, Object> chimePredicates = ChimeUtils.getAllPredicates(predicateJson);
-                String model = (String) overrideJson.get("model");
-                if (overrideJson.containsKey("texture")) {
-                    String armorTexture = (String) overrideJson.get("texture");
-                    overrides.add(new ChimeModelOverride(predicates, chimePredicates, model, armorTexture));
-                } else {
-                    overrides.add(new ChimeModelOverride(predicates, chimePredicates, model));
-                }
             }
+        } else {
+            overrides = Collections.emptyList();
         }
         return new ChimeBlockModel(manager, resourceLocation, parent, ambientocclusion, guiLight, display, texture, elements, overrides);
     }

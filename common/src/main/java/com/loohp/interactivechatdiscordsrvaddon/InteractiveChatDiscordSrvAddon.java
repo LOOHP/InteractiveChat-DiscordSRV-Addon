@@ -733,7 +733,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                         ),
                         ResourceManager.Flag.build(
                                 InteractiveChat.version.isLegacy(),
-                                InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_18_2)
+                                InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_18_2),
+                                InteractiveChat.version.isOlderOrEqualTo(MCVersion.V1_21_3)
                         )
                 );
 

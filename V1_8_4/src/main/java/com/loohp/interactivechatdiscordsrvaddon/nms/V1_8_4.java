@@ -26,13 +26,16 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
+import com.loohp.interactivechat.nms.NMS;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ItemDamageInfo;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ProfileProperty;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
@@ -312,7 +315,7 @@ public class V1_8_4 extends NMSAddonWrapper {
     }
 
     @Override
-    public float getTrimMaterialIndex(Object trimMaterial) {
+    public float getLegacyTrimMaterialIndex(Object trimMaterial) {
         throw new UnsupportedOperationException();
     }
 
@@ -378,6 +381,17 @@ public class V1_8_4 extends NMSAddonWrapper {
     @Override
     public Key getDecoratedPotSherdPatternName(ItemStack itemStack) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isJukeboxPlayable(ItemStack itemStack) {
+        net.minecraft.server.v1_8_R3.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        return nmsItemStack.getItem() instanceof ItemRecord;
+    }
+
+    @Override
+    public boolean shouldSongShowInToolTip(ItemStack disc) {
+        return true;
     }
 
     @Override
@@ -475,6 +489,11 @@ public class V1_8_4 extends NMSAddonWrapper {
     }
 
     @Override
+    public boolean shouldHideTooltip(ItemStack itemStack) {
+        return false;
+    }
+
+    @Override
     public Key getAttributeModifierKey(Object attributeModifier) {
         throw new UnsupportedOperationException();
     }
@@ -487,6 +506,71 @@ public class V1_8_4 extends NMSAddonWrapper {
     @Override
     public Fraction getWeightForBundle(ItemStack itemStack) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public CustomModelData getCustomModelData(ItemStack itemStack) {
+        return null;
+    }
+
+    @Override
+    public boolean hasDataComponent(ItemStack itemStack, String componentName, boolean ignoreDefault) {
+        return false;
+    }
+
+    @Override
+    public String getBlockStateProperty(ItemStack itemStack, String property) {
+        return null;
+    }
+
+    @Override
+    public ItemDamageInfo getItemDamageInfo(ItemStack itemStack) {
+        return new ItemDamageInfo(itemStack.getDurability(), itemStack.getType().getMaxDurability());
+    }
+
+    @Override
+    public float getItemCooldownProgress(Player player, ItemStack itemStack) {
+        return 0.0F;
+    }
+
+    @Override
+    public float getSkyAngle(World world) {
+        return 0F;
+    }
+
+    @Override
+    public int getMoonPhase(World world) {
+        return 0;
+    }
+
+    @Override
+    public int getCrossbowPullTime(ItemStack itemStack, LivingEntity livingEntity) {
+        return 0;
+    }
+
+    @Override
+    public int getItemUseTimeLeft(LivingEntity livingEntity) {
+        return 0;
+    }
+
+    @Override
+    public int getTicksUsedSoFar(ItemStack itemStack, LivingEntity livingEntity) {
+        return 0;
+    }
+
+    @Override
+    public Key getItemModelResourceLocation(ItemStack itemStack) {
+        return NMS.getInstance().getNMSItemStackNamespacedKey(itemStack);
+    }
+
+    @Override
+    public Boolean getEnchantmentGlintOverride(ItemStack itemStack) {
+        return null;
+    }
+
+    @Override
+    public Key getCustomTooltipResourceLocation(ItemStack itemStack) {
+        return null;
     }
 
 }

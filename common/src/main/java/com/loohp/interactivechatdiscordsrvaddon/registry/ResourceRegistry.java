@@ -35,7 +35,7 @@ public class ResourceRegistry {
             blockTextureLocation = com.loohp.interactivechat.InteractiveChat.version.isLegacy() ? "minecraft:blocks/" : "minecraft:block/";
         } catch (ClassNotFoundException | NoClassDefFoundError e) {
             isMinecraftServerEnvironment = false;
-            resourcePackVersion = 32;
+            resourcePackVersion = 46;
             itemTextureLocation = "minecraft:item/";
             blockTextureLocation = "minecraft:block/";
         }
@@ -71,7 +71,8 @@ public class ResourceRegistry {
 
     public static final String LEGACY_PAINTINGS_LOCATION = "minecraft:paintings/";
 
-    public static final String ARMOR_TEXTURE_LOCATION = "models/armor/";
+    public static final String ARMOR_TEXTURE_LOCATION = RESOURCE_PACK_VERSION < 46 ? "models/armor/": "entity/equipment/humanoid/";
+    public static final String ARMOR_LEGGINGS_TEXTURE_LOCATION = RESOURCE_PACK_VERSION < 46 ? "models/armor/": "entity/equipment/humanoid_leggings/";
 
     public static final String IC_OLD_BASE_BLOCK_MODEL = ICD_PREFIX + "block/block";
     public static final String IC_OLD_BASE_ITEM_MODEL = ICD_PREFIX + "item/generated";
@@ -93,6 +94,8 @@ public class ResourceRegistry {
     public static final String BANNER_PATTERNS_TEXTURE_PLACEHOLDER = ICD_PREFIX + "banner_patterns";
     public static final String SHIELD_BASE_TEXTURE_PLACEHOLDER = ICD_PREFIX + "shield_base";
     public static final String SHIELD_PATTERNS_TEXTURE_PLACEHOLDER = ICD_PREFIX + "shield_patterns";
+
+    public static final String CHEST_TEXTURE_PLACEHOLDER = ICD_PREFIX + "chest_texture";
 
     public static final String LEGACY_SINGLE_PAINTING_LOCATION = "minecraft:painting/paintings_kristoffer_zetterstrand";
 

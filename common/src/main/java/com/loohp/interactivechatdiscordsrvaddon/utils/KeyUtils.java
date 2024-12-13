@@ -26,11 +26,16 @@ import org.bukkit.NamespacedKey;
 public class KeyUtils {
 
     @SuppressWarnings("PatternValidation")
+    public static Key toKey(String namespacedKey) {
+        return Key.key(namespacedKey);
+    }
+
+    @SuppressWarnings("PatternValidation")
     public static Key toKey(NamespacedKey namespacedKey) {
         return Key.key(namespacedKey.getNamespace(), namespacedKey.getKey());
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings("UnstableApiUsage")
     public static NamespacedKey fromKey(Key key) {
         return new NamespacedKey(key.namespace(), key.value());
     }

@@ -403,7 +403,13 @@ public class MinecraftFontRenderer extends JFrame {
                 int packFormat = GUIMain.getDefaultPackVersion((Integer) defaultPackVersionSpinner.getValue());
                 defaultPackVersionSpinner.setValue(packFormat);
 
-                resourceManager = new ResourceManager(packFormat, Collections.emptyList(), Collections.singletonList(ICacheManager.getDummySupplier()), PackFormat.version(packFormat), ResourceManager.Flag.build(false, packFormat < 9));
+                resourceManager = new ResourceManager(
+                        packFormat,
+                        Collections.emptyList(),
+                        Collections.singletonList(ICacheManager.getDummySupplier()),
+                        PackFormat.version(packFormat),
+                        ResourceManager.Flag.build(false, packFormat < 9, packFormat < 46)
+                );
                 resourceManager.loadResources(new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN, true);
                 resourceBar.setValue(valuePerPack);
                 for (String resourceName : resourceOrder) {

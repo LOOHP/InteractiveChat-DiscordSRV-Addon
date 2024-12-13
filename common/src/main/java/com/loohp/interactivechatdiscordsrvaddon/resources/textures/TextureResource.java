@@ -103,27 +103,40 @@ public class TextureResource {
         return isTexture;
     }
 
-    public BufferedImage getTexture(int w, int h) {
-        return getTexture(w, h, false);
+    public BufferedImage getTexture(int width, int height) {
+        return getTexture(width, height, false);
     }
 
-    public BufferedImage getTexture(int w, int h, boolean clearAnimation) {
+    public BufferedImage getTexture(int width, int height, boolean clearAnimation) {
         BufferedImage image = loadImage();
         if (imageTransformFunction != null) {
             image = imageTransformFunction.apply(image);
         }
-        if (clearAnimation && hasTextureMeta()) {
-            TextureMeta meta = getTextureMeta();
+        TextureMeta meta = getTextureMeta();
+        if (clearAnimation && meta != null) {
             if (meta.hasAnimation()) {
                 image = AnimatedTextureUtils.getCurrentAnimationFrame(image, meta.getAnimation(), 0);
             }
         }
-        if (image.getWidth() != w || image.getHeight() != h) {
-            image = ImageUtils.resizeImageAbs(image, w, h);
+        if (image.getWidth() != width || image.getHeight() != height) {
+            image = ImageUtils.resizeImageAbs(image, width, height);
         } else {
             image = ImageUtils.copyImage(image);
         }
         return image;
+    }
+
+    public BufferedImage getScaledTexture(int srcWidth, int srcHeight, int dstWidth, int dstHeight) {
+        TextureGui.Scaling<?> scaling = TextureGui.Scaling.DEFAULT_SCALING;
+        TextureMeta meta = getTextureMeta();
+        if (meta != null) {
+            TextureGui textureGui = meta.getGui();
+            if (textureGui != null) {
+                scaling = textureGui.getScaling();
+            }
+        }
+        BufferedImage source = getTexture(srcWidth, srcHeight, true);
+        return scaling.getScalingProperty().apply(source, dstWidth, dstHeight);
     }
 
     public BufferedImage getTexture() {

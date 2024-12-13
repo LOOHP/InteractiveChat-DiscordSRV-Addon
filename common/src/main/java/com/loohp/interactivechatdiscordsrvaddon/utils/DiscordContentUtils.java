@@ -41,6 +41,7 @@ import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordInteractionEvents;
+import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordMessageContent;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.HoverClickDisplayData;
@@ -134,7 +135,7 @@ public class DiscordContentUtils {
                         contents.add(content);
 
                         DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, player);
-                        List<ToolTipComponent<?>> toolTipComponents = discordToolTip.getComponents();
+                        List<ToolTipComponent<?>> toolTipComponents = discordToolTip.isHideTooltip() ? new ArrayList<>() : discordToolTip.getComponents();
 
                         boolean forceShow = false;
                         if (type.equals(ImageDisplayType.ITEM_CONTAINER) && InteractiveChatDiscordSrvAddon.plugin.showContainers) {
@@ -177,8 +178,8 @@ public class DiscordContentUtils {
                             forceShow = true;
                         }
 
-                        if (forceShow || !discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem) {
-                            BufferedImage tooltip = ImageGeneration.getToolTipImage(toolTipComponents);
+                        if ((forceShow || !discordToolTip.isHideTooltip()) && (forceShow || !discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem)) {
+                            BufferedImage tooltip = ImageGeneration.getToolTipImage(toolTipComponents, NMSAddon.getInstance().getCustomTooltipResourceLocation(item));
 
                             if (iData.isFilledMap() && InteractiveChatDiscordSrvAddon.plugin.showMaps) {
                                 MapView mapView = FilledMapUtils.getMapView(item);
@@ -302,7 +303,7 @@ public class DiscordContentUtils {
                     if (hData.hasHover()) {
                         if (InteractiveChatDiscordSrvAddon.plugin.hoverUseTooltipImage) {
                             Component print = hData.getHoverText();
-                            BufferedImage tooltip = ImageGeneration.getToolTipImage(print, true);
+                            BufferedImage tooltip = ImageGeneration.getToolTipImage(print, true, null);
                             byte[] tooltipData = ImageUtils.toArray(tooltip);
                             content.addAttachment("ToolTip_" + i + ".png", tooltipData);
                             content.addImageUrl("attachment://ToolTip_" + i + ".png");

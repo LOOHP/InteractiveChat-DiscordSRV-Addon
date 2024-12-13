@@ -40,7 +40,7 @@ import java.util.Objects;
 
 public class BlockModel {
 
-    public static BlockModel fromJson(IModelManager manager, String resourceLocation, JSONObject rootJson) {
+    public static BlockModel fromJson(IModelManager manager, String resourceLocation, JSONObject rootJson, boolean useLegacyOverrides) {
         String parent = (String) rootJson.getOrDefault("parent", null);
         boolean ambientocclusion = (boolean) rootJson.getOrDefault("ambientocclusion", true);
         ModelGUILight guiLight = rootJson.containsKey("gui_light") ? ModelGUILight.fromKey((String) rootJson.get("gui_light")) : null;
@@ -143,26 +143,31 @@ public class BlockModel {
                 elements.add(new ModelElement(name, from, to, rotation, shade, face));
             }
         }
-        List<ModelOverride> overrides = new ArrayList<>();
-        JSONArray overridesArray = (JSONArray) rootJson.get("overrides");
-        if (overridesArray != null) {
-            ListIterator<Object> itr = overridesArray.listIterator(overridesArray.size());
-            while (itr.hasPrevious()) {
-                JSONObject overrideJson = (JSONObject) itr.previous();
-                JSONObject predicateJson = (JSONObject) overrideJson.get("predicate");
-                Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
-                for (Object obj1 : predicateJson.keySet()) {
-                    String predicateTypeKey = obj1.toString();
-                    ModelOverrideType type = ModelOverrideType.fromKey(predicateTypeKey);
-                    if (type == null) {
-                        continue;
+        List<ModelOverride> overrides;
+        if (useLegacyOverrides) {
+            overrides = new ArrayList<>();
+            JSONArray overridesArray = (JSONArray) rootJson.get("overrides");
+            if (overridesArray != null) {
+                ListIterator<Object> itr = overridesArray.listIterator(overridesArray.size());
+                while (itr.hasPrevious()) {
+                    JSONObject overrideJson = (JSONObject) itr.previous();
+                    JSONObject predicateJson = (JSONObject) overrideJson.get("predicate");
+                    Map<ModelOverrideType, Float> predicates = new EnumMap<>(ModelOverrideType.class);
+                    for (Object obj1 : predicateJson.keySet()) {
+                        String predicateTypeKey = obj1.toString();
+                        ModelOverrideType type = ModelOverrideType.fromKey(predicateTypeKey);
+                        if (type == null) {
+                            continue;
+                        }
+                        Object value = predicateJson.get(predicateTypeKey);
+                        predicates.put(type, ((Number) value).floatValue());
                     }
-                    Object value = predicateJson.get(predicateTypeKey);
-                    predicates.put(type, ((Number) value).floatValue());
+                    String model = (String) overrideJson.get("model");
+                    overrides.add(new ModelOverride(predicates, model));
                 }
-                String model = (String) overrideJson.get("model");
-                overrides.add(new ModelOverride(predicates, model));
             }
+        } else {
+            overrides = Collections.emptyList();
         }
         return new BlockModel(manager, resourceLocation, parent, ambientocclusion, guiLight, display, texture, elements, overrides);
     }

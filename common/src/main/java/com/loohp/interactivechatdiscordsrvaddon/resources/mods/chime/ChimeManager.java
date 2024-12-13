@@ -30,13 +30,12 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingExcepti
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
-import com.loohp.interactivechatdiscordsrvaddon.resources.models.IModelManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelParsingFunction;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.ModManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
-import com.loohp.interactivechatdiscordsrvaddon.utils.TriFunction;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
@@ -57,7 +56,7 @@ public class ChimeManager extends ModManager implements IChimeManager {
 
     public static final String MOD_NAME = "Chime";
     public static final List<String> ASSETS_FOLDERS = Collections.singletonList("overrides");
-    public static final TriFunction<IModelManager, String, JSONObject, ChimeBlockModel> CHIME_MODEL_PARSING_FUNCTION = (manager, key, json) -> ChimeBlockModel.fromJson(manager, key, json);
+    public static final ModelParsingFunction<ChimeBlockModel> CHIME_MODEL_PARSING_FUNCTION = (manager, key, json, override) -> ChimeBlockModel.fromJson(manager, key, json, override);
 
     private List<String> overrideLocations;
     private Map<String, TextureResource> textures;
@@ -79,6 +78,7 @@ public class ChimeManager extends ModManager implements IChimeManager {
         if (!root.exists() || !root.isDirectory()) {
             throw new IllegalArgumentException(root.getAbsolutePath() + " is not a directory.");
         }
+        boolean useLegacyOverrides = manager.hasFlag(ResourceManager.Flag.LEGACY_MODEL_DEFINITION);
         overrideLocations.add(root.getName() + "/");
         JSONParser parser = new JSONParser();
         Map<String, ChimeBlockModel> models = new HashMap<>();
@@ -100,7 +100,7 @@ public class ChimeManager extends ModManager implements IChimeManager {
                         parent = parent.substring(0, parent.lastIndexOf("."));
                     }
                     rootJson.put("parent", parent);
-                    ChimeBlockModel model = CHIME_MODEL_PARSING_FUNCTION.apply(this, key, rootJson);
+                    ChimeBlockModel model = CHIME_MODEL_PARSING_FUNCTION.fromJson(this, key, rootJson, useLegacyOverrides);
                     models.put(key, model);
                 } else if (name.endsWith(".png")) {
                     textures.put(key, new TextureResource(this, key, file, true, null));

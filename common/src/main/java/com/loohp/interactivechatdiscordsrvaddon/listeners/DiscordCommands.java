@@ -700,7 +700,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                     errorCode--;
                     String title = ChatColorUtils.stripColor(ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(offlineICPlayer, InteractiveChatDiscordSrvAddon.plugin.playerinfoCommandFormatTitle)));
                     String subtitle = ChatColorUtils.stripColor(ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(offlineICPlayer, InteractiveChatDiscordSrvAddon.plugin.playerinfoCommandFormatSubTitle)));
-                    BufferedImage image = ImageGeneration.getToolTipImage(playerInfoComponents);
+                    BufferedImage image = ImageGeneration.getToolTipImage(playerInfoComponents, null);
                     errorCode--;
                     byte[] data = ImageUtils.toArray(image);
                     errorCode--;

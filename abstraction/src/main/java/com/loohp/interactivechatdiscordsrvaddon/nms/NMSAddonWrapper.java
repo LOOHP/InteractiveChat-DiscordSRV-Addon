@@ -24,18 +24,20 @@ import com.google.common.collect.Multimap;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
+import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ItemDamageInfo;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ProfileProperty;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import net.md_5.bungee.api.ChatColor;
-import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -121,7 +123,7 @@ public abstract class NMSAddonWrapper {
 
     public abstract String getEntityNBT(Entity entity);
 
-    public abstract float getTrimMaterialIndex(Object trimMaterial);
+    public abstract float getLegacyTrimMaterialIndex(Object trimMaterial);
 
     public abstract TextColor getTrimMaterialColor(Object trimMaterial);
 
@@ -138,6 +140,10 @@ public abstract class NMSAddonWrapper {
     public abstract Component getDeathMessage(Player player);
 
     public abstract Key getDecoratedPotSherdPatternName(ItemStack itemStack);
+
+    public abstract boolean isJukeboxPlayable(ItemStack itemStack);
+
+    public abstract boolean shouldSongShowInToolTip(ItemStack disc);
 
     public abstract Component getMusicDiscNameTranslationKey(ItemStack disc);
 
@@ -163,10 +169,38 @@ public abstract class NMSAddonWrapper {
 
     public abstract ItemFlag getHideAdditionalItemFlag();
 
+    public abstract boolean shouldHideTooltip(ItemStack itemStack);
+
     public abstract Key getAttributeModifierKey(Object attributeModifier);
 
     public abstract ProfileProperty toProfileProperty(Property property);
 
     public abstract Fraction getWeightForBundle(ItemStack itemStack);
+
+    public abstract CustomModelData getCustomModelData(ItemStack itemStack);
+
+    public abstract boolean hasDataComponent(ItemStack itemStack, String componentName, boolean ignoreDefault);
+
+    public abstract String getBlockStateProperty(ItemStack itemStack, String property);
+
+    public abstract ItemDamageInfo getItemDamageInfo(ItemStack itemStack);
+
+    public abstract float getItemCooldownProgress(Player player, ItemStack itemStack);
+
+    public abstract float getSkyAngle(World world);
+
+    public abstract int getMoonPhase(World world);
+
+    public abstract int getCrossbowPullTime(ItemStack itemStack, LivingEntity livingEntity);
+
+    public abstract int getItemUseTimeLeft(LivingEntity livingEntity);
+
+    public abstract int getTicksUsedSoFar(ItemStack itemStack, LivingEntity livingEntity);
+
+    public abstract Key getItemModelResourceLocation(ItemStack itemStack);
+
+    public abstract Boolean getEnchantmentGlintOverride(ItemStack itemStack);
+
+    public abstract Key getCustomTooltipResourceLocation(ItemStack itemStack);
 
 }

@@ -27,7 +27,6 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingExcepti
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
-import com.loohp.interactivechatdiscordsrvaddon.utils.TriFunction;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -38,7 +37,7 @@ import java.util.regex.Pattern;
 
 public class ModelManager extends AbstractManager implements IModelManager {
 
-    public static final TriFunction<IModelManager, String, JSONObject, BlockModel> DEFAULT_MODEL_PARSING_FUNCTION = (manager, key, json) -> BlockModel.fromJson(manager, key, json);
+    public static final ModelParsingFunction<BlockModel> DEFAULT_MODEL_PARSING_FUNCTION = (manager, key, json, override) -> BlockModel.fromJson(manager, key, json, override);
 
     public static final String CACHE_KEY = "ModelManager";
     public static final String BLOCK_ENTITY_BASE = "minecraft:builtin/entity";
@@ -46,7 +45,7 @@ public class ModelManager extends AbstractManager implements IModelManager {
     public static final String ITEM_BASE_LAYER = "layer";
 
     private Map<String, BlockModel> models;
-    private TriFunction<IModelManager, String, JSONObject, ? extends BlockModel> modelParsingFunction;
+    private ModelParsingFunction<?> modelParsingFunction;
 
     public ModelManager(ResourceManager manager) {
         super(manager);
@@ -59,6 +58,7 @@ public class ModelManager extends AbstractManager implements IModelManager {
         if (!root.exists() || !root.isDirectory()) {
             throw new IllegalArgumentException(root.getAbsolutePath() + " is not a directory.");
         }
+        boolean useLegacyOverrides = manager.hasFlag(ResourceManager.Flag.LEGACY_MODEL_DEFINITION);
         Map<String, BlockModel> models = new HashMap<>();
         Collection<ResourcePackFile> files = root.listFilesRecursively(new String[] {"json"});
         for (ResourcePackFile file : files) {
@@ -66,7 +66,7 @@ public class ModelManager extends AbstractManager implements IModelManager {
                 String key = namespace + ":" + file.getRelativePathFrom(root);
                 key = key.substring(0, key.lastIndexOf("."));
                 JSONObject rootJson = readJSONObject(file);
-                BlockModel model = modelParsingFunction.apply(this, key, rootJson);
+                BlockModel model = modelParsingFunction.fromJson(this, key, rootJson, useLegacyOverrides);
                 models.put(key, model);
             } catch (Exception e) {
                 new ResourceLoadingException("Unable to load block model " + file.getAbsolutePath(), e).printStackTrace();
@@ -96,11 +96,11 @@ public class ModelManager extends AbstractManager implements IModelManager {
 
     }
 
-    public TriFunction<IModelManager, String, JSONObject, ? extends BlockModel> getModelParsingFunction() {
+    public ModelParsingFunction<?> getModelParsingFunction() {
         return modelParsingFunction;
     }
 
-    public void setModelParsingFunction(TriFunction<IModelManager, String, JSONObject, ? extends BlockModel> modelParsingFunction) {
+    public void setModelParsingFunction(ModelParsingFunction<?> modelParsingFunction) {
         this.modelParsingFunction = modelParsingFunction;
     }
 

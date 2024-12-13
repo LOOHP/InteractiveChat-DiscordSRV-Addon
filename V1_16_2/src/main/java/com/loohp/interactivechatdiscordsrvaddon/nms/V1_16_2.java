@@ -26,49 +26,53 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
+import com.loohp.interactivechat.nms.NMS;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ItemDamageInfo;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ProfileProperty;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import net.md_5.bungee.api.ChatColor;
+import net.minecraft.server.v1_16_R2.AdvancementDisplay;
+import net.minecraft.server.v1_16_R2.AttributeBase;
+import net.minecraft.server.v1_16_R2.BiomeBase;
+import net.minecraft.server.v1_16_R2.Block;
+import net.minecraft.server.v1_16_R2.CombatTracker;
 import net.minecraft.server.v1_16_R2.EnchantmentManager;
 import net.minecraft.server.v1_16_R2.EntityFishingHook;
 import net.minecraft.server.v1_16_R2.EntityLiving;
+import net.minecraft.server.v1_16_R2.EntityPlayer;
 import net.minecraft.server.v1_16_R2.EntityTypes;
 import net.minecraft.server.v1_16_R2.EnumArmorMaterial;
+import net.minecraft.server.v1_16_R2.EnumBannerPatternType;
 import net.minecraft.server.v1_16_R2.EnumChatFormat;
-import net.minecraft.server.v1_16_R2.AdvancementDisplay;
+import net.minecraft.server.v1_16_R2.EnumItemSlot;
 import net.minecraft.server.v1_16_R2.EnumMonsterType;
 import net.minecraft.server.v1_16_R2.IRegistry;
-import net.minecraft.server.v1_16_R2.ItemMonsterEgg;
-import net.minecraft.server.v1_16_R2.MinecraftServer;
-import net.minecraft.server.v1_16_R2.MinecraftVersion;
-import net.minecraft.server.v1_16_R2.MobEffectInfo;
-import net.minecraft.server.v1_16_R2.NBTTagCompound;
-import net.minecraft.server.v1_16_R2.NBTTagList;
-import net.minecraft.server.v1_16_R2.MinecraftKey;
-import net.minecraft.server.v1_16_R2.EntityPlayer;
-import net.minecraft.server.v1_16_R2.WorldServer;
-import net.minecraft.server.v1_16_R2.CombatTracker;
-import net.minecraft.server.v1_16_R2.MobEffect;
-import net.minecraft.server.v1_16_R2.MobEffectList;
-import net.minecraft.server.v1_16_R2.EnumItemSlot;
-import net.minecraft.server.v1_16_R2.AttributeBase;
-import net.minecraft.server.v1_16_R2.Paintings;
 import net.minecraft.server.v1_16_R2.Item;
 import net.minecraft.server.v1_16_R2.ItemArmor;
+import net.minecraft.server.v1_16_R2.ItemMonsterEgg;
+import net.minecraft.server.v1_16_R2.ItemRecord;
+import net.minecraft.server.v1_16_R2.MinecraftKey;
+import net.minecraft.server.v1_16_R2.MinecraftServer;
+import net.minecraft.server.v1_16_R2.MinecraftVersion;
+import net.minecraft.server.v1_16_R2.MobEffect;
+import net.minecraft.server.v1_16_R2.MobEffectInfo;
+import net.minecraft.server.v1_16_R2.MobEffectList;
+import net.minecraft.server.v1_16_R2.NBTTagCompound;
+import net.minecraft.server.v1_16_R2.NBTTagList;
+import net.minecraft.server.v1_16_R2.Paintings;
 import net.minecraft.server.v1_16_R2.PotionUtil;
-import net.minecraft.server.v1_16_R2.BiomeBase;
-import net.minecraft.server.v1_16_R2.Block;
-import net.minecraft.server.v1_16_R2.EnumBannerPatternType;
+import net.minecraft.server.v1_16_R2.WorldServer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -100,6 +104,7 @@ import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -485,7 +490,7 @@ public class V1_16_2 extends NMSAddonWrapper {
     }
 
     @Override
-    public float getTrimMaterialIndex(Object trimMaterial) {
+    public float getLegacyTrimMaterialIndex(Object trimMaterial) {
         throw new UnsupportedOperationException();
     }
 
@@ -577,6 +582,17 @@ public class V1_16_2 extends NMSAddonWrapper {
     }
 
     @Override
+    public boolean isJukeboxPlayable(ItemStack itemStack) {
+        net.minecraft.server.v1_16_R2.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        return nmsItemStack.getItem() instanceof ItemRecord;
+    }
+
+    @Override
+    public boolean shouldSongShowInToolTip(ItemStack disc) {
+        return true;
+    }
+
+    @Override
     public Component getMusicDiscNameTranslationKey(ItemStack disc) {
         NamespacedKey namespacedKey = disc.getType().getKey();
         return Component.translatable("item." + namespacedKey.getNamespace() + "." + namespacedKey.getKey() + ".desc");
@@ -659,6 +675,11 @@ public class V1_16_2 extends NMSAddonWrapper {
     }
 
     @Override
+    public boolean shouldHideTooltip(ItemStack itemStack) {
+        return false;
+    }
+
+    @Override
     public Key getAttributeModifierKey(Object attributeModifier) {
         throw new UnsupportedOperationException();
     }
@@ -671,6 +692,79 @@ public class V1_16_2 extends NMSAddonWrapper {
     @Override
     public Fraction getWeightForBundle(ItemStack itemStack) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public CustomModelData getCustomModelData(ItemStack itemStack) {
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta == null || !itemMeta.hasCustomModelData()) {
+            return null;
+        }
+        return new CustomModelData(itemMeta.getCustomModelData());
+    }
+
+    @Override
+    public boolean hasDataComponent(ItemStack itemStack, String componentName, boolean ignoreDefault) {
+        return false;
+    }
+
+    @Override
+    public String getBlockStateProperty(ItemStack itemStack, String property) {
+        return null;
+    }
+
+    @Override
+    public ItemDamageInfo getItemDamageInfo(ItemStack itemStack) {
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (itemMeta instanceof Damageable) {
+            return new ItemDamageInfo(((Damageable) itemMeta).getDamage(), itemStack.getType().getMaxDurability());
+        }
+        return new ItemDamageInfo(0, itemStack.getType().getMaxDurability());
+    }
+
+    @Override
+    public float getItemCooldownProgress(Player player, ItemStack itemStack) {
+        return 0.0F;
+    }
+
+    @Override
+    public float getSkyAngle(World world) {
+        return 0F;
+    }
+
+    @Override
+    public int getMoonPhase(World world) {
+        return 0;
+    }
+
+    @Override
+    public int getCrossbowPullTime(ItemStack itemStack, LivingEntity livingEntity) {
+        return 0;
+    }
+
+    @Override
+    public int getItemUseTimeLeft(LivingEntity livingEntity) {
+        return 0;
+    }
+
+    @Override
+    public int getTicksUsedSoFar(ItemStack itemStack, LivingEntity livingEntity) {
+        return 0;
+    }
+
+    @Override
+    public Key getItemModelResourceLocation(ItemStack itemStack) {
+        return NMS.getInstance().getNMSItemStackNamespacedKey(itemStack);
+    }
+
+    @Override
+    public Boolean getEnchantmentGlintOverride(ItemStack itemStack) {
+        return null;
+    }
+
+    @Override
+    public Key getCustomTooltipResourceLocation(ItemStack itemStack) {
+        return null;
     }
 
 }

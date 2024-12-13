@@ -450,7 +450,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:music_disc"))) {
+        if (NMSAddon.getInstance().isJukeboxPlayable(item) && NMSAddon.getInstance().shouldSongShowInToolTip(item)) {
             prints.add(tooltipText(getMusicDiscName(item).color(GRAY)));
         }
 
@@ -841,7 +841,7 @@ public class DiscordItemStackUtils {
             }
         }
 
-        return new DiscordToolTip(prints, !hasCustomName && prints.size() <= 1);
+        return new DiscordToolTip(prints, !hasCustomName && prints.size() <= 1, NMSAddon.getInstance().shouldHideTooltip(item));
     }
 
     public static String toDiscordText(List<ToolTipComponent<?>> toolTipComponents, Function<ToolTipComponent<BufferedImage>, Component> imageToolTipHandler, String language, boolean embedLinks) {
@@ -866,10 +866,12 @@ public class DiscordItemStackUtils {
 
         private final List<ToolTipComponent<?>> components;
         private final boolean isBaseItem;
+        private final boolean isHideTooltip;
 
-        public DiscordToolTip(List<ToolTipComponent<?>> components, boolean isBaseItem) {
+        public DiscordToolTip(List<ToolTipComponent<?>> components, boolean isBaseItem, boolean isHideTooltip) {
             this.components = components;
             this.isBaseItem = isBaseItem;
+            this.isHideTooltip = isHideTooltip;
         }
 
         public List<ToolTipComponent<?>> getComponents() {
@@ -880,6 +882,9 @@ public class DiscordItemStackUtils {
             return isBaseItem;
         }
 
+        public boolean isHideTooltip() {
+            return isHideTooltip;
+        }
     }
 
 }

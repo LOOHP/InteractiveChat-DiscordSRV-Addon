@@ -20,6 +20,11 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.textures;
 
+import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.NineSliceImage;
+
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +42,8 @@ public class TextureGui {
     }
 
     public static class Scaling<T extends ScalingProperty> {
+
+        public static final Scaling<StretchScalingProperty> DEFAULT_SCALING = new Scaling<>(ScalingType.STRETCH, new StretchScalingProperty());
 
         private final ScalingType<T> scalingType;
         private final T scalingProperty;
@@ -111,10 +118,19 @@ public class TextureGui {
 
     public static abstract class ScalingProperty {
 
+        public abstract BufferedImage apply(BufferedImage source, int dstWidth, int dstHeight);
+
     }
 
     public static class StretchScalingProperty extends ScalingProperty {
 
+        @Override
+        public BufferedImage apply(BufferedImage source, int dstWidth, int dstHeight) {
+            if (source.getWidth() != dstWidth || source.getHeight() != dstHeight) {
+                return ImageUtils.resizeImageAbs(source, dstWidth, dstHeight);
+            }
+            return ImageUtils.copyImage(source);
+        }
     }
 
     public static class TileScalingProperty extends ScalingProperty {
@@ -134,6 +150,22 @@ public class TextureGui {
         public int getHeight() {
             return height;
         }
+
+        @Override
+        public BufferedImage apply(BufferedImage source, int dstWidth, int dstHeight) {
+            if (source.getWidth() != dstWidth || source.getHeight() != dstHeight) {
+                BufferedImage image = new BufferedImage(dstWidth, dstHeight, BufferedImage.TYPE_INT_ARGB);
+                Graphics2D g = image.createGraphics();
+                for (int y = 0; y < dstHeight; y += source.getHeight()) {
+                    for (int x = 0; x < dstWidth; x += source.getWidth()) {
+                        g.drawImage(source, x, y, null);
+                    }
+                }
+                g.dispose();
+                return image;
+            }
+            return ImageUtils.copyImage(source);
+        }
     }
 
     public static class NineSliceScalingProperty extends ScalingProperty {
@@ -144,14 +176,16 @@ public class TextureGui {
         private final int borderTop;
         private final int borderRight;
         private final int borderBottom;
+        private final boolean stretchInner;
 
-        public NineSliceScalingProperty(int width, int height, int borderLeft, int borderTop, int borderRight, int borderBottom) {
+        public NineSliceScalingProperty(int width, int height, int borderLeft, int borderTop, int borderRight, int borderBottom, boolean stretchInner) {
             this.width = width;
             this.height = height;
             this.borderLeft = borderLeft;
             this.borderTop = borderTop;
             this.borderRight = borderRight;
             this.borderBottom = borderBottom;
+            this.stretchInner = stretchInner;
         }
 
         public int getWidth() {
@@ -176,6 +210,18 @@ public class TextureGui {
 
         public int getBorderBottom() {
             return borderBottom;
+        }
+
+        public boolean isStretchInner() {
+            return stretchInner;
+        }
+
+        @Override
+        public BufferedImage apply(BufferedImage source, int dstWidth, int dstHeight) {
+            if (source.getWidth() != dstWidth || source.getHeight() != dstHeight) {
+                return NineSliceImage.createExpanded(source, this, dstWidth, dstHeight);
+            }
+            return ImageUtils.copyImage(source);
         }
     }
 

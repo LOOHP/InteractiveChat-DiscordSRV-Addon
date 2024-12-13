@@ -30,6 +30,8 @@ import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.definitions.equipment.EquipmentModelDefinitionManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.definitions.item.ItemModelDefinitionManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageMeta;
@@ -67,6 +69,8 @@ public class ResourceManager implements AutoCloseable {
 
     private final Map<String, IResourceRegistry> resourceRegistries;
 
+    private final ItemModelDefinitionManager itemModelDefinitionManager;
+    private final EquipmentModelDefinitionManager equipmentModelDefinitionManager;
     private final ModelManager modelManager;
     private final TextureManager textureManager;
     private final FontManager fontManager;
@@ -97,6 +101,8 @@ public class ResourceManager implements AutoCloseable {
             this.resourceRegistries.put(resourceRegistry.getRegistryIdentifier(), resourceRegistry);
         }
 
+        this.itemModelDefinitionManager = new ItemModelDefinitionManager(this);
+        this.equipmentModelDefinitionManager = new EquipmentModelDefinitionManager(this);
         this.modelManager = new ModelManager(this);
         this.textureManager = new TextureManager(this);
         this.fontManager = new FontManager(this);
@@ -324,6 +330,8 @@ public class ResourceManager implements AutoCloseable {
             Pattern namespace = resourceFilterBlock.getNamespace();
             Pattern path = resourceFilterBlock.getPath();
 
+            ((AbstractManager) itemModelDefinitionManager).filterResources(namespace, path);
+            ((AbstractManager) equipmentModelDefinitionManager).filterResources(namespace, path);
             ((AbstractManager) modelManager).filterResources(namespace, path);
             ((AbstractManager) textureManager).filterResources(namespace, path);
             ((AbstractManager) fontManager).filterResources(namespace, path);
@@ -333,6 +341,8 @@ public class ResourceManager implements AutoCloseable {
             }
         }
 
+        ((AbstractManager) itemModelDefinitionManager).reload();
+        ((AbstractManager) equipmentModelDefinitionManager).reload();
         ((AbstractManager) modelManager).reload();
         ((AbstractManager) textureManager).reload();
         ((AbstractManager) fontManager).reload();
@@ -365,6 +375,24 @@ public class ResourceManager implements AutoCloseable {
             throw new IllegalArgumentException(assetsFolder.getAbsolutePath() + " is not a directory.");
         }
         Collection<ResourcePackFile> folders = assetsFolder.listFilesAndFolders();
+        for (ResourcePackFile folder : folders) {
+            if (folder.isDirectory()) {
+                String namespace = folder.getName();
+                ResourcePackFile equipment = folder.getChild("equipment");
+                if (equipment.exists() && equipment.isDirectory()) {
+                    ((AbstractManager) equipmentModelDefinitionManager).loadDirectory(namespace, equipment);
+                }
+            }
+        }
+        for (ResourcePackFile folder : folders) {
+            if (folder.isDirectory()) {
+                String namespace = folder.getName();
+                ResourcePackFile items = folder.getChild("items");
+                if (items.exists() && items.isDirectory()) {
+                    ((AbstractManager) itemModelDefinitionManager).loadDirectory(namespace, items);
+                }
+            }
+        }
         for (ResourcePackFile folder : folders) {
             if (folder.isDirectory()) {
                 String namespace = folder.getName();
@@ -434,6 +462,14 @@ public class ResourceManager implements AutoCloseable {
 
     public int getNativeServerPackFormat() {
         return nativeServerPackFormat;
+    }
+
+    public ItemModelDefinitionManager getItemModelDefinitionManager() {
+        return itemModelDefinitionManager;
+    }
+
+    public EquipmentModelDefinitionManager getEquipmentModelDefinitionManager() {
+        return equipmentModelDefinitionManager;
     }
 
     public ModelManager getModelManager() {
@@ -550,6 +586,8 @@ public class ResourceManager implements AutoCloseable {
                 resourceRegistry.close();
             }
 
+            itemModelDefinitionManager.close();
+            equipmentModelDefinitionManager.close();
             modelManager.close();
             textureManager.close();
             fontManager.close();
@@ -613,7 +651,8 @@ public class ResourceManager implements AutoCloseable {
     public enum Flag {
 
         LEGACY_PRE_FLATTEN(true),
-        LEGACY_HARDCODED_SPACE_FONT(true);
+        LEGACY_HARDCODED_SPACE_FONT(true),
+        LEGACY_MODEL_DEFINITION(true);
 
         private final static Flag[] VALUES = values();
 

@@ -31,6 +31,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.SteppedIntegerRang
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ICacheManager;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ModelLayer;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RawEnchantmentGlintData;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RenderResult;
@@ -591,7 +592,13 @@ public class BlockModelRenderer extends JFrame {
                 int packFormat = GUIMain.getDefaultPackVersion((Integer) defaultPackVersionSpinner.getValue());
                 defaultPackVersionSpinner.setValue(packFormat);
 
-                resourceManager = new ResourceManager(packFormat, Collections.emptyList(), Collections.singletonList(ICacheManager.getDummySupplier()), PackFormat.version(packFormat));
+                resourceManager = new ResourceManager(
+                        packFormat,
+                        Collections.emptyList(),
+                        Collections.singletonList(ICacheManager.getDummySupplier()),
+                        PackFormat.version(packFormat),
+                        ResourceManager.Flag.build(false, packFormat < 9, packFormat < 46)
+                );
                 resourceManager.loadResources(new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN, true);
                 resourceBar.setValue(valuePerPack);
                 for (String resourceName : resourceOrder) {
@@ -698,7 +705,7 @@ public class BlockModelRenderer extends JFrame {
             modelRenderer.reloadPoolSize();
             long start = System.currentTimeMillis();
             try {
-                RenderResult result = modelRenderer.render((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), (int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), new SteppedIntegerRange((int) spinnerTick.getValue()), resourceManager, null, false, key, ModelDisplayPosition.GUI, predicates, providedTextures, tintColorProvider, enchantedCheckBox.isSelected(), altPosBox.isSelected(), parameters -> getEnchantedImage(parameters.getImage(), parameters.getGlintType(), parameters.getTick()), parameters -> new RawEnchantmentGlintData(Collections.singletonList(getRawEnchantedImage(parameters.getImage(), parameters.getGlintType(), parameters.getTick())), Collections.singletonList(OpenGLBlending.GLINT)));
+                RenderResult result = modelRenderer.render((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), (int) spinnerWidth.getValue(), (int) spinnerHeight.getValue(), new SteppedIntegerRange((int) spinnerTick.getValue()), resourceManager, false, ModelDisplayPosition.GUI, Collections.singletonList(new ModelLayer(key, predicates, providedTextures, tintColorProvider, null)), enchantedCheckBox.isSelected(), altPosBox.isSelected(), parameters -> getEnchantedImage(parameters.getImage(), parameters.getGlintType(), parameters.getTick()), parameters -> new RawEnchantmentGlintData(Collections.singletonList(getRawEnchantedImage(parameters.getImage(), parameters.getGlintType(), parameters.getTick())), Collections.singletonList(OpenGLBlending.GLINT)));
                 long end = System.currentTimeMillis();
                 if (result.isSuccessful()) {
                     renderedImage = result.getImage(0);
