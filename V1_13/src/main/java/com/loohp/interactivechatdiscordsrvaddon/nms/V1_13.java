@@ -475,9 +475,9 @@ public class V1_13 extends NMSAddonWrapper {
     }
 
     @Override
-    public String getEnchantmentTranslationKey(Enchantment enchantment) {
+    public Component getEnchantmentDescription(Enchantment enchantment) {
         NamespacedKey namespacedKey = enchantment.getKey();
-        return "enchantment." + namespacedKey.getNamespace() + "." + namespacedKey.getKey();
+        return Component.translatable("enchantment." + namespacedKey.getNamespace() + "." + namespacedKey.getKey());
     }
 
     @Override

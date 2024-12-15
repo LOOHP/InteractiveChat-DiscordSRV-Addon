@@ -410,8 +410,8 @@ public class V1_8 extends NMSAddonWrapper {
 
     @SuppressWarnings("deprecation")
     @Override
-    public String getEnchantmentTranslationKey(Enchantment enchantment) {
-        return net.minecraft.server.v1_8_R1.Enchantment.getById(enchantment.getId()).a();
+    public Component getEnchantmentDescription(Enchantment enchantment) {
+        return Component.translatable(net.minecraft.server.v1_8_R1.Enchantment.getById(enchantment.getId()).a());
     }
 
     @Override

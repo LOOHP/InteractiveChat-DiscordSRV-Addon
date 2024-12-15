@@ -253,8 +253,8 @@ public class TranslationKeyUtils {
         return "potion.withDuration";
     }
 
-    public static String getEnchantment(Enchantment enchantment) {
-        return NMSAddon.getInstance().getEnchantmentTranslationKey(enchantment);
+    public static Component getEnchantmentDescription(Enchantment enchantment) {
+        return NMSAddon.getInstance().getEnchantmentDescription(enchantment);
     }
 
     public static String getEnchantmentLevel(int level) {

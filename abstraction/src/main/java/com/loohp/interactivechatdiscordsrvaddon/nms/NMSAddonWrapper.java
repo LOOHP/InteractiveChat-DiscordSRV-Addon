@@ -147,7 +147,7 @@ public abstract class NMSAddonWrapper {
 
     public abstract Component getMusicDiscNameTranslationKey(ItemStack disc);
 
-    public abstract String getEnchantmentTranslationKey(Enchantment enchantment);
+    public abstract Component getEnchantmentDescription(Enchantment enchantment);
 
     public abstract String getEffectTranslationKey(PotionEffectType type);
 

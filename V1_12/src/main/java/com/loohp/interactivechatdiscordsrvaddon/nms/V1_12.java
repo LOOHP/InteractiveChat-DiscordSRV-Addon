@@ -463,8 +463,8 @@ public class V1_12 extends NMSAddonWrapper {
     }
 
     @Override
-    public String getEnchantmentTranslationKey(Enchantment enchantment) {
-        return ((CraftEnchantment) enchantment).getHandle().a();
+    public Component getEnchantmentDescription(Enchantment enchantment) {
+        return Component.translatable(((CraftEnchantment) enchantment).getHandle().a());
     }
 
     @Override

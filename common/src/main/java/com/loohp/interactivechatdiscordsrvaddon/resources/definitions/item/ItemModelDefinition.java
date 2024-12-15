@@ -259,7 +259,7 @@ public abstract class ItemModelDefinition {
 
     private static String ensureNamespace(String key) {
         if (!key.contains(":")) {
-            return ResourceRegistry.DEFAULT_NAMESPACE + key;
+            return ResourceRegistry.DEFAULT_NAMESPACE + ":" + key;
         }
         return key;
     }

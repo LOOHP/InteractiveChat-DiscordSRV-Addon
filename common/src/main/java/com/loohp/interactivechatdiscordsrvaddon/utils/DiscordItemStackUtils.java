@@ -144,7 +144,7 @@ import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getDyeColor;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getEffect;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getEffectLevel;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getEnchantment;
+import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getEnchantmentDescription;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getEnchantmentLevel;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getEntityTypeName;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getFilledMapId;
@@ -647,19 +647,18 @@ public class DiscordItemStackUtils {
             for (Entry<Enchantment, Integer> entry : enchantments.entrySet()) {
                 Enchantment enchantment = entry.getKey();
                 int level = entry.getValue();
-                String key = getEnchantment(enchantment);
+                Component description = getEnchantmentDescription(enchantment);
                 String enchantmentName;
-                if (key.equals(getTranslation(key, language))) {
-                    continue;
-                } else {
-                    enchantmentName = key;
-                }
-                if (enchantmentName != null) {
-                    if (enchantment.getMaxLevel() == 1 && level == 1) {
-                        prints.add(tooltipText(translatable(enchantmentName).color(GRAY)));
-                    } else {
-                        prints.add(tooltipText(translatable(enchantmentName).append(text(" ")).append(translatable(getEnchantmentLevel(level))).color(GRAY)));
+                if (description instanceof com.loohp.interactivechat.libs.net.kyori.adventure.text.TranslatableComponent) {
+                    String key = ((com.loohp.interactivechat.libs.net.kyori.adventure.text.TranslatableComponent) description).key();
+                    if (key.equals(getTranslation(key, language))) {
+                        continue;
                     }
+                }
+                if (enchantment.getMaxLevel() == 1 && level == 1) {
+                    prints.add(tooltipText(description.color(GRAY)));
+                } else {
+                    prints.add(tooltipText(description.append(text(" ")).append(translatable(getEnchantmentLevel(level))).color(GRAY)));
                 }
             }
         }

@@ -56,6 +56,7 @@ import net.minecraft.core.IRegistryCustom;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.chat.IChatBaseComponent;
 import net.minecraft.resources.MinecraftKey;
 import net.minecraft.server.level.EntityPlayer;
 import net.minecraft.server.level.WorldServer;
@@ -97,6 +98,7 @@ import org.bukkit.craftbukkit.v1_21_R2.CraftEquipmentSlot;
 import org.bukkit.craftbukkit.v1_21_R2.CraftWorld;
 import org.bukkit.craftbukkit.v1_21_R2.advancement.CraftAdvancement;
 import org.bukkit.craftbukkit.v1_21_R2.attribute.CraftAttributeInstance;
+import org.bukkit.craftbukkit.v1_21_R2.enchantments.CraftEnchantment;
 import org.bukkit.craftbukkit.v1_21_R2.entity.CraftEntity;
 import org.bukkit.craftbukkit.v1_21_R2.entity.CraftEntityType;
 import org.bukkit.craftbukkit.v1_21_R2.entity.CraftLivingEntity;
@@ -568,9 +570,9 @@ public class V1_21_2 extends NMSAddonWrapper {
     }
 
     @Override
-    public String getEnchantmentTranslationKey(Enchantment enchantment) {
-        NamespacedKey namespacedKey = enchantment.getKey();
-        return "enchantment." + namespacedKey.getNamespace() + "." + namespacedKey.getKey();
+    public Component getEnchantmentDescription(Enchantment enchantment) {
+        IChatBaseComponent description = CraftEnchantment.bukkitToMinecraft(enchantment).f();
+        return InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(description));
     }
 
     @Override
