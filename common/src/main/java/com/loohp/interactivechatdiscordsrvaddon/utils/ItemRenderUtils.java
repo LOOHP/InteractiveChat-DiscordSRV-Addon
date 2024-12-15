@@ -1167,6 +1167,9 @@ public class ItemRenderUtils {
     }
 
     private static String ensureNamespace(String key) {
+        if (key == null) {
+            return null;
+        }
         if (!key.contains(":")) {
             return ResourceRegistry.DEFAULT_NAMESPACE + ":" + key;
         }

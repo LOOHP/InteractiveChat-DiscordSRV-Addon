@@ -52,10 +52,12 @@ import net.minecraft.advancements.critereon.CriterionConditionBlock;
 import net.minecraft.core.BlockPosition;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
+import net.minecraft.core.IRegistry;
 import net.minecraft.core.IRegistryCustom;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.chat.IChatBaseComponent;
 import net.minecraft.resources.MinecraftKey;
@@ -69,7 +71,6 @@ import net.minecraft.world.entity.EntityLiving;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.animal.EntityTropicalFish;
 import net.minecraft.world.entity.animal.EntityTropicalFish.d;
-import net.minecraft.world.entity.decoration.EntityPainting;
 import net.minecraft.world.entity.projectile.EntityFishingHook;
 import net.minecraft.world.item.AdventureModePredicate;
 import net.minecraft.world.item.Instrument;
@@ -85,11 +86,13 @@ import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.item.enchantment.EnchantmentManager;
 import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.item.equipment.trim.TrimMaterial;
+import net.minecraft.world.item.equipment.trim.TrimPattern;
 import net.minecraft.world.level.biome.BiomeBase;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.DecoratedPotPatterns;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import org.bukkit.Bukkit;
+import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -100,6 +103,7 @@ import org.bukkit.craftbukkit.v1_21_R3.CraftEquipmentSlot;
 import org.bukkit.craftbukkit.v1_21_R3.CraftWorld;
 import org.bukkit.craftbukkit.v1_21_R3.advancement.CraftAdvancement;
 import org.bukkit.craftbukkit.v1_21_R3.attribute.CraftAttributeInstance;
+import org.bukkit.craftbukkit.v1_21_R3.block.banner.CraftPatternType;
 import org.bukkit.craftbukkit.v1_21_R3.enchantments.CraftEnchantment;
 import org.bukkit.craftbukkit.v1_21_R3.entity.CraftEntity;
 import org.bukkit.craftbukkit.v1_21_R3.entity.CraftEntityType;
@@ -107,6 +111,7 @@ import org.bukkit.craftbukkit.v1_21_R3.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v1_21_R3.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_21_R3.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v1_21_R3.inventory.trim.CraftTrimMaterial;
+import org.bukkit.craftbukkit.v1_21_R3.inventory.trim.CraftTrimPattern;
 import org.bukkit.craftbukkit.v1_21_R3.potion.CraftPotionEffectType;
 import org.bukkit.craftbukkit.v1_21_R3.potion.CraftPotionUtil;
 import org.bukkit.craftbukkit.v1_21_R3.util.CraftChatMessage;
@@ -401,15 +406,15 @@ public class V1_21_4 extends NMSAddonWrapper {
         return nmsItemStack.a(DataComponents.Y) != null;
     }
 
-    @SuppressWarnings("PatternValidation")
     @Override
-    public Key getGoatHornInstrument(ItemStack itemStack) {
+    public Component getInstrumentDescription(ItemStack itemStack) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
         Holder<Instrument> holder = nmsItemStack.a(DataComponents.Z);
         if (holder == null) {
             return null;
         }
-        return holder.e().map(r -> Key.key(r.b().b(), r.b().a())).orElse(null);
+        IChatBaseComponent description = holder.a().d();
+        return InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(description));
     }
 
     @SuppressWarnings("PatternValidation")
@@ -420,13 +425,20 @@ public class V1_21_4 extends NMSAddonWrapper {
         if (customData == null) {
             return null;
         }
-        Optional<Holder<net.minecraft.world.entity.decoration.PaintingVariant>> optional = customData.a(EntityPainting.d).result();
-        if (!optional.isPresent()) {
+        NBTTagCompound nbt = customData.d();
+        if (nbt == null || !nbt.b("variant", 8)) {
             return null;
         }
-        net.minecraft.world.entity.decoration.PaintingVariant paintingVariant = optional.get().a();
-        MinecraftKey key = paintingVariant.d();
-        return new PaintingVariant(Key.key(key.b(), key.a()), paintingVariant.a() / 16, paintingVariant.b() / 16);
+        MinecraftKey key = MinecraftKey.a(nbt.l("variant"));
+        IRegistryCustom customRegistry = ((CraftWorld) Bukkit.getWorlds().get(0)).getHandle().K_();
+        IRegistry<net.minecraft.world.entity.decoration.PaintingVariant> paintingRegistry = customRegistry.e(Registries.X);
+        net.minecraft.world.entity.decoration.PaintingVariant paintingVariant = paintingRegistry.a(key);
+        if (paintingVariant == null) {
+            return null;
+        }
+        Optional<Component> title = paintingVariant.e().map(c -> InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(c)));
+        Optional<Component> author = paintingVariant.f().map(c -> InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(c)));
+        return new PaintingVariant(Key.key(key.b(), key.a()), paintingVariant.b(), paintingVariant.c(), title, author);
     }
 
     @Override
@@ -547,7 +559,7 @@ public class V1_21_4 extends NMSAddonWrapper {
     }
 
     @Override
-    public Component getMusicDiscNameTranslationKey(ItemStack disc) {
+    public Component getJukeboxSongDescription(ItemStack disc) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(disc);
         JukeboxPlayable jukeboxPlayable = nmsItemStack.a(DataComponents.ab);
         if (jukeboxPlayable == null) {
@@ -769,6 +781,32 @@ public class V1_21_4 extends NMSAddonWrapper {
         }
         NamespacedKey namespacedKey = itemMeta.getTooltipStyle();
         return Key.key(namespacedKey.getNamespace(), namespacedKey.getKey());
+    }
+
+    @Override
+    public String getBannerPatternTranslationKey(PatternType type, DyeColor color) {
+        String translationKey = CraftPatternType.bukkitToMinecraft(type).b();
+        return translationKey + "." + color.name().toLowerCase();
+    }
+
+    @Override
+    public Component getTrimMaterialDescription(Object trimMaterial) {
+        TrimMaterial material = CraftTrimMaterial.bukkitToMinecraft((org.bukkit.inventory.meta.trim.TrimMaterial) trimMaterial);
+        IChatBaseComponent description = material.d();
+        return InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(description));
+    }
+
+    @Override
+    public Component getTrimPatternDescription(Object trimPattern, Object trimMaterial) {
+        TrimPattern pattern = CraftTrimPattern.bukkitToMinecraft((org.bukkit.inventory.meta.trim.TrimPattern) trimPattern);
+        IChatBaseComponent description;
+        if (trimMaterial == null) {
+            description = pattern.c();
+        } else {
+            TrimMaterial material = CraftTrimMaterial.bukkitToMinecraft((org.bukkit.inventory.meta.trim.TrimMaterial) trimMaterial);
+            description = pattern.a(Holder.a(material));
+        }
+        return InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(description));
     }
 
 }

@@ -38,6 +38,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import net.md_5.bungee.api.ChatColor;
+import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -117,7 +118,7 @@ public abstract class NMSAddonWrapper {
 
     public abstract boolean hasBlockEntityTag(ItemStack itemStack);
 
-    public abstract Key getGoatHornInstrument(ItemStack itemStack);
+    public abstract Component getInstrumentDescription(ItemStack itemStack);
 
     public abstract PaintingVariant getPaintingVariant(ItemStack itemStack);
 
@@ -145,7 +146,7 @@ public abstract class NMSAddonWrapper {
 
     public abstract boolean shouldSongShowInToolTip(ItemStack disc);
 
-    public abstract Component getMusicDiscNameTranslationKey(ItemStack disc);
+    public abstract Component getJukeboxSongDescription(ItemStack disc);
 
     public abstract Component getEnchantmentDescription(Enchantment enchantment);
 
@@ -202,5 +203,11 @@ public abstract class NMSAddonWrapper {
     public abstract Boolean getEnchantmentGlintOverride(ItemStack itemStack);
 
     public abstract Key getCustomTooltipResourceLocation(ItemStack itemStack);
+
+    public abstract String getBannerPatternTranslationKey(PatternType type, DyeColor color);
+
+    public abstract Component getTrimMaterialDescription(Object trimMaterial);
+
+    public abstract Component getTrimPatternDescription(Object trimPattern, Object trimMaterial);
 
 }

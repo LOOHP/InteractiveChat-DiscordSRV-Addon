@@ -123,12 +123,9 @@ import static com.loohp.interactivechat.libs.net.kyori.adventure.text.format.Nam
 import static com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor.GRAY;
 import static com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor.RED;
 import static com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor.WHITE;
-import static com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor.YELLOW;
 import static com.loohp.interactivechat.utils.LanguageUtils.getTranslation;
 import static com.loohp.interactivechat.utils.LanguageUtils.getTranslationKey;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils.join;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getArmorTrimMaterialDescription;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getArmorTrimPatternDescription;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getAttributeModifierKey;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getBannerPatternItemName;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getBannerPatternName;
@@ -155,16 +152,13 @@ import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getFireworkFlicker;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getFireworkTrail;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getFireworkType;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getGoatHornInstrument;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getItemComponents;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getItemNbtTag;
+import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getJukeboxSongDescription;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getModifierSlotGroupKey;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getModifierSlotKey;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getMusicDiscName;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getNoEffect;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getPaintingAuthor;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getPaintingDimension;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getPaintingTitle;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getPotionDurationInfinite;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getPotionWhenDrunk;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getPotionWithAmplifier;
@@ -295,14 +289,13 @@ public class DiscordItemStackUtils {
             ArmorMeta armorMeta = (ArmorMeta) item.getItemMeta();
             ArmorTrim armorTrim = armorMeta.getTrim();
             if (armorTrim != null && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ARMOR_TRIM)) {
-                TrimMaterial trimMaterial = armorTrim.getMaterial();
                 TrimPattern trimPattern = armorTrim.getPattern();
-                Key material = KeyUtils.toKey(trimMaterial.getKey());
-                Key pattern = KeyUtils.toKey(trimPattern.getKey());
+                TrimMaterial trimMaterial = armorTrim.getMaterial();
+                Component trimPatternDescription = NMSAddon.getInstance().getTrimPatternDescription(trimPattern, trimMaterial);
+                Component trimMaterialDescription = NMSAddon.getInstance().getTrimMaterialDescription(trimMaterial);
                 prints.add(tooltipText(translatable(getSmithingTemplateUpgrade()).color(GRAY)));
-                TextColor color = NMSAddon.getInstance().getTrimMaterialColor(trimMaterial);
-                prints.add(tooltipText(text(" ").append(translatable(getArmorTrimPatternDescription(pattern)).color(color))));
-                prints.add(tooltipText(text(" ").append(translatable(getArmorTrimMaterialDescription(material)).color(color))));
+                prints.add(tooltipText(text(" ").append(trimPatternDescription)));
+                prints.add(tooltipText(text(" ").append(trimMaterialDescription)));
             }
         }
 
@@ -328,8 +321,8 @@ public class DiscordItemStackUtils {
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19_4) && icMaterial.isMaterial(XMaterial.PAINTING) && !hideAdditionalFlags) {
             PaintingVariant paintingVariant = NMSAddon.getInstance().getPaintingVariant(item);
             if (paintingVariant != null) {
-                prints.add(tooltipText(translatable(getPaintingTitle(paintingVariant)).color(YELLOW)));
-                prints.add(tooltipText(translatable(getPaintingAuthor(paintingVariant)).color(GRAY)));
+                paintingVariant.getTitle().ifPresent(title -> prints.add(tooltipText(title)));
+                paintingVariant.getAuthor().ifPresent(author -> prints.add(tooltipText(author)));
                 prints.add(tooltipText(translatable(getPaintingDimension()).arguments(text(paintingVariant.getBlockWidth()), text(paintingVariant.getBlockHeight())).color(WHITE)));
                 prints.add(tooltipImage(ImageGeneration.getPaintingImage(paintingVariant)));
             }
@@ -355,9 +348,9 @@ public class DiscordItemStackUtils {
         }
 
         if (icMaterial.isMaterial(XMaterial.GOAT_HORN) && !hideAdditionalFlags) {
-            Key instrument = NMSAddon.getInstance().getGoatHornInstrument(item);
-            if (instrument != null) {
-                prints.add(tooltipText(translatable(getGoatHornInstrument(instrument)).color(GRAY)));
+            Component description = NMSAddon.getInstance().getInstrumentDescription(item);
+            if (description != null) {
+                prints.add(tooltipText(description.color(GRAY)));
             }
         }
 
@@ -451,7 +444,7 @@ public class DiscordItemStackUtils {
         }
 
         if (NMSAddon.getInstance().isJukeboxPlayable(item) && NMSAddon.getInstance().shouldSongShowInToolTip(item)) {
-            prints.add(tooltipText(getMusicDiscName(item).color(GRAY)));
+            prints.add(tooltipText(getJukeboxSongDescription(item).color(GRAY)));
         }
 
         if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:disc_fragment")) && !hideAdditionalFlags) {

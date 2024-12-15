@@ -75,6 +75,7 @@ import net.minecraft.server.v1_14_R1.Paintings;
 import net.minecraft.server.v1_14_R1.PotionUtil;
 import net.minecraft.server.v1_14_R1.WorldServer;
 import org.bukkit.Bukkit;
+import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -348,12 +349,12 @@ public class V1_14 extends NMSAddonWrapper {
 
     @SuppressWarnings("PatternValidation")
     @Override
-    public Key getGoatHornInstrument(ItemStack itemStack) {
+    public Component getInstrumentDescription(ItemStack itemStack) {
         try {
             net.minecraft.server.v1_14_R1.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
             if (nmsItemStack.hasTag() && nmsItemStack.getTag().hasKey("instrument")) {
-                String instrument = nmsItemStack.getTag().getString("instrument");
-                return Key.key(instrument);
+                Key instrument = Key.key(nmsItemStack.getTag().getString("instrument"));
+                return Component.translatable("instrument." + instrument.namespace() + "." + instrument.value());
             }
         } catch (Exception ignored) {
         }
@@ -488,7 +489,7 @@ public class V1_14 extends NMSAddonWrapper {
     }
 
     @Override
-    public Component getMusicDiscNameTranslationKey(ItemStack disc) {
+    public Component getJukeboxSongDescription(ItemStack disc) {
         NamespacedKey namespacedKey = disc.getType().getKey();
         return Component.translatable("item." + namespacedKey.getNamespace() + "." + namespacedKey.getKey() + ".desc");
     }
@@ -660,6 +661,22 @@ public class V1_14 extends NMSAddonWrapper {
     @Override
     public Key getCustomTooltipResourceLocation(ItemStack itemStack) {
         return null;
+    }
+
+    @Override
+    public String getBannerPatternTranslationKey(PatternType type, DyeColor color) {
+        Key typeKey = getPatternTypeKey(type);
+        return "block.minecraft.banner." + typeKey.value() + "." + color.name().toLowerCase();
+    }
+
+    @Override
+    public Component getTrimMaterialDescription(Object trimMaterial) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Component getTrimPatternDescription(Object trimPattern, Object trimMaterial) {
+        throw new UnsupportedOperationException();
     }
 
 }

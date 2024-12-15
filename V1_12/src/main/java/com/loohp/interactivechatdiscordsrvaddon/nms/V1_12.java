@@ -26,6 +26,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
+import com.loohp.interactivechat.libs.org.apache.commons.text.WordUtils;
 import com.loohp.interactivechat.nms.NMS;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
@@ -68,6 +69,7 @@ import net.minecraft.server.v1_12_R1.NBTTagCompound;
 import net.minecraft.server.v1_12_R1.NBTTagList;
 import net.minecraft.server.v1_12_R1.PotionUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -323,12 +325,12 @@ public class V1_12 extends NMSAddonWrapper {
 
     @SuppressWarnings("PatternValidation")
     @Override
-    public Key getGoatHornInstrument(ItemStack itemStack) {
+    public Component getInstrumentDescription(ItemStack itemStack) {
         try {
             net.minecraft.server.v1_12_R1.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
             if (nmsItemStack.hasTag() && nmsItemStack.getTag().hasKey("instrument")) {
-                String instrument = nmsItemStack.getTag().getString("instrument");
-                return Key.key(instrument);
+                Key instrument = Key.key(nmsItemStack.getTag().getString("instrument"));
+                return Component.translatable("instrument." + instrument.namespace() + "." + instrument.value());
             }
         } catch (Exception ignored) {
         }
@@ -451,7 +453,7 @@ public class V1_12 extends NMSAddonWrapper {
     }
 
     @Override
-    public Component getMusicDiscNameTranslationKey(ItemStack disc) {
+    public Component getJukeboxSongDescription(ItemStack disc) {
         try {
             itemRecordTranslationKeyField.setAccessible(true);
             net.minecraft.server.v1_12_R1.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(disc);
@@ -631,6 +633,24 @@ public class V1_12 extends NMSAddonWrapper {
     @Override
     public Key getCustomTooltipResourceLocation(ItemStack itemStack) {
         return null;
+    }
+
+    @Override
+    public String getBannerPatternTranslationKey(PatternType type, DyeColor color) {
+        Key typeKey = getPatternTypeKey(type);
+        String colorName = WordUtils.capitalizeFully(color.name().toLowerCase().replace("_", " ")).replace(" ", "");
+        colorName = colorName.substring(0, 1).toLowerCase() + colorName.substring(1);
+        return "item.banner." + typeKey.value() + "." + colorName;
+    }
+
+    @Override
+    public Component getTrimMaterialDescription(Object trimMaterial) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Component getTrimPatternDescription(Object trimPattern, Object trimMaterial) {
+        throw new UnsupportedOperationException();
     }
 
 }

@@ -55,6 +55,7 @@ import net.minecraft.core.HolderSet;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.chat.IChatBaseComponent;
 import net.minecraft.resources.MinecraftKey;
 import net.minecraft.server.level.EntityPlayer;
 import net.minecraft.server.level.WorldServer;
@@ -77,6 +78,7 @@ import net.minecraft.world.item.ItemMonsterEgg;
 import net.minecraft.world.item.ItemRecord;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.armortrim.TrimMaterial;
+import net.minecraft.world.item.armortrim.TrimPattern;
 import net.minecraft.world.item.component.BundleContents;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.DyedItemColor;
@@ -87,6 +89,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.DecoratedPotPatterns;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import org.bukkit.Bukkit;
+import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -97,12 +100,14 @@ import org.bukkit.craftbukkit.v1_20_R4.CraftEquipmentSlot;
 import org.bukkit.craftbukkit.v1_20_R4.CraftWorld;
 import org.bukkit.craftbukkit.v1_20_R4.advancement.CraftAdvancement;
 import org.bukkit.craftbukkit.v1_20_R4.attribute.CraftAttributeInstance;
+import org.bukkit.craftbukkit.v1_20_R4.block.banner.CraftPatternType;
 import org.bukkit.craftbukkit.v1_20_R4.entity.CraftEntity;
 import org.bukkit.craftbukkit.v1_20_R4.entity.CraftEntityType;
 import org.bukkit.craftbukkit.v1_20_R4.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v1_20_R4.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_20_R4.inventory.CraftItemStack;
 import org.bukkit.craftbukkit.v1_20_R4.inventory.trim.CraftTrimMaterial;
+import org.bukkit.craftbukkit.v1_20_R4.inventory.trim.CraftTrimPattern;
 import org.bukkit.craftbukkit.v1_20_R4.potion.CraftPotionEffectType;
 import org.bukkit.craftbukkit.v1_20_R4.potion.CraftPotionUtil;
 import org.bukkit.craftbukkit.v1_20_R4.util.CraftChatMessage;
@@ -409,14 +414,15 @@ public class V1_20_6 extends NMSAddonWrapper {
 
     @SuppressWarnings("PatternValidation")
     @Override
-    public Key getGoatHornInstrument(ItemStack itemStack) {
+    public Component getInstrumentDescription(ItemStack itemStack) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
         Holder<Instrument> holder = nmsItemStack.a(DataComponents.P);
         if (holder == null) {
             return null;
         }
         MinecraftKey key = BuiltInRegistries.am.b(holder.a());
-        return Key.key(key.b(), key.a());
+        Key instrument = Key.key(key.b(), key.a());
+        return Component.translatable("instrument." + instrument.namespace() + "." + instrument.value());
     }
 
     @SuppressWarnings("PatternValidation")
@@ -433,7 +439,7 @@ public class V1_20_6 extends NMSAddonWrapper {
         }
         net.minecraft.world.entity.decoration.PaintingVariant paintingVariant = optional.get().a();
         MinecraftKey key = BuiltInRegistries.l.b(paintingVariant);
-        return new PaintingVariant(Key.key(key.b(), key.a()), paintingVariant.a() / 16, paintingVariant.b() / 16);
+        return new PaintingVariant(Key.key(key.b(), key.a()), paintingVariant.a(), paintingVariant.b());
     }
 
     @Override
@@ -551,7 +557,7 @@ public class V1_20_6 extends NMSAddonWrapper {
     }
 
     @Override
-    public Component getMusicDiscNameTranslationKey(ItemStack disc) {
+    public Component getJukeboxSongDescription(ItemStack disc) {
         NamespacedKey namespacedKey = disc.getType().getKey();
         return Component.translatable("item." + namespacedKey.getNamespace() + "." + namespacedKey.getKey() + ".desc");
     }
@@ -738,6 +744,32 @@ public class V1_20_6 extends NMSAddonWrapper {
     @Override
     public Key getCustomTooltipResourceLocation(ItemStack itemStack) {
         return null;
+    }
+
+    @Override
+    public String getBannerPatternTranslationKey(PatternType type, DyeColor color) {
+        String translationKey = CraftPatternType.bukkitToMinecraft(type).b();
+        return translationKey + "." + color.name().toLowerCase();
+    }
+
+    @Override
+    public Component getTrimMaterialDescription(Object trimMaterial) {
+        TrimMaterial material = CraftTrimMaterial.bukkitToMinecraft((org.bukkit.inventory.meta.trim.TrimMaterial) trimMaterial);
+        IChatBaseComponent description = material.e();
+        return InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(description));
+    }
+
+    @Override
+    public Component getTrimPatternDescription(Object trimPattern, Object trimMaterial) {
+        TrimPattern pattern = CraftTrimPattern.bukkitToMinecraft((org.bukkit.inventory.meta.trim.TrimPattern) trimPattern);
+        IChatBaseComponent description;
+        if (trimMaterial == null) {
+            description = pattern.c();
+        } else {
+            TrimMaterial material = CraftTrimMaterial.bukkitToMinecraft((org.bukkit.inventory.meta.trim.TrimMaterial) trimMaterial);
+            description = pattern.a(Holder.a(material));
+        }
+        return InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(description));
     }
 
 }

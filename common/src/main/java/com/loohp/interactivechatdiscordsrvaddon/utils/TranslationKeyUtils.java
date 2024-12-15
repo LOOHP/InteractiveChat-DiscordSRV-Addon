@@ -27,7 +27,6 @@ import com.loohp.interactivechat.libs.org.apache.commons.text.WordUtils;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackType;
 import org.bukkit.Color;
 import org.bukkit.DyeColor;
@@ -65,14 +64,6 @@ public class TranslationKeyUtils {
 
     public static String getPotterySherdName(Key material) {
         return "item." + material.namespace() + "." + material.value();
-    }
-
-    public static String getArmorTrimMaterialDescription(Key material) {
-        return "trim_material." + material.namespace() + "." + material.value();
-    }
-
-    public static String getArmorTrimPatternDescription(Key pattern) {
-        return "trim_pattern." + pattern.namespace() + "." + pattern.value();
     }
 
     public static String getSmithingTemplateUpgrade() {
@@ -114,16 +105,6 @@ public class TranslationKeyUtils {
             return "trim_pattern." + namespace + "." + key;
         }
         return material.asString();
-    }
-
-    public static String getPaintingTitle(PaintingVariant paintingVariant) {
-        Key key = paintingVariant.getKey();
-        return "painting." + key.namespace() + "." + key.value() + ".title";
-    }
-
-    public static String getPaintingAuthor(PaintingVariant paintingVariant) {
-        Key key = paintingVariant.getKey();
-        return "painting." + key.namespace() + "." + key.value() + ".author";
     }
 
     public static String getPaintingDimension() {
@@ -301,8 +282,8 @@ public class TranslationKeyUtils {
         }
     }
 
-    public static Component getMusicDiscName(ItemStack disc) {
-        return NMSAddon.getInstance().getMusicDiscNameTranslationKey(disc);
+    public static Component getJukeboxSongDescription(ItemStack disc) {
+        return NMSAddon.getInstance().getJukeboxSongDescription(disc);
     }
 
     public static String getDiscFragmentName(ItemStack fragment) {
@@ -336,14 +317,7 @@ public class TranslationKeyUtils {
     }
 
     public static String getBannerPatternName(PatternType type, DyeColor color) {
-        Key typeKey = NMSAddon.getInstance().getPatternTypeKey(type);
-        if (InteractiveChat.version.isLegacy()) {
-            String colorName = WordUtils.capitalizeFully(color.name().toLowerCase().replace("_", " ")).replace(" ", "");
-            colorName = colorName.substring(0, 1).toLowerCase() + colorName.substring(1);
-            return "item.banner." + typeKey.value() + "." + colorName;
-        } else {
-            return "block.minecraft.banner." + typeKey.value() + "." + color.name().toLowerCase();
-        }
+        return NMSAddon.getInstance().getBannerPatternTranslationKey(type, color);
     }
 
     public static String getAttributeModifierKey(boolean equalFlag, double amount, int operation) {
@@ -494,10 +468,6 @@ public class TranslationKeyUtils {
                 return "item.minecraft.firework_star." + dyeColor.name().toLowerCase();
             }
         }
-    }
-
-    public static String getGoatHornInstrument(Key instrument) {
-        return "instrument." + instrument.namespace() + "." + instrument.value();
     }
 
 }

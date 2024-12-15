@@ -420,8 +420,10 @@ public class ModelRenderer implements AutoCloseable {
                 for (int i = 0; i < images.length; i++) {
                     g[i].dispose();
                 }
-            } else {
+            } else if (layers.size() == 1) {
                 images = layers.get(0);
+            } else {
+                images = new BufferedImage[] {new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)};
             }
             for (int i = 0; i < images.length; i++) {
                 images[i] = ImageUtils.resizeImageQuality(images[i], width, height);

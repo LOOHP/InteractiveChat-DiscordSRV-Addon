@@ -80,6 +80,7 @@ import net.minecraft.world.level.block.entity.EnumBannerPatternType;
 import net.minecraft.world.level.block.entity.TileEntitySkull;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import org.bukkit.Bukkit;
+import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -114,6 +115,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.inventory.meta.trim.TrimPattern;
 import org.bukkit.map.MapCursor;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -395,12 +397,12 @@ public class V1_20_2 extends NMSAddonWrapper {
 
     @SuppressWarnings("PatternValidation")
     @Override
-    public Key getGoatHornInstrument(ItemStack itemStack) {
+    public Component getInstrumentDescription(ItemStack itemStack) {
         try {
             net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
             if (nmsItemStack.u() && nmsItemStack.v().e("instrument")) {
-                String instrument = nmsItemStack.v().l("instrument");
-                return Key.key(instrument);
+                Key instrument = Key.key(nmsItemStack.v().l("instrument"));
+                return Component.translatable("instrument." + instrument.namespace() + "." + instrument.value());
             }
         } catch (Exception ignored) {
         }
@@ -416,7 +418,7 @@ public class V1_20_2 extends NMSAddonWrapper {
                 String variant = nmsItemStack.v().p("EntityTag").l("variant");
                 MinecraftKey key = new MinecraftKey(variant);
                 net.minecraft.world.entity.decoration.PaintingVariant paintingVariant = BuiltInRegistries.m.a(key);
-                return new PaintingVariant(Key.key(key.b(), key.a()), paintingVariant.a() / 16, paintingVariant.b() / 16);
+                return new PaintingVariant(Key.key(key.b(), key.a()), paintingVariant.a(), paintingVariant.b());
             }
         } catch (Exception ignored) {
         }
@@ -538,7 +540,7 @@ public class V1_20_2 extends NMSAddonWrapper {
     }
 
     @Override
-    public Component getMusicDiscNameTranslationKey(ItemStack disc) {
+    public Component getJukeboxSongDescription(ItemStack disc) {
         NamespacedKey namespacedKey = disc.getType().getKey();
         return Component.translatable("item." + namespacedKey.getNamespace() + "." + namespacedKey.getKey() + ".desc");
     }
@@ -710,6 +712,28 @@ public class V1_20_2 extends NMSAddonWrapper {
     @Override
     public Key getCustomTooltipResourceLocation(ItemStack itemStack) {
         return null;
+    }
+
+    @Override
+    public String getBannerPatternTranslationKey(PatternType type, DyeColor color) {
+        Key typeKey = getPatternTypeKey(type);
+        return "block.minecraft.banner." + typeKey.value() + "." + color.name().toLowerCase();
+    }
+
+    @Override
+    public Component getTrimMaterialDescription(Object trimMaterial) {
+        NamespacedKey material = ((org.bukkit.inventory.meta.trim.TrimMaterial) trimMaterial).getKey();
+        String translationKey = "trim_material." + material.getNamespace() + "." + material.getKey();
+        TextColor color = getTrimMaterialColor(trimMaterial);
+        return Component.translatable(translationKey).color(color);
+    }
+
+    @Override
+    public Component getTrimPatternDescription(Object trimPattern, Object trimMaterial) {
+        NamespacedKey pattern = ((TrimPattern) trimPattern).getKey();
+        String translationKey = "trim_pattern." + pattern.getNamespace() + "." + pattern.getKey();
+        TextColor color = getTrimMaterialColor(trimMaterial);
+        return Component.translatable(translationKey).color(color);
     }
 
 }
