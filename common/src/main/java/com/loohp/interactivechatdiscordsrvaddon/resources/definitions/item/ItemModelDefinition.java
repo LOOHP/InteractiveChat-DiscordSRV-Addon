@@ -72,7 +72,7 @@ public abstract class ItemModelDefinition {
             }
             return new ItemModelDefinitionComposite(handAnimationOnSwapString, models);
         } else if (type == ItemModelDefinitionType.CONDITION) {
-            String propertyKey = (String) rootJson.get("property");
+            String propertyKey = ensureNamespace((String) rootJson.get("property"));
             ConditionPropertyType<?> propertyType = ConditionPropertyType.getConditionPropertyType(propertyKey);
             JSONObject onTrueJson = (JSONObject) rootJson.get("on_true");
             JSONObject onFalseJson = (JSONObject) rootJson.get("on_false");
@@ -110,7 +110,7 @@ public abstract class ItemModelDefinition {
                 throw new IllegalArgumentException("Unknown condition property type: " + propertyKey);
             }
         } else if (type == ItemModelDefinitionType.SELECT) {
-            String propertyKey = (String) rootJson.get("property");
+            String propertyKey = ensureNamespace((String) rootJson.get("property"));
             SelectPropertyType<?> propertyType = SelectPropertyType.getSelectPropertyType(propertyKey);
             List<SelectCase> cases = new ArrayList<>();
             JSONArray casesJson = (JSONArray) rootJson.get("cases");
@@ -158,7 +158,7 @@ public abstract class ItemModelDefinition {
                 throw new IllegalArgumentException("Unknown select property type: " + propertyKey);
             }
         } else if (type == ItemModelDefinitionType.RANGE_DISPATCH) {
-            String propertyKey = (String) rootJson.get("property");
+            String propertyKey = ensureNamespace((String) rootJson.get("property"));
             RangeDispatchPropertyType<?> propertyType = RangeDispatchPropertyType.getRangeDispatchPropertyType(propertyKey);
             float scale = ((Number) rootJson.getOrDefault("scale", 1.0)).floatValue();
             JSONArray entriesArray = (JSONArray) rootJson.get("entries");
@@ -211,10 +211,10 @@ public abstract class ItemModelDefinition {
         } else if (type == ItemModelDefinitionType.SPECIAL) {
             String base = (String) rootJson.get("base");
             JSONObject modelJson = (JSONObject) rootJson.get("model");
-            String modelTypeKey = (String) modelJson.get("type");
+            String modelTypeKey = ensureNamespace((String) modelJson.get("type"));
             SpecialModelType<?> specialModelType = SpecialModelType.getSpecialModelType(modelTypeKey);
             if (specialModelType.equals(SpecialModelType.BED)) {
-                String texture = (String) modelJson.get("texture");
+                String texture = ensureNamespace((String) modelJson.get("texture"));
                 return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new BedSpecialModel(texture));
             } else if (specialModelType.equals(SpecialModelType.BANNER)) {
                 String color = (String) modelJson.get("color");
@@ -222,18 +222,18 @@ public abstract class ItemModelDefinition {
             } else if (specialModelType.equals(SpecialModelType.CONDUIT)) {
                 return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new ConduitSpecialModel());
             } else if (specialModelType.equals(SpecialModelType.CHEST)) {
-                String texture = (String) modelJson.get("texture");
+                String texture = ensureNamespace((String) modelJson.get("texture"));
                 float openness = ((Number) modelJson.getOrDefault("openness", 0.0)).floatValue();
                 return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new ChestSpecialModel(texture, openness));
             } else if (specialModelType.equals(SpecialModelType.DECORATED_POT)) {
                 return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new DecoratedPotSpecialModel());
             } else if (specialModelType.equals(SpecialModelType.HEAD)) {
                 String kind = (String) modelJson.get("kind");
-                String texture = (String) modelJson.get("texture");
+                String texture = ensureNamespace((String) modelJson.get("texture"));
                 float animation = ((Number) modelJson.getOrDefault("animation", 0.0)).floatValue();
                 return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new HeadSpecialModel(kind, texture, animation));
             } else if (specialModelType.equals(SpecialModelType.SHULKER_BOX)) {
-                String name = (String) modelJson.get("name");
+                String name = ensureNamespace((String) modelJson.get("name"));
                 float openness = ((Number) modelJson.getOrDefault("openness", 0.0)).floatValue();
                 String orientation = (String) modelJson.getOrDefault("orientation", "up");
                 return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new ShulkerBoxSpecialModel(name, openness, orientation));
@@ -241,11 +241,11 @@ public abstract class ItemModelDefinition {
                 return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new ShieldSpecialModel());
             } else if (specialModelType.equals(SpecialModelType.STANDING_SIGN)) {
                 String woodType = (String) modelJson.get("wood_type");
-                String texture = (String) modelJson.get("texture");
+                String texture = ensureNamespace((String) modelJson.get("texture"));
                 return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new StandingSignSpecialModel(woodType, texture));
             } else if (specialModelType.equals(SpecialModelType.HANGING_SIGN)) {
                 String woodType = (String) modelJson.get("wood_type");
-                String texture = (String) modelJson.get("texture");
+                String texture = ensureNamespace((String) modelJson.get("texture"));
                 return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new HangingSignSpecialModel(woodType, texture));
             } else if (specialModelType.equals(SpecialModelType.TRIDENT)) {
                 return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new TridentSpecialModel());
