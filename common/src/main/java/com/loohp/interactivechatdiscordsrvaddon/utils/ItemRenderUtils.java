@@ -1053,6 +1053,7 @@ public class ItemRenderUtils {
                     }
                 }
             }
+            return resolveItemModelDefinition(manager, player, displayPosition, itemStack, evaluated, postResolveFunctionGenerator);
         } else if (itemModelDefinitionType.equals(ItemModelDefinition.ItemModelDefinitionType.EMPTY)) {
             return Collections.emptyList();
         } else if (itemModelDefinitionType.equals(ItemModelDefinition.ItemModelDefinitionType.BUNDLE_SELECTED_ITEM)) {
@@ -1163,7 +1164,6 @@ public class ItemRenderUtils {
         } else {
             throw new IllegalArgumentException("Unsupported item model definition type: " + itemModelDefinitionType);
         }
-        return Collections.emptyList();
     }
 
     private static String ensureNamespace(String key) {
