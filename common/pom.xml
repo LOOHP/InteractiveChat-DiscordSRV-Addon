@@ -140,6 +140,10 @@
                                     <pattern>org.objectweb</pattern>
                                     <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.org.objectweb</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>com.tcoded.folialib</pattern>
+                                    <shadedPattern>com.loohp.interactivechatdiscordsrvaddon.libs.com.folialib</shadedPattern>
+                                </relocation>
                             </relocations>
                         </configuration>
                     </execution>
@@ -304,6 +308,10 @@
             <id>loohp-repo</id>
             <url>https://repo.loohpjames.com/repository</url>
         </repository>
+        <repository>
+            <id>discordsrv</id>
+            <url>https://nexus.scarsz.me/content/groups/public/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -344,6 +352,12 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
+            <groupId>com.github.technicallycoded</groupId>
+            <artifactId>FoliaLib</artifactId>
+            <version>0.4.3</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
             <version>1.20.6-R0.1-SNAPSHOT</version>
@@ -358,7 +372,7 @@
         <dependency>
             <groupId>com.discordsrv</groupId>
             <artifactId>discordsrv</artifactId>
-            <version>1.28.0-SNAPSHOT</version>
+            <version>1.29.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -388,7 +402,7 @@
         <dependency>
             <groupId>com.github.LoneDev6</groupId>
             <artifactId>API-ItemsAdder</artifactId>
-            <version>3.4.1d</version>
+            <version>3.6.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

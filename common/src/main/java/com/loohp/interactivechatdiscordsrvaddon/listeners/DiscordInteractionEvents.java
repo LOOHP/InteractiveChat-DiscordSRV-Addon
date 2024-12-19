@@ -69,7 +69,7 @@ public class DiscordInteractionEvents extends ListenerAdapter {
             }
             REGISTER.put(id, interactionData);
         }
-        Bukkit.getScheduler().runTaskLaterAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+        InteractiveChatDiscordSrvAddon.plugin.getScheduler().runLaterAsync((task) -> {
             for (String id : interactionIds) {
                 REGISTER.remove(id);
             }

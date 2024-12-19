@@ -375,7 +375,7 @@ public class DiscordContentUtils {
                 int slot = Integer.parseInt(((SelectionMenuInteraction) event.getInteraction()).getValues().get(0));
                 if (slot >= 0 && slot < items.length) {
                     event.deferReply().setEphemeral(true).queue();
-                    Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+                    InteractiveChatDiscordSrvAddon.plugin.getScheduler().runAsync((task) -> {
                         OfflineICPlayer offlineICPlayer = offlineICPlayerAtomicRef.updateAndGet(p -> p instanceof ICPlayer ? (p.isOnline() ? p : ICPlayerFactory.getOfflineICPlayer(p.getUniqueId())) : p);
                         try {
                             ItemStack item = items[slot];
@@ -465,7 +465,7 @@ public class DiscordContentUtils {
                 return;
             }
             event.deferEdit().queue();
-            Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+            InteractiveChatDiscordSrvAddon.plugin.getScheduler().runAsync((task) -> {
                 AtomicInteger currentPage = currentPages.get(user.getId());
                 if (currentPage == null) {
                     currentPages.put(user.getId(), currentPage = new AtomicInteger(0));
