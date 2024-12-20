@@ -711,7 +711,7 @@ public class ImageGeneration {
         }
 
         ArmorUtils.ArmorTextureResult helmetArmorResult = ArmorUtils.getArmorTexture(resourceManager.get(), helmet, EquipmentSlot.HEAD);
-        if (helmetArmorResult.hasArmorTexture()) {
+        if (ArmorUtils.isPlayerArmor(helmet) && helmetArmorResult.hasArmorTexture()) {
             BufferedImage helmetImage = null;
             for (EquipmentModelDefinition.EquipmentLayer layer : helmetArmorResult.getLayers()) {
                 Key key = KeyUtils.toKey(layer.getTexture());

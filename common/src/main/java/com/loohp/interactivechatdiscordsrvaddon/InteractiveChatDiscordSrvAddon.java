@@ -190,6 +190,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public String mentionHighlight = "";
     public boolean deathMessageItem = true;
     public boolean deathMessageTranslated = true;
+    public String deathMessageTitle = "";
     public boolean advancementName = true;
     public boolean advancementItem = true;
     public boolean advancementDescription = true;
@@ -540,6 +541,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
         deathMessageItem = config.getConfiguration().getBoolean("DeathMessage.ShowItems");
         deathMessageTranslated = config.getConfiguration().getBoolean("DeathMessage.TranslatedDeathMessage");
+        deathMessageTitle = config.getConfiguration().getString("DeathMessage.Title");
 
         advancementName = config.getConfiguration().getBoolean("Advancements.CorrectAdvancementName");
         advancementItem = config.getConfiguration().getBoolean("Advancements.ChangeToItemIcon");
