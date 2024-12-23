@@ -20,7 +20,6 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -55,12 +54,12 @@ public class ReferenceFont extends MinecraftFont {
     }
 
     @Override
-    public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations) {
+    public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, int color, List<TextDecoration> decorations) {
         return getReferencedFontProvider().forCharacter(character).printCharacter(image, character, x, y, fontSize, lastItalicExtraWidth, color, decorations);
     }
 
     @Override
-    public Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color) {
+    public Optional<BufferedImage> getCharacterImage(String character, float fontSize, int color) {
         return getReferencedFontProvider().forCharacter(character).getCharacterImage(character, fontSize, color);
     }
 

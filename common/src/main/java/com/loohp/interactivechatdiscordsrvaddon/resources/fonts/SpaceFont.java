@@ -20,7 +20,6 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
@@ -62,7 +61,7 @@ public class SpaceFont extends MinecraftFont {
     }
 
     @Override
-    public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations) {
+    public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, int color, List<TextDecoration> decorations) {
         decorations = sortDecorations(decorations);
         int advance = (int) Math.round(charAdvances.get(character.codePointAt(0)) * 0.75);
         if (advance != 0) {
@@ -77,7 +76,7 @@ public class SpaceFont extends MinecraftFont {
             int boldSize = (int) (fontSize / 16.0 * 2);
             int italicExtraWidth = 0;
             boolean italic = false;
-            Color awtColor = new Color(color.value());
+            Color awtColor = new Color(color);
             BufferedImage charImage = null;
             boolean underlineStrikethroughExpanded = false;
             for (TextDecoration decoration : decorations) {
@@ -134,7 +133,7 @@ public class SpaceFont extends MinecraftFont {
     }
 
     @Override
-    public Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color) {
+    public Optional<BufferedImage> getCharacterImage(String character, float fontSize, int color) {
         int advance = (int) Math.round(charAdvances.get(character.codePointAt(0)) * 0.75);
         if (advance == 0) {
             return Optional.empty();

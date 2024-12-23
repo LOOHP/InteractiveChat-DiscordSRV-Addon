@@ -456,7 +456,7 @@ public class OutboundToDiscordEvents implements Listener {
                             component = gameMessageProcessItemEvent.getComponent();
                             title = gameMessageProcessItemEvent.getTitle();
                             if (gameMessageProcessItemEvent.hasInventory()) {
-                                DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.ITEM_CONTAINER, gameMessageProcessItemEvent.getItemStack().clone(), new TitledInventoryWrapper(ItemStackUtils.getDisplayName(item, null), gameMessageProcessItemEvent.getInventory())));
+                                DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.ITEM_CONTAINER, gameMessageProcessItemEvent.getItemStack().clone(), new TitledInventoryWrapper(ItemStackUtils.getDisplayName(item, false), gameMessageProcessItemEvent.getInventory())));
                             } else {
                                 DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.ITEM, gameMessageProcessItemEvent.getItemStack().clone()));
                             }

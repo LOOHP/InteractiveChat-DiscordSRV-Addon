@@ -20,7 +20,6 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
@@ -165,9 +164,9 @@ public abstract class MinecraftFont {
 
     public abstract boolean canDisplayCharacter(String character);
 
-    public abstract FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations);
+    public abstract FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, int color, List<TextDecoration> decorations);
 
-    public abstract Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color);
+    public abstract Optional<BufferedImage> getCharacterImage(String character, float fontSize, int color);
 
     public abstract int getCharacterWidth(String character);
 

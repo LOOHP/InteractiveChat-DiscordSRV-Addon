@@ -387,7 +387,7 @@ public class DiscordContentUtils {
                             ImageDisplayData data;
                             Inventory inv = getBlockInventory(item);
                             if (inv != null) {
-                                data = new ImageDisplayData(offlineICPlayer, 0, title, ImageDisplayType.ITEM_CONTAINER, item.clone(), new TitledInventoryWrapper(ItemStackUtils.getDisplayName(item, null), inv));
+                                data = new ImageDisplayData(offlineICPlayer, 0, title, ImageDisplayType.ITEM_CONTAINER, item.clone(), new TitledInventoryWrapper(ItemStackUtils.getDisplayName(item, false), inv));
                             } else {
                                 data = new ImageDisplayData(offlineICPlayer, 0, title, ImageDisplayType.ITEM, item.clone());
                             }
