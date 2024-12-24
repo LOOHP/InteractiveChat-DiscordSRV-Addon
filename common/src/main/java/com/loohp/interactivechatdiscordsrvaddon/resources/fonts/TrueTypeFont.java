@@ -20,7 +20,6 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
@@ -148,7 +147,7 @@ public class TrueTypeFont extends MinecraftFont {
 
     @SuppressWarnings("rawtypes")
     @Override
-    public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations) {
+    public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, int color, List<TextDecoration> decorations) {
         float scale = fontSize / 16;
         fontSize = fontSize - (13 - this.size);
         decorations = sortDecorations(decorations);
@@ -190,7 +189,7 @@ public class TrueTypeFont extends MinecraftFont {
                     break;
             }
         }
-        g.setColor(new Color(color.value()));
+        g.setColor(new Color(color));
         g.setFont(fontToPrint);
         int height = g.getFontMetrics().getHeight() / 2;
         int newW = g.getFontMetrics().stringWidth(character);
@@ -219,11 +218,11 @@ public class TrueTypeFont extends MinecraftFont {
     }
 
     @Override
-    public Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color) {
+    public Optional<BufferedImage> getCharacterImage(String character, float fontSize, int color) {
         BufferedImage image = new BufferedImage((int) (10 * fontSize), (int) (10 * fontSize), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = image.createGraphics();
         Font fontToPrint = font.deriveFont(fontSize);
-        g.setColor(new Color(color.value()));
+        g.setColor(new Color(color));
         g.setFont(fontToPrint);
         int height = g.getFontMetrics().getHeight() / 2;
         g.drawString(character, 0, height);

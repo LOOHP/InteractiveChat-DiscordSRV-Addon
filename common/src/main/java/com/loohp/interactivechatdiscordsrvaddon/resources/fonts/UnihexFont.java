@@ -21,7 +21,6 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources.fonts;
 
 import com.loohp.blockmodelrenderer.utils.ColorUtils;
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
@@ -247,9 +246,9 @@ public class UnihexFont extends MinecraftFont {
     }
 
     @Override
-    public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, TextColor color, List<TextDecoration> decorations) {
+    public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, int color, List<TextDecoration> decorations) {
         decorations = sortDecorations(decorations);
-        Color awtColor = new Color(color.value());
+        Color awtColor = new Color(color);
         Optional<FontResource> optCharImage = charImages.get(character.codePointAt(0));
         if (optCharImage == null) {
             optCharImage = missingCharacter;
@@ -340,8 +339,8 @@ public class UnihexFont extends MinecraftFont {
     }
 
     @Override
-    public Optional<BufferedImage> getCharacterImage(String character, float fontSize, TextColor color) {
-        Color awtColor = new Color(color.value());
+    public Optional<BufferedImage> getCharacterImage(String character, float fontSize, int color) {
+        Color awtColor = new Color(color);
         Optional<FontResource> optCharImage = charImages.get(character.codePointAt(0));
         if (optCharImage == null) {
             optCharImage = missingCharacter;

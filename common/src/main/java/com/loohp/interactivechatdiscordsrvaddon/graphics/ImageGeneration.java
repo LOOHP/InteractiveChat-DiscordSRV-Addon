@@ -280,7 +280,7 @@ public class ImageGeneration {
         InteractiveChatDiscordSrvAddon.plugin.inventoryImageCounter.incrementAndGet();
         Debug.debug("ImageGeneration creating inventory image of " + player.getName());
 
-        String key = INVENTORY_CACHE_KEY + HashUtils.createSha1("Inventory", inventory);
+        String key = INVENTORY_CACHE_KEY + HashUtils.createSha1(title == null ? "Inventory" : InteractiveChatComponentSerializer.gson().serialize(title), inventory);
         if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial()) && Arrays.stream(inventory.getContents()).noneMatch(each -> each != null && each.hasItemMeta() && each.getItemMeta().hasCustomModelData())) {
             CacheObject<?> cache = resourceManager.get().getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).getCache(key);
             if (cache != null) {
@@ -711,7 +711,7 @@ public class ImageGeneration {
         }
 
         ArmorUtils.ArmorTextureResult helmetArmorResult = ArmorUtils.getArmorTexture(resourceManager.get(), helmet, EquipmentSlot.HEAD);
-        if (helmetArmorResult.hasArmorTexture()) {
+        if (ArmorUtils.isPlayerArmor(helmet) && helmetArmorResult.hasArmorTexture()) {
             BufferedImage helmetImage = null;
             for (EquipmentModelDefinition.EquipmentLayer layer : helmetArmorResult.getLayers()) {
                 Key key = KeyUtils.toKey(layer.getTexture());
@@ -1724,7 +1724,7 @@ public class ImageGeneration {
                     g.drawImage(previousPage, 48, 313, null);
                 }
                 Component pageHeader = Component.translatable(TranslationKeyUtils.getBookPageIndicator()).arguments(Component.text(pageNumber), Component.text(totalPages)).color(NamedTextColor.BLACK);
-                ImageUtils.printComponentRightAligned(resourceManager.get(), page, pageHeader, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), 255, 30, 16, 0);
+                ImageUtils.printComponentRightAligned(resourceManager.get(), page, pageHeader, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), 255, 30, 16, Double.NEGATIVE_INFINITY);
 
                 BufferedImage temp = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB);
 
@@ -1735,7 +1735,7 @@ public class ImageGeneration {
                     @Override
                     public int applyAsInt(CharacterLengthProviderData data) {
                         String character = data.getCharacter();
-                        FontRenderResult renderResult = resourceManager.get().getFontManager().getFontProviders(data.getFont()).forCharacter(character).printCharacter(temp, character, 0, 0, 16, lastItalicExtraWidth, NamedTextColor.BLACK, data.getDecorations());
+                        FontRenderResult renderResult = resourceManager.get().getFontManager().getFontProviders(data.getFont()).forCharacter(character).printCharacter(temp, character, 0, 0, 16, lastItalicExtraWidth, NamedTextColor.BLACK.value(), data.getDecorations());
                         lastItalicExtraWidth = renderResult.getItalicExtraWidth();
                         return renderResult.getWidth() + renderResult.getSpaceWidth();
                     }
@@ -1744,7 +1744,7 @@ public class ImageGeneration {
                 int y = 58;
                 for (Component each : lines.subList(0, Math.min(lines.size(), BOOK_MAX_LINES))) {
                     each = each.colorIfAbsent(NamedTextColor.BLACK);
-                    ImageUtils.printComponent(resourceManager.get(), page, each, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), 34, y, 16, 0);
+                    ImageUtils.printComponent(resourceManager.get(), page, each, InteractiveChatDiscordSrvAddon.plugin.language, InteractiveChat.version.isLegacyRGB(), 34, y, 16, Double.NEGATIVE_INFINITY);
                     y += 18;
                 }
 

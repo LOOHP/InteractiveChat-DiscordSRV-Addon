@@ -48,6 +48,8 @@ DeathMessage:
   TranslatedDeathMessage: true
   #Show the weapon inside the death message if there is one
   ShowItems: true
+  #Title for the show item embed
+  Title: "Item Weapon"
 
 Advancements:
   #Replace the advancement name from DiscordSRV with the actual display name

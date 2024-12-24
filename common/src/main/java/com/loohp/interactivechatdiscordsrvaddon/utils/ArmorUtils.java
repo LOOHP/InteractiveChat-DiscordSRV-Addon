@@ -36,6 +36,12 @@ import java.util.OptionalInt;
 
 public class ArmorUtils {
 
+    private static final EquipmentSlot[] PLAYER_ARMOR_SLOTS = new EquipmentSlot[] {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
+
+    public static boolean isPlayerArmor(ItemStack itemStack) {
+        return Arrays.stream(PLAYER_ARMOR_SLOTS).anyMatch(s -> NMSAddon.getInstance().matchArmorSlot(itemStack, s));
+    }
+
     public static ArmorTextureResult getArmorTexture(ResourceManager manager, ItemStack armorItem, EquipmentSlot slot) {
         if (armorItem == null || slot.equals(EquipmentSlot.HAND) || slot.equals(EquipmentSlot.OFF_HAND)) {
             return ArmorTextureResult.NONE;

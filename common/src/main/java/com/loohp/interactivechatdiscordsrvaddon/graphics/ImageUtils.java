@@ -339,7 +339,7 @@ public class ImageUtils {
                     int red = (int) (getRed(colorValue) * xValue);
                     int green = (int) (getGreen(colorValue) * yValue);
                     int blue = (int) (getBlue(colorValue) * zValue);
-                    int color = getIntFromColor(red < 0 ? 0 : (Math.min(red, 255)), green < 0 ? 0 : (Math.min(green, 255)), blue < 0 ? 0 : (Math.min(blue, 255)), alpha);
+                    int color = getIntFromColor(Math.max(0, Math.min(red, 255)), Math.max(0, Math.min(green, 255)), Math.max(0, Math.min(blue, 255)), alpha);
                     image.setRGB(x, y, color);
                 }
             }
@@ -658,7 +658,7 @@ public class ImageUtils {
 
     public static ComponentPrintResult printComponentGlowing(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize) {
         BufferedImage temp = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        ComponentPrintResult printResult = printComponent0(manager, temp, component, language, legacyRGB, topX, topY, fontSize, 1);
+        ComponentPrintResult printResult = printComponent0(manager, temp, component, language, legacyRGB, topX, topY, fontSize, false, Double.NEGATIVE_INFINITY);
         temp = printResult.getImage();
         Graphics2D g = image.createGraphics();
         BufferedImage shadow = transformRGB(copyImage(temp), (x, y, color) -> {
@@ -687,7 +687,7 @@ public class ImageUtils {
     }
 
     public static ComponentPrintResult printComponentShadowless(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize) {
-        return printComponent0(manager, image, component, language, legacyRGB, topX, topY, fontSize, 1);
+        return printComponent0(manager, image, component, language, legacyRGB, topX, topY, fontSize, false, Double.NEGATIVE_INFINITY);
     }
 
     public static ComponentPrintResult printComponent(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize) {
@@ -696,19 +696,21 @@ public class ImageUtils {
 
     public static ComponentPrintResult printComponent(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize, double shadowFactor) {
         BufferedImage temp = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        ComponentPrintResult printResult = printComponent0(manager, temp, component, language, legacyRGB, topX, topY, fontSize, 1);
+        ComponentPrintResult printResult = printComponent0(manager, temp, component, language, legacyRGB, topX, topY, fontSize, false, 1.0);
         temp = printResult.getImage();
         Graphics2D g = image.createGraphics();
-        if (shadowFactor != 0) {
-            BufferedImage shadow = multiply(copyImage(temp), shadowFactor);
-            g.drawImage(shadow, (int) (fontSize * 0.15), (int) (fontSize * 0.15), null);
+        if (Double.isFinite(shadowFactor)) {
+            BufferedImage tempShadow = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            ComponentPrintResult shadowPrintResult = printComponent0(manager, tempShadow, component, language, legacyRGB, topX, topY, fontSize, true, shadowFactor);
+            tempShadow = shadowPrintResult.getImage();
+            g.drawImage(tempShadow, (int) (fontSize * 0.15), (int) (fontSize * 0.15), null);
         }
         g.drawImage(temp, 0, 0, null);
         g.dispose();
         return new ComponentPrintResult(image, printResult.getTextWidth());
     }
 
-    private static ComponentPrintResult printComponent0(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize, double factor) {
+    private static ComponentPrintResult printComponent0(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize, boolean isShadow, double shadowFactor) {
         Component text = ComponentFlattening.flatten(ComponentStringUtils.resolve(ComponentModernizing.modernize(component), manager.getLanguageManager().getTranslateFunction().ofLanguage(language)));
 
         BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
@@ -734,7 +736,19 @@ public class ImageUtils {
             }
             CharacterData characterData = pair.right();
             MinecraftFont fontProvider = manager.getFontManager().getFontProviders(characterData.getFont()).forCharacter(character);
-            FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, characterData.getColor(), characterData.getDecorations());
+            int color;
+            if (isShadow) {
+                color = characterData.getShadowColor().orElseGet(() -> {
+                    int textColor = characterData.getColor();
+                    int red = (int) (getRed(textColor) * shadowFactor);
+                    int green = (int) (getGreen(textColor) * shadowFactor);
+                    int blue = (int) (getBlue(textColor) * shadowFactor);
+                    return getIntFromColor(Math.max(0, Math.min(red, 255)), Math.max(0, Math.min(green, 255)), Math.max(0, Math.min(blue, 255)), 255);
+                });
+            } else {
+                color = characterData.getColor();
+            }
+            FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, color, characterData.getDecorations());
             textImage = result.getImage();
             x += result.getWidth() + (lastSpaceWidth = result.getSpaceWidth());
             lastItalicExtraWidth = result.getItalicExtraWidth();

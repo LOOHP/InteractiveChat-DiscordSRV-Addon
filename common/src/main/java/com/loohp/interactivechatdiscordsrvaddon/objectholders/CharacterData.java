@@ -24,6 +24,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.TextComponent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.ShadowColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration.State;
@@ -37,6 +38,7 @@ import it.unimi.dsi.fastutil.chars.CharObjectPair;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
@@ -47,11 +49,13 @@ public class CharacterData {
         StringBuilder sb = new StringBuilder();
         component = ComponentFlattening.flatten(component);
         for (Component each : component.children()) {
-            Key font = each.style().font();
-            TextColor color = each.color();
-            if (color == null) {
-                color = NamedTextColor.WHITE;
+            Key font = each.font();
+            TextColor textColor = each.color();
+            if (textColor == null) {
+                textColor = NamedTextColor.WHITE;
             }
+            int color = textColor.value();
+            OptionalInt shadowColor = each.shadowColor() == null ? OptionalInt.empty() : OptionalInt.of(each.shadowColor().value());
             List<TextDecoration> decorations = each.decorations().entrySet().stream().filter(entry -> entry.getValue().equals(State.TRUE)).map(entry -> entry.getKey()).collect(Collectors.toList());
             String content;
             if (each instanceof TextComponent) {
@@ -62,7 +66,7 @@ public class CharacterData {
             if (content.isEmpty()) {
                 continue;
             }
-            CharacterData characterData = new CharacterData(font, color, decorations);
+            CharacterData characterData = new CharacterData(font, color, shadowColor, decorations);
             for (char c : content.toCharArray()) {
                 sb.append(c);
                 data.add(characterData);
@@ -80,7 +84,10 @@ public class CharacterData {
         List<Component> components = new ArrayList<>(dataList.size());
         for (CharObjectPair<CharacterData> data : dataList) {
             CharacterData characterData = data.right();
-            Component component = Component.text(data.firstChar()).color(characterData.getColor()).font(characterData.getFont());
+            Component component = Component.text(data.firstChar()).font(characterData.getFont()).color(TextColor.color(characterData.getColor()));
+            if (characterData.getShadowColor().isPresent()) {
+                component = component.shadowColor(ShadowColor.shadowColor(characterData.getShadowColor().getAsInt()));
+            }
             for (TextDecoration textDecoration : characterData.getDecorations()) {
                 component = component.decorate(textDecoration);
             }
@@ -90,12 +97,14 @@ public class CharacterData {
     }
 
     private final Key font;
-    private final TextColor color;
+    private final int color;
+    private final OptionalInt shadowColor;
     private final List<TextDecoration> decorations;
 
-    public CharacterData(Key font, TextColor color, List<TextDecoration> decorations) {
+    public CharacterData(Key font, int color, OptionalInt shadowColor, List<TextDecoration> decorations) {
         this.font = font;
         this.color = color;
+        this.shadowColor = shadowColor;
         this.decorations = decorations;
     }
 
@@ -103,8 +112,12 @@ public class CharacterData {
         return font;
     }
 
-    public TextColor getColor() {
+    public int getColor() {
         return color;
+    }
+
+    public OptionalInt getShadowColor() {
+        return shadowColor;
     }
 
     public List<TextDecoration> getDecorations() {

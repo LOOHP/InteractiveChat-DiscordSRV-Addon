@@ -456,7 +456,7 @@ public class OutboundToDiscordEvents implements Listener {
                             component = gameMessageProcessItemEvent.getComponent();
                             title = gameMessageProcessItemEvent.getTitle();
                             if (gameMessageProcessItemEvent.hasInventory()) {
-                                DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.ITEM_CONTAINER, gameMessageProcessItemEvent.getItemStack().clone(), new TitledInventoryWrapper(ItemStackUtils.getDisplayName(item, null), gameMessageProcessItemEvent.getInventory())));
+                                DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.ITEM_CONTAINER, gameMessageProcessItemEvent.getItemStack().clone(), new TitledInventoryWrapper(ItemStackUtils.getDisplayName(item, false), gameMessageProcessItemEvent.getInventory())));
                             } else {
                                 DATA.put(inventoryId, new ImageDisplayData(icSender, position, title, ImageDisplayType.ITEM, gameMessageProcessItemEvent.getItemStack().clone()));
                             }
@@ -655,7 +655,7 @@ public class OutboundToDiscordEvents implements Listener {
             return;
         }
         ItemMeta meta = item.getItemMeta();
-        if (meta == null || !meta.hasDisplayName() || meta.getDisplayName().length() <= 0) {
+        if (meta == null || !meta.hasDisplayName() || meta.getDisplayName().isEmpty()) {
             return;
         }
         Color color = null;
@@ -668,11 +668,12 @@ public class OutboundToDiscordEvents implements Listener {
         Player player = event.getPlayer();
         ICPlayer icPlayer = ICPlayerFactory.getICPlayer(player);
 
-        DiscordMessageContent content = new DiscordMessageContent(ChatColorUtils.stripColor(meta.getDisplayName()), "attachment://Item.png", color);
+        DiscordMessageContent content = new DiscordMessageContent(InteractiveChatDiscordSrvAddon.plugin.deathMessageTitle, null, color);
         try {
             BufferedImage image = ImageGeneration.getItemStackImage(item, ICPlayerFactory.getICPlayer(player), InteractiveChatDiscordSrvAddon.plugin.itemAltAir);
             byte[] itemData = ImageUtils.toArray(image);
-
+            content.setTitle(DiscordItemStackUtils.getItemNameForDiscord(item, null, InteractiveChatDiscordSrvAddon.plugin.language));
+            content.setThumbnail("attachment://Item.png");
             content.addAttachment("Item.png", itemData);
 
             DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, icPlayer);
