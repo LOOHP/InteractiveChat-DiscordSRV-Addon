@@ -22,17 +22,27 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.definitions.item;
 
 import com.ibm.icu.util.TimeZone;
 import com.loohp.blockmodelrenderer.utils.ColorUtils;
+import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.ParseException;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ChargeType;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay;
+import com.loohp.interactivechatdiscordsrvaddon.utils.KeyUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ThrowingFunction;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import org.bukkit.inventory.MainHand;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public abstract class ItemModelDefinition {
 
@@ -112,7 +122,7 @@ public abstract class ItemModelDefinition {
         } else if (type == ItemModelDefinitionType.SELECT) {
             String propertyKey = ensureNamespace((String) rootJson.get("property"));
             SelectPropertyType<?> propertyType = SelectPropertyType.getSelectPropertyType(propertyKey);
-            List<SelectCase> cases = new ArrayList<>();
+            List<UnparsedSelectCase> cases = new ArrayList<>();
             JSONArray casesJson = (JSONArray) rootJson.get("cases");
             for (Object caseObj : casesJson) {
                 JSONObject caseModelJson = (JSONObject) caseObj;
@@ -126,34 +136,34 @@ public abstract class ItemModelDefinition {
                 } else {
                     whens = Collections.singletonList((String) rawWhen);
                 }
-                cases.add(new SelectCase(whens, ItemModelDefinition.fromJson((JSONObject) caseModelJson.get("model"))));
+                cases.add(new UnparsedSelectCase(whens, ItemModelDefinition.fromJson((JSONObject) caseModelJson.get("model"))));
             }
             JSONObject fallbackJson = (JSONObject) rootJson.get("fallback");
             ItemModelDefinition fallback = fallbackJson != null ? ItemModelDefinition.fromJson(fallbackJson) : null;
             if (propertyType.equals(SelectPropertyType.MAIN_HAND)) {
-                return new MainHandSelectProperty(handAnimationOnSwapString, propertyType, cases, fallback);
+                return new MainHandSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> MainHand.valueOf(c.toUpperCase())), fallback);
             } else if (propertyType.equals(SelectPropertyType.CHARGE_TYPE)) {
-                return new ChargeTypeSelectProperty(handAnimationOnSwapString, propertyType, cases, fallback);
+                return new ChargeTypeSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> ChargeType.fromName(c)), fallback);
             } else if (propertyType.equals(SelectPropertyType.TRIM_MATERIAL)) {
-                return new TrimMaterialSelectProperty(handAnimationOnSwapString, propertyType, cases, fallback);
+                return new TrimMaterialSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> KeyUtils.toKey(c)), fallback);
             } else if (propertyType.equals(SelectPropertyType.BLOCK_STATE)) {
                 String blockStateProperty = (String) rootJson.get("block_state_property");
-                return new BlockStateSelectProperty(handAnimationOnSwapString, propertyType, cases, fallback, blockStateProperty);
+                return new BlockStateSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> c), fallback, blockStateProperty);
             } else if (propertyType.equals(SelectPropertyType.DISPLAY_CONTEXT)) {
-                return new DisplayContextSelectProperty(handAnimationOnSwapString, propertyType,cases, fallback);
+                return new DisplayContextSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> ModelDisplay.ModelDisplayPosition.fromKey(c)), fallback);
             } else if (propertyType.equals(SelectPropertyType.LOCAL_TIME)) {
                 String pattern = (String) rootJson.getOrDefault("pattern", "");
                 String locale = (String) rootJson.getOrDefault("locale", "");
                 TimeZone timeZone = TimeZone.getTimeZone((String) rootJson.getOrDefault("time_zone", ""));
                 Optional<TimeZone> optTimeZone = timeZone == TimeZone.UNKNOWN_ZONE ? Optional.empty() : Optional.of(timeZone);
-                return new LocalTimeSelectProperty(handAnimationOnSwapString, propertyType, cases, fallback, pattern, locale, optTimeZone);
+                return new LocalTimeSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> c), fallback, pattern, locale, optTimeZone);
             } else if (propertyType.equals(SelectPropertyType.CONTEXT_DIMENSION)) {
-                return new ContextDimensionSelectProperty(handAnimationOnSwapString, propertyType, cases, fallback);
+                return new ContextDimensionSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> KeyUtils.toKey(c)), fallback);
             } else if (propertyType.equals(SelectPropertyType.CONTEXT_ENTITY_TYPE)) {
-                return new ContextEntityTypeSelectProperty(handAnimationOnSwapString, propertyType,cases, fallback);
+                return new ContextEntityTypeSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> KeyUtils.toKey(c)), fallback);
             } else if (propertyType.equals(SelectPropertyType.CUSTOM_MODEL_DATA)) {
                 int index = ((Number) rootJson.getOrDefault("index", 0)).intValue();
-                return new CustomModelDataSelectProperty(handAnimationOnSwapString, propertyType, cases, fallback, index);
+                return new CustomModelDataSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> c), fallback, index);
             } else {
                 throw new IllegalArgumentException("Unknown select property type: " + propertyKey);
             }
@@ -267,6 +277,7 @@ public abstract class ItemModelDefinition {
         return key;
     }
 
+    @SuppressWarnings("rawtypes")
     public static class ItemModelDefinitionType<T extends ItemModelDefinition> {
 
         public static final ItemModelDefinitionType<ItemModelDefinitionModel> MODEL = new ItemModelDefinitionType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":model", ItemModelDefinitionModel.class);
@@ -436,27 +447,45 @@ public abstract class ItemModelDefinition {
         public ItemModelDefinition getOnFalse() {
             return onFalse;
         }
+
+        public ItemModelDefinition getModel(boolean evaluation) {
+            return evaluation ? getOnTrue() : getOnFalse();
+        }
     }
 
     // SELECT Definition
-    public abstract static class ItemModelDefinitionSelect extends ItemModelDefinition {
+    public abstract static class ItemModelDefinitionSelect<T> extends ItemModelDefinition {
 
         private final SelectPropertyType<?> property;
-        private final List<SelectCase> cases;
+        private final List<SelectCase<T>> cases;
         private final ItemModelDefinition fallback;
 
-        public ItemModelDefinitionSelect(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase> cases, ItemModelDefinition fallback) {
+        private final Object2ObjectMap<T, ItemModelDefinition> caseModels;
+
+        public ItemModelDefinitionSelect(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<T>> cases, ItemModelDefinition fallback) {
             super(ItemModelDefinitionType.SELECT, handAnimationOnSwapString);
             this.property = propertyType;
             this.cases = cases;
             this.fallback = fallback;
+            this.caseModels = bake();
+        }
+
+        private Object2ObjectMap<T, ItemModelDefinition> bake() {
+            Object2ObjectMap<T, ItemModelDefinition> object2ObjectMap = new Object2ObjectOpenHashMap<>();
+            for (SelectCase<T> switchCase : cases) {
+                ItemModelDefinition itemModel = switchCase.getModel();
+                for (T when : switchCase.getWhen()) {
+                    object2ObjectMap.put(when, itemModel);
+                }
+            }
+            return object2ObjectMap;
         }
 
         public SelectPropertyType<?> getPropertyType() {
             return property;
         }
 
-        public List<SelectCase> getCases() {
+        public List<SelectCase<T>> getCases() {
             return cases;
         }
 
@@ -466,6 +495,10 @@ public abstract class ItemModelDefinition {
 
         public ItemModelDefinition getFallback() {
             return fallback;
+        }
+
+        public ItemModelDefinition getEntryCase(Object value) {
+            return caseModels.get(value);
         }
     }
 
@@ -477,12 +510,24 @@ public abstract class ItemModelDefinition {
         private final List<RangeEntry> entries;
         private final ItemModelDefinition fallback;
 
+        private final float[] thresholds;
+
         public ItemModelDefinitionRangeDispatch(boolean handAnimationOnSwapString, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback) {
             super(ItemModelDefinitionType.RANGE_DISPATCH, handAnimationOnSwapString);
             this.propertyType = propertyType;
             this.scale = scale;
             this.entries = entries;
             this.fallback = fallback;
+
+            this.thresholds = bake();
+        }
+
+        public float[] bake() {
+            float[] thresholds = new float[entries.size()];
+            for (int i = 0; i < thresholds.length; i++) {
+                thresholds[i] = entries.get(i).getThreshold();
+            }
+            return thresholds;
         }
 
         public RangeDispatchPropertyType<?> getPropertyType() {
@@ -503,6 +548,25 @@ public abstract class ItemModelDefinition {
 
         public ItemModelDefinition getFallback() {
             return fallback;
+        }
+
+        public int getEntryIndex(float value) {
+            if (thresholds.length < 16) {
+                for (int i = 0; i < thresholds.length; ++i) {
+                    if (thresholds[i] > value) {
+                        return i - 1;
+                    }
+                }
+                return thresholds.length - 1;
+            } else {
+                int i = Arrays.binarySearch(thresholds, value);
+                if (i < 0) {
+                    int j = ~i;
+                    return j - 1;
+                } else {
+                    return i;
+                }
+            }
         }
     }
 
@@ -548,17 +612,43 @@ public abstract class ItemModelDefinition {
         }
     }
 
-    public static class SelectCase {
+    private static class UnparsedSelectCase {
 
         private final List<String> when;
         private final ItemModelDefinition model;
 
-        public SelectCase(List<String> when, ItemModelDefinition model) {
+        public UnparsedSelectCase(List<String> when, ItemModelDefinition model) {
             this.when = when;
             this.model = model;
         }
 
-        public List<String> getWhen() {
+        public <T> SelectCase<T> parse(ThrowingFunction<String, T> parser) {
+            return new SelectCase<>(when.stream().map(s -> {
+                try {
+                    return parser.apply(s);
+                } catch (Throwable e) {
+                    return null;
+                }
+            }).filter(c -> c != null).collect(Collectors.toList()), model);
+        }
+
+    }
+
+    private static <T> List<SelectCase<T>> parse(List<UnparsedSelectCase> list, ThrowingFunction<String, T> parser) {
+        return list.stream().map(c -> c.parse(parser)).collect(Collectors.toList());
+    }
+
+    public static class SelectCase<T> {
+
+        private final List<T> when;
+        private final ItemModelDefinition model;
+
+        public SelectCase(List<T> when, ItemModelDefinition model) {
+            this.when = when;
+            this.model = model;
+        }
+
+        public List<T> getWhen() {
             return when;
         }
 
@@ -957,7 +1047,7 @@ public abstract class ItemModelDefinition {
         }
     }
 
-    public static class SelectPropertyType<T extends ItemModelDefinitionSelect> {
+    public static class SelectPropertyType<T extends ItemModelDefinitionSelect<?>> {
 
         public static final SelectPropertyType<MainHandSelectProperty> MAIN_HAND = new SelectPropertyType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":main_hand", MainHandSelectProperty.class);
         public static final SelectPropertyType<ChargeTypeSelectProperty> CHARGE_TYPE = new SelectPropertyType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":charge_type", ChargeTypeSelectProperty.class);
@@ -1007,28 +1097,28 @@ public abstract class ItemModelDefinition {
         }
     }
 
-    public static class MainHandSelectProperty extends ItemModelDefinitionSelect {
-        public MainHandSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase> cases, ItemModelDefinition fallback) {
+    public static class MainHandSelectProperty extends ItemModelDefinitionSelect<MainHand> {
+        public MainHandSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<MainHand>> cases, ItemModelDefinition fallback) {
             super(handAnimationOnSwapString, propertyType, cases, fallback);
         }
     }
 
-    public static class ChargeTypeSelectProperty extends ItemModelDefinitionSelect {
-        public ChargeTypeSelectProperty(boolean handAnimationOnSwapString,SelectPropertyType<?> propertyType, List<SelectCase> cases, ItemModelDefinition fallback) {
+    public static class ChargeTypeSelectProperty extends ItemModelDefinitionSelect<ChargeType> {
+        public ChargeTypeSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<ChargeType>> cases, ItemModelDefinition fallback) {
             super(handAnimationOnSwapString, propertyType, cases, fallback);
         }
     }
 
-    public static class TrimMaterialSelectProperty extends ItemModelDefinitionSelect {
-        public TrimMaterialSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase> cases, ItemModelDefinition fallback) {
+    public static class TrimMaterialSelectProperty extends ItemModelDefinitionSelect<Key> {
+        public TrimMaterialSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<Key>> cases, ItemModelDefinition fallback) {
             super(handAnimationOnSwapString, propertyType, cases, fallback);
         }
     }
 
-    public static class BlockStateSelectProperty extends ItemModelDefinitionSelect {
+    public static class BlockStateSelectProperty extends ItemModelDefinitionSelect<String> {
         private final String blockStateProperty;
 
-        public BlockStateSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase> cases, ItemModelDefinition fallback, String blockStateProperty) {
+        public BlockStateSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<String>> cases, ItemModelDefinition fallback, String blockStateProperty) {
             super(handAnimationOnSwapString, propertyType, cases, fallback);
             this.blockStateProperty = blockStateProperty;
         }
@@ -1038,18 +1128,18 @@ public abstract class ItemModelDefinition {
         }
     }
 
-    public static class DisplayContextSelectProperty extends ItemModelDefinitionSelect {
-        public DisplayContextSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase> cases, ItemModelDefinition fallback) {
+    public static class DisplayContextSelectProperty extends ItemModelDefinitionSelect<ModelDisplay.ModelDisplayPosition> {
+        public DisplayContextSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<ModelDisplay.ModelDisplayPosition>> cases, ItemModelDefinition fallback) {
             super(handAnimationOnSwapString, propertyType, cases, fallback);
         }
     }
 
-    public static class LocalTimeSelectProperty extends ItemModelDefinitionSelect {
+    public static class LocalTimeSelectProperty extends ItemModelDefinitionSelect<String> {
         private final String pattern;
         private final String locale;
         private final Optional<TimeZone> timeZone;
 
-        public LocalTimeSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase> cases, ItemModelDefinition fallback, String pattern, String locale, Optional<TimeZone> timeZone) {
+        public LocalTimeSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<String>> cases, ItemModelDefinition fallback, String pattern, String locale, Optional<TimeZone> timeZone) {
             super(handAnimationOnSwapString, propertyType, cases, fallback);
             this.pattern = pattern;
             this.locale = locale;
@@ -1069,22 +1159,22 @@ public abstract class ItemModelDefinition {
         }
     }
 
-    public static class ContextDimensionSelectProperty extends ItemModelDefinitionSelect {
-        public ContextDimensionSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase> cases, ItemModelDefinition fallback) {
+    public static class ContextDimensionSelectProperty extends ItemModelDefinitionSelect<Key> {
+        public ContextDimensionSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<Key>> cases, ItemModelDefinition fallback) {
             super(handAnimationOnSwapString, propertyType, cases, fallback);
         }
     }
 
-    public static class ContextEntityTypeSelectProperty extends ItemModelDefinitionSelect {
-        public ContextEntityTypeSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase> cases, ItemModelDefinition fallback) {
+    public static class ContextEntityTypeSelectProperty extends ItemModelDefinitionSelect<Key> {
+        public ContextEntityTypeSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<Key>> cases, ItemModelDefinition fallback) {
             super(handAnimationOnSwapString, propertyType, cases, fallback);
         }
     }
 
-    public static class CustomModelDataSelectProperty extends ItemModelDefinitionSelect {
+    public static class CustomModelDataSelectProperty extends ItemModelDefinitionSelect<String> {
         private final int index;
 
-        public CustomModelDataSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase> cases, ItemModelDefinition fallback, int index) {
+        public CustomModelDataSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<String>> cases, ItemModelDefinition fallback, int index) {
             super(handAnimationOnSwapString, propertyType, cases, fallback);
             this.index = index;
         }

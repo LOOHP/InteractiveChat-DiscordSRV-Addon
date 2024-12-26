@@ -37,8 +37,8 @@ public class CustomModelData {
         this.colors = colors;
     }
 
-    public CustomModelData(float legacyIndex) {
-        this(Collections.singletonList(legacyIndex), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+    public CustomModelData(Number legacyIndex) {
+        this(Collections.singletonList(legacyIndex.floatValue()), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
     }
 
     private static <T> T getValue(List<T> var0, int var1) {

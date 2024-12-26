@@ -632,4 +632,9 @@ public class V1_9 extends NMSAddonWrapper {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public OptionalInt getFireworkFlightDuration(ItemStack itemStack) {
+        return OptionalInt.empty();
+    }
+
 }

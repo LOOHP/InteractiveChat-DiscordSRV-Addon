@@ -82,6 +82,7 @@ import net.minecraft.world.item.armortrim.TrimPattern;
 import net.minecraft.world.item.component.BundleContents;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.DyedItemColor;
+import net.minecraft.world.item.component.Fireworks;
 import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.item.enchantment.EnchantmentManager;
 import net.minecraft.world.level.biome.BiomeBase;
@@ -770,6 +771,16 @@ public class V1_20_5 extends NMSAddonWrapper {
             description = pattern.a(Holder.a(material));
         }
         return InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(description));
+    }
+
+    @Override
+    public OptionalInt getFireworkFlightDuration(ItemStack itemStack) {
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        Fireworks fireworks = nmsItemStack.a(DataComponents.U);
+        if (fireworks == null) {
+            return OptionalInt.empty();
+        }
+        return OptionalInt.of(fireworks.a());
     }
 
 }

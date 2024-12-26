@@ -22,9 +22,8 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.models;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 public class ModelDisplay {
 
@@ -75,6 +74,7 @@ public class ModelDisplay {
 
     public enum ModelDisplayPosition {
 
+        NONE("none"),
         THIRDPERSON_RIGHTHAND("thirdperson_righthand", "thirdperson"),
         THIRDPERSON_LEFTHAND(THIRDPERSON_RIGHTHAND, "thirdperson_lefthand"),
         FIRSTPERSON_RIGHTHAND("firstperson_righthand", "firstperson"),
@@ -94,10 +94,10 @@ public class ModelDisplay {
         }
 
         private ModelDisplayPosition fallback;
-        private Set<String> keys;
+        private List<String> keys;
 
         ModelDisplayPosition(ModelDisplayPosition fallback, String... keys) {
-            this.keys = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(keys)));
+            this.keys = Collections.unmodifiableList(Arrays.asList(keys));
             this.fallback = fallback;
         }
 
@@ -105,7 +105,11 @@ public class ModelDisplay {
             this(null, keys);
         }
 
-        public Set<String> getKeys() {
+        public String getMainKey() {
+            return keys.get(0);
+        }
+
+        public List<String> getKeys() {
             return keys;
         }
 

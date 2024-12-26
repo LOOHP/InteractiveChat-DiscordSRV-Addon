@@ -239,7 +239,7 @@ public class DiscordItemStackUtils {
     }
 
     @SuppressWarnings({"UnstableApiUsage", "PatternValidation"})
-    public static DiscordToolTip getToolTip(ItemStack item, OfflineICPlayer player) throws Exception {
+    public static DiscordToolTip getToolTip(ItemStack item, OfflineICPlayer player, boolean showAdvanceDetails) throws Exception {
         String language = InteractiveChatDiscordSrvAddon.plugin.language;
         UnaryOperator<String> translationFunction = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(language);
 
@@ -456,10 +456,9 @@ public class DiscordItemStackUtils {
         }
 
         if (icMaterial.isMaterial(XMaterial.FIREWORK_ROCKET) && !hideAdditionalFlags) {
-            if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta) {
-                FireworkMeta meta = (FireworkMeta) item.getItemMeta();
-                int flight = meta.getPower();
-                prints.add(tooltipText(translatable(getRocketFlightDuration()).append(text(" " + flight)).color(GRAY)));
+            OptionalInt flight = NMSAddon.getInstance().getFireworkFlightDuration(item);
+            if (flight.isPresent()) {
+                prints.add(tooltipText(translatable(getRocketFlightDuration()).append(text(" " + flight.getAsInt())).color(GRAY)));
             }
             if (hasMeta && item.getItemMeta() instanceof FireworkMeta) {
                 FireworkMeta fireworkMeta = (FireworkMeta) item.getItemMeta();
@@ -504,7 +503,7 @@ public class DiscordItemStackUtils {
             List<ItemStack> charged = meta.getChargedProjectiles();
             if (charged != null && !charged.isEmpty()) {
                 ItemStack charge = charged.get(0);
-                List<ToolTipComponent<?>> chargedItemInfo = getToolTip(charge, player).getComponents();
+                List<ToolTipComponent<?>> chargedItemInfo = getToolTip(charge, player, false).getComponents();
                 Component chargeItemName = chargedItemInfo.get(0).getToolTipComponent(ToolTipType.TEXT);
                 prints.add(tooltipText(translatable(getCrossbowProjectile()).color(WHITE).append(text(" [").color(WHITE)).append(chargeItemName).append(text("]").color(WHITE))));
                 if (InteractiveChatDiscordSrvAddon.plugin.showFireworkRocketDetailsInCrossbow && ICMaterial.from(charge).isMaterial(XMaterial.FIREWORK_ROCKET)) {
@@ -816,7 +815,7 @@ public class DiscordItemStackUtils {
                 prints.add(tooltipText(translatable(getDurability()).arguments(text(durability), text(maxDur)).color(WHITE)));
             }
         }
-        if (InteractiveChatDiscordSrvAddon.plugin.showAdvanceDetails) {
+        if (showAdvanceDetails) {
             if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_20_5)) {
                 prints.add(tooltipText(text(item.getType().getKey().toString()).color(DARK_GRAY)));
                 int size = NMSAddon.getInstance().getItemComponentsSize(item);

@@ -134,7 +134,7 @@ public class DiscordContentUtils {
                         content.addAttachment("Item_" + i + ".png", imageData);
                         contents.add(content);
 
-                        DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, player);
+                        DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, player, InteractiveChatDiscordSrvAddon.plugin.showAdvanceDetails);
                         List<ToolTipComponent<?>> toolTipComponents = discordToolTip.isHideTooltip() ? new ArrayList<>() : discordToolTip.getComponents();
 
                         boolean forceShow = false;
