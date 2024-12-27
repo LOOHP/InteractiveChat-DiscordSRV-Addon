@@ -60,6 +60,7 @@ import net.minecraft.server.v1_16_R3.EnumMonsterType;
 import net.minecraft.server.v1_16_R3.IRegistry;
 import net.minecraft.server.v1_16_R3.Item;
 import net.minecraft.server.v1_16_R3.ItemArmor;
+import net.minecraft.server.v1_16_R3.ItemFireworks;
 import net.minecraft.server.v1_16_R3.ItemMonsterEgg;
 import net.minecraft.server.v1_16_R3.ItemRecord;
 import net.minecraft.server.v1_16_R3.MinecraftKey;
@@ -782,6 +783,20 @@ public class V1_16_4 extends NMSAddonWrapper {
     @Override
     public Component getTrimPatternDescription(Object trimPattern, Object trimMaterial) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public OptionalInt getFireworkFlightDuration(ItemStack itemStack) {
+        net.minecraft.server.v1_16_R3.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        if (nmsItemStack.getItem() instanceof ItemFireworks) {
+            NBTTagCompound nbt = nmsItemStack.b("Fireworks");
+            if (nbt != null) {
+                if (nbt.hasKeyOfType("Flight", 99)) {
+                    return OptionalInt.of(nbt.getByte("Flight"));
+                }
+            }
+        }
+        return OptionalInt.empty();
     }
 
 }

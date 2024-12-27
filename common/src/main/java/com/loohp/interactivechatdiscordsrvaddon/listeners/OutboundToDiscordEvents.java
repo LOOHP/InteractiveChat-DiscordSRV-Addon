@@ -676,7 +676,7 @@ public class OutboundToDiscordEvents implements Listener {
             content.setThumbnail("attachment://Item.png");
             content.addAttachment("Item.png", itemData);
 
-            DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, icPlayer);
+            DiscordToolTip discordToolTip = DiscordItemStackUtils.getToolTip(item, icPlayer, InteractiveChatDiscordSrvAddon.plugin.showAdvanceDetails);
             if (!discordToolTip.isHideTooltip() &&(!discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem)) {
                 BufferedImage tooltip = ImageGeneration.getToolTipImage(discordToolTip.getComponents(), NMSAddon.getInstance().getCustomTooltipResourceLocation(item));
                 byte[] tooltipData = ImageUtils.toArray(tooltip);

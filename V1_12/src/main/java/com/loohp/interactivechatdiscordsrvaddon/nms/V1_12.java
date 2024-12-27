@@ -32,10 +32,10 @@ import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ItemDamageInfo;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ProfileProperty;
@@ -58,6 +58,7 @@ import net.minecraft.server.v1_12_R1.EnumMonsterType;
 import net.minecraft.server.v1_12_R1.IChatBaseComponent;
 import net.minecraft.server.v1_12_R1.Item;
 import net.minecraft.server.v1_12_R1.ItemArmor;
+import net.minecraft.server.v1_12_R1.ItemFireworks;
 import net.minecraft.server.v1_12_R1.ItemMonsterEgg;
 import net.minecraft.server.v1_12_R1.ItemRecord;
 import net.minecraft.server.v1_12_R1.Items;
@@ -651,6 +652,20 @@ public class V1_12 extends NMSAddonWrapper {
     @Override
     public Component getTrimPatternDescription(Object trimPattern, Object trimMaterial) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public OptionalInt getFireworkFlightDuration(ItemStack itemStack) {
+        net.minecraft.server.v1_12_R1.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        if (nmsItemStack.getItem() instanceof ItemFireworks) {
+            NBTTagCompound nbt = nmsItemStack.d("Fireworks");
+            if (nbt != null) {
+                if (nbt.hasKeyOfType("Flight", 99)) {
+                    return OptionalInt.of(nbt.getByte("Flight"));
+                }
+            }
+        }
+        return OptionalInt.empty();
     }
 
 }

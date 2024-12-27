@@ -33,10 +33,10 @@ import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ItemDamageInfo;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ProfileProperty;
@@ -44,28 +44,29 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import net.md_5.bungee.api.ChatColor;
+import net.minecraft.server.v1_11_R1.AttributeBase;
+import net.minecraft.server.v1_11_R1.Block;
+import net.minecraft.server.v1_11_R1.CombatTracker;
 import net.minecraft.server.v1_11_R1.EnchantmentManager;
 import net.minecraft.server.v1_11_R1.EntityFishingHook;
 import net.minecraft.server.v1_11_R1.EntityLiving;
+import net.minecraft.server.v1_11_R1.EntityPlayer;
 import net.minecraft.server.v1_11_R1.EntityTypes;
+import net.minecraft.server.v1_11_R1.EnumBannerPatternType;
+import net.minecraft.server.v1_11_R1.EnumItemSlot;
 import net.minecraft.server.v1_11_R1.EnumMonsterType;
 import net.minecraft.server.v1_11_R1.IChatBaseComponent;
-import net.minecraft.server.v1_11_R1.ItemRecord;
-import net.minecraft.server.v1_11_R1.MinecraftServer;
-import net.minecraft.server.v1_11_R1.NBTTagCompound;
-import net.minecraft.server.v1_11_R1.NBTTagList;
-import net.minecraft.server.v1_11_R1.MinecraftKey;
-import net.minecraft.server.v1_11_R1.EntityPlayer;
-import net.minecraft.server.v1_11_R1.CombatTracker;
-import net.minecraft.server.v1_11_R1.MobEffect;
-import net.minecraft.server.v1_11_R1.MobEffectList;
-import net.minecraft.server.v1_11_R1.EnumItemSlot;
-import net.minecraft.server.v1_11_R1.AttributeBase;
 import net.minecraft.server.v1_11_R1.Item;
 import net.minecraft.server.v1_11_R1.ItemArmor;
+import net.minecraft.server.v1_11_R1.ItemFireworks;
+import net.minecraft.server.v1_11_R1.ItemRecord;
+import net.minecraft.server.v1_11_R1.MinecraftKey;
+import net.minecraft.server.v1_11_R1.MinecraftServer;
+import net.minecraft.server.v1_11_R1.MobEffect;
+import net.minecraft.server.v1_11_R1.MobEffectList;
+import net.minecraft.server.v1_11_R1.NBTTagCompound;
+import net.minecraft.server.v1_11_R1.NBTTagList;
 import net.minecraft.server.v1_11_R1.PotionUtil;
-import net.minecraft.server.v1_11_R1.Block;
-import net.minecraft.server.v1_11_R1.EnumBannerPatternType;
 import org.bukkit.Achievement;
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
@@ -645,6 +646,20 @@ public class V1_11 extends NMSAddonWrapper {
     @Override
     public Component getTrimPatternDescription(Object trimPattern, Object trimMaterial) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public OptionalInt getFireworkFlightDuration(ItemStack itemStack) {
+        net.minecraft.server.v1_11_R1.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        if (nmsItemStack.getItem() instanceof ItemFireworks) {
+            NBTTagCompound nbt = nmsItemStack.d("Fireworks");
+            if (nbt != null) {
+                if (nbt.hasKeyOfType("Flight", 99)) {
+                    return OptionalInt.of(nbt.getByte("Flight"));
+                }
+            }
+        }
+        return OptionalInt.empty();
     }
 
 }

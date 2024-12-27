@@ -47,6 +47,7 @@ import net.minecraft.EnumChatFormat;
 import net.minecraft.MinecraftVersion;
 import net.minecraft.advancements.AdvancementDisplay;
 import net.minecraft.core.IRegistry;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.resources.MinecraftKey;
@@ -66,6 +67,7 @@ import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.BundleItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemArmor;
+import net.minecraft.world.item.ItemFireworks;
 import net.minecraft.world.item.ItemMonsterEgg;
 import net.minecraft.world.item.ItemRecord;
 import net.minecraft.world.item.alchemy.PotionUtil;
@@ -731,6 +733,20 @@ public class V1_18_2 extends NMSAddonWrapper {
     @Override
     public Component getTrimPatternDescription(Object trimPattern, Object trimMaterial) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public OptionalInt getFireworkFlightDuration(ItemStack itemStack) {
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        if (nmsItemStack.c() instanceof ItemFireworks) {
+            NBTTagCompound nbt = nmsItemStack.b("Fireworks");
+            if (nbt != null) {
+                if (nbt.b("Flight", NBTBase.u)) {
+                    return OptionalInt.of(nbt.f("Flight"));
+                }
+            }
+        }
+        return OptionalInt.empty();
     }
 
 }

@@ -210,4 +210,6 @@ public abstract class NMSAddonWrapper {
 
     public abstract Component getTrimPatternDescription(Object trimPattern, Object trimMaterial);
 
+    public abstract OptionalInt getFireworkFlightDuration(ItemStack itemStack);
+
 }

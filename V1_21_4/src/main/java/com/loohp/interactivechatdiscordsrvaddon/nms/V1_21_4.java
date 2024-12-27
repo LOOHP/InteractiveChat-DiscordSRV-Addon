@@ -82,6 +82,7 @@ import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.item.component.BundleContents;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.DyedItemColor;
+import net.minecraft.world.item.component.Fireworks;
 import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.item.enchantment.EnchantmentManager;
 import net.minecraft.world.item.equipment.Equippable;
@@ -702,10 +703,8 @@ public class V1_21_4 extends NMSAddonWrapper {
     @Override
     public ItemDamageInfo getItemDamageInfo(ItemStack itemStack) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        Integer rawMaxDamage = nmsItemStack.a(DataComponents.d);
-        int maxDamage = rawMaxDamage == null ? itemStack.getType().getMaxDurability() : rawMaxDamage;
-        Integer rawDamage = nmsItemStack.a(DataComponents.e);
-        int damage = rawDamage == null ? 0 : rawDamage;
+        int damage = nmsItemStack.o();
+        int maxDamage = nmsItemStack.p();
         return new ItemDamageInfo(damage, maxDamage);
     }
 
@@ -807,6 +806,16 @@ public class V1_21_4 extends NMSAddonWrapper {
             description = pattern.a(Holder.a(material));
         }
         return InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(description));
+    }
+
+    @Override
+    public OptionalInt getFireworkFlightDuration(ItemStack itemStack) {
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        Fireworks fireworks = nmsItemStack.a(DataComponents.af);
+        if (fireworks == null) {
+            return OptionalInt.empty();
+        }
+        return OptionalInt.of(fireworks.a());
     }
 
 }

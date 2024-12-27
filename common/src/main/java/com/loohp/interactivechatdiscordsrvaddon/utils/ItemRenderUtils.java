@@ -45,6 +45,7 @@ import com.loohp.interactivechatdiscordsrvaddon.graphics.BannerGraphics.BannerAs
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ChargeType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ItemDamageInfo;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
@@ -71,10 +72,12 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.DecoratedPot;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.MainHand;
 import org.bukkit.inventory.meta.ArmorMeta;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BundleMeta;
@@ -178,9 +181,9 @@ public class ItemRenderUtils {
             if (!player.isRightHanded()) {
                 predicates.put(ModelOverrideType.LEFTHANDED, 1F);
             }
-            if (hasItemMeta && itemMeta.hasCustomModelData()) {
-                int customModelData = itemMeta.getCustomModelData();
-                predicates.put(ModelOverrideType.CUSTOM_MODEL_DATA, (float) customModelData);
+            CustomModelData customModelData = NMSAddon.getInstance().getCustomModelData(item);
+            if (customModelData != null && customModelData.hasLegacyIndex()) {
+                predicates.put(ModelOverrideType.CUSTOM_MODEL_DATA, customModelData.getLegacyIndex());
             }
             if (item.getType().getMaxDurability() > 0) {
                 int maxDur = item.getType().getMaxDurability();
@@ -639,213 +642,146 @@ public class ItemRenderUtils {
         } else if (itemModelDefinitionType.equals(ItemModelDefinition.ItemModelDefinitionType.CONDITION)) {
             ItemModelDefinition.ItemModelDefinitionCondition condition = (ItemModelDefinition.ItemModelDefinitionCondition) itemModelDefinition;
             ItemModelDefinition.ConditionPropertyType<?> propertyType = condition.getPropertyType();
-            ItemModelDefinition evaluated;
+            boolean evaluation;
             if (propertyType.equals(ItemModelDefinition.ConditionPropertyType.USING_ITEM)) {
-                evaluated = condition.getOnFalse();
+                evaluation = false;
             } else if (propertyType.equals(ItemModelDefinition.ConditionPropertyType.BROKEN)) {
                 if (itemStack.getType().getMaxDurability() > 0) {
                     int maxDur = itemStack.getType().getMaxDurability();
                     int damage = InteractiveChat.version.isLegacy() ? itemStack.getDurability() : ((Damageable) itemStack.getItemMeta()).getDamage();
-                    if (maxDur - damage == 1) {
-                        evaluated = condition.getOnTrue();
-                    } else {
-                        evaluated = condition.getOnFalse();
-                    }
+                    evaluation = maxDur - damage == 1;
                 } else {
-                    evaluated = condition.getOnFalse();
+                    evaluation = false;
                 }
             } else if (propertyType.equals(ItemModelDefinition.ConditionPropertyType.DAMAGED)) {
                 if (itemStack.getType().getMaxDurability() > 0 && NMSAddon.getInstance().isItemUnbreakable(itemStack)) {
                     int maxDur = itemStack.getType().getMaxDurability();
                     int damage = InteractiveChat.version.isLegacy() ? itemStack.getDurability() : ((Damageable) itemStack.getItemMeta()).getDamage();
-                    if (damage > 0) {
-                        evaluated = condition.getOnTrue();
-                    } else {
-                        evaluated = condition.getOnFalse();
-                    }
+                    evaluation = damage > 0;
                 } else {
-                    evaluated = condition.getOnFalse();
+                    evaluation = false;
                 }
             } else if (propertyType.equals(ItemModelDefinition.ConditionPropertyType.HAS_COMPONENT)) {
                 ItemModelDefinition.HasComponentConditionProperty hasComponentConditionProperty = (ItemModelDefinition.HasComponentConditionProperty) condition;
-                if (NMSAddon.getInstance().hasDataComponent(itemStack, hasComponentConditionProperty.getComponent(), hasComponentConditionProperty.isIgnoreDefault())) {
-                    evaluated = condition.getOnTrue();
-                } else {
-                    evaluated = condition.getOnFalse();
-                }
+                evaluation = NMSAddon.getInstance().hasDataComponent(itemStack, hasComponentConditionProperty.getComponent(), hasComponentConditionProperty.isIgnoreDefault());
             } else if (propertyType.equals(ItemModelDefinition.ConditionPropertyType.FISHING_ROD_CAST)) {
                 ICPlayer icplayer = player.getPlayer();
-                boolean evaluation = false;
+                boolean evaluation0 = false;
                 if (icplayer != null && icplayer.isLocal()) {
                     Player bukkitPlayer = icplayer.getLocalPlayer();
                     if (FishUtils.getPlayerFishingHook(bukkitPlayer) != null) {
                         ItemStack mainHandItem = bukkitPlayer.getEquipment().getItemInHand();
-                        if (InteractiveChat.version.isOld()) {
-                            if (mainHandItem != null && mainHandItem.equals(itemStack)) {
-                                evaluation = true;
-                            }
-                        } else {
-                            ItemStack offHandItem = bukkitPlayer.getEquipment().getItemInOffHand();
-                            if ((mainHandItem != null && mainHandItem.equals(itemStack)) || ((offHandItem != null && offHandItem.equals(itemStack)) && (mainHandItem == null || !XMaterial.matchXMaterial(mainHandItem).equals(XMaterial.FISHING_ROD)))) {
-                                evaluation = true;
-                            }
+                        ItemStack offHandItem = bukkitPlayer.getEquipment().getItemInOffHand();
+                        if ((mainHandItem != null && mainHandItem.equals(itemStack)) || ((offHandItem != null && offHandItem.equals(itemStack)) && (mainHandItem == null || !XMaterial.matchXMaterial(mainHandItem).equals(XMaterial.FISHING_ROD)))) {
+                            evaluation0 = true;
                         }
                     }
                 }
-                if (evaluation) {
-                    evaluated = condition.getOnTrue();
-                } else {
-                    evaluated = condition.getOnFalse();
-                }
+                evaluation = evaluation0;
             } else if (propertyType.equals(ItemModelDefinition.ConditionPropertyType.BUNDLE_SELECTED_ITEM)) {
-                evaluated = condition.getOnFalse();
+                evaluation = false;
             } else if (propertyType.equals(ItemModelDefinition.ConditionPropertyType.SELECTED)) {
-                evaluated = condition.getOnFalse();
+                evaluation = false;
             } else if (propertyType.equals(ItemModelDefinition.ConditionPropertyType.CARRIED)) {
-                evaluated = condition.getOnFalse();
+                evaluation = false;
             } else if (propertyType.equals(ItemModelDefinition.ConditionPropertyType.EXTENDED_VIEW)) {
-                evaluated = condition.getOnFalse();
+                evaluation = false;
             } else if (propertyType.equals(ItemModelDefinition.ConditionPropertyType.KEYBIND_DOWN)) {
-                evaluated = condition.getOnFalse();
+                evaluation = false;
             } else if (propertyType.equals(ItemModelDefinition.ConditionPropertyType.VIEW_ENTITY)) {
-                evaluated = condition.getOnFalse();
+                evaluation = false;
             } else if (propertyType.equals(ItemModelDefinition.ConditionPropertyType.CUSTOM_MODEL_DATA)) {
                 ItemModelDefinition.CustomModelDataConditionProperty customModelDataConditionProperty = (ItemModelDefinition.CustomModelDataConditionProperty) condition;
                 CustomModelData customModelData = NMSAddon.getInstance().getCustomModelData(itemStack);
-                boolean evaluation;
-                if (customModelData == null || !Boolean.TRUE.equals(customModelData.getFlag(customModelDataConditionProperty.getIndex()))) {
-                    evaluated = condition.getOnFalse();
-                } else {
-                    evaluated = condition.getOnTrue();
-                }
+                evaluation = customModelData != null && Boolean.TRUE.equals(customModelData.getFlag(customModelDataConditionProperty.getIndex()));
             } else {
-                throw new IllegalArgumentException("Unknown condition property type: " + propertyType);
+                evaluation = false;
             }
+            ItemModelDefinition evaluated = condition.getModel(evaluation);
             return resolveItemModelDefinition(manager, player, displayPosition, itemStack, evaluated, postResolveFunctionGenerator);
         } else if (itemModelDefinitionType.equals(ItemModelDefinition.ItemModelDefinitionType.SELECT)) {
-            ItemModelDefinition.ItemModelDefinitionSelect select = (ItemModelDefinition.ItemModelDefinitionSelect) itemModelDefinition;
+            ItemModelDefinition.ItemModelDefinitionSelect<?> select = (ItemModelDefinition.ItemModelDefinitionSelect<?>) itemModelDefinition;
             ItemModelDefinition.SelectPropertyType<?> propertyType = select.getPropertyType();
-            ItemModelDefinition evaluated = select.hasFallback() ? select.getFallback() : ItemModelDefinitionManager.MISSING_MODEL;
+            Object value;
             if (propertyType.equals(ItemModelDefinition.SelectPropertyType.MAIN_HAND)) {
                 ICPlayer icPlayer = player.getPlayer();
-                for (ItemModelDefinition.SelectCase selectCase : select.getCases()) {
-                    if (selectCase.getWhen().contains("right") && player.isRightHanded()) {
-                        evaluated = selectCase.getModel();
-                        break;
-                    } else if (selectCase.getWhen().contains("left") && !player.isRightHanded()) {
-                        evaluated = selectCase.getModel();
-                        break;
-                    }
-                }
+                value = player.isRightHanded() ? MainHand.RIGHT : MainHand.LEFT;
             } else if (propertyType.equals(ItemModelDefinition.SelectPropertyType.CHARGE_TYPE)) {
-                String chargedWith;
                 if (itemStack.getItemMeta() instanceof CrossbowMeta) {
                     CrossbowMeta meta = (CrossbowMeta) itemStack.getItemMeta();
                     List<ItemStack> charged = meta.getChargedProjectiles();
                     if (charged != null && !charged.isEmpty()) {
                         if (charged.stream().anyMatch(i -> ICMaterial.from(i).isMaterial(XMaterial.FIREWORK_ROCKET))) {
-                            chargedWith = "rocket";
+                            value = ChargeType.ROCKET;
                         } else {
-                            chargedWith = "arrow";
+                            value = ChargeType.ARROW;
                         }
                     } else {
-                        chargedWith = "none";
+                        value = ChargeType.NONE;
                     }
                 } else {
-                    chargedWith = "none";
-                }
-                for (ItemModelDefinition.SelectCase selectCase : select.getCases()) {
-                    if (selectCase.getWhen().contains(chargedWith)) {
-                        evaluated = selectCase.getModel();
-                        break;
-                    }
+                    value = ChargeType.NONE;
                 }
             } else if (propertyType.equals(ItemModelDefinition.SelectPropertyType.TRIM_MATERIAL)) {
-                String trimMaterialName = null;
                 if (itemStack.getItemMeta() instanceof ArmorMeta) {
                     ArmorMeta armorMeta = (ArmorMeta) itemStack.getItemMeta();
                     ArmorTrim armorTrim = armorMeta.getTrim();
                     if (armorTrim != null) {
                         TrimMaterial trimMaterial = armorTrim.getMaterial();
-                        trimMaterialName = trimMaterial.getKey().toString();
+                        value = KeyUtils.toKey(trimMaterial.getKey());
+                    } else {
+                        value = null;
                     }
-                }
-                for (ItemModelDefinition.SelectCase selectCase : select.getCases()) {
-                    if (selectCase.getWhen().contains(trimMaterialName)) {
-                        evaluated = selectCase.getModel();
-                        break;
-                    }
+                } else {
+                    value = null;
                 }
             } else if (propertyType.equals(ItemModelDefinition.SelectPropertyType.BLOCK_STATE)) {
                 ItemModelDefinition.BlockStateSelectProperty blockStateSelectProperty = (ItemModelDefinition.BlockStateSelectProperty) select;
-                String state = NMSAddon.getInstance().getBlockStateProperty(itemStack, blockStateSelectProperty.getBlockStateProperty());
-                for (ItemModelDefinition.SelectCase selectCase : select.getCases()) {
-                    if (selectCase.getWhen().contains(state)) {
-                        evaluated = selectCase.getModel();
-                        break;
-                    }
-                }
+                value = NMSAddon.getInstance().getBlockStateProperty(itemStack, blockStateSelectProperty.getBlockStateProperty());
             } else if (propertyType.equals(ItemModelDefinition.SelectPropertyType.DISPLAY_CONTEXT)) {
-                for (ItemModelDefinition.SelectCase selectCase : select.getCases()) {
-                    if (selectCase.getWhen().stream().anyMatch(e -> displayPosition.getKeys().contains(e))) {
-                        evaluated = selectCase.getModel();
-                        break;
-                    }
-                }
+                value = displayPosition;
             } else if (propertyType.equals(ItemModelDefinition.SelectPropertyType.LOCAL_TIME)) {
                 ItemModelDefinition.LocalTimeSelectProperty localTimeSelectProperty = (ItemModelDefinition.LocalTimeSelectProperty) select;
                 ULocale uLocale = new ULocale(localTimeSelectProperty.getLocale());
                 Calendar calendar = localTimeSelectProperty.getTimeZone().map(timeZone -> Calendar.getInstance(timeZone, uLocale)).orElseGet(() -> Calendar.getInstance(uLocale));
                 SimpleDateFormat simpleDateFormat = new SimpleDateFormat(localTimeSelectProperty.getPattern(), uLocale);
                 simpleDateFormat.setCalendar(calendar);
+                String dateMatch = null;
                 try {
-                    String dateMatch = simpleDateFormat.format(new Date());
-                    for (ItemModelDefinition.SelectCase selectCase : select.getCases()) {
-                        if (selectCase.getWhen().contains(dateMatch)) {
-                            evaluated = selectCase.getModel();
-                            break;
-                        }
-                    }
+                    dateMatch = simpleDateFormat.format(new Date());
                 } catch (Exception ignored) {
                 }
+                value = dateMatch;
             } else if (propertyType.equals(ItemModelDefinition.SelectPropertyType.CONTEXT_DIMENSION)) {
                 ICPlayer icPlayer = player.getPlayer();
                 if (icPlayer != null && icPlayer.isLocal()) {
-                    String world = NMSAddon.getInstance().getNamespacedKey(icPlayer.getLocalPlayer().getWorld()).asString();
-                    for (ItemModelDefinition.SelectCase selectCase : select.getCases()) {
-                        if (selectCase.getWhen().stream().anyMatch(e -> ensureNamespace(e).equals(world))) {
-                            evaluated = selectCase.getModel();
-                            break;
-                        }
-                    }
+                    value = NMSAddon.getInstance().getNamespacedKey(icPlayer.getLocalPlayer().getWorld());
+                } else {
+                    value = null;
                 }
             } else if (propertyType.equals(ItemModelDefinition.SelectPropertyType.CONTEXT_ENTITY_TYPE)) {
-                for (ItemModelDefinition.SelectCase selectCase : select.getCases()) {
-                    if (selectCase.getWhen().stream().anyMatch(e -> ensureNamespace(e).equals("player"))) {
-                        evaluated = selectCase.getModel();
-                        break;
-                    }
-                }
+                value = KeyUtils.toKey(EntityType.PLAYER.getKey());
             } else if (propertyType.equals(ItemModelDefinition.SelectPropertyType.CUSTOM_MODEL_DATA)) {
                 ItemModelDefinition.CustomModelDataSelectProperty customModelDataSelectProperty = (ItemModelDefinition.CustomModelDataSelectProperty) select;
                 CustomModelData customModelData = NMSAddon.getInstance().getCustomModelData(itemStack);
                 if (customModelData != null) {
-                    String value = customModelData.getString(customModelDataSelectProperty.getIndex());
-                    for (ItemModelDefinition.SelectCase selectCase : select.getCases()) {
-                        if (selectCase.getWhen().contains(value)) {
-                            evaluated = selectCase.getModel();
-                            break;
-                        }
-                    }
+                    value = customModelData.getString(customModelDataSelectProperty.getIndex());
+                } else {
+                    value = null;
                 }
+            } else {
+                value = null;
+            }
+            ItemModelDefinition evaluated = select.getEntryCase(value);
+            if (evaluated == null) {
+                evaluated = select.hasFallback() ? select.getFallback() : ItemModelDefinitionManager.MISSING_MODEL;
             }
             return resolveItemModelDefinition(manager, player, displayPosition, itemStack, evaluated, postResolveFunctionGenerator);
         } else if (itemModelDefinitionType.equals(ItemModelDefinition.ItemModelDefinitionType.RANGE_DISPATCH)) {
             ItemModelDefinition.ItemModelDefinitionRangeDispatch rangeDispatch = (ItemModelDefinition.ItemModelDefinitionRangeDispatch) itemModelDefinition;
             ItemModelDefinition.RangeDispatchPropertyType<?> propertyType = rangeDispatch.getPropertyType();
-            ItemModelDefinition evaluated = rangeDispatch.hasFallback() ? rangeDispatch.getFallback() : ItemModelDefinitionManager.MISSING_MODEL;
+            float value;
             if (propertyType.equals(ItemModelDefinition.RangeDispatchPropertyType.BUNDLE_FULLNESS)) {
-                float value;
                 if (ICMaterial.from(itemStack).isMaterial(XMaterial.BUNDLE)) {
                     @SuppressWarnings("UnstableApiUsage")
                     float weight = BundleUtils.getWeight(((BundleMeta) itemStack.getItemMeta()).getItems()).floatValue();
@@ -853,55 +789,31 @@ public class ItemRenderUtils {
                 } else {
                     value = 0;
                 }
-                for (ItemModelDefinition.RangeEntry rangeEntry : rangeDispatch.getEntries()) {
-                    if (rangeEntry.getThreshold() <= value) {
-                        evaluated = rangeEntry.getModel();
-                        break;
-                    }
-                }
             } else if (propertyType.equals(ItemModelDefinition.RangeDispatchPropertyType.DAMAGE)) {
                 ItemModelDefinition.DamageRangeDispatchProperty damageRangeDispatchProperty = (ItemModelDefinition.DamageRangeDispatchProperty) rangeDispatch;
                 ItemDamageInfo itemDamageInfo = NMSAddon.getInstance().getItemDamageInfo(itemStack);
-                if (itemDamageInfo.getDamage() > 0) {
-                    float value;
-                    if (damageRangeDispatchProperty.isNormalize()) {
-                        value = ((float) itemDamageInfo.getDamage() / itemDamageInfo.getMaxDamage()) * damageRangeDispatchProperty.getScale();
-                    } else {
-                        value = (float) itemDamageInfo.getDamage() * damageRangeDispatchProperty.getScale();
-                    }
-                    for (ItemModelDefinition.RangeEntry rangeEntry : rangeDispatch.getEntries()) {
-                        if (rangeEntry.getThreshold() <= value) {
-                            evaluated = rangeEntry.getModel();
-                            break;
-                        }
-                    }
+                float damage = (float) itemDamageInfo.getDamage();
+                float maxDamage = (float) itemDamageInfo.getMaxDamage();
+                if (damageRangeDispatchProperty.isNormalize()) {
+                    value = Math.min(Math.max(damage / maxDamage, 0.0F), 1.0F) * damageRangeDispatchProperty.getScale();
+                } else {
+                    value = Math.min(Math.max(damage, 0.0F), maxDamage) * damageRangeDispatchProperty.getScale();
                 }
             } else if (propertyType.equals(ItemModelDefinition.RangeDispatchPropertyType.COUNT)) {
                 ItemModelDefinition.CountRangeDispatchProperty countRangeDispatchProperty = (ItemModelDefinition.CountRangeDispatchProperty) rangeDispatch;
-                int count = itemStack.getAmount();
-                int maxStackSize = itemStack.getMaxStackSize();
-                float value;
+                float count = (float) itemStack.getAmount();
+                float maxStackSize = (float) itemStack.getMaxStackSize();
                 if (countRangeDispatchProperty.isNormalize()) {
-                    value = ((float)count / maxStackSize) * countRangeDispatchProperty.getScale();
+                    value = Math.min(Math.max(count / maxStackSize, 0.0F), 1.0F) * countRangeDispatchProperty.getScale();
                 } else {
-                    value = (float) count * countRangeDispatchProperty.getScale();
-                }
-                for (ItemModelDefinition.RangeEntry rangeEntry : rangeDispatch.getEntries()) {
-                    if (rangeEntry.getThreshold() <= value) {
-                        evaluated = rangeEntry.getModel();
-                        break;
-                    }
+                    value = Math.min(Math.max(count, 0.0F), maxStackSize) * countRangeDispatchProperty.getScale();
                 }
             } else if (propertyType.equals(ItemModelDefinition.RangeDispatchPropertyType.COOLDOWN)) {
                 ICPlayer icPlayer = player.getPlayer();
                 if (icPlayer != null && icPlayer.isLocal()) {
-                    float cooldown = NMSAddon.getInstance().getItemCooldownProgress(icPlayer.getLocalPlayer(), itemStack) * rangeDispatch.getScale();
-                    for (ItemModelDefinition.RangeEntry rangeEntry : rangeDispatch.getEntries()) {
-                        if (rangeEntry.getThreshold() <= cooldown) {
-                            evaluated = rangeEntry.getModel();
-                            break;
-                        }
-                    }
+                    value = NMSAddon.getInstance().getItemCooldownProgress(icPlayer.getLocalPlayer(), itemStack) * rangeDispatch.getScale();
+                } else {
+                    value = 0F;
                 }
             } else if (propertyType.equals(ItemModelDefinition.RangeDispatchPropertyType.TIME)) {
                 ItemModelDefinition.TimeRangeDispatchProperty timeRangeDispatchProperty = (ItemModelDefinition.TimeRangeDispatchProperty) rangeDispatch;
@@ -918,13 +830,7 @@ public class ItemRenderUtils {
                             break;
                     }
                 }
-                float value = angle * timeRangeDispatchProperty.getScale();
-                for (ItemModelDefinition.RangeEntry rangeEntry : rangeDispatch.getEntries()) {
-                    if (rangeEntry.getThreshold() <= value) {
-                        evaluated = rangeEntry.getModel();
-                        break;
-                    }
-                }
+                value = angle * timeRangeDispatchProperty.getScale();
             } else if (propertyType.equals(ItemModelDefinition.RangeDispatchPropertyType.COMPASS)) {
                 ItemModelDefinition.CompassRangeDispatchProperty compassRangeDispatchProperty = (ItemModelDefinition.CompassRangeDispatchProperty) rangeDispatch;
                 ICPlayer icPlayer = player.getPlayer();
@@ -968,15 +874,8 @@ public class ItemRenderUtils {
                 } else {
                     angle = RANDOM.nextFloat();
                 }
-                float value = angle * compassRangeDispatchProperty.getScale();
-                for (ItemModelDefinition.RangeEntry rangeEntry : rangeDispatch.getEntries()) {
-                    if (rangeEntry.getThreshold() <= value) {
-                        evaluated = rangeEntry.getModel();
-                        break;
-                    }
-                }
+                value = angle * compassRangeDispatchProperty.getScale();
             } else if (propertyType.equals(ItemModelDefinition.RangeDispatchPropertyType.CROSSBOW_PULL)) {
-                float value;
                 if (ICMaterial.from(itemStack).isMaterial(XMaterial.CROSSBOW)) {
                     CrossbowMeta crossbowMeta = (CrossbowMeta) itemStack.getItemMeta();
                     if (crossbowMeta.hasChargedProjectiles()) {
@@ -993,20 +892,13 @@ public class ItemRenderUtils {
                         }
                         value = ((float) tickUsedSoFar / (float) pullTime) * rangeDispatch.getScale();
                     } else {
-                        value = 0;
+                        value = 0F;
                     }
                 } else {
-                    value = 0;
-                }
-                for (ItemModelDefinition.RangeEntry rangeEntry : rangeDispatch.getEntries()) {
-                    if (rangeEntry.getThreshold() <= value) {
-                        evaluated = rangeEntry.getModel();
-                        break;
-                    }
+                    value = 0F;
                 }
             } else if (propertyType.equals(ItemModelDefinition.RangeDispatchPropertyType.USE_DURATION)) {
                 ItemModelDefinition.UseDurationRangeDispatchProperty useDurationRangeDispatchProperty = (ItemModelDefinition.UseDurationRangeDispatchProperty) rangeDispatch;
-                float value;
                 ICPlayer icPlayer = player.getPlayer();
                 if (icPlayer != null && icPlayer.isLocal() && player.getMainHandItem().equals(itemStack)) {
                     Player bukkitPlayer = icPlayer.getLocalPlayer();
@@ -1016,42 +908,34 @@ public class ItemRenderUtils {
                         value = NMSAddon.getInstance().getTicksUsedSoFar(itemStack, bukkitPlayer) * rangeDispatch.getScale();
                     }
                 } else {
-                    value = 0;
-                }
-                for (ItemModelDefinition.RangeEntry rangeEntry : rangeDispatch.getEntries()) {
-                    if (rangeEntry.getThreshold() <= value) {
-                        evaluated = rangeEntry.getModel();
-                        break;
-                    }
+                    value = 0F;
                 }
             } else if (propertyType.equals(ItemModelDefinition.RangeDispatchPropertyType.USE_CYCLE)) {
                 ItemModelDefinition.UseCycleRangeDispatchProperty useCycleRangeDispatchProperty = (ItemModelDefinition.UseCycleRangeDispatchProperty) rangeDispatch;
-                float value;
                 ICPlayer icPlayer = player.getPlayer();
                 if (icPlayer != null && icPlayer.isLocal() && player.getMainHandItem().equals(itemStack)) {
                     Player bukkitPlayer = icPlayer.getLocalPlayer();
                     value = (NMSAddon.getInstance().getItemUseTimeLeft(bukkitPlayer) % useCycleRangeDispatchProperty.getPeriod()) * useCycleRangeDispatchProperty.getScale();
                 } else {
-                    value = 0;
-                }
-                for (ItemModelDefinition.RangeEntry rangeEntry : rangeDispatch.getEntries()) {
-                    if (rangeEntry.getThreshold() <= value) {
-                        evaluated = rangeEntry.getModel();
-                        break;
-                    }
+                    value = 0F;
                 }
             } else if (propertyType.equals(ItemModelDefinition.RangeDispatchPropertyType.CUSTOM_MODEL_DATA)) {
                 ItemModelDefinition.CustomModelDataRangeDispatchProperty customModelDataRangeDispatchProperty = (ItemModelDefinition.CustomModelDataRangeDispatchProperty) rangeDispatch;
                 CustomModelData customModelData = NMSAddon.getInstance().getCustomModelData(itemStack);
                 if (customModelData != null && customModelData.getFloat(customModelDataRangeDispatchProperty.getIndex()) != null) {
-                    float value = customModelData.getFloat(customModelDataRangeDispatchProperty.getIndex());
-                    for (ItemModelDefinition.RangeEntry rangeEntry : rangeDispatch.getEntries()) {
-                        if (rangeEntry.getThreshold() <= value) {
-                            evaluated = rangeEntry.getModel();
-                            break;
-                        }
-                    }
+                    value = customModelData.getFloat(customModelDataRangeDispatchProperty.getIndex());
+                } else {
+                    value = 0F;
                 }
+            } else {
+                value = 0F;
+            }
+            int entryIndex = rangeDispatch.getEntryIndex(value);
+            ItemModelDefinition evaluated;
+            if (entryIndex == -1) {
+                evaluated = rangeDispatch.hasFallback() ? rangeDispatch.getFallback() : ItemModelDefinitionManager.MISSING_MODEL;
+            } else {
+                evaluated = rangeDispatch.getEntries().get(entryIndex).getModel();
             }
             return resolveItemModelDefinition(manager, player, displayPosition, itemStack, evaluated, postResolveFunctionGenerator);
         } else if (itemModelDefinitionType.equals(ItemModelDefinition.ItemModelDefinitionType.EMPTY)) {
