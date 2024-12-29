@@ -212,4 +212,6 @@ public abstract class NMSAddonWrapper {
 
     public abstract OptionalInt getFireworkFlightDuration(ItemStack itemStack);
 
+    public abstract boolean shouldShowOperatorBlockWarnings(ItemStack itemStack, Player player);
+
 }

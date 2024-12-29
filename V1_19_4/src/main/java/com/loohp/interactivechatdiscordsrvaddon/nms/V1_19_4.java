@@ -759,4 +759,9 @@ public class V1_19_4 extends NMSAddonWrapper {
         return OptionalInt.empty();
     }
 
+    @Override
+    public boolean shouldShowOperatorBlockWarnings(ItemStack itemStack, Player player) {
+        return false;
+    }
+
 }

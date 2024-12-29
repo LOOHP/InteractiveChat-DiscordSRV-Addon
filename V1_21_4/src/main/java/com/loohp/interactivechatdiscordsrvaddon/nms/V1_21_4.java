@@ -818,4 +818,11 @@ public class V1_21_4 extends NMSAddonWrapper {
         return OptionalInt.of(fireworks.a());
     }
 
+    @Override
+    public boolean shouldShowOperatorBlockWarnings(ItemStack itemStack, Player player) {
+        EntityPlayer nmsPlayer = ((CraftPlayer) player).getHandle();
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        return nmsItemStack.h().a(nmsItemStack, nmsPlayer);
+    }
+
 }

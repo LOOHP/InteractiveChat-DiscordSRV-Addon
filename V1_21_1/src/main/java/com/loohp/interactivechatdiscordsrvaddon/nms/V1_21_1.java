@@ -799,4 +799,9 @@ public class V1_21_1 extends NMSAddonWrapper {
         return OptionalInt.of(fireworks.a());
     }
 
+    @Override
+    public boolean shouldShowOperatorBlockWarnings(ItemStack itemStack, Player player) {
+        return false;
+    }
+
 }
