@@ -164,7 +164,7 @@ public class V1_19 extends NMSAddonWrapper {
     @Override
     public Key getPatternTypeKey(PatternType patternType) {
         try {
-            MinecraftKey key = IRegistry.bO.b(new EnumBannerPatternType(patternType.getIdentifier()));
+            MinecraftKey key = IRegistry.bO.b(EnumBannerPatternType.a(patternType.getIdentifier()).a());
             return Key.key(key.b(), key.a());
         } catch (Exception ignored) {
         }
