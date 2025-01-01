@@ -20,16 +20,13 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.languages;
 
-import java.util.function.BinaryOperator;
-import java.util.function.UnaryOperator;
-
 @FunctionalInterface
-public interface TranslateFunction extends BinaryOperator<String> {
+public interface TranslateFunction {
 
-    String apply(String translationKey, String language);
+    String apply(String translationKey, String fallback, String language);
 
-    default UnaryOperator<String> ofLanguage(String language) {
-        return translationKey -> apply(translationKey, language);
+    default SpecificTranslateFunction ofLanguage(String language) {
+        return (translationKey, fallback) -> apply(translationKey, fallback, language);
     }
 
 }

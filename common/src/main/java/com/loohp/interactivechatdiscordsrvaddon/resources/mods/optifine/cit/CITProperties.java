@@ -41,6 +41,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.PercentageOrIntege
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
+import com.loohp.interactivechatdiscordsrvaddon.resources.languages.SpecificTranslateFunction;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.OptifineUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
 import org.bukkit.Material;
@@ -60,7 +61,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
-import java.util.function.UnaryOperator;
 
 public abstract class CITProperties {
 
@@ -302,7 +302,7 @@ public abstract class CITProperties {
     }
 
     @SuppressWarnings("deprecation")
-    public boolean test(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction) {
+    public boolean test(EquipmentSlot heldSlot, ItemStack itemStack, SpecificTranslateFunction translateFunction) {
         if (itemStack == null || itemStack.getType().equals(Material.AIR)) {
             return false;
         }

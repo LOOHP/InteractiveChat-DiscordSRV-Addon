@@ -69,6 +69,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RenderRe
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.definitions.equipment.EquipmentModelDefinition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.MinecraftFont.FontRenderResult;
+import com.loohp.interactivechatdiscordsrvaddon.resources.languages.SpecificTranslateFunction;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.EnchantmentProperties.OpenGLBlending;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.EnchantmentGlintType;
@@ -127,7 +128,6 @@ import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -164,7 +164,7 @@ public class ImageGeneration {
     private static Supplier<ResourceManager> resourceManager = () -> InteractiveChatDiscordSrvAddon.plugin.getResourceManager();
     private static Supplier<MCVersion> version = () -> InteractiveChat.version;
     private static Supplier<String> language = () -> InteractiveChatDiscordSrvAddon.plugin.language;
-    private static Supplier<UnaryOperator<String>> translateFunction = () -> resourceManager.get().getLanguageManager().getTranslateFunction().ofLanguage(language.get());
+    private static Supplier<SpecificTranslateFunction> translateFunction = () -> resourceManager.get().getLanguageManager().getTranslateFunction().ofLanguage(language.get());
 
     public static BufferedImage getMissingImage(int width, int length) {
         return TextureManager.getMissingImage(width, length);
@@ -1037,7 +1037,7 @@ public class ImageGeneration {
         if (prints.isEmpty() || !(prints.get(0).getType().equals(ToolTipType.TEXT))) {
             Debug.debug("ImageGeneration creating tooltip image");
         } else {
-            Debug.debug("ImageGeneration creating tooltip image of " + InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(prints.get(0).getToolTipComponent(ToolTipType.TEXT)));
+            Debug.debug("ImageGeneration creating tooltip image of " + InteractiveChatComponentSerializer.legacySection().serialize(ComponentStringUtils.resolve(prints.get(0).getToolTipComponent(ToolTipType.TEXT), translateFunction.get())));
         }
 
         if (allowLineBreaks) {

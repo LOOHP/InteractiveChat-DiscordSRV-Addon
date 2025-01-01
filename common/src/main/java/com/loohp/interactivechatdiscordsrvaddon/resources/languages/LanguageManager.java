@@ -51,12 +51,12 @@ public class LanguageManager extends AbstractManager implements ILanguageManager
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
     public static TranslateFunction defaultTranslateFunction(LanguageManager manager) {
-        return (translationKey, language) -> {
+        return (translationKey, fallback, language) -> {
             Map<String, String> mapping = manager.translations.get(language);
             if (mapping == null) {
-                return translationKey;
+                return fallback == null ? translationKey : fallback;
             }
-            return mapping.getOrDefault(translationKey, translationKey);
+            return mapping.getOrDefault(translationKey, fallback == null ? translationKey : fallback);
         };
     }
 
@@ -176,8 +176,8 @@ public class LanguageManager extends AbstractManager implements ILanguageManager
     }
 
     @Override
-    public String applyTranslations(String str, String language) {
-        return translateFunction.apply(str, language);
+    public String applyTranslations(String translationKey, String fallback, String language) {
+        return translateFunction.apply(translationKey, fallback, language);
     }
 
     @Override

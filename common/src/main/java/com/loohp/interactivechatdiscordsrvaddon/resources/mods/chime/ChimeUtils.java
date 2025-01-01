@@ -41,6 +41,7 @@ import com.loohp.interactivechat.utils.ItemNBTUtils;
 import com.loohp.interactivechat.utils.NBTParsingUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.languages.SpecificTranslateFunction;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimeModelOverride.ChimeModelOverrideType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimePredicateEnums.ItemInHand;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimePredicateEnums.TargetType;
@@ -51,11 +52,10 @@ import org.bukkit.inventory.ItemStack;
 import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.function.UnaryOperator;
 
 public class ChimeUtils {
 
-    public static String getItemDisplayName(ItemStack itemStack, UnaryOperator<String> translateFunction) {
+    public static String getItemDisplayName(ItemStack itemStack, SpecificTranslateFunction translateFunction) {
         if (itemStack.getItemMeta() == null || !itemStack.getItemMeta().hasDisplayName()) {
             return "";
         }
@@ -73,7 +73,7 @@ public class ChimeUtils {
         return "";
     }
 
-    public static String componentToString(Component component, UnaryOperator<String> translateFunction) {
+    public static String componentToString(Component component, SpecificTranslateFunction translateFunction) {
         StringBuilder sb = new StringBuilder();
         for (Component each : ComponentStringUtils.resolve(component, translateFunction).iterable(ComponentIteratorType.DEPTH_FIRST)) {
             if (each instanceof TextComponent) {

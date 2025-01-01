@@ -86,9 +86,9 @@ public class Commands implements CommandExecutor, TabCompleter {
                             for (Component each : ComponentStyling.splitAtLineBreaks(ResourcePackInfoUtils.resolveDescription(info))) {
                                 InteractiveChatAPI.sendMessage(sender, Component.text("   - ").color(NamedTextColor.GRAY).append(each));
                                 if (info.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) > 0) {
-                                    sender.sendMessage(ChatColor.YELLOW + "     " + LanguageUtils.getTranslation(TranslationKeyUtils.getNewIncompatiblePack(), InteractiveChatDiscordSrvAddon.plugin.language));
+                                    sender.sendMessage(ChatColor.YELLOW + "     " + LanguageUtils.getTranslation(TranslationKeyUtils.getNewIncompatiblePack(), InteractiveChatDiscordSrvAddon.plugin.language).getResult());
                                 } else if (info.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) < 0) {
-                                    sender.sendMessage(ChatColor.YELLOW + "     " + LanguageUtils.getTranslation(TranslationKeyUtils.getOldIncompatiblePack(), InteractiveChatDiscordSrvAddon.plugin.language));
+                                    sender.sendMessage(ChatColor.YELLOW + "     " + LanguageUtils.getTranslation(TranslationKeyUtils.getOldIncompatiblePack(), InteractiveChatDiscordSrvAddon.plugin.language).getResult());
                                 }
                             }
                         }

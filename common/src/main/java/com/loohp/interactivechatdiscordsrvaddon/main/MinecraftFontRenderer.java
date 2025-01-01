@@ -644,8 +644,8 @@ public class MinecraftFontRenderer extends JFrame {
 
     private List<LanguageData> getAllLanguageData(LanguageManager languageManager) {
         return languageManager.getAvailableLanguages().stream().map(language -> {
-            String name = languageManager.applyTranslations("language.name", language);
-            String region = languageManager.applyTranslations("language.region", language);
+            String name = languageManager.applyTranslations("language.name", null, language);
+            String region = languageManager.applyTranslations("language.region", null, language);
             return new LanguageData(language, name.equalsIgnoreCase("language.name") ? null : name, region.equalsIgnoreCase("language.region") ? null : region);
         }).collect(Collectors.toList());
     }

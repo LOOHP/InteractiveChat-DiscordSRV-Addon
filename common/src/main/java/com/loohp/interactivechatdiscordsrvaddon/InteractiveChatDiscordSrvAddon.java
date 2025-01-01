@@ -745,7 +745,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                 }
 
                 resourceManager.getFontManager().setDefaultKey(forceUnicode ? FontManager.UNIFORM_FONT : FontManager.DEFAULT_FONT);
-                resourceManager.getLanguageManager().setTranslateFunction((translateKey, language) -> LanguageUtils.getTranslation(translateKey, language));
+                resourceManager.getLanguageManager().setTranslateFunction((translateKey, fallback, language) -> LanguageUtils.getTranslation(translateKey, language).getResultOrFallback(fallback));
                 resourceManager.getLanguageManager().setAvailableLanguagesSupplier(() -> LanguageUtils.getLoadedLanguages());
                 resourceManager.getLanguageManager().registerReloadListener(e -> {
                     LanguageUtils.clearPluginTranslations(InteractiveChatDiscordSrvAddon.plugin);

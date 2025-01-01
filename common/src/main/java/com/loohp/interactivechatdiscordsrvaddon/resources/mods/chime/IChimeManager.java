@@ -21,6 +21,7 @@
 package com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime;
 
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
+import com.loohp.interactivechatdiscordsrvaddon.resources.languages.SpecificTranslateFunction;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.IModelManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.ITextureManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
@@ -28,10 +29,8 @@ import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.function.UnaryOperator;
-
 public interface IChimeManager extends IModelManager, ITextureManager {
 
-    TextureResource getArmorOverrideTextures(String layer, ItemStack itemStack, OfflineICPlayer player, World world, LivingEntity entity, UnaryOperator<String> translateFunction);
+    TextureResource getArmorOverrideTextures(String layer, ItemStack itemStack, OfflineICPlayer player, World world, LivingEntity entity, SpecificTranslateFunction translateFunction);
 
 }

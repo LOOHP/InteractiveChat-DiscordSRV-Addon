@@ -207,7 +207,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
             NMS.getInstance().setItemStackDisplayName(exp, expText);
         } else {
             ItemMeta expMeta = exp.getItemMeta();
-            expMeta.setDisplayName(ChatColor.YELLOW + LanguageUtils.getTranslation(InventoryDisplay.getLevelTranslation(level), InteractiveChat.language).replaceFirst("%s|%d", level + ""));
+            expMeta.setDisplayName(ChatColor.YELLOW + LanguageUtils.getTranslation(InventoryDisplay.getLevelTranslation(level), InteractiveChat.language).getResult().replaceFirst("%s|%d", level + ""));
             exp.setItemMeta(expMeta);
         }
         inv.setItem(1, exp);
@@ -297,7 +297,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
             NMS.getInstance().setItemStackDisplayName(exp, expText);
         } else {
             ItemMeta expMeta = exp.getItemMeta();
-            expMeta.setDisplayName(ChatColor.YELLOW + LanguageUtils.getTranslation(InventoryDisplay.getLevelTranslation(level), InteractiveChat.language).replaceFirst("%s|%d", level + ""));
+            expMeta.setDisplayName(ChatColor.YELLOW + LanguageUtils.getTranslation(InventoryDisplay.getLevelTranslation(level), InteractiveChat.language).getResult().replaceFirst("%s|%d", level + ""));
             exp.setItemMeta(expMeta);
         }
         inv.setItem(37, exp);
@@ -636,9 +636,9 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                         }
                         builder.setColor(color);
                         if (packInfo.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) > 0) {
-                            builder.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getNewIncompatiblePack(), InteractiveChatDiscordSrvAddon.plugin.language));
+                            builder.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getNewIncompatiblePack(), InteractiveChatDiscordSrvAddon.plugin.language).getResult());
                         } else if (packInfo.compareServerPackFormat(ResourceRegistry.RESOURCE_PACK_VERSION) < 0) {
-                            builder.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getOldIncompatiblePack(), InteractiveChatDiscordSrvAddon.plugin.language));
+                            builder.setFooter(LanguageUtils.getTranslation(TranslationKeyUtils.getOldIncompatiblePack(), InteractiveChatDiscordSrvAddon.plugin.language).getResult());
                         }
                     } else {
                         builder.setColor(0xFF0000).setDescription(packInfo.getRejectedReason());
@@ -653,7 +653,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                         e.printStackTrace();
                     }
                 }
-                WebhookMessageUpdateAction<Message> action = event.getHook().setEphemeral(true).editOriginal("**" + LanguageUtils.getTranslation(TranslationKeyUtils.getServerResourcePack(), InteractiveChatDiscordSrvAddon.plugin.language) + "**").setEmbeds(messageEmbeds);
+                WebhookMessageUpdateAction<Message> action = event.getHook().setEphemeral(true).editOriginal("**" + LanguageUtils.getTranslation(TranslationKeyUtils.getServerResourcePack(), InteractiveChatDiscordSrvAddon.plugin.language).getResult() + "**").setEmbeds(messageEmbeds);
                 for (Entry<String, byte[]> entry : attachments.entrySet()) {
                     action = action.addFile(entry.getValue(), entry.getKey());
                 }

@@ -51,6 +51,8 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent.ToolTipType;
+import com.loohp.interactivechatdiscordsrvaddon.resources.languages.SpecificTranslateFunction;
+import com.loohp.interactivechatdiscordsrvaddon.resources.languages.TranslateFunction;
 import github.scarsz.discordsrv.dependencies.kyori.adventure.text.KeybindComponent;
 import github.scarsz.discordsrv.dependencies.kyori.adventure.text.TranslatableComponent;
 import github.scarsz.discordsrv.dependencies.mcdiscordreserializer.discord.DiscordSerializer;
@@ -110,7 +112,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.OptionalInt;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import static com.loohp.interactivechat.libs.net.kyori.adventure.text.Component.empty;
@@ -216,7 +217,7 @@ public class DiscordItemStackUtils {
     }
 
     public static String getItemNameForDiscord(ItemStack item, OfflineICPlayer player, String language) {
-        UnaryOperator<String> translationFunction = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(language);
+        SpecificTranslateFunction translationFunction = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(language);
 
         Player bukkitPlayer = player == null || player.getPlayer() == null || !player.getPlayer().isLocal() ? null : player.getPlayer().getLocalPlayer();
         if (bukkitPlayer == null && !Bukkit.getOnlinePlayers().isEmpty()) {
@@ -228,7 +229,7 @@ public class DiscordItemStackUtils {
             item = new ItemStack(Material.AIR);
         }
         ICMaterial icMaterial = ICMaterial.from(item);
-        String name = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(ItemStackUtils.getDisplayName(item), language);
+        String name = InteractiveChatComponentSerializer.legacySection().serialize(ComponentStringUtils.resolve(ItemStackUtils.getDisplayName(item), translationFunction));
         if (item.getAmount() == 1 || item == null || item.getType().equals(Material.AIR)) {
             name = InteractiveChatDiscordSrvAddon.plugin.itemDisplaySingle.replace("{Item}", ComponentStringUtils.stripColorAndConvertMagic(name)).replace("{Amount}", String.valueOf(item.getAmount()));
         } else {
@@ -241,7 +242,7 @@ public class DiscordItemStackUtils {
     @SuppressWarnings({"UnstableApiUsage", "PatternValidation"})
     public static DiscordToolTip getToolTip(ItemStack item, OfflineICPlayer player, boolean showAdvanceDetails) throws Exception {
         String language = InteractiveChatDiscordSrvAddon.plugin.language;
-        UnaryOperator<String> translationFunction = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(language);
+        SpecificTranslateFunction translationFunction = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(language);
 
         Player bukkitPlayer = player == null || player.getPlayer() == null || !player.getPlayer().isLocal() ? null : player.getPlayer().getLocalPlayer();
         if (bukkitPlayer == null && !Bukkit.getOnlinePlayers().isEmpty()) {
@@ -544,7 +545,7 @@ public class DiscordItemStackUtils {
                     for (PotionEffect effect : effects) {
                         if (InteractiveChat.version.isLegacy()) {
                             String key = getEffect(effect.getType());
-                            String translation = getTranslation(key, language);
+                            String translation = getTranslation(key, language).getResult();
                             String description = "";
                             if (key.equals(translation)) {
                                 description += WordUtils.capitalize(effect.getType().getName().toLowerCase().replace("_", " "));
@@ -552,7 +553,7 @@ public class DiscordItemStackUtils {
                                 description += translation;
                             }
                             int amplifier = effect.getAmplifier();
-                            String effectLevelTranslation = getTranslation(getEffectLevel(amplifier), language);
+                            String effectLevelTranslation = getTranslation(getEffectLevel(amplifier), language).getResult();
                             if (!effectLevelTranslation.isEmpty()) {
                                 description += " " + effectLevelTranslation;
                             }
@@ -573,7 +574,7 @@ public class DiscordItemStackUtils {
                         } else {
                             String key = getEffect(effect.getType());
                             String potionName;
-                            if (key.equals(getTranslation(key, language))) {
+                            if (key.equals(getTranslation(key, language).getResult())) {
                                 potionName = WordUtils.capitalize(effect.getType().getName().toLowerCase().replace("_", " "));
                             } else {
                                 potionName = key;
@@ -643,7 +644,7 @@ public class DiscordItemStackUtils {
                 String enchantmentName;
                 if (description instanceof com.loohp.interactivechat.libs.net.kyori.adventure.text.TranslatableComponent) {
                     String key = ((com.loohp.interactivechat.libs.net.kyori.adventure.text.TranslatableComponent) description).key();
-                    if (key.equals(getTranslation(key, language))) {
+                    if (key.equals(getTranslation(key, language).getResult())) {
                         continue;
                     }
                 }
@@ -836,7 +837,7 @@ public class DiscordItemStackUtils {
     }
 
     public static String toDiscordText(List<ToolTipComponent<?>> toolTipComponents, Function<ToolTipComponent<BufferedImage>, Component> imageToolTipHandler, String language, boolean embedLinks) {
-        UnaryOperator<String> translationFunction = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(language);
+        SpecificTranslateFunction translationFunction = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(language);
         DiscordSerializer serializerSpecial = new DiscordSerializer(DiscordSerializerOptions.defaults().withEmbedLinks(embedLinks));
         Function<?, String> resolver = component -> serializerSpecial.serialize(ComponentStringUtils.toDiscordSRVComponent(ComponentStringUtils.resolve((Component) component, translationFunction)));
         DiscordSerializer serializerRegular = new DiscordSerializer(new DiscordSerializerOptions(embedLinks, true, (Function<KeybindComponent, String>) resolver, (Function<TranslatableComponent, String>) resolver));

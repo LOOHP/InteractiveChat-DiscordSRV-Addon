@@ -23,13 +23,12 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.ComponentIteratorType;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.TextComponent;
+import com.loohp.interactivechatdiscordsrvaddon.resources.languages.SpecificTranslateFunction;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
-
-import java.util.function.UnaryOperator;
 
 public class OptifineUtils {
 
-    public static String componentToString(Component component, UnaryOperator<String> translateFunction) {
+    public static String componentToString(Component component, SpecificTranslateFunction translateFunction) {
         StringBuilder sb = new StringBuilder();
         for (Component each : ComponentStringUtils.resolve(component, translateFunction).iterable(ComponentIteratorType.DEPTH_FIRST)) {
             if (each instanceof TextComponent) {

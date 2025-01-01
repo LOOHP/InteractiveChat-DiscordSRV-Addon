@@ -1,5 +1,5 @@
 /*
- * This file is part of InteractiveChatDiscordSrvAddon2.
+ * This file is part of InteractiveChatDiscordSrvAddon.
  *
  * Copyright (C) 2022. LoohpJames <jamesloohp@gmail.com>
  * Copyright (C) 2022. Contributors
@@ -20,16 +20,9 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.languages;
 
-import com.loohp.interactivechatdiscordsrvaddon.resources.IAbstractManager;
+@FunctionalInterface
+public interface SpecificTranslateFunction {
 
-import java.util.List;
-
-public interface ILanguageManager extends IAbstractManager {
-
-    String applyTranslations(String translationKey, String fallback, String language);
-
-    List<String> getAvailableLanguages();
-
-    LanguageMeta getLanguageMeta(String language);
+    String apply(String translationKey, String fallback);
 
 }
