@@ -1,8 +1,8 @@
 /*
  * This file is part of InteractiveChatDiscordSrvAddon.
  *
- * Copyright (C) 2022. LoohpJames <jamesloohp@gmail.com>
- * Copyright (C) 2022. Contributors
+ * Copyright (C) 2020 - 2025. LoohpJames <jamesloohp@gmail.com>
+ * Copyright (C) 2020 - 2025. Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -252,7 +252,7 @@ public class DiscordContentUtils {
                             int level = iData.getPlayer().getExperienceLevel();
                             byte[] bottleData = ImageUtils.toArray(InteractiveChatDiscordSrvAddon.plugin.modelRenderer.render(32, 32, ModelRenderer.SINGLE_RENDER, InteractiveChatDiscordSrvAddon.plugin.getResourceManager(), InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction("minecraft:item/experience_bottle", null, XMaterial.EXPERIENCE_BOTTLE.parseItem(), InteractiveChat.version.isOld(), null, null, null, null, InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)).orElse(null), InteractiveChat.version.isOld(), "minecraft:item/experience_bottle", ModelDisplayPosition.GUI, false, null, null).getImage(0));
                             content.addAttachment("Level_" + i + ".png", bottleData);
-                            content.setFooter(ComponentStringUtils.convertFormattedString(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language), level));
+                            content.setFooter(ComponentStringUtils.convertFormattedString(LanguageUtils.getTranslation(TranslationKeyUtils.getLevelTranslation(level), InteractiveChatDiscordSrvAddon.plugin.language).getResult(), level));
                             content.setFooterImageUrl("attachment://Level_" + i + ".png");
                         }
                         contents.add(content);
@@ -309,7 +309,7 @@ public class DiscordContentUtils {
                             content.addImageUrl("attachment://ToolTip_" + i + ".png");
                             content.addDescription(null);
                         } else {
-                            body += ComponentStringUtils.stripColorAndConvertMagic(InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(hData.getHoverText()));
+                            body += ComponentStringUtils.stripColorAndConvertMagic(InteractiveChatComponentSerializer.legacySection().serialize(ComponentStringUtils.resolve(hData.getHoverText(), InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language))));
                         }
                     }
                     if (hData.hasClick()) {
@@ -318,14 +318,14 @@ public class DiscordContentUtils {
                                 if (body.length() > 0) {
                                     body += "\n\n";
                                 }
-                                body += LanguageUtils.getTranslation(TranslationKeyUtils.getCopyToClipboard(), InteractiveChatDiscordSrvAddon.plugin.language) + ": __" + hData.getClickValue() + "__";
+                                body += LanguageUtils.getTranslation(TranslationKeyUtils.getCopyToClipboard(), InteractiveChatDiscordSrvAddon.plugin.language).getResult() + ": __" + hData.getClickValue() + "__";
                                 break;
                             case OPEN_URL:
                                 if (body.length() > 0) {
                                     body += "\n\n";
                                 }
                                 String url = hData.getClickValue();
-                                body += LanguageUtils.getTranslation(TranslationKeyUtils.getOpenUrl(), InteractiveChatDiscordSrvAddon.plugin.language) + ": __" + url + "__";
+                                body += LanguageUtils.getTranslation(TranslationKeyUtils.getOpenUrl(), InteractiveChatDiscordSrvAddon.plugin.language).getResult() + ": __" + url + "__";
                                 if (URLRequestUtils.IMAGE_URL_PATTERN.matcher(url).matches() && URLRequestUtils.isAllowed(url)) {
                                     preview = url;
                                 }
@@ -434,7 +434,7 @@ public class DiscordContentUtils {
         Map<String, AtomicInteger> currentPages = new ConcurrentHashMap<>();
         List<SelectOption> selectOptions = IntStream.range(1, cachedImages.length + 1).mapToObj(i -> {
             String asText = String.valueOf(i);
-            return SelectOption.of(ComponentStringUtils.convertFormattedString(LanguageUtils.getTranslation(TranslationKeyUtils.getBookPageIndicator(), InteractiveChatDiscordSrvAddon.plugin.language), i, cachedImages.length), asText);
+            return SelectOption.of(ComponentStringUtils.convertFormattedString(LanguageUtils.getTranslation(TranslationKeyUtils.getBookPageIndicator(), InteractiveChatDiscordSrvAddon.plugin.language).getResult(), i, cachedImages.length), asText);
         }).collect(Collectors.toList());
         return (event, discordMessageContents) -> {
             User self = DiscordSRV.getPlugin().getJda().getSelfUser();

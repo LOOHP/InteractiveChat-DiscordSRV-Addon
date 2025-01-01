@@ -1,8 +1,8 @@
 /*
- * This file is part of ImageFrame.
+ * This file is part of InteractiveChatDiscordSrvAddon-Abstraction.
  *
- * Copyright (C) 2024. LoohpJames <jamesloohp@gmail.com>
- * Copyright (C) 2024. Contributors
+ * Copyright (C) 2020 - 2025. LoohpJames <jamesloohp@gmail.com>
+ * Copyright (C) 2020 - 2025. Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -211,5 +211,7 @@ public abstract class NMSAddonWrapper {
     public abstract Component getTrimPatternDescription(Object trimPattern, Object trimMaterial);
 
     public abstract OptionalInt getFireworkFlightDuration(ItemStack itemStack);
+
+    public abstract boolean shouldShowOperatorBlockWarnings(ItemStack itemStack, Player player);
 
 }

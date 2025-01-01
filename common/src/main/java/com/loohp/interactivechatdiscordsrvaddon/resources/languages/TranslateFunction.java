@@ -1,8 +1,8 @@
 /*
  * This file is part of InteractiveChatDiscordSrvAddon.
  *
- * Copyright (C) 2022. LoohpJames <jamesloohp@gmail.com>
- * Copyright (C) 2022. Contributors
+ * Copyright (C) 2020 - 2025. LoohpJames <jamesloohp@gmail.com>
+ * Copyright (C) 2020 - 2025. Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,16 +20,13 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.languages;
 
-import java.util.function.BinaryOperator;
-import java.util.function.UnaryOperator;
-
 @FunctionalInterface
-public interface TranslateFunction extends BinaryOperator<String> {
+public interface TranslateFunction {
 
-    String apply(String translationKey, String language);
+    String apply(String translationKey, String fallback, String language);
 
-    default UnaryOperator<String> ofLanguage(String language) {
-        return translationKey -> apply(translationKey, language);
+    default SpecificTranslateFunction ofLanguage(String language) {
+        return (translationKey, fallback) -> apply(translationKey, fallback, language);
     }
 
 }

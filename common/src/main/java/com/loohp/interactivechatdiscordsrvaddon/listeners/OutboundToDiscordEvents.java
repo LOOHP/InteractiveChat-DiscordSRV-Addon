@@ -1,8 +1,8 @@
 /*
  * This file is part of InteractiveChatDiscordSrvAddon.
  *
- * Copyright (C) 2022. LoohpJames <jamesloohp@gmail.com>
- * Copyright (C) 2022. Contributors
+ * Copyright (C) 2020 - 2025. LoohpJames <jamesloohp@gmail.com>
+ * Copyright (C) 2020 - 2025. Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,6 +68,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ImageDisplayType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.InteractionHandler;
 import com.loohp.interactivechatdiscordsrvaddon.registry.DiscordDataRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.languages.SpecificTranslateFunction;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordContentUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils;
@@ -724,8 +725,10 @@ public class OutboundToDiscordEvents implements Listener {
         Object advancement = NMSAddon.getInstance().getBukkitAdvancementFromEvent(bukkitEvent);
         AdvancementData data = NMSAddon.getInstance().getAdvancementDataFromBukkitAdvancement(advancement);
 
-        String title = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(data.getTitle(), InteractiveChatDiscordSrvAddon.plugin.language);
-        String description = InteractiveChatComponentSerializer.bungeecordApiLegacy().serialize(data.getDescription(), InteractiveChatDiscordSrvAddon.plugin.language);
+        SpecificTranslateFunction translateFunction = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language);
+
+        String title = InteractiveChatComponentSerializer.legacySection().serialize(ComponentStringUtils.resolve(data.getTitle(), translateFunction));
+        String description = InteractiveChatComponentSerializer.legacySection().serialize(ComponentStringUtils.resolve(data.getDescription(), translateFunction));
         ItemStack item = data.getItem();
         AdvancementType advancementType = data.getAdvancementType();
         boolean isMinecraft = data.isMinecraft();
@@ -750,13 +753,13 @@ public class OutboundToDiscordEvents implements Listener {
         }
         if (InteractiveChatDiscordSrvAddon.plugin.advancementName && title != null) {
             event.setAchievementName(ChatColorUtils.stripColor(title));
-            messageFormat.setAuthorName(ComponentStringUtils.convertFormattedString(LanguageUtils.getTranslation(advancementType.getTranslationKey(), InteractiveChatDiscordSrvAddon.plugin.language), event.getPlayer().getName(), ChatColorUtils.stripColor(title)));
+            messageFormat.setAuthorName(ComponentStringUtils.convertFormattedString(LanguageUtils.getTranslation(advancementType.getTranslationKey(), InteractiveChatDiscordSrvAddon.plugin.language).getResult(), event.getPlayer().getName(), ChatColorUtils.stripColor(title)));
             Color color;
             if (isMinecraft) {
                 color = ColorUtils.getColor(advancementType.getColor());
             } else {
                 String colorStr = ChatColorUtils.getFirstColors(title);
-                color = ColorUtils.getColor(ColorUtils.toChatColor(colorStr));
+                color = ColorUtils.getColor(colorStr == null || colorStr.isEmpty() ? advancementType.getColor() : ColorUtils.toChatColor(colorStr));
             }
             if (color.equals(Color.white)) {
                 color = DiscordContentUtils.OFFSET_WHITE;

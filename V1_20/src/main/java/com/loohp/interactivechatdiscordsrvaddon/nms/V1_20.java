@@ -1,8 +1,8 @@
 /*
- * This file is part of InteractiveChatDiscordSrvAddon.
+ * This file is part of InteractiveChatDiscordSrvAddon-V1_20.
  *
- * Copyright (C) 2024. LoohpJames <jamesloohp@gmail.com>
- * Copyright (C) 2024. Contributors
+ * Copyright (C) 2020 - 2025. LoohpJames <jamesloohp@gmail.com>
+ * Copyright (C) 2020 - 2025. Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -170,7 +170,7 @@ public class V1_20 extends NMSAddonWrapper {
     @Override
     public Key getPatternTypeKey(PatternType patternType) {
         try {
-            MinecraftKey key = BuiltInRegistries.al.b(new EnumBannerPatternType(patternType.getIdentifier()));
+            MinecraftKey key = BuiltInRegistries.al.b(EnumBannerPatternType.a(patternType.getIdentifier()).a());
             return Key.key(key.b(), key.a());
         } catch (Exception ignored) {
         }
@@ -755,6 +755,11 @@ public class V1_20 extends NMSAddonWrapper {
             }
         }
         return OptionalInt.empty();
+    }
+
+    @Override
+    public boolean shouldShowOperatorBlockWarnings(ItemStack itemStack, Player player) {
+        return false;
     }
 
 }

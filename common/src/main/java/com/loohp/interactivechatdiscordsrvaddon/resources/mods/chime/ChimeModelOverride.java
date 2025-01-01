@@ -1,8 +1,8 @@
 /*
- * This file is part of InteractiveChatDiscordSrvAddon2.
+ * This file is part of InteractiveChatDiscordSrvAddon.
  *
- * Copyright (C) 2022. LoohpJames <jamesloohp@gmail.com>
- * Copyright (C) 2022. Contributors
+ * Copyright (C) 2020 - 2025. LoohpJames <jamesloohp@gmail.com>
+ * Copyright (C) 2020 - 2025. Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ import com.loohp.interactivechat.utils.NBTParsingUtils;
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.languages.SpecificTranslateFunction;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimePredicateEnums.ItemInHand;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimePredicateEnums.TargetType;
@@ -49,7 +50,6 @@ import org.bukkit.util.RayTraceResult;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 public class ChimeModelOverride extends ModelOverride {
@@ -88,7 +88,7 @@ public class ChimeModelOverride extends ModelOverride {
         return false;
     }
 
-    public boolean test(Map<ModelOverrideType, Float> data, OfflineICPlayer player, World world, LivingEntity entity, ItemStack itemStack, UnaryOperator<String> translateFunction) {
+    public boolean test(Map<ModelOverrideType, Float> data, OfflineICPlayer player, World world, LivingEntity entity, ItemStack itemStack, SpecificTranslateFunction translateFunction) {
         if (!super.test(data)) {
             return false;
         }
@@ -420,7 +420,7 @@ public class ChimeModelOverride extends ModelOverride {
             return predicate;
         }
 
-        public boolean test(Object value, OfflineICPlayer player, World world, LivingEntity entity, ItemStack itemStack, UnaryOperator<String> translateFunction) {
+        public boolean test(Object value, OfflineICPlayer player, World world, LivingEntity entity, ItemStack itemStack, SpecificTranslateFunction translateFunction) {
             try {
                 return predicate.test(value, player, world, entity, itemStack, translateFunction);
             } catch (Throwable e) {
@@ -459,7 +459,7 @@ public class ChimeModelOverride extends ModelOverride {
     @FunctionalInterface
     public interface ChimeOverridePredicate<T> {
 
-        boolean test(T t, OfflineICPlayer player, World world, LivingEntity entity, ItemStack itemStack, UnaryOperator<String> translateFunction) throws Throwable;
+        boolean test(T t, OfflineICPlayer player, World world, LivingEntity entity, ItemStack itemStack, SpecificTranslateFunction translateFunction) throws Throwable;
 
     }
 

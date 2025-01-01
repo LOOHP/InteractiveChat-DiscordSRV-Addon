@@ -1,8 +1,8 @@
 /*
  * This file is part of InteractiveChatDiscordSrvAddon.
  *
- * Copyright (C) 2022. LoohpJames <jamesloohp@gmail.com>
- * Copyright (C) 2022. Contributors
+ * Copyright (C) 2020 - 2025. LoohpJames <jamesloohp@gmail.com>
+ * Copyright (C) 2020 - 2025. Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,6 +46,7 @@ import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.ItemNBTUtils;
 import com.loohp.interactivechat.utils.XMaterialUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.FontProvider;
+import com.loohp.interactivechatdiscordsrvaddon.resources.languages.SpecificTranslateFunction;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
@@ -60,7 +61,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.ToIntFunction;
-import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -70,7 +70,7 @@ public class ComponentStringUtils {
 
     private static final Pattern ARG_FORMAT = Pattern.compile("%(?:(\\d+)\\$)?([A-Za-z%]|$)");
 
-    public static List<Component> applyWordWrap(Component component, UnaryOperator<String> translateFunction, int lineLengthLimit, ToIntFunction<CharacterLengthProviderData> characterLengthProvider) {
+    public static List<Component> applyWordWrap(Component component, SpecificTranslateFunction translateFunction, int lineLengthLimit, ToIntFunction<CharacterLengthProviderData> characterLengthProvider) {
         List<Component> result = new ArrayList<>();
         int x = 0;
         List<Component> child = ComponentFlattening.flatten(component).children();
@@ -205,7 +205,7 @@ public class ComponentStringUtils {
         return result;
     }
 
-    public static Component resolve(Component component, UnaryOperator<String> translateFunction) {
+    public static Component resolve(Component component, SpecificTranslateFunction translateFunction) {
         component = ComponentFlattening.flatten(component);
         List<Component> children = new ArrayList<>(component.children());
         for (int i = 0; i < children.size(); i++) {
@@ -234,8 +234,8 @@ public class ComponentStringUtils {
         return ComponentCompacting.optimize(component.children(children));
     }
 
-    public static Component convertSingleTranslatable(TranslatableComponent component, UnaryOperator<String> translateFunction) {
-        String translation = translateFunction.apply(component.key());
+    public static Component convertSingleTranslatable(TranslatableComponent component, SpecificTranslateFunction translateFunction) {
+        String translation = translateFunction.apply(component.key(), component.fallback());
         List<Component> args = ComponentLike.asComponents(component.arguments());
 
         List<Component> parts = new ArrayList<>();
@@ -343,7 +343,7 @@ public class ComponentStringUtils {
     }
 
     public static Component join(Component parent, Component deliminator, Collection<? extends Component> components) {
-        if (components.size() == 0) {
+        if (components.isEmpty()) {
             return parent;
         }
         if (components.size() == 1) {

@@ -1,8 +1,8 @@
 /*
- * This file is part of InteractiveChatDiscordSrvAddon2.
+ * This file is part of InteractiveChatDiscordSrvAddon.
  *
- * Copyright (C) 2022. LoohpJames <jamesloohp@gmail.com>
- * Copyright (C) 2022. Contributors
+ * Copyright (C) 2020 - 2025. LoohpJames <jamesloohp@gmail.com>
+ * Copyright (C) 2020 - 2025. Contributors
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceLoadingException;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
+import com.loohp.interactivechatdiscordsrvaddon.resources.languages.SpecificTranslateFunction;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride;
@@ -72,7 +73,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 public class OptifineManager extends ModManager implements IOptifineManager {
@@ -180,7 +180,7 @@ public class OptifineManager extends ModManager implements IOptifineManager {
     }
 
     @Override
-    public Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> getItemPostResolveFunction(EquipmentSlot heldSlot, ItemStack itemStack, boolean is1_8, Map<ModelOverrideType, Float> predicates, UnaryOperator<String> translateFunction) {
+    public Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> getItemPostResolveFunction(EquipmentSlot heldSlot, ItemStack itemStack, boolean is1_8, Map<ModelOverrideType, Float> predicates, SpecificTranslateFunction translateFunction) {
         if (itemStack == null || itemStack.getType().equals(Material.AIR)) {
             return ModelRenderer.DEFAULT_POST_RESOLVE_FUNCTION;
         }
@@ -267,7 +267,7 @@ public class OptifineManager extends ModManager implements IOptifineManager {
     }
 
     @Override
-    public TextureResource getElytraOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction) {
+    public TextureResource getElytraOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack, SpecificTranslateFunction translateFunction) {
         if (itemStack == null || !itemStack.getType().equals(Material.valueOf("ELYTRA"))) {
             return null;
         }
@@ -285,7 +285,7 @@ public class OptifineManager extends ModManager implements IOptifineManager {
     }
 
     @Override
-    public TextureResource getArmorOverrideTextures(String layer, EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction) {
+    public TextureResource getArmorOverrideTextures(String layer, EquipmentSlot heldSlot, ItemStack itemStack, SpecificTranslateFunction translateFunction) {
         if (itemStack == null || itemStack.getType().equals(Material.AIR)) {
             return null;
         }
@@ -306,7 +306,7 @@ public class OptifineManager extends ModManager implements IOptifineManager {
     }
 
     @Override
-    public List<ValuePairs<TextureResource, OpenGLBlending>> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction) {
+    public List<ValuePairs<TextureResource, OpenGLBlending>> getEnchantmentGlintOverrideTextures(EquipmentSlot heldSlot, ItemStack itemStack, SpecificTranslateFunction translateFunction) {
         Map<String, TextureResource> overrideTextures = new HashMap<>();
         if (itemStack == null || itemStack.getType().equals(Material.AIR)) {
             return getCITGlobalProperties().isUseGlint() ? Collections.emptyList() : Collections.singletonList(new ValuePairs<>(new GeneratedTextureResource(manager, BLANK_ENCHANTMENT), OpenGLBlending.ADD));
@@ -460,7 +460,7 @@ public class OptifineManager extends ModManager implements IOptifineManager {
     }
 
     @Override
-    public <T extends CITProperties> ValuePairs<ResourcePackFile, T> getCITOverride(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction, Class<T> type) {
+    public <T extends CITProperties> ValuePairs<ResourcePackFile, T> getCITOverride(EquipmentSlot heldSlot, ItemStack itemStack, SpecificTranslateFunction translateFunction, Class<T> type) {
         ValuePairs<ResourcePackFile, T> result = null;
         int weight = Integer.MIN_VALUE;
         for (ValuePairs<ResourcePackFile, CITProperties> pair : citOverrides.values()) {
@@ -474,7 +474,7 @@ public class OptifineManager extends ModManager implements IOptifineManager {
     }
 
     @Override
-    public <T extends CITProperties> List<ValuePairs<ResourcePackFile, T>> getCITOverrides(EquipmentSlot heldSlot, ItemStack itemStack, UnaryOperator<String> translateFunction, Class<T> type) {
+    public <T extends CITProperties> List<ValuePairs<ResourcePackFile, T>> getCITOverrides(EquipmentSlot heldSlot, ItemStack itemStack, SpecificTranslateFunction translateFunction, Class<T> type) {
         List<ValuePairs<ResourcePackFile, T>> result = new ArrayList<>();
         for (ValuePairs<ResourcePackFile, CITProperties> pair : citOverrides.values()) {
             CITProperties citProperties = pair.getSecond();

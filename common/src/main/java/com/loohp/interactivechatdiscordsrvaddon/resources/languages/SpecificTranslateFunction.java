@@ -18,26 +18,11 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.loohp.interactivechatdiscordsrvaddon.objectholders;
+package com.loohp.interactivechatdiscordsrvaddon.resources.languages;
 
-import com.loohp.interactivechat.objectholders.OfflineICPlayer;
+@FunctionalInterface
+public interface SpecificTranslateFunction {
 
-public abstract class DiscordDisplayData {
-
-    protected final OfflineICPlayer player;
-    protected final int position;
-
-    public DiscordDisplayData(OfflineICPlayer player, int position) {
-        this.player = player;
-        this.position = position;
-    }
-
-    public OfflineICPlayer getPlayer() {
-        return player;
-    }
-
-    public int getPosition() {
-        return position;
-    }
+    String apply(String translationKey, String fallback);
 
 }
