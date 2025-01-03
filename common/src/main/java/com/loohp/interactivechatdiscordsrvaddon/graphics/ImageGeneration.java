@@ -904,7 +904,7 @@ public class ImageGeneration {
         } else {
             CompletableFuture<BufferedImage> future = new CompletableFuture<>();
             ItemStack finalItem = item.clone();
-            Bukkit.getScheduler().runTask(InteractiveChatDiscordSrvAddon.plugin, () -> {
+            InteractiveChatDiscordSrvAddon.plugin.getScheduler().runNextTick((outer) -> {
                 ItemMapWrapper data;
                 try {
                     data = new ItemMapWrapper(finalItem, player);
@@ -912,7 +912,7 @@ public class ImageGeneration {
                     future.completeExceptionally(e);
                     return;
                 }
-                Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+                InteractiveChatDiscordSrvAddon.plugin.getScheduler().runAsync((inner) -> {
                     try {
                         future.complete(getMapImage(data.getColors(), data.getMapCursors(), player));
                     } catch (Throwable e) {
@@ -1693,7 +1693,7 @@ public class ImageGeneration {
     public static Future<List<BufferedImage>> getBookInterface(List<Component> pages) {
         CompletableFuture<List<BufferedImage>> future = new CompletableFuture<>();
         List<Supplier<BufferedImage>> suppliers = getBookInterfaceSuppliers(pages);
-        Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> future.complete(suppliers.stream().map(each -> each.get()).collect(Collectors.toList())));
+        InteractiveChatDiscordSrvAddon.plugin.getScheduler().runAsync((task) -> future.complete(suppliers.stream().map(each -> each.get()).collect(Collectors.toList())));
         return future;
     }
 
