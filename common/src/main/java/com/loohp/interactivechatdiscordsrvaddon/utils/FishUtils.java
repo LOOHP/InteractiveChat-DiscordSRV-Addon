@@ -20,12 +20,9 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
-import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import org.bukkit.DyeColor;
-import org.bukkit.entity.FishHook;
-import org.bukkit.entity.Player;
 import org.bukkit.entity.TropicalFish;
 import org.bukkit.entity.TropicalFish.Pattern;
 
@@ -100,10 +97,6 @@ public class FishUtils {
         int base = getTropicalFishBaseVariant(variance);
         int index = getTropicalFishPatternVariant(variance);
         return TropicalFishPattern.getPatternName(base, index);
-    }
-
-    public static FishHook getPlayerFishingHook(Player player) {
-        return NMSAddon.getInstance().getFishHook(player);
     }
 
     public enum TropicalFishPattern {

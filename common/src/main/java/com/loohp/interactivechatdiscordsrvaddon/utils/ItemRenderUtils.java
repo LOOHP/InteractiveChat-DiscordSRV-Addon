@@ -436,7 +436,7 @@ public class ItemRenderUtils {
                 ICPlayer icplayer = player.getPlayer();
                 if (icplayer != null && icplayer.isLocal()) {
                     Player bukkitPlayer = icplayer.getLocalPlayer();
-                    if (FishUtils.getPlayerFishingHook(bukkitPlayer) != null) {
+                    if (NMSAddon.getInstance().getFishHook(bukkitPlayer) != null) {
                         ItemStack mainHandItem = bukkitPlayer.getEquipment().getItemInHand();
                         if (InteractiveChat.version.isOld()) {
                             if (mainHandItem != null && mainHandItem.equals(item)) {
@@ -669,7 +669,7 @@ public class ItemRenderUtils {
                 boolean evaluation0 = false;
                 if (icplayer != null && icplayer.isLocal()) {
                     Player bukkitPlayer = icplayer.getLocalPlayer();
-                    if (FishUtils.getPlayerFishingHook(bukkitPlayer) != null) {
+                    if (NMSAddon.getInstance().getFishHook(bukkitPlayer) != null) {
                         ItemStack mainHandItem = bukkitPlayer.getEquipment().getItemInHand();
                         ItemStack offHandItem = bukkitPlayer.getEquipment().getItemInOffHand();
                         if ((mainHandItem != null && mainHandItem.equals(itemStack)) || ((offHandItem != null && offHandItem.equals(itemStack)) && (mainHandItem == null || !XMaterial.matchXMaterial(mainHandItem).equals(XMaterial.FISHING_ROD)))) {
