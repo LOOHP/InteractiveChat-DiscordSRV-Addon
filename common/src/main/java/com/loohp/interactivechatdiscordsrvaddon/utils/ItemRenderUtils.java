@@ -417,6 +417,9 @@ public class ItemRenderUtils {
                 tintColorProvider = new TintColorProvider.DyeTintProvider(tintIndex -> tintIndex != 1 ? -1 : overlayColor);
             } else if (InteractiveChat.version.isLegacy() && icMaterial.isOneOf(Collections.singletonList("CONTAINS:bed"))) {
                 String colorName = icMaterial.name().replace("_BED", "").toLowerCase();
+                if (colorName.equalsIgnoreCase("light_gray")) {
+                    colorName = "silver";
+                }
                 BufferedImage bedTexture = manager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "bed/" + colorName).getTexture();
                 providedTextures.put(ResourceRegistry.LEGACY_BED_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, bedTexture));
             } else if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_9) && icMaterial.isMaterial(XMaterial.ENDER_PEARL)) {
