@@ -25,6 +25,10 @@ import java.util.List;
 
 public class CustomModelData {
 
+    public static boolean isEmpty(CustomModelData data) {
+        return data == null || data.isEmpty();
+    }
+
     private final List<Float> floats;
     private final List<Boolean> flags;
     private final List<String> strings;
@@ -83,5 +87,9 @@ public class CustomModelData {
 
     public float getLegacyIndex() {
         return floats.get(0);
+    }
+
+    public boolean isEmpty() {
+        return floats.isEmpty() && flags.isEmpty() && strings.isEmpty() && colors.isEmpty();
     }
 }
