@@ -39,6 +39,7 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @SuppressWarnings("deprecation")
 public class GraphicsToPacketMapWrapper {
@@ -169,23 +170,20 @@ public class GraphicsToPacketMapWrapper {
         NMS.getInstance().sendFakeMainHandSlot(player, mapItem);
 
         GraphicsToPacketMapWrapper ref = this;
-        new BukkitRunnable() {
-            int index = 0;
 
-            @Override
-            public void run() {
-                GraphicsToPacketMapWrapper wrapper = InboundToGameEvents.MAP_VIEWERS.get(player);
-                if (wrapper != null && wrapper.equals(ref)) {
-                    byte[] colorArray = colors.get(index);
-                    NMS.getInstance().sendFakeMapUpdate(player, MAP_ID, Collections.emptyList(), colorArray);
-                } else {
-                    this.cancel();
-                }
-                if (++index >= colors.size()) {
-                    index = 0;
-                }
+        final AtomicInteger index = new AtomicInteger();
+        InteractiveChatDiscordSrvAddon.plugin.getScheduler().runTimer((task) -> {
+            GraphicsToPacketMapWrapper wrapper = InboundToGameEvents.MAP_VIEWERS.get(player);
+            if (wrapper != null && wrapper.equals(ref)) {
+                byte[] colorArray = colors.get(index.get());
+                NMS.getInstance().sendFakeMapUpdate(player, MAP_ID, Collections.emptyList(), colorArray);
+            } else {
+                task.cancel();
             }
-        }.runTaskTimer(InteractiveChatDiscordSrvAddon.plugin, 0, 1);
+            if (index.incrementAndGet() >= colors.size()) {
+                index.set(0);
+            }
+        }, 0, 1);
     }
 
 }
