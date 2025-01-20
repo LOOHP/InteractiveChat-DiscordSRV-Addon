@@ -113,8 +113,12 @@ public class EquipmentModelDefinition {
             this(OptionalInt.of(colorWhenUndyed));
         }
 
-        public OptionalInt getColorWhenUndyed() {
+        public OptionalInt getOptionalColorWhenUndyed() {
             return colorWhenUndyed;
+        }
+
+        public int getColorWhenUndyed(int defaultColor) {
+            return colorWhenUndyed.orElse(defaultColor);
         }
     }
 

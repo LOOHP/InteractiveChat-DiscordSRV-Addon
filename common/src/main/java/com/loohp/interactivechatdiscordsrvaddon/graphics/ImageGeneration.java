@@ -563,8 +563,8 @@ public class ImageGeneration {
                 Key key = KeyUtils.toKey(layer.getTexture());
                 BufferedImage layerImage = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getArmorOverrideTextures(key.value(), EquipmentSlot.LEGS, leggings, player, world, livingEntity, translateFunction.get()).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getOptionalTexture(key.namespace() + ":" + ResourceRegistry.ARMOR_LEGGINGS_TEXTURE_LOCATION + key.value()).map(t -> t.getTexture()).orElse(null));
                 if (layerImage != null) {
-                    if (layer.isDyeable() && leggingsArmorResult.hasDyeableColor()) {
-                        BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(layerImage), leggingsArmorResult.getDyeableColor());
+                    if (layer.isDyeable()) {
+                        BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(layerImage), leggingsArmorResult.getDyeableColor(layer.getDyeable().getColorWhenUndyed(ResourceRegistry.DEFAULT_DYE_COLOR)));
                         layerImage = ImageUtils.multiply(layerImage, colorOverlay);
                     }
                     if (leggingsImage == null) {
@@ -603,10 +603,10 @@ public class ImageGeneration {
             BufferedImage bootsImage = null;
             for (EquipmentModelDefinition.EquipmentLayer layer : bootsArmorResult.getLayers()) {
                 Key key = KeyUtils.toKey(layer.getTexture());
-                BufferedImage layerImage = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getArmorOverrideTextures(key.value(), EquipmentSlot.LEGS, leggings, player, world, livingEntity, translateFunction.get()).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getOptionalTexture(key.namespace() + ":" + ResourceRegistry.ARMOR_TEXTURE_LOCATION + key.value()).map(t -> t.getTexture()).orElse(null));
+                BufferedImage layerImage = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getArmorOverrideTextures(key.value(), EquipmentSlot.FEET, leggings, player, world, livingEntity, translateFunction.get()).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getOptionalTexture(key.namespace() + ":" + ResourceRegistry.ARMOR_TEXTURE_LOCATION + key.value()).map(t -> t.getTexture()).orElse(null));
                 if (layerImage != null) {
-                    if (layer.isDyeable() && bootsArmorResult.hasDyeableColor()) {
-                        BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(layerImage), bootsArmorResult.getDyeableColor());
+                    if (layer.isDyeable()) {
+                        BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(layerImage), bootsArmorResult.getDyeableColor(layer.getDyeable().getColorWhenUndyed(ResourceRegistry.DEFAULT_DYE_COLOR)));
                         layerImage = ImageUtils.multiply(layerImage, colorOverlay);
                     }
                     if (bootsImage == null) {
@@ -677,10 +677,10 @@ public class ImageGeneration {
             BufferedImage chestplateImage = null;
             for (EquipmentModelDefinition.EquipmentLayer layer : chestplateArmorResult.getLayers()) {
                 Key key = KeyUtils.toKey(layer.getTexture());
-                BufferedImage layerImage = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getArmorOverrideTextures(key.value(), EquipmentSlot.LEGS, leggings, player, world, livingEntity, translateFunction.get()).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getOptionalTexture(key.namespace() + ":" + ResourceRegistry.ARMOR_TEXTURE_LOCATION + key.value()).map(t -> t.getTexture()).orElse(null));
+                BufferedImage layerImage = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getArmorOverrideTextures(key.value(), EquipmentSlot.CHEST, leggings, player, world, livingEntity, translateFunction.get()).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getOptionalTexture(key.namespace() + ":" + ResourceRegistry.ARMOR_TEXTURE_LOCATION + key.value()).map(t -> t.getTexture()).orElse(null));
                 if (layerImage != null) {
-                    if (layer.isDyeable() && chestplateArmorResult.hasDyeableColor()) {
-                        BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(layerImage), chestplateArmorResult.getDyeableColor());
+                    if (layer.isDyeable()) {
+                        BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(layerImage), chestplateArmorResult.getDyeableColor(layer.getDyeable().getColorWhenUndyed(ResourceRegistry.DEFAULT_DYE_COLOR)));
                         layerImage = ImageUtils.multiply(layerImage, colorOverlay);
                     }
                     if (chestplateImage == null) {
@@ -720,10 +720,10 @@ public class ImageGeneration {
             BufferedImage helmetImage = null;
             for (EquipmentModelDefinition.EquipmentLayer layer : helmetArmorResult.getLayers()) {
                 Key key = KeyUtils.toKey(layer.getTexture());
-                BufferedImage layerImage = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getArmorOverrideTextures(key.value(), EquipmentSlot.LEGS, leggings, player, world, livingEntity, translateFunction.get()).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getOptionalTexture(key.namespace() + ":" + ResourceRegistry.ARMOR_TEXTURE_LOCATION + key.value()).map(t -> t.getTexture()).orElse(null));
+                BufferedImage layerImage = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getArmorOverrideTextures(key.value(), EquipmentSlot.HEAD, leggings, player, world, livingEntity, translateFunction.get()).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getOptionalTexture(key.namespace() + ":" + ResourceRegistry.ARMOR_TEXTURE_LOCATION + key.value()).map(t -> t.getTexture()).orElse(null));
                 if (layerImage != null) {
-                    if (layer.isDyeable() && helmetArmorResult.hasDyeableColor()) {
-                        BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(layerImage), helmetArmorResult.getDyeableColor());
+                    if (layer.isDyeable()) {
+                        BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(layerImage), helmetArmorResult.getDyeableColor(layer.getDyeable().getColorWhenUndyed(ResourceRegistry.DEFAULT_DYE_COLOR)));
                         layerImage = ImageUtils.multiply(layerImage, colorOverlay);
                     }
                     if (helmetImage == null) {
