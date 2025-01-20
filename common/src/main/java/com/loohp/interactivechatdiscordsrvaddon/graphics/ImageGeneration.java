@@ -390,7 +390,8 @@ public class ImageGeneration {
         //boots
         ItemStack boots = inventory.getItem(i);
         if (boots == null || boots.getType().equals(Material.AIR)) {
-            g.drawImage(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_boots").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
+            String resourceLocation = ResourceRegistry.RESOURCE_PACK_VERSION < 46 ? ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_boots" : ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/slot/boots";
+            g.drawImage(resourceManager.get().getTextureManager().getTexture(resourceLocation).getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
         } else {
             BufferedImage itemImage = getSingleRawItemImage(boots, player);
             if (itemImage != null) {
@@ -402,7 +403,8 @@ public class ImageGeneration {
         //leggings
         ItemStack leggings = inventory.getItem(i);
         if (leggings == null || leggings.getType().equals(Material.AIR)) {
-            g.drawImage(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_leggings").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
+            String resourceLocation = ResourceRegistry.RESOURCE_PACK_VERSION < 46 ? ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_leggings" : ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/slot/leggings";
+            g.drawImage(resourceManager.get().getTextureManager().getTexture(resourceLocation).getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
         } else {
             BufferedImage itemImage = getSingleRawItemImage(leggings, player);
             if (itemImage != null) {
@@ -414,7 +416,8 @@ public class ImageGeneration {
         //chestplate
         ItemStack chestplate = inventory.getItem(i);
         if (chestplate == null || chestplate.getType().equals(Material.AIR)) {
-            g.drawImage(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_chestplate").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
+            String resourceLocation = ResourceRegistry.RESOURCE_PACK_VERSION < 46 ? ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_chestplate" : ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/slot/chestplate";
+            g.drawImage(resourceManager.get().getTextureManager().getTexture(resourceLocation).getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
         } else {
             BufferedImage itemImage = getSingleRawItemImage(chestplate, player);
             if (itemImage != null) {
@@ -426,7 +429,8 @@ public class ImageGeneration {
         //helmet
         ItemStack helmet = inventory.getItem(i);
         if (helmet == null || helmet.getType().equals(Material.AIR)) {
-            g.drawImage(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_helmet").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
+            String resourceLocation = ResourceRegistry.RESOURCE_PACK_VERSION < 46 ? ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_helmet" : ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/slot/helmet";
+            g.drawImage(resourceManager.get().getTextureManager().getTexture(resourceLocation).getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
         } else {
             BufferedImage itemImage = getSingleRawItemImage(helmet, player);
             if (itemImage != null) {
