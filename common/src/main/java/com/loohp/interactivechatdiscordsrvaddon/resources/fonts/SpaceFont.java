@@ -63,7 +63,7 @@ public class SpaceFont extends MinecraftFont {
     @Override
     public FontRenderResult printCharacter(BufferedImage image, String character, int x, int y, float fontSize, int lastItalicExtraWidth, int color, List<TextDecoration> decorations) {
         decorations = sortDecorations(decorations);
-        int advance = (int) Math.round(charAdvances.get(character.codePointAt(0)) * 0.75);
+        int advance = charAdvances.get(character.codePointAt(0));
         if (advance != 0) {
             int sign = advance < 0 ? -1 : 1;
             advance = Math.abs(advance);
@@ -71,7 +71,8 @@ public class SpaceFont extends MinecraftFont {
             int w = (int) Math.round(originalW * ((double) Math.round(fontSize) / (double) DEFAULT_HEIGHT));
             int h = Math.round(fontSize);
             int beforeTransformW = w;
-            int pixelSize = Math.round((float) beforeTransformW / (float) originalW);
+            double accuratePixelSize = (double) beforeTransformW / (double) originalW;
+            int pixelSize = (int) Math.round(accuratePixelSize);
             int strikeSize = (int) (fontSize / 8);
             int boldSize = (int) (fontSize / 16.0 * 2);
             int italicExtraWidth = 0;
@@ -126,15 +127,39 @@ public class SpaceFont extends MinecraftFont {
                 }
                 g.dispose();
             }
-            return new FontRenderResult(image, w * sign + extraWidth, h, pixelSize, italicExtraWidth);
+            return new FontRenderResult(image, w * sign + extraWidth, h, 0, italicExtraWidth);
         } else {
-            return new FontRenderResult(image, 0, 0, 0, lastItalicExtraWidth);
+            int w = 0;
+            int h = Math.round(fontSize);
+            int beforeTransformW = w;
+            int strikeSize = (int) (fontSize / 8);
+            int boldSize = (int) (fontSize / 16.0 * 2);
+            int italicExtraWidth = 0;
+            boolean italic = false;
+            Color awtColor = new Color(color);
+            boolean underlineStrikethroughExpanded = false;
+            for (TextDecoration decoration : decorations) {
+                switch (decoration) {
+                    case BOLD:
+                        w += boldSize - 1;
+                        break;
+                    case ITALIC:
+                        int extraWidth = (int) ((double) h * (4.0 / 14.0));
+                        italicExtraWidth = (int) Math.round(-ITALIC_SHEAR_X * h);
+                        italic = true;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            int extraWidth = italic ? 0 : lastItalicExtraWidth;
+            return new FontRenderResult(image, w + extraWidth, h, 0, italicExtraWidth);
         }
     }
 
     @Override
     public Optional<BufferedImage> getCharacterImage(String character, float fontSize, int color) {
-        int advance = (int) Math.round(charAdvances.get(character.codePointAt(0)) * 0.75);
+        int advance = charAdvances.get(character.codePointAt(0));
         if (advance == 0) {
             return Optional.empty();
         }
