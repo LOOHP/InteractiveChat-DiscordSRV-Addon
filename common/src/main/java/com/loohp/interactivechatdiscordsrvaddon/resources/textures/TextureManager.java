@@ -250,7 +250,7 @@ public class TextureManager extends AbstractManager implements ITextureManager {
                                     g.drawImage(textureImage, 0, 0, null);
                                     g.dispose();
                                     applyPaletteReplacementMap(entry.getValue(), newImage);
-                                    String key = namespace + ":" + texture + "_" + entry.getKey();
+                                    String key = namespace + ":" + texture + source.getSeparator() + entry.getKey();
                                     textures.put(key, new GeneratedTextureResource(manager, key, newImage));
                                 }
                             }

@@ -990,8 +990,8 @@ public class ImageGeneration {
 
                 BufferedImage iconImage;
                 if (resourceManager.get().getNativeServerPackFormat() >= 24) {
-                    String assetName = NMSAddon.getInstance().getMapCursorTypeKey(icon).value();
-                    iconImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_MAP_DECORATION_LOCATION + assetName).getTexture();
+                    String assetName = NMSAddon.getInstance().getMapCursorTypeKey(icon).asString();
+                    iconImage = resourceManager.get().getTextureManager().getTexture(assetName).getTexture();
                 } else {
                     int typeId = icon.getType().ordinal();
                     iconImage = ImageUtils.copyAndGetSubImage(asset, typeId % MAP_ICON_PER_ROLE * iconWidth, typeId / MAP_ICON_PER_ROLE * iconWidth, iconWidth, iconWidth);
