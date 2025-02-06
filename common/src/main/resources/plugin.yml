@@ -7,6 +7,7 @@ description: DiscordSRV addon to InteractiveChat
 depend: [InteractiveChat, DiscordSRV]
 softdepend: [ItemsAdder]
 prefix: InteractiveChatDiscordSRVAddon
+folia-supported: true
 
 commands:
   interactivechatdiscordsrv:

@@ -48,7 +48,7 @@ public class ICPlayerEvents implements Listener {
     private static final ConcurrentCacheHashMap<UUID, Map<String, Object>> CACHED_PROPERTIES = new ConcurrentCacheHashMap<>(300000);
 
     static {
-        Bukkit.getScheduler().runTaskTimerAsynchronously(InteractiveChat.plugin, () -> CACHED_PROPERTIES.cleanUp(), 12000, 12000);
+        InteractiveChatDiscordSrvAddon.plugin.getScheduler().runTimerAsync(() -> CACHED_PROPERTIES.cleanUp(), 12000, 12000);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -68,7 +68,7 @@ public class ICPlayerEvents implements Listener {
 
     private void populate(OfflineICPlayer player, boolean scheduleAsync) {
         if (scheduleAsync) {
-            Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> populate(player, false));
+            InteractiveChatDiscordSrvAddon.plugin.getScheduler().runAsync((task) -> populate(player, false));
             return;
         }
         Map<String, Object> cachedProperties = CACHED_PROPERTIES.get(player.getUniqueId());
