@@ -85,8 +85,9 @@ public class TextureAtlases {
                             String sprite = (String) sourceJson.getOrDefault("sprite", resource);
                             textureAtlasSource = new TextureAtlasSingleSource(resource, sprite);
                         } else if (sourceType.equals(TextureAtlasSourceType.FILTER)) {
-                            Pattern namespace = Pattern.compile((String) sourceJson.get("namespace"));
-                            Pattern path = Pattern.compile((String) sourceJson.get("path"));
+                            JSONObject patternJson = (JSONObject) sourceJson.get("pattern");
+                            Pattern namespace = Pattern.compile((String) patternJson.get("namespace"));
+                            Pattern path = Pattern.compile((String) patternJson.get("path"));
                             textureAtlasSource = new TextureAtlasFilterSource(namespace, path);
                         } else if (sourceType.equals(TextureAtlasSourceType.UNSTITCH)) {
                             String resource = (String) sourceJson.get("resource");

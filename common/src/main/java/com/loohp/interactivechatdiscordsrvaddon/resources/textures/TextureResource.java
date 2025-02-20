@@ -41,7 +41,7 @@ public class TextureResource {
     private final ITextureManager manager;
     private final String resourceKey;
     private final ResourcePackFile file;
-    private final  boolean isTexture;
+    private final boolean isTexture;
     private Reference<BufferedImage> texture;
     private final UnaryOperator<BufferedImage> imageTransformFunction;
 
