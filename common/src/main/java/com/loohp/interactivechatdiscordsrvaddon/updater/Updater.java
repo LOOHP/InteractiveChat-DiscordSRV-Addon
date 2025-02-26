@@ -99,7 +99,7 @@ public class Updater implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        Bukkit.getScheduler().runTaskLaterAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+        InteractiveChatDiscordSrvAddon.plugin.getScheduler().runLaterAsync(() -> {
             if (InteractiveChatDiscordSrvAddon.plugin.updaterEnabled) {
                 Player player = event.getPlayer();
                 if (player.hasPermission("interactivechatdiscordsrv.update")) {
