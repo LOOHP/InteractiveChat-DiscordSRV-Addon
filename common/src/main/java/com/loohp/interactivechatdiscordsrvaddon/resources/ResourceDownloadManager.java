@@ -25,6 +25,7 @@ import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.utils.FileUtils;
 import com.loohp.interactivechat.utils.HTTPRequestUtils;
+import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TriConsumer;
 
 import java.io.ByteArrayInputStream;
@@ -90,7 +91,8 @@ public class ResourceDownloadManager {
         if (data == null || assetIndex == null) {
             data = HTTPRequestUtils.getJSONResponse(ASSETS_DATA_URL.replace("%s", minecraftVersion));
             if (data == null) {
-                throw new RuntimeException("Unable to fetch assets from \"api.loohpjames.com\". This could be an internet issue or \"api.loohpjames.com\" is down. If the plugin functions correctly after this, this error can be ignored.");
+                InteractiveChatDiscordSrvAddon.plugin.sendMessage(ChatColor.RED + "[ICDiscordSrvAddon] Unable to fetch assets from \"api.loohpjames.com\". This could be an internet issue or \"api.loohpjames.com\" is down. If the plugin functions correctly after this, this error can be ignored.");
+                return;
             }
             JSONObject client = (JSONObject) data.get("client-entries");
             assetIndex = HTTPRequestUtils.getJSONResponse(client.get("asset-index").toString());
