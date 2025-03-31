@@ -706,7 +706,7 @@ public class V1_16_4 extends NMSAddonWrapper {
     }
 
     @Override
-    public boolean hasDataComponent(ItemStack itemStack, String componentName, boolean ignoreDefault) {
+    public boolean hasDataComponent(ItemStack itemStack, Key componentName, boolean ignoreDefault) {
         return false;
     }
 

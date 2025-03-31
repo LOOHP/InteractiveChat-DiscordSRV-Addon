@@ -95,7 +95,7 @@ public abstract class ItemModelDefinition {
             } else if (propertyType.equals(ConditionPropertyType.DAMAGED)) {
                 return new DamagedConditionProperty(handAnimationOnSwapString, propertyType, onTrue, onFalse);
             } else if (propertyType.equals(ConditionPropertyType.HAS_COMPONENT)) {
-                String component = (String) rootJson.get("component");
+                Key component = KeyUtils.toKey((String) rootJson.get("component"));
                 boolean ignoreDefault = (boolean) rootJson.getOrDefault("ignore_default", false);
                 return new HasComponentConditionProperty(handAnimationOnSwapString, propertyType, onTrue, onFalse, component, ignoreDefault);
             } else if (propertyType.equals(ConditionPropertyType.FISHING_ROD_CAST)) {
@@ -961,16 +961,16 @@ public abstract class ItemModelDefinition {
     }
 
     public static class HasComponentConditionProperty extends ItemModelDefinitionCondition {
-        private final String component;
+        private final Key component;
         private final boolean ignoreDefault;
 
-        public HasComponentConditionProperty(boolean handAnimationOnSwap, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse, String component, boolean ignoreDefault) {
+        public HasComponentConditionProperty(boolean handAnimationOnSwap, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse, Key component, boolean ignoreDefault) {
             super(handAnimationOnSwap, propertyType, onTrue, onFalse);
             this.component = component;
             this.ignoreDefault = ignoreDefault;
         }
 
-        public String getComponent() {
+        public Key getComponent() {
             return component;
         }
 

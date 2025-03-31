@@ -85,8 +85,9 @@ public class TextureAtlases {
                             String sprite = (String) sourceJson.getOrDefault("sprite", resource);
                             textureAtlasSource = new TextureAtlasSingleSource(resource, sprite);
                         } else if (sourceType.equals(TextureAtlasSourceType.FILTER)) {
-                            Pattern namespace = Pattern.compile((String) sourceJson.get("namespace"));
-                            Pattern path = Pattern.compile((String) sourceJson.get("path"));
+                            JSONObject patternJson = (JSONObject) sourceJson.get("pattern");
+                            Pattern namespace = Pattern.compile((String) patternJson.get("namespace"));
+                            Pattern path = Pattern.compile((String) patternJson.get("path"));
                             textureAtlasSource = new TextureAtlasFilterSource(namespace, path);
                         } else if (sourceType.equals(TextureAtlasSourceType.UNSTITCH)) {
                             String resource = (String) sourceJson.get("resource");
@@ -116,7 +117,8 @@ public class TextureAtlases {
                                 String key = (String) o;
                                 permutations.put(key, (String) permutationsJson.get(key));
                             }
-                            textureAtlasSource = new TextureAtlasPalettedPermutationsSource(textures, paletteKey, permutations);
+                            String separator = (String) sourceJson.getOrDefault("separator", "_");
+                            textureAtlasSource = new TextureAtlasPalettedPermutationsSource(textures, paletteKey, permutations, separator);
                         } else {
                             continue;
                         }
@@ -494,11 +496,13 @@ public class TextureAtlases {
         private final List<String> textures;
         private final String paletteKey;
         private final Map<String, String> permutations;
+        private final String separator;
 
-        public TextureAtlasPalettedPermutationsSource(List<String> textures, String paletteKey, Map<String, String> permutations) {
+        public TextureAtlasPalettedPermutationsSource(List<String> textures, String paletteKey, Map<String, String> permutations, String separator) {
             this.textures = Collections.unmodifiableList(textures);
             this.paletteKey = paletteKey;
             this.permutations = Collections.unmodifiableMap(permutations);
+            this.separator = separator;
         }
 
         public List<String> getTextures() {
@@ -511,6 +515,10 @@ public class TextureAtlases {
 
         public Map<String, String> getPermutations() {
             return permutations;
+        }
+
+        public String getSeparator() {
+            return separator;
         }
 
         @Override

@@ -335,7 +335,8 @@ public class OutboundToDiscordEvents implements Listener {
 
                                         if (customP.getClick().isEnabled()) {
                                             usingHoverClick = true;
-                                            hoverClick.clickAction(customP.getClick().getAction()).clickValue(CustomStringUtils.applyReplacementRegex(customP.getClick().getValue(), result, 1));
+                                            String clickValue = ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(icSender, CustomStringUtils.applyReplacementRegex(customP.getClick().getValue(), result, 1)));
+                                            hoverClick.clickAction(customP.getClick().getAction()).clickValue(CustomStringUtils.applyReplacementRegex(clickValue, result, 1));
                                         }
 
                                         if (usingHoverClick) {
@@ -392,7 +393,8 @@ public class OutboundToDiscordEvents implements Listener {
 
                                     if (customP.getClick().isEnabled()) {
                                         usingHoverClick = true;
-                                        hoverClick.clickAction(customP.getClick().getAction()).clickValue(CustomStringUtils.applyReplacementRegex(customP.getClick().getValue(), result, 1));
+                                        String clickValue = ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(icSender, CustomStringUtils.applyReplacementRegex(customP.getClick().getValue(), result, 1)));
+                                        hoverClick.clickAction(customP.getClick().getAction()).clickValue(CustomStringUtils.applyReplacementRegex(clickValue, result, 1));
                                     }
 
                                     if (usingHoverClick) {

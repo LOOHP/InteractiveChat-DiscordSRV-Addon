@@ -29,6 +29,8 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.MCVersion;
+import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
+import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelFace.ModelFaceSide;
@@ -37,6 +39,7 @@ import org.bukkit.Material;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -212,6 +215,7 @@ public class ModelUtils {
         LEGACY_MODEL_NAME.put("RED_DYE", "dye_red");
         LEGACY_MODEL_NAME.put("SALMON_SPAWN_EGG", "spawn_egg");
         LEGACY_MODEL_NAME.put("SHEEP_SPAWN_EGG", "spawn_egg");
+        LEGACY_MODEL_NAME.put("SHORT_GRASS", "tall_grass");
         LEGACY_MODEL_NAME.put("SHULKER_SPAWN_EGG", "spawn_egg");
         LEGACY_MODEL_NAME.put("OAK_SIGN", "sign");
         LEGACY_MODEL_NAME.put("SILVERFISH_SPAWN_EGG", "spawn_egg");
@@ -231,6 +235,7 @@ public class ModelUtils {
         LEGACY_MODEL_NAME.put("SUGAR_CANE", "reeds");
         LEGACY_MODEL_NAME.put("TERRACOTTA", "hardened_clay");
         LEGACY_MODEL_NAME.put("TOTEM_OF_UNDYING", "totem");
+        LEGACY_MODEL_NAME.put("TROPICAL_FISH", "clownfish");
         LEGACY_MODEL_NAME.put("TROPICAL_FISH_SPAWN_EGG", "spawn_egg");
         LEGACY_MODEL_NAME.put("TURTLE_SPAWN_EGG", "spawn_egg");
         LEGACY_MODEL_NAME.put("VEX_SPAWN_EGG", "spawn_egg");
@@ -265,9 +270,26 @@ public class ModelUtils {
         return material.getKey().getNamespace();
     }
 
+    @SuppressWarnings("RedundantIfStatement")
+    private static boolean shouldUseLegacyModelName(ICMaterial icMaterial) {
+        if (!InteractiveChat.version.isLegacy()) {
+            return false;
+        }
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_11) && icMaterial.isOneOf(Collections.singletonList("CONTAINS:shulker_box"))) {
+            return false;
+        }
+        return true;
+    }
+
     public static String getItemModelKey(ICMaterial icMaterial) {
-        if (InteractiveChat.version.isLegacy()) {
+        if (InteractiveChatDiscordSrvAddon.debug) {
+            Debug.debug("Item Model Key: " + icMaterial.parseXMaterial().name() + " | " + icMaterial.parseMaterial().name());
+        }
+        if (shouldUseLegacyModelName(icMaterial)) {
             String legacyKey = LEGACY_MODEL_NAME.get(icMaterial.name());
+            if (InteractiveChatDiscordSrvAddon.debug) {
+                Debug.debug("Item Model Legacy Key: " + legacyKey);
+            }
             if (legacyKey != null) {
                 return legacyKey.toLowerCase();
             }

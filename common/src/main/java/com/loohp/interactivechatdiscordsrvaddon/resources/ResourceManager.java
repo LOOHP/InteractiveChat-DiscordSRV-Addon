@@ -289,16 +289,20 @@ public class ResourceManager implements AutoCloseable {
 
         for (PackOverlay overlay : overlays) {
             if (overlay.getFormats().isCompatible(nativeServerPackFormat)) {
-                ResourcePackFile overlayAssetsFolder = resourcePack.getChild(overlay.getDirectory()).getChild("assets");
-                Map<String, TextureAtlases> overlayTextureAtlases = loadAtlases(overlayAssetsFolder);
-                for (Map.Entry<String, TextureAtlases> entry : overlayTextureAtlases.entrySet()) {
-                    String namespace = entry.getKey();
-                    TextureAtlases atlases = textureAtlases.get(namespace);
-                    if (atlases == null) {
-                        textureAtlases.put(namespace, entry.getValue());
-                    } else {
-                        textureAtlases.put(namespace, atlases.merge(entry.getValue()));
+                try {
+                    ResourcePackFile overlayAssetsFolder = resourcePack.getChild(overlay.getDirectory()).getChild("assets");
+                    Map<String, TextureAtlases> overlayTextureAtlases = loadAtlases(overlayAssetsFolder);
+                    for (Map.Entry<String, TextureAtlases> entry : overlayTextureAtlases.entrySet()) {
+                        String namespace = entry.getKey();
+                        TextureAtlases atlases = textureAtlases.get(namespace);
+                        if (atlases == null) {
+                            textureAtlases.put(namespace, entry.getValue());
+                        } else {
+                            textureAtlases.put(namespace, atlases.merge(entry.getValue()));
+                        }
                     }
+                } catch (Throwable e) {
+                    new ResourceLoadingException("Unable to load overlay " + overlay.getDirectory() + " for pack " + resourcePackNameStr, e).printStackTrace();
                 }
             }
         }
@@ -310,8 +314,12 @@ public class ResourceManager implements AutoCloseable {
             filterResources(resourceFilterBlocks);
             loadAssets(assetsFolder, languageMeta, textureAtlases);
             for (PackOverlay overlay : overlays) {
-                if (overlay.getFormats().isCompatible(nativeServerPackFormat)) {
-                    loadAssets(resourcePack.getChild(overlay.getDirectory()).getChild("assets"), languageMeta, textureAtlases);
+                try {
+                    if (overlay.getFormats().isCompatible(nativeServerPackFormat)) {
+                        loadAssets(resourcePack.getChild(overlay.getDirectory()).getChild("assets"), languageMeta, textureAtlases);
+                    }
+                } catch (Throwable e) {
+                    new ResourceLoadingException("Unable to load overlay " + overlay.getDirectory() + " for pack " + resourcePackNameStr, e).printStackTrace();
                 }
             }
         } catch (Exception e) {

@@ -1,7 +1,9 @@
 [![Build Status](https://ci.loohpjames.com/job/InteractiveChat-DiscordSRV-Addon/badge/icon)](https://ci.loohpjames.com/job/InteractiveChat-DiscordSRV-Addon/)
 # InteractiveChat DiscordSRV Addon
 
-https://www.spigotmc.org/resources/83917/
+https://www.spigotmc.org/resources/83917/<br>
+https://modrinth.com/plugin/interactivechat-discordsrv-addon/<br>
+https://hangar.papermc.io/LOOHP/InteractiveChatDiscordSRV
 
 Have InteractiveChat Placeholders translated on DiscordSRV discord messages. As well as sharing items, inventories to discord and sharing images and gifs to the game from discord!
 

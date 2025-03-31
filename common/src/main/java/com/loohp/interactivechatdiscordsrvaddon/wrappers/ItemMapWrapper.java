@@ -31,7 +31,6 @@ import org.bukkit.map.MapView;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ItemMapWrapper {
 
@@ -67,7 +66,7 @@ public class ItemMapWrapper {
             icons = null;
         } else {
             colors = FilledMapUtils.getColors(mapView, player);
-            icons = FilledMapUtils.getCursors(mapView, player).stream().sorted(ICON_ORDER).collect(Collectors.toList());
+            icons = FilledMapUtils.getCursors(mapView, player);
         }
         MapDataLookupEvent event = new MapDataLookupEvent(player, mapId, mapView, colors, icons);
         Bukkit.getPluginManager().callEvent(event);

@@ -51,6 +51,7 @@ import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.SteppedIntegerRange;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
@@ -281,7 +282,7 @@ public class ImageGeneration {
         Debug.debug("ImageGeneration creating inventory image of " + player.getName());
 
         String key = INVENTORY_CACHE_KEY + HashUtils.createSha1(title == null ? "Inventory" : InteractiveChatComponentSerializer.gson().serialize(title), inventory);
-        if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial()) && Arrays.stream(inventory.getContents()).noneMatch(each -> each != null && each.hasItemMeta() && each.getItemMeta().hasCustomModelData())) {
+        if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial()) && Arrays.stream(inventory.getContents()).noneMatch(each -> each != null && !CustomModelData.isEmpty(NMSAddon.getInstance().getCustomModelData(each)))) {
             CacheObject<?> cache = resourceManager.get().getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).getCache(key);
             if (cache != null) {
                 return ImageUtils.copyImage((BufferedImage) cache.getObject());
@@ -345,7 +346,7 @@ public class ImageGeneration {
         }
 
         String key = PLAYER_INVENTORY_CACHE_KEY + HashUtils.createSha1(player.isRightHanded(), player.getSelectedSlot(), 0, player.getUniqueId().toString(), inventory) + ImageUtils.hash(background);
-        if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial()) && Arrays.stream(inventory.getContents()).noneMatch(each -> each != null && each.hasItemMeta() && each.getItemMeta().hasCustomModelData())) {
+        if (!inventory.contains(XMaterial.COMPASS.parseMaterial()) && !inventory.contains(XMaterial.CLOCK.parseMaterial()) && Arrays.stream(inventory.getContents()).noneMatch(each -> each != null && !CustomModelData.isEmpty(NMSAddon.getInstance().getCustomModelData(each)))) {
             CacheObject<?> cache = resourceManager.get().getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).getCache(key);
             if (cache != null) {
                 return ImageUtils.copyImage((BufferedImage) cache.getObject());
@@ -389,7 +390,8 @@ public class ImageGeneration {
         //boots
         ItemStack boots = inventory.getItem(i);
         if (boots == null || boots.getType().equals(Material.AIR)) {
-            g.drawImage(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_boots").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
+            String resourceLocation = ResourceRegistry.RESOURCE_PACK_VERSION < 46 ? ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_boots" : ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/slot/boots";
+            g.drawImage(resourceManager.get().getTextureManager().getTexture(resourceLocation).getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
         } else {
             BufferedImage itemImage = getSingleRawItemImage(boots, player);
             if (itemImage != null) {
@@ -401,7 +403,8 @@ public class ImageGeneration {
         //leggings
         ItemStack leggings = inventory.getItem(i);
         if (leggings == null || leggings.getType().equals(Material.AIR)) {
-            g.drawImage(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_leggings").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
+            String resourceLocation = ResourceRegistry.RESOURCE_PACK_VERSION < 46 ? ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_leggings" : ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/slot/leggings";
+            g.drawImage(resourceManager.get().getTextureManager().getTexture(resourceLocation).getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
         } else {
             BufferedImage itemImage = getSingleRawItemImage(leggings, player);
             if (itemImage != null) {
@@ -413,7 +416,8 @@ public class ImageGeneration {
         //chestplate
         ItemStack chestplate = inventory.getItem(i);
         if (chestplate == null || chestplate.getType().equals(Material.AIR)) {
-            g.drawImage(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_chestplate").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
+            String resourceLocation = ResourceRegistry.RESOURCE_PACK_VERSION < 46 ? ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_chestplate" : ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/slot/chestplate";
+            g.drawImage(resourceManager.get().getTextureManager().getTexture(resourceLocation).getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
         } else {
             BufferedImage itemImage = getSingleRawItemImage(chestplate, player);
             if (itemImage != null) {
@@ -425,7 +429,8 @@ public class ImageGeneration {
         //helmet
         ItemStack helmet = inventory.getItem(i);
         if (helmet == null || helmet.getType().equals(Material.AIR)) {
-            g.drawImage(resourceManager.get().getTextureManager().getTexture(ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_helmet").getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
+            String resourceLocation = ResourceRegistry.RESOURCE_PACK_VERSION < 46 ? ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_helmet" : ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/slot/helmet";
+            g.drawImage(resourceManager.get().getTextureManager().getTexture(resourceLocation).getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
         } else {
             BufferedImage itemImage = getSingleRawItemImage(helmet, player);
             if (itemImage != null) {
@@ -558,8 +563,8 @@ public class ImageGeneration {
                 Key key = KeyUtils.toKey(layer.getTexture());
                 BufferedImage layerImage = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getArmorOverrideTextures(key.value(), EquipmentSlot.LEGS, leggings, player, world, livingEntity, translateFunction.get()).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getOptionalTexture(key.namespace() + ":" + ResourceRegistry.ARMOR_LEGGINGS_TEXTURE_LOCATION + key.value()).map(t -> t.getTexture()).orElse(null));
                 if (layerImage != null) {
-                    if (layer.isDyeable() && leggingsArmorResult.hasDyeableColor()) {
-                        BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(layerImage), leggingsArmorResult.getDyeableColor());
+                    if (layer.isDyeable()) {
+                        BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(layerImage), leggingsArmorResult.getDyeableColor(layer.getDyeable().getColorWhenUndyed(ResourceRegistry.DEFAULT_DYE_COLOR)));
                         layerImage = ImageUtils.multiply(layerImage, colorOverlay);
                     }
                     if (leggingsImage == null) {
@@ -598,10 +603,10 @@ public class ImageGeneration {
             BufferedImage bootsImage = null;
             for (EquipmentModelDefinition.EquipmentLayer layer : bootsArmorResult.getLayers()) {
                 Key key = KeyUtils.toKey(layer.getTexture());
-                BufferedImage layerImage = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getArmorOverrideTextures(key.value(), EquipmentSlot.LEGS, leggings, player, world, livingEntity, translateFunction.get()).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getOptionalTexture(key.namespace() + ":" + ResourceRegistry.ARMOR_TEXTURE_LOCATION + key.value()).map(t -> t.getTexture()).orElse(null));
+                BufferedImage layerImage = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getArmorOverrideTextures(key.value(), EquipmentSlot.FEET, leggings, player, world, livingEntity, translateFunction.get()).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getOptionalTexture(key.namespace() + ":" + ResourceRegistry.ARMOR_TEXTURE_LOCATION + key.value()).map(t -> t.getTexture()).orElse(null));
                 if (layerImage != null) {
-                    if (layer.isDyeable() && bootsArmorResult.hasDyeableColor()) {
-                        BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(layerImage), bootsArmorResult.getDyeableColor());
+                    if (layer.isDyeable()) {
+                        BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(layerImage), bootsArmorResult.getDyeableColor(layer.getDyeable().getColorWhenUndyed(ResourceRegistry.DEFAULT_DYE_COLOR)));
                         layerImage = ImageUtils.multiply(layerImage, colorOverlay);
                     }
                     if (bootsImage == null) {
@@ -672,10 +677,10 @@ public class ImageGeneration {
             BufferedImage chestplateImage = null;
             for (EquipmentModelDefinition.EquipmentLayer layer : chestplateArmorResult.getLayers()) {
                 Key key = KeyUtils.toKey(layer.getTexture());
-                BufferedImage layerImage = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getArmorOverrideTextures(key.value(), EquipmentSlot.LEGS, leggings, player, world, livingEntity, translateFunction.get()).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getOptionalTexture(key.namespace() + ":" + ResourceRegistry.ARMOR_TEXTURE_LOCATION + key.value()).map(t -> t.getTexture()).orElse(null));
+                BufferedImage layerImage = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getArmorOverrideTextures(key.value(), EquipmentSlot.CHEST, leggings, player, world, livingEntity, translateFunction.get()).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getOptionalTexture(key.namespace() + ":" + ResourceRegistry.ARMOR_TEXTURE_LOCATION + key.value()).map(t -> t.getTexture()).orElse(null));
                 if (layerImage != null) {
-                    if (layer.isDyeable() && chestplateArmorResult.hasDyeableColor()) {
-                        BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(layerImage), chestplateArmorResult.getDyeableColor());
+                    if (layer.isDyeable()) {
+                        BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(layerImage), chestplateArmorResult.getDyeableColor(layer.getDyeable().getColorWhenUndyed(ResourceRegistry.DEFAULT_DYE_COLOR)));
                         layerImage = ImageUtils.multiply(layerImage, colorOverlay);
                     }
                     if (chestplateImage == null) {
@@ -715,10 +720,10 @@ public class ImageGeneration {
             BufferedImage helmetImage = null;
             for (EquipmentModelDefinition.EquipmentLayer layer : helmetArmorResult.getLayers()) {
                 Key key = KeyUtils.toKey(layer.getTexture());
-                BufferedImage layerImage = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getArmorOverrideTextures(key.value(), EquipmentSlot.LEGS, leggings, player, world, livingEntity, translateFunction.get()).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getOptionalTexture(key.namespace() + ":" + ResourceRegistry.ARMOR_TEXTURE_LOCATION + key.value()).map(t -> t.getTexture()).orElse(null));
+                BufferedImage layerImage = resourceManager.get().getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getArmorOverrideTextures(key.value(), EquipmentSlot.HEAD, leggings, player, world, livingEntity, translateFunction.get()).map(t -> t.getTexture()).orElse(resourceManager.get().getTextureManager().getOptionalTexture(key.namespace() + ":" + ResourceRegistry.ARMOR_TEXTURE_LOCATION + key.value()).map(t -> t.getTexture()).orElse(null));
                 if (layerImage != null) {
-                    if (layer.isDyeable() && helmetArmorResult.hasDyeableColor()) {
-                        BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(layerImage), helmetArmorResult.getDyeableColor());
+                    if (layer.isDyeable()) {
+                        BufferedImage colorOverlay = ImageUtils.changeColorTo(ImageUtils.copyImage(layerImage), helmetArmorResult.getDyeableColor(layer.getDyeable().getColorWhenUndyed(ResourceRegistry.DEFAULT_DYE_COLOR)));
                         layerImage = ImageUtils.multiply(layerImage, colorOverlay);
                     }
                     if (helmetImage == null) {
@@ -985,8 +990,8 @@ public class ImageGeneration {
 
                 BufferedImage iconImage;
                 if (resourceManager.get().getNativeServerPackFormat() >= 24) {
-                    String assetName = NMSAddon.getInstance().getMapCursorTypeKey(icon).value();
-                    iconImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.DEFAULT_MAP_DECORATION_LOCATION + assetName).getTexture();
+                    String assetName = NMSAddon.getInstance().getMapCursorTypeKey(icon).asString();
+                    iconImage = resourceManager.get().getTextureManager().getTexture(assetName).getTexture();
                 } else {
                     int typeId = icon.getType().ordinal();
                     iconImage = ImageUtils.copyAndGetSubImage(asset, typeId % MAP_ICON_PER_ROLE * iconWidth, typeId / MAP_ICON_PER_ROLE * iconWidth, iconWidth, iconWidth);

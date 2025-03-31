@@ -35,6 +35,7 @@ import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.InventoryUtils;
 import com.loohp.interactivechat.utils.ItemStackUtils;
 import com.loohp.interactivechat.utils.LanguageUtils;
+import com.loohp.interactivechat.utils.MCVersion;
 import com.loohp.interactivechat.utils.PlaceholderParser;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
@@ -415,7 +416,7 @@ public class DiscordContentUtils {
             BlockState bsm = ((BlockStateMeta) item.getItemMeta()).getBlockState();
             if (bsm instanceof InventoryHolder) {
                 Inventory container = ((InventoryHolder) bsm).getInventory();
-                if (!container.isEmpty()) {
+                if (!isInventoryEmpty(container)) {
                     inv = Bukkit.createInventory(ICInventoryHolder.INSTANCE, InventoryUtils.toMultipleOf9(container.getSize()));
                     for (int j = 0; j < container.getSize(); j++) {
                         if (container.getItem(j) != null) {
@@ -428,6 +429,14 @@ public class DiscordContentUtils {
             }
         }
         return inv;
+    }
+
+    private static boolean isInventoryEmpty(Inventory inventory) {
+        if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16_2)) {
+            return inventory.isEmpty();
+        } else {
+            return Arrays.stream(inventory.getContents()).noneMatch(i -> i != null && !i.getType().equals(Material.AIR));
+        }
     }
 
     private static BiConsumer<GenericComponentInteractionCreateEvent, List<DiscordMessageContent>> getBookHandler(UUID interactionUuid, Color color, List<Supplier<BufferedImage>> imageSuppliers, byte[][] cachedImages) {

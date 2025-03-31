@@ -20,6 +20,7 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.graphics;
 
+import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
@@ -43,13 +44,19 @@ import java.util.List;
 
 public class BannerGraphics {
 
+    @SuppressWarnings("deprecation")
     public static BannerAssetResult generateBannerAssets(ItemStack item) {
         BufferedImage baseImage = InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "banner_base").getTexture(64, 64);
         BufferedImage patternsImage = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
 
-        ICMaterial icMaterial = ICMaterial.from(item);
-        String colorName = icMaterial.name().replace("_BANNER", "");
-        Color baseColor = new Color(DyeColor.valueOf(colorName.toUpperCase()).getColor().asRGB());
+        Color baseColor;
+        if (InteractiveChat.version.isLegacy()) {
+            baseColor = new Color(DyeColor.getByDyeData(item.getData().getData()).getColor().asRGB());
+        } else {
+            ICMaterial icMaterial = ICMaterial.from(item);
+            String colorName = icMaterial.name().replace("_BANNER", "");
+            baseColor = new Color(DyeColor.valueOf(colorName.toUpperCase()).getColor().asRGB());
+        }
 
         BufferedImage baseTint = new BufferedImage(42, 41, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = baseTint.createGraphics();
