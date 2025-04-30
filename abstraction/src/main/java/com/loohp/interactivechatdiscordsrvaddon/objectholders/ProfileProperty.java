@@ -1,5 +1,5 @@
 /*
- * This file is part of InteractiveChatDiscordSrvAddon-Abstraction.
+ * This file is part of InteractiveChatDiscordSrvAddon2.
  *
  * Copyright (C) 2020 - 2025. LoohpJames <jamesloohp@gmail.com>
  * Copyright (C) 2020 - 2025. Contributors

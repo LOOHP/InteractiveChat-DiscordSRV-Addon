@@ -1,5 +1,5 @@
 /*
- * This file is part of InteractiveChatDiscordSrvAddon-V1_21_3.
+ * This file is part of InteractiveChatDiscordSrvAddon2.
  *
  * Copyright (C) 2020 - 2025. LoohpJames <jamesloohp@gmail.com>
  * Copyright (C) 2020 - 2025. Contributors
