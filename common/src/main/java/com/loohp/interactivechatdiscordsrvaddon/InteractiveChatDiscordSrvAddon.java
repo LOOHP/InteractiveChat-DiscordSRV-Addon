@@ -24,6 +24,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.api.events.InteractiveChatConfigReloadEvent;
 import com.loohp.interactivechat.config.Config;
+import com.loohp.interactivechat.libs.com.loohp.platformscheduler.Scheduler;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
@@ -382,24 +383,24 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         ThreadFactory factory = new ThreadFactoryBuilder().setNameFormat("InteractiveChatDiscordSRVAddon Async Media Reading Thread #%d").build();
         mediaReadingService = Executors.newFixedThreadPool(4, factory);
 
-        Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
+        Scheduler.runTaskTimerAsynchronously(this, () -> {
             for (ICPlayer player : ICPlayerFactory.getOnlineICPlayers()) {
                 cachePlayerSkin(player);
             }
             AssetsDownloader.loadExtras();
         }, 600, 6000);
 
-        Bukkit.getScheduler().runTask(this, () -> placeholderCooldownManager = new PlaceholderCooldownManager());
+        Scheduler.runTask(this, () -> placeholderCooldownManager = new PlaceholderCooldownManager());
     }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        Bukkit.getScheduler().runTaskLaterAsynchronously(this, () -> cachePlayerSkin(ICPlayerFactory.getICPlayer(event.getPlayer())), 40);
+        Scheduler.runTaskLaterAsynchronously(this, () -> cachePlayerSkin(ICPlayerFactory.getICPlayer(event.getPlayer())), 40);
     }
 
     @EventHandler
     public void onInteractiveChatReload(InteractiveChatConfigReloadEvent event) {
-        Bukkit.getScheduler().runTaskLater(this, () -> placeholderCooldownManager.reloadPlaceholders(), 5);
+        Scheduler.runTaskLater(this, () -> placeholderCooldownManager.reloadPlaceholders(), 5);
     }
 
     private void cachePlayerSkin(ICPlayer player) {
@@ -648,7 +649,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
             senders = receivers;
         }
 
-        Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+        Scheduler.runTaskAsynchronously(this, () -> {
             try {
                 if (!resourceReloadLock.tryLock(0, TimeUnit.MILLISECONDS)) {
                     sendMessage(ChatColor.YELLOW + "Resource reloading already in progress!", senders);
@@ -661,7 +662,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
             try {
                 isReady = false;
                 if (InteractiveChatDiscordSrvAddon.plugin.isResourceManagerReady()) {
-                    Bukkit.getScheduler().callSyncMethod(plugin, () -> {
+                    Scheduler.callSyncMethod(plugin, () -> {
                         InteractiveChatDiscordSrvAddon.plugin.getResourceManager().close();
                         return null;
                     }).get();
@@ -803,7 +804,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                     }
                 }
 
-                Bukkit.getScheduler().callSyncMethod(plugin, () -> {
+                Scheduler.callSyncMethod(plugin, () -> {
                     InteractiveChatDiscordSrvAddon.plugin.resourceManager = resourceManager;
 
                     if (resourceManager.getResourcePackInfo().stream().allMatch(each -> each.getStatus())) {

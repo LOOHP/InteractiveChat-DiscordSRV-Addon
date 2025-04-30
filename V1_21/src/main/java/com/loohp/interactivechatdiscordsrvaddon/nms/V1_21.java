@@ -22,6 +22,8 @@ package com.loohp.interactivechatdiscordsrvaddon.nms;
 
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.loohp.interactivechat.libs.com.google.gson.Gson;
+import com.loohp.interactivechat.libs.com.google.gson.JsonElement;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
@@ -30,6 +32,7 @@ import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
 import com.loohp.interactivechat.nms.NMS;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
+import com.loohp.interactivechat.utils.NativeJsonConverter;
 import com.loohp.interactivechat.utils.ReflectionUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
@@ -43,6 +46,8 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.ProfileProperty;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.JsonOps;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.EnumChatFormat;
 import net.minecraft.MinecraftVersion;
@@ -54,6 +59,9 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.IRegistry;
 import net.minecraft.core.IRegistryCustom;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponentPredicate;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -802,6 +810,42 @@ public class V1_21 extends NMSAddonWrapper {
     @Override
     public boolean shouldShowOperatorBlockWarnings(ItemStack itemStack, Player player) {
         return false;
+    }
+
+    @Override
+    public Object getItemStackDataComponentValue(ItemStack itemStack, Key component) {
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        DataComponentType<?> componentType = BuiltInRegistries.aq.a(MinecraftKey.a(component.namespace(), component.value()));
+        if (componentType == null) {
+            return false;
+        }
+        return nmsItemStack.a(componentType);
+    }
+
+    @Override
+    public Object serializeDataComponent(Key component, String data) {
+        DataComponentType<?> componentType = BuiltInRegistries.aq.a(MinecraftKey.a(component.namespace(), component.value()));
+        if (componentType == null) {
+            return null;
+        }
+        IRegistryCustom registryAccess = ((CraftWorld)Bukkit.getWorlds().get(0)).getHandle().H_();
+        JsonElement jsonElement = new Gson().fromJson(data, JsonElement.class);
+        Object nativeJsonElement = NativeJsonConverter.toNative(jsonElement);
+        return componentType.c().decode(registryAccess.a((DynamicOps<Object>) (DynamicOps<?>) JsonOps.INSTANCE), nativeJsonElement).result().map(r -> r.getFirst()).orElse(null);
+    }
+
+    @Override
+    public boolean evaluateComponentPredicateOnItemStack(ItemStack itemStack, String predicateData, String data) {
+        IRegistryCustom registryAccess = ((CraftWorld)Bukkit.getWorlds().get(0)).getHandle().H_();
+        JsonElement jsonElement = new Gson().fromJson(predicateData, JsonElement.class);
+        Object nativeJsonElement = NativeJsonConverter.toNative(jsonElement);
+        DataComponentPredicate predicate = DataComponentPredicate.a.decode(registryAccess.a((DynamicOps<Object>) (DynamicOps<?>) JsonOps.INSTANCE), nativeJsonElement).result().map(r -> r.getFirst()).orElse(null);
+        if (predicate == null) {
+            return false;
+        }
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        DataComponentMap dataComponentMap = nmsItemStack.a();
+        return predicate.test(dataComponentMap);
     }
 
 }

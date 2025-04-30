@@ -20,8 +20,8 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.api.events;
 
+import com.loohp.interactivechat.libs.com.loohp.platformscheduler.Scheduler;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager.ModManagerSupplier;
-import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
@@ -38,7 +38,7 @@ public class ResourceManagerInitializeEvent extends Event {
     private List<ModManagerSupplier<?>> modManagerSuppliers;
 
     public ResourceManagerInitializeEvent(List<ModManagerSupplier<?>> modManagerSuppliers) {
-        super(!Bukkit.isPrimaryThread());
+        super(!Scheduler.isPrimaryThread());
         this.modManagerSuppliers = modManagerSuppliers;
     }
 

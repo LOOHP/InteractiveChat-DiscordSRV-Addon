@@ -20,8 +20,8 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.api.events;
 
+import com.loohp.interactivechat.libs.com.loohp.platformscheduler.Scheduler;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents.DiscordAttachmentData;
-import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
@@ -42,7 +42,7 @@ public class DiscordAttachmentConversionEvent extends Event {
     private final DiscordAttachmentData data;
 
     public DiscordAttachmentConversionEvent(String url, DiscordAttachmentData data) {
-        super(!Bukkit.isPrimaryThread());
+        super(!Scheduler.isPrimaryThread());
         this.url = url;
         this.data = data;
     }

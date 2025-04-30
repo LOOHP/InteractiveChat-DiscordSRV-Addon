@@ -24,6 +24,7 @@ import com.loohp.blockmodelrenderer.blending.BlendingModes;
 import com.loohp.blockmodelrenderer.utils.ColorUtils;
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
+import com.loohp.interactivechat.libs.com.loohp.platformscheduler.Scheduler;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
@@ -903,13 +904,13 @@ public class ImageGeneration {
             throw new IllegalArgumentException("Provided item is not a filled map");
         }
         Debug.debug("ImageGeneration creating map image with item");
-        if (Bukkit.isPrimaryThread()) {
+        if (Scheduler.isPrimaryThread()) {
             ItemMapWrapper data = new ItemMapWrapper(item, player);
             return CompletableFuture.completedFuture(getMapImage(data.getColors(), data.getMapCursors(), player));
         } else {
             CompletableFuture<BufferedImage> future = new CompletableFuture<>();
             ItemStack finalItem = item.clone();
-            Bukkit.getScheduler().runTask(InteractiveChatDiscordSrvAddon.plugin, () -> {
+            Scheduler.runTask(InteractiveChatDiscordSrvAddon.plugin, () -> {
                 ItemMapWrapper data;
                 try {
                     data = new ItemMapWrapper(finalItem, player);
@@ -917,14 +918,14 @@ public class ImageGeneration {
                     future.completeExceptionally(e);
                     return;
                 }
-                Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+                Scheduler.runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
                     try {
                         future.complete(getMapImage(data.getColors(), data.getMapCursors(), player));
                     } catch (Throwable e) {
                         future.completeExceptionally(e);
                     }
                 });
-            });
+            }, player);
             return future;
         }
     }
@@ -1698,7 +1699,7 @@ public class ImageGeneration {
     public static Future<List<BufferedImage>> getBookInterface(List<Component> pages) {
         CompletableFuture<List<BufferedImage>> future = new CompletableFuture<>();
         List<Supplier<BufferedImage>> suppliers = getBookInterfaceSuppliers(pages);
-        Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> future.complete(suppliers.stream().map(each -> each.get()).collect(Collectors.toList())));
+        Scheduler.runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> future.complete(suppliers.stream().map(each -> each.get()).collect(Collectors.toList())));
         return future;
     }
 

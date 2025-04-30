@@ -20,10 +20,10 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.api.events;
 
+import com.loohp.interactivechat.libs.com.loohp.platformscheduler.Scheduler;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import com.loohp.interactivechat.objectholders.ICPlayer;
-import org.bukkit.Bukkit;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -46,7 +46,7 @@ public class GameMessageEvent extends Event implements Cancellable {
     private boolean cancel;
 
     public GameMessageEvent(ICPlayer sender, Component component, boolean cancel) {
-        super(!Bukkit.isPrimaryThread());
+        super(!Scheduler.isPrimaryThread());
         this.sender = sender;
         this.component = component;
         this.cancel = cancel;

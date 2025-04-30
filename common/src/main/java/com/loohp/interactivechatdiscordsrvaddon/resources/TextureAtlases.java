@@ -20,11 +20,14 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources;
 
+import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream;
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.utils.KeyUtils;
 
 import java.awt.image.BufferedImage;
 import java.io.InputStreamReader;
@@ -228,32 +231,40 @@ public class TextureAtlases {
         public static final TextureAtlasSourceType<TextureAtlasUnstitchSource> UNSTITCH = new TextureAtlasSourceType<>("unstitch", TextureAtlasUnstitchSource.class);
         public static final TextureAtlasSourceType<TextureAtlasPalettedPermutationsSource> PALETTED_PERMUTATIONS = new TextureAtlasSourceType<>("paletted_permutations", TextureAtlasPalettedPermutationsSource.class);
 
-        private static final Map<String, TextureAtlasSourceType<?>> TYPES;
+        private static final Map<Key, TextureAtlasSourceType<?>> TYPES;
 
         static {
-            Map<String, TextureAtlasSourceType<?>> types = new HashMap<>();
-            types.put(DIRECTORY.name(), DIRECTORY);
-            types.put(SINGLE.name(), SINGLE);
-            types.put(FILTER.name(), FILTER);
-            types.put(UNSTITCH.name(), UNSTITCH);
-            types.put(PALETTED_PERMUTATIONS.name(), PALETTED_PERMUTATIONS);
+            Map<Key, TextureAtlasSourceType<?>> types = new HashMap<>();
+            types.put(DIRECTORY.getKey(), DIRECTORY);
+            types.put(SINGLE.getKey(), SINGLE);
+            types.put(FILTER.getKey(), FILTER);
+            types.put(UNSTITCH.getKey(), UNSTITCH);
+            types.put(PALETTED_PERMUTATIONS.getKey(), PALETTED_PERMUTATIONS);
             TYPES = Collections.unmodifiableMap(types);
         }
 
-        public static Map<String, TextureAtlasSourceType<?>> types() {
+        public static Map<Key, TextureAtlasSourceType<?>> types() {
             return TYPES;
         }
 
-        private final String name;
+        private final Key key;
         private final Class<T> typeClass;
 
-        private TextureAtlasSourceType(String name, Class<T> typeClass) {
-            this.name = name;
+        private TextureAtlasSourceType(Key key, Class<T> typeClass) {
+            this.key = key;
             this.typeClass = typeClass;
         }
 
+        private TextureAtlasSourceType(String key, Class<T> typeClass) {
+            this(KeyUtils.toKey(key), typeClass);
+        }
+
+        public Key getKey() {
+            return key;
+        }
+
         public String name() {
-            return name;
+            return key.asString();
         }
 
         @Override
@@ -262,7 +273,10 @@ public class TextureAtlases {
         }
 
         public static TextureAtlasSourceType<?> fromName(String name) {
-            return TYPES.get(name.toLowerCase());
+            if (!name.contains(":")) {
+                name = ResourceRegistry.DEFAULT_NAMESPACE + ":" + name;
+            }
+            return TYPES.get(KeyUtils.toKey(name.toLowerCase()));
         }
 
         @Override
@@ -270,12 +284,12 @@ public class TextureAtlases {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             TextureAtlasSourceType<?> that = (TextureAtlasSourceType<?>) o;
-            return name.equals(that.name) && typeClass.equals(that.typeClass);
+            return key.equals(that.key) && typeClass.equals(that.typeClass);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(name, typeClass);
+            return Objects.hash(key, typeClass);
         }
     }
 

@@ -24,13 +24,13 @@ import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.api.events.ICPlayerJoinEvent;
 import com.loohp.interactivechat.api.events.OfflineICPlayerCreationEvent;
 import com.loohp.interactivechat.api.events.OfflineICPlayerUpdateEvent;
+import com.loohp.interactivechat.libs.com.loohp.platformscheduler.Scheduler;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.objectholders.ConcurrentCacheHashMap;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 import com.loohp.interactivechat.utils.HTTPRequestUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -48,7 +48,7 @@ public class ICPlayerEvents implements Listener {
     private static final ConcurrentCacheHashMap<UUID, Map<String, Object>> CACHED_PROPERTIES = new ConcurrentCacheHashMap<>(300000);
 
     static {
-        Bukkit.getScheduler().runTaskTimerAsynchronously(InteractiveChat.plugin, () -> CACHED_PROPERTIES.cleanUp(), 12000, 12000);
+        Scheduler.runTaskTimerAsynchronously(InteractiveChat.plugin, () -> CACHED_PROPERTIES.cleanUp(), 12000, 12000);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -68,7 +68,7 @@ public class ICPlayerEvents implements Listener {
 
     private void populate(OfflineICPlayer player, boolean scheduleAsync) {
         if (scheduleAsync) {
-            Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> populate(player, false));
+            Scheduler.runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> populate(player, false));
             return;
         }
         Map<String, Object> cachedProperties = CACHED_PROPERTIES.get(player.getUniqueId());

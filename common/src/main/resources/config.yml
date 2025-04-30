@@ -297,7 +297,7 @@ DiscordMention:
 Resources:
   #Which language should be used in places like the item tooltip
   #Visit this page for all the languages that Minecraft offers:
-  #https://minecraft.fandom.com/wiki/Language
+  #https://loohpjames.com/minecraft/languages/
   Language: en_us
   #Apply the force unicode setting to languages and fonts
   ForceUnicodeFont: false

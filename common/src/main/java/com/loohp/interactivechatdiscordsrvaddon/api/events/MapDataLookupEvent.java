@@ -20,7 +20,7 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.api.events;
 
-import org.bukkit.Bukkit;
+import com.loohp.interactivechat.libs.com.loohp.platformscheduler.Scheduler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -44,7 +44,7 @@ public class MapDataLookupEvent extends Event {
     private List<MapCursor> mapCursors;
 
     public MapDataLookupEvent(Player player, int mapId, MapView mapView, byte[] colors, List<MapCursor> mapCursors) {
-        super(!Bukkit.isPrimaryThread());
+        super(!Scheduler.isPrimaryThread());
         this.player = player;
         this.mapId = mapId;
         this.mapView = mapView;

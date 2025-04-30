@@ -21,6 +21,7 @@
 package com.loohp.interactivechatdiscordsrvaddon.updater;
 
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechat.libs.com.loohp.platformscheduler.Scheduler;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.ClickEvent;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.event.HoverEvent;
@@ -99,7 +100,7 @@ public class Updater implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        Bukkit.getScheduler().runTaskLaterAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+        Scheduler.runTaskLaterAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
             if (InteractiveChatDiscordSrvAddon.plugin.updaterEnabled) {
                 Player player = event.getPlayer();
                 if (player.hasPermission("interactivechatdiscordsrv.update")) {

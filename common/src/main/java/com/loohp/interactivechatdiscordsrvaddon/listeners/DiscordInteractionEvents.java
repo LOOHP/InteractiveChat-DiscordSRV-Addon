@@ -20,10 +20,10 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.listeners;
 
+import com.loohp.interactivechat.libs.com.loohp.platformscheduler.Scheduler;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.HashUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
-import com.loohp.interactivechatdiscordsrvaddon.metrics.Metrics;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordMessageContent;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.InteractionHandler;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
@@ -31,7 +31,6 @@ import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.ButtonCl
 import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.GenericComponentInteractionCreateEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.events.interaction.SelectionMenuEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.hooks.ListenerAdapter;
-import org.bukkit.Bukkit;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -47,7 +46,7 @@ public class DiscordInteractionEvents extends ListenerAdapter {
 
     static {
         try {
-            String uuid = Metrics.getServerUUID();
+            String uuid = InteractiveChatDiscordSrvAddon.plugin.metrics.getServerUUID();
             if (uuid == null) {
                 uuid = UUID.randomUUID().toString();
             }
@@ -69,7 +68,7 @@ public class DiscordInteractionEvents extends ListenerAdapter {
             }
             REGISTER.put(id, interactionData);
         }
-        Bukkit.getScheduler().runTaskLaterAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+        Scheduler.runTaskLaterAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
             for (String id : interactionIds) {
                 REGISTER.remove(id);
             }

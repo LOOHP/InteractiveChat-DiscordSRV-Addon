@@ -642,4 +642,19 @@ public class V1_10 extends NMSAddonWrapper {
         return false;
     }
 
+    @Override
+    public Object getItemStackDataComponentValue(ItemStack itemStack, Key component) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object serializeDataComponent(Key component, String data) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean evaluateComponentPredicateOnItemStack(ItemStack itemStack, String predicateData, String data) {
+        throw new UnsupportedOperationException();
+    }
+
 }

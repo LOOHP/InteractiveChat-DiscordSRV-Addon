@@ -1,5 +1,5 @@
 /*
- * This file is part of InteractiveChatDiscordSrvAddon-V1_20_3.
+ * This file is part of InteractiveChatDiscordSrvAddon-V1_21_4.
  *
  * Copyright (C) 2020 - 2025. LoohpJames <jamesloohp@gmail.com>
  * Copyright (C) 2020 - 2025. Contributors
@@ -24,6 +24,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.loohp.interactivechat.libs.com.google.gson.Gson;
 import com.loohp.interactivechat.libs.com.google.gson.JsonElement;
+import com.loohp.interactivechat.libs.com.google.gson.JsonObject;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
@@ -33,6 +34,7 @@ import com.loohp.interactivechat.nms.NMS;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechat.utils.NativeJsonConverter;
+import com.loohp.interactivechat.utils.ReflectionUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
@@ -52,43 +54,54 @@ import net.minecraft.EnumChatFormat;
 import net.minecraft.MinecraftVersion;
 import net.minecraft.advancements.AdvancementDisplay;
 import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.advancements.critereon.CriterionConditionBlock;
 import net.minecraft.core.BlockPosition;
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.IRegistry;
 import net.minecraft.core.IRegistryCustom;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.component.predicates.DataComponentPredicate;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.NBTBase;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.chat.IChatBaseComponent;
 import net.minecraft.resources.MinecraftKey;
 import net.minecraft.server.level.EntityPlayer;
 import net.minecraft.server.level.WorldServer;
 import net.minecraft.server.packs.EnumResourcePackType;
 import net.minecraft.world.damagesource.CombatTracker;
-import net.minecraft.world.effect.AttributeModifierTemplate;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectList;
 import net.minecraft.world.entity.EntityLiving;
-import net.minecraft.world.entity.EnumItemSlot;
-import net.minecraft.world.entity.EnumMonsterType;
-import net.minecraft.world.entity.ai.attributes.AttributeBase;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.animal.EntityTropicalFish;
+import net.minecraft.world.entity.animal.EntityTropicalFish.d;
 import net.minecraft.world.entity.projectile.EntityFishingHook;
-import net.minecraft.world.item.ArmorMaterial;
-import net.minecraft.world.item.BundleItem;
+import net.minecraft.world.item.AdventureModePredicate;
+import net.minecraft.world.item.Instrument;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemArmor;
-import net.minecraft.world.item.ItemFireworks;
-import net.minecraft.world.item.ItemMonsterEgg;
-import net.minecraft.world.item.ItemRecord;
-import net.minecraft.world.item.alchemy.PotionUtil;
-import net.minecraft.world.item.armortrim.TrimMaterial;
-import net.minecraft.world.item.armortrim.TrimPattern;
+import net.minecraft.world.item.ItemCrossbow;
+import net.minecraft.world.item.JukeboxPlayable;
+import net.minecraft.world.item.JukeboxSong;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.component.BlockItemStateProperties;
+import net.minecraft.world.item.component.BundleContents;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.DyedItemColor;
+import net.minecraft.world.item.component.Fireworks;
+import net.minecraft.world.item.component.InstrumentComponent;
+import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.item.enchantment.EnchantmentManager;
+import net.minecraft.world.item.equipment.Equippable;
+import net.minecraft.world.item.equipment.trim.TrimMaterial;
+import net.minecraft.world.item.equipment.trim.TrimPattern;
 import net.minecraft.world.level.biome.BiomeBase;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.DecoratedPotPatterns;
-import net.minecraft.world.level.block.entity.TileEntitySkull;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
+import net.minecraft.world.level.saveddata.maps.MapDecorationType;
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
@@ -97,21 +110,24 @@ import org.bukkit.World;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.banner.PatternType;
-import org.bukkit.craftbukkit.v1_20_R3.CraftEquipmentSlot;
-import org.bukkit.craftbukkit.v1_20_R3.CraftWorld;
-import org.bukkit.craftbukkit.v1_20_R3.advancement.CraftAdvancement;
-import org.bukkit.craftbukkit.v1_20_R3.attribute.CraftAttributeInstance;
-import org.bukkit.craftbukkit.v1_20_R3.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_20_R3.entity.CraftEntityType;
-import org.bukkit.craftbukkit.v1_20_R3.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_20_R3.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_20_R3.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v1_20_R3.inventory.trim.CraftTrimMaterial;
-import org.bukkit.craftbukkit.v1_20_R3.inventory.trim.CraftTrimPattern;
-import org.bukkit.craftbukkit.v1_20_R3.potion.CraftPotionEffectType;
-import org.bukkit.craftbukkit.v1_20_R3.potion.CraftPotionUtil;
-import org.bukkit.craftbukkit.v1_20_R3.util.CraftChatMessage;
-import org.bukkit.craftbukkit.v1_20_R3.util.CraftMagicNumbers;
+import org.bukkit.craftbukkit.v1_21_R4.CraftEquipmentSlot;
+import org.bukkit.craftbukkit.v1_21_R4.CraftWorld;
+import org.bukkit.craftbukkit.v1_21_R4.advancement.CraftAdvancement;
+import org.bukkit.craftbukkit.v1_21_R4.attribute.CraftAttributeInstance;
+import org.bukkit.craftbukkit.v1_21_R4.block.banner.CraftPatternType;
+import org.bukkit.craftbukkit.v1_21_R4.enchantments.CraftEnchantment;
+import org.bukkit.craftbukkit.v1_21_R4.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_21_R4.entity.CraftEntityType;
+import org.bukkit.craftbukkit.v1_21_R4.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_21_R4.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_21_R4.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_21_R4.inventory.trim.CraftTrimMaterial;
+import org.bukkit.craftbukkit.v1_21_R4.inventory.trim.CraftTrimPattern;
+import org.bukkit.craftbukkit.v1_21_R4.map.CraftMapCursor;
+import org.bukkit.craftbukkit.v1_21_R4.potion.CraftPotionEffectType;
+import org.bukkit.craftbukkit.v1_21_R4.potion.CraftPotionUtil;
+import org.bukkit.craftbukkit.v1_21_R4.util.CraftChatMessage;
+import org.bukkit.craftbukkit.v1_21_R4.util.CraftMagicNumbers;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -123,7 +139,6 @@ import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.map.MapCursor;
@@ -131,50 +146,49 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
+import java.util.concurrent.ExecutionException;
 
 @SuppressWarnings("unused")
-public class V1_20_3 extends NMSAddonWrapper {
+public class V1_21_5 extends NMSAddonWrapper {
 
-    private final Method bundleItemGetWeightMethod;
+    private final Field adventureModePredicatePredicatesField;
+    private final Method bundleContentsGetWeightMethod;
 
-    public V1_20_3() {
+    public V1_21_5() {
         try {
-            bundleItemGetWeightMethod = BundleItem.class.getDeclaredMethod("k", net.minecraft.world.item.ItemStack.class);
-        } catch (NoSuchMethodException e) {
+            adventureModePredicatePredicatesField = ReflectionUtils.findDeclaredField(AdventureModePredicate.class, List.class, "predicates", "f");
+            bundleContentsGetWeightMethod = ReflectionUtils.findDeclaredMethod(BundleContents.class, new Class[] {net.minecraft.world.item.ItemStack.class}, "getWeight", "b");
+        } catch (NoSuchFieldException | NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
     public Map<ICMaterial, TintColorProvider.SpawnEggTintData> getSpawnEggColorMap() {
-        Map<ICMaterial, TintColorProvider.SpawnEggTintData> mapping = new LinkedHashMap<>();
-        for (Item item : BuiltInRegistries.h) {
-            if (item instanceof ItemMonsterEgg) {
-                ItemMonsterEgg egg = (ItemMonsterEgg) item;
-                ICMaterial icMaterial = ICMaterial.of(CraftMagicNumbers.getMaterial(item));
-                mapping.put(icMaterial, new TintColorProvider.SpawnEggTintData(egg.a(0), egg.a(1)));
-            }
-        }
-        return mapping;
-    }
-
-    @Override
-    public Key getMapCursorTypeKey(MapCursor mapCursor) {
-        throw new UnsupportedOperationException();
+        return Collections.emptyMap(); // Spawn Eggs no longer uses tinting
     }
 
     @SuppressWarnings("PatternValidation")
+    @Override
+    public Key getMapCursorTypeKey(MapCursor mapCursor) {
+        MapDecorationType nmsType = CraftMapCursor.CraftType.bukkitToMinecraft(mapCursor.getType());
+        MinecraftKey key = nmsType.b();
+        return Key.key(key.b(), key.a());
+    }
+
+    @SuppressWarnings({"PatternValidation", "deprecation"})
     @Override
     public Key getPatternTypeKey(PatternType patternType) {
         NamespacedKey key = patternType.getKey();
@@ -185,7 +199,7 @@ public class V1_20_3 extends NMSAddonWrapper {
     @Override
     public DimensionManager getDimensionManager(World world) {
         WorldServer worldServer = ((CraftWorld) world).getHandle();
-        net.minecraft.world.level.dimension.DimensionManager manager = worldServer.E_();
+        net.minecraft.world.level.dimension.DimensionManager manager = worldServer.F_();
         return new DimensionManager() {
             @Override
             public boolean hasFixedTime() {
@@ -221,7 +235,7 @@ public class V1_20_3 extends NMSAddonWrapper {
             }
             @Override
             public boolean createDragonFight() {
-                return worldServer.ae() == net.minecraft.world.level.World.j && worldServer.ad().a(BuiltinDimensionTypes.c);
+                return worldServer.aj() == net.minecraft.world.level.World.j && worldServer.ai().a(BuiltinDimensionTypes.c);
             }
             @Override
             public boolean piglinSafe() {
@@ -274,7 +288,7 @@ public class V1_20_3 extends NMSAddonWrapper {
     @Override
     public Key getNamespacedKey(World world) {
         WorldServer worldServer = ((CraftWorld) world).getHandle();
-        MinecraftKey key = worldServer.ae().a();
+        MinecraftKey key = worldServer.aj().a();
         return Key.key(key.b(), key.a());
     }
 
@@ -282,18 +296,19 @@ public class V1_20_3 extends NMSAddonWrapper {
     public BiomePrecipitation getPrecipitation(Location location) {
         WorldServer worldServer = ((CraftWorld) location.getWorld()).getHandle();
         BiomeBase biomeBase = worldServer.a(location.getBlockX(), location.getBlockY(), location.getBlockZ()).a();
-        BiomeBase.Precipitation precipitation = biomeBase.a(new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ()));
+        BiomeBase.Precipitation precipitation = biomeBase.a(new BlockPosition(location.getBlockX(), location.getBlockY(), location.getBlockZ()), location.getBlockY());
         return BiomePrecipitation.fromName(precipitation.name());
     }
 
     @Override
     public OptionalInt getTropicalFishBucketVariantTag(ItemStack bucket) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(bucket);
-        NBTTagCompound nbt = nmsItemStack.v();
-        if (nbt == null || !nbt.e("BucketVariantTag")) {
+        CustomData customData = nmsItemStack.a(DataComponents.Y);
+        if (customData.c()) {
             return OptionalInt.empty();
         }
-        return OptionalInt.of(nbt.h("BucketVariantTag"));
+        Optional<EntityTropicalFish.d> optional = customData.a(d.a.fieldOf("BucketVariantTag")).result();
+        return optional.map(f -> OptionalInt.of(EntityTropicalFish.b.indexOf(f))).orElse(OptionalInt.empty());
     }
 
     @Override
@@ -304,8 +319,9 @@ public class V1_20_3 extends NMSAddonWrapper {
     @Override
     public List<PotionEffect> getAllPotionEffects(ItemStack potion) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(potion);
+        PotionContents potionContents = nmsItemStack.a(DataComponents.R);
         List<PotionEffect> effects = new ArrayList<>();
-        for (MobEffect mobEffect : PotionUtil.a(nmsItemStack)) {
+        for (MobEffect mobEffect : potionContents.a()) {
             effects.add(CraftPotionUtil.toBukkit(mobEffect));
         }
         return effects;
@@ -314,7 +330,7 @@ public class V1_20_3 extends NMSAddonWrapper {
     @Override
     public ChatColor getPotionEffectChatColor(PotionEffectType type) {
         MobEffectList mobEffectList = ((CraftPotionEffectType) type).getHandle();
-        EnumChatFormat chatFormat = mobEffectList.f().a();
+        EnumChatFormat chatFormat = mobEffectList.h().a();
         return ChatColor.getByChar(chatFormat.toString().charAt(1));
     }
 
@@ -322,14 +338,12 @@ public class V1_20_3 extends NMSAddonWrapper {
     public Map<String, AttributeModifier> getPotionAttributeModifiers(PotionEffect effect) {
         Map<String, AttributeModifier> attributes = new HashMap<>();
         MobEffect mobEffect = CraftPotionUtil.fromBukkit(effect);
-        MobEffectList mobEffectList = mobEffect.c();
-        Map<AttributeBase, AttributeModifierTemplate> nmsMap = mobEffectList.h();
-        for (Map.Entry<AttributeBase, AttributeModifierTemplate> entry : nmsMap.entrySet()) {
-            String name = entry.getKey().c();
-            AttributeModifierTemplate template = entry.getValue();
-            AttributeModifier attributeModifier = CraftAttributeInstance.convert(template.a(effect.getAmplifier()));
+        MobEffectList mobEffectList = mobEffect.c().a();
+        mobEffectList.a(effect.getAmplifier(), (holder, nmsAttributeModifier) -> {
+            String name = holder.a().c();
+            AttributeModifier attributeModifier = CraftAttributeInstance.convert(nmsAttributeModifier);
             attributes.put(name, attributeModifier);
-        }
+        });
         return attributes;
     }
 
@@ -344,107 +358,121 @@ public class V1_20_3 extends NMSAddonWrapper {
 
     @Override
     public List<ICMaterial> getItemCanPlaceOnList(ItemStack itemStack) {
-        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        List<ICMaterial> materials = new ArrayList<>();
-        if (nmsItemStack.u() && nmsItemStack.v().b("CanPlaceOn", 9)) {
-            NBTTagList nbtTagList = nmsItemStack.v().c("CanPlaceOn", 8);
-            if (!nbtTagList.isEmpty()) {
-                for (int i = 0; i < nbtTagList.size(); i++) {
-                    try {
-                        MinecraftKey key = MinecraftKey.a(nbtTagList.j(i));
-                        Block block = BuiltInRegistries.e.a(key);
-                        materials.add(ICMaterial.of(CraftMagicNumbers.getMaterial(block)));
-                    } catch (Exception ignore) {
+        try {
+            net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+            AdventureModePredicate adventureModePredicate = nmsItemStack.a(DataComponents.m);
+            if (adventureModePredicate == null) {
+                return Collections.emptyList();
+            }
+            adventureModePredicatePredicatesField.setAccessible(true);
+            List<CriterionConditionBlock> predicate = (List<CriterionConditionBlock>) adventureModePredicatePredicatesField.get(adventureModePredicate);
+            List<ICMaterial> materials = new ArrayList<>();
+            for (CriterionConditionBlock block : predicate) {
+                Optional<HolderSet<Block>> optSet = block.b();
+                if (optSet.isPresent()) {
+                    for (Holder<Block> set : optSet.get()) {
+                        materials.add(ICMaterial.of(CraftMagicNumbers.getMaterial(set.a())));
                     }
                 }
             }
+            return materials;
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
-        return materials;
     }
 
     @Override
     public List<ICMaterial> getItemCanDestroyList(ItemStack itemStack) {
-        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        List<ICMaterial> materials = new ArrayList<>();
-        if (nmsItemStack.u() && nmsItemStack.v().b("CanDestroy", 9)) {
-            NBTTagList nbtTagList = nmsItemStack.v().c("CanDestroy", 8);
-            if (!nbtTagList.isEmpty()) {
-                for (int i = 0; i < nbtTagList.size(); i++) {
-                    try {
-                        MinecraftKey key = MinecraftKey.a(nbtTagList.j(i));
-                        Block block = BuiltInRegistries.e.a(key);
-                        materials.add(ICMaterial.of(CraftMagicNumbers.getMaterial(block)));
-                    } catch (Exception ignore) {
+        try {
+            net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+            AdventureModePredicate adventureModePredicate = nmsItemStack.a(DataComponents.n);
+            if (adventureModePredicate == null) {
+                return Collections.emptyList();
+            }
+            adventureModePredicatePredicatesField.setAccessible(true);
+            List<CriterionConditionBlock> predicate = (List<CriterionConditionBlock>) adventureModePredicatePredicatesField.get(adventureModePredicate);
+            List<ICMaterial> materials = new ArrayList<>();
+            for (CriterionConditionBlock block : predicate) {
+                Optional<HolderSet<Block>> optSet = block.b();
+                if (optSet.isPresent()) {
+                    for (Holder<Block> set : optSet.get()) {
+                        materials.add(ICMaterial.of(CraftMagicNumbers.getMaterial(set.a())));
                     }
                 }
             }
+            return materials;
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
-        return materials;
     }
 
     @Override
     public OptionalInt getLeatherArmorColor(ItemStack itemStack) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        if (nmsItemStack.u() && nmsItemStack.v().e("display")) {
-            NBTTagCompound display = nmsItemStack.v().p("display");
-            if (display.e("color")) {
-                return OptionalInt.of(display.h("color"));
-            }
-        }
-        return OptionalInt.empty();
+        DyedItemColor dyedItemColor = nmsItemStack.a(DataComponents.K);
+        return dyedItemColor == null ? OptionalInt.empty() : OptionalInt.of(dyedItemColor.a());
     }
 
     @Override
     public boolean hasBlockEntityTag(ItemStack itemStack) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        return nmsItemStack.b("BlockEntityTag") != null;
+        return nmsItemStack.a(DataComponents.Y) != null;
     }
 
-    @SuppressWarnings("PatternValidation")
     @Override
     public Component getInstrumentDescription(ItemStack itemStack) {
-        try {
-            net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-            if (nmsItemStack.u() && nmsItemStack.v().e("instrument")) {
-                Key instrument = Key.key(nmsItemStack.v().l("instrument"));
-                return Component.translatable("instrument." + instrument.namespace() + "." + instrument.value());
-            }
-        } catch (Exception ignored) {
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        InstrumentComponent component = nmsItemStack.a(DataComponents.ab);
+        if (component == null) {
+            return null;
         }
-        return null;
+        Optional<Holder<Instrument>> optHolder = component.a(((CraftWorld) Bukkit.getWorlds().get(0)).getHandle().J_());
+        if (optHolder == null && !optHolder.isPresent()) {
+            return null;
+        }
+        IChatBaseComponent description = optHolder.get().a().d();
+        return InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(description));
     }
 
     @SuppressWarnings("PatternValidation")
     @Override
     public PaintingVariant getPaintingVariant(ItemStack itemStack) {
-        try {
-            net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-            if (nmsItemStack.u() && nmsItemStack.v().e("EntityTag")) {
-                String variant = nmsItemStack.v().p("EntityTag").l("variant");
-                MinecraftKey key = new MinecraftKey(variant);
-                net.minecraft.world.entity.decoration.PaintingVariant paintingVariant = BuiltInRegistries.l.a(key);
-                return new PaintingVariant(Key.key(key.b(), key.a()), paintingVariant.a(), paintingVariant.b());
-            }
-        } catch (Exception ignored) {
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        CustomData customData = nmsItemStack.a(DataComponents.Y);
+        if (customData == null) {
+            return null;
         }
-        return null;
+        NBTTagCompound nbt = customData.d();
+        if (nbt == null || !nbt.b("variant")) {
+            return null;
+        }
+        Optional<String> optVariant = nbt.i("variant");
+        if (optVariant != null && !optVariant.isPresent()) {
+            return null;
+        }
+        MinecraftKey key = MinecraftKey.a(optVariant.get());
+        IRegistryCustom customRegistry = ((CraftWorld) Bukkit.getWorlds().get(0)).getHandle().J_();
+        IRegistry<net.minecraft.world.entity.decoration.PaintingVariant> paintingRegistry = customRegistry.f(Registries.aZ);
+        net.minecraft.world.entity.decoration.PaintingVariant paintingVariant = paintingRegistry.a(key);
+        if (paintingVariant == null) {
+            return null;
+        }
+        Optional<Component> title = paintingVariant.e().map(c -> InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(c)));
+        Optional<Component> author = paintingVariant.f().map(c -> InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(c)));
+        return new PaintingVariant(Key.key(key.b(), key.a()), paintingVariant.b(), paintingVariant.c(), title, author);
     }
 
     @Override
     public String getEntityNBT(Entity entity) {
         net.minecraft.world.entity.Entity nmsEntity = ((CraftEntity) entity).getHandle();
         NBTTagCompound nbt = new NBTTagCompound();
-        nmsEntity.e(nbt);
+        nmsEntity.f(nbt);
         return nbt.toString();
     }
 
     @Override
     public float getLegacyTrimMaterialIndex(Object trimMaterial) {
-        if (trimMaterial == null) {
-            return 0.0F;
-        }
-        TrimMaterial nmsTrimMaterial = ((CraftTrimMaterial) trimMaterial).getHandle();
-        return nmsTrimMaterial.c();
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -453,7 +481,7 @@ public class V1_20_3 extends NMSAddonWrapper {
             return NamedTextColor.GRAY;
         }
         TrimMaterial nmsTrimMaterial = ((CraftTrimMaterial) trimMaterial).getHandle();
-        TextColor textColor = InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(nmsTrimMaterial.e())).color();
+        TextColor textColor = InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(nmsTrimMaterial.b())).color();
         return textColor == null ? NamedTextColor.GRAY : textColor;
     }
 
@@ -481,38 +509,39 @@ public class V1_20_3 extends NMSAddonWrapper {
     @Override
     public boolean matchArmorSlot(ItemStack armorItem, EquipmentSlot slot) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(armorItem);
-        Item item = nmsItemStack.d();
-        if (!(item instanceof ItemArmor)) {
+        Equippable equippable = nmsItemStack.a(DataComponents.D);
+        if (equippable == null) {
             return false;
         }
-        return CraftEquipmentSlot.getSlot(((ItemArmor) item).g()).equals(slot);
+        if (equippable.f().map(a -> a.a().anyMatch(s -> s.a().equals(EntityTypes.bS))).orElse(true)) {
+            return CraftEquipmentSlot.getSlot(equippable.b()).equals(slot);
+        }
+        return false;
     }
 
     @SuppressWarnings("PatternValidation")
     @Override
     public Key getArmorMaterialKey(ItemStack armorItem) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(armorItem);
-        Item item = nmsItemStack.d();
-        if (!(item instanceof ItemArmor)) {
+        Equippable equippable = nmsItemStack.a(DataComponents.D);
+        if (equippable == null) {
             return null;
         }
-        ArmorMaterial armorMaterial = ((ItemArmor) item).d();
-        return Key.key(armorMaterial.e());
+        return equippable.d().map(key -> Key.key(key.a().b(), key.a().a())).orElse(null);
     }
 
     @Override
     public Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> getItemAttributeModifiers(ItemStack itemStack) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
         Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> result = new EnumMap<>(EquipmentSlotGroup.class);
-        for (EnumItemSlot slot : EnumItemSlot.values()) {
-            EquipmentSlotGroup equipmentSlotGroup = EquipmentSlotGroup.forEquipmentSlot(CraftEquipmentSlot.getSlot(slot));
-            Multimap<AttributeBase, net.minecraft.world.entity.ai.attributes.AttributeModifier> nmsMap = nmsItemStack.a(slot);
-            for (Map.Entry<AttributeBase, net.minecraft.world.entity.ai.attributes.AttributeModifier> entry : nmsMap.entries()) {
+        for (net.minecraft.world.entity.EquipmentSlotGroup slotGroup : net.minecraft.world.entity.EquipmentSlotGroup.values()) {
+            EquipmentSlotGroup equipmentSlotGroup = EquipmentSlotGroup.fromName(slotGroup.c());
+            nmsItemStack.a(slotGroup, (holder, nmsAttributeModifier) -> {
                 Multimap<String, AttributeModifier> attributes = result.computeIfAbsent(equipmentSlotGroup, k -> LinkedHashMultimap.create());
-                String name = entry.getKey().c();
-                AttributeModifier attributeModifier = CraftAttributeInstance.convert(entry.getValue());
+                String name = holder.a().c();
+                AttributeModifier attributeModifier = CraftAttributeInstance.convert(nmsAttributeModifier);
                 attributes.put(name, attributeModifier);
-            }
+            });
         }
         return result;
     }
@@ -520,7 +549,7 @@ public class V1_20_3 extends NMSAddonWrapper {
     @Override
     public Component getDeathMessage(Player player) {
         EntityPlayer entityPlayer = ((CraftPlayer) player).getHandle();
-        CombatTracker combatTracker = entityPlayer.eK();
+        CombatTracker combatTracker = entityPlayer.eS();
         return InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(combatTracker.a()));
     }
 
@@ -528,7 +557,7 @@ public class V1_20_3 extends NMSAddonWrapper {
     @Override
     public Key getDecoratedPotSherdPatternName(ItemStack itemStack) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        Item item = nmsItemStack.d();
+        Item item = nmsItemStack.h();
         MinecraftKey key = DecoratedPotPatterns.a(item).a();
         return Key.key(key.b(), key.a());
     }
@@ -536,26 +565,41 @@ public class V1_20_3 extends NMSAddonWrapper {
     @Override
     public boolean isJukeboxPlayable(ItemStack itemStack) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        return nmsItemStack.d() instanceof ItemRecord;
+        JukeboxPlayable jukeboxPlayable = nmsItemStack.a(DataComponents.ae);
+        return jukeboxPlayable != null;
     }
 
     @Override
     public boolean shouldSongShowInToolTip(ItemStack disc) {
-        return true;
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(disc);
+        JukeboxPlayable jukeboxPlayable = nmsItemStack.a(DataComponents.ae);
+        if (jukeboxPlayable == null) {
+            return false;
+        }
+        IRegistryCustom registryAccess = ((CraftWorld) Bukkit.getWorlds().get(0)).getHandle().J_();
+        Optional<Holder<JukeboxSong>> optJukeboxSong = jukeboxPlayable.a().a(registryAccess);
+        return optJukeboxSong != null && optJukeboxSong.isPresent();
     }
 
     @Override
     public Component getJukeboxSongDescription(ItemStack disc) {
-        NamespacedKey namespacedKey = disc.getType().getKey();
-        return Component.translatable("item." + namespacedKey.getNamespace() + "." + namespacedKey.getKey() + ".desc");
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(disc);
+        JukeboxPlayable jukeboxPlayable = nmsItemStack.a(DataComponents.ae);
+        if (jukeboxPlayable == null) {
+            return null;
+        }
+        IRegistryCustom registryAccess = ((CraftWorld) Bukkit.getWorlds().get(0)).getHandle().J_();
+        Optional<Holder<JukeboxSong>> optJukeboxSong = jukeboxPlayable.a().a(registryAccess);
+        return optJukeboxSong.map(h -> InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(h.a().c()))).orElse(null);
     }
 
     @Override
     public Component getEnchantmentDescription(Enchantment enchantment) {
-        NamespacedKey namespacedKey = enchantment.getKey();
-        return Component.translatable("enchantment." + namespacedKey.getNamespace() + "." + namespacedKey.getKey());
+        IChatBaseComponent description = CraftEnchantment.bukkitToMinecraft(enchantment).f();
+        return InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(description));
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public String getEffectTranslationKey(PotionEffectType type) {
         NamespacedKey namespacedKey = type.getKey();
@@ -592,41 +636,48 @@ public class V1_20_3 extends NMSAddonWrapper {
     @Override
     public float getEnchantmentDamageBonus(ItemStack itemStack, LivingEntity livingEntity) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        if (livingEntity == null) {
-            return EnchantmentManager.a(nmsItemStack, EnumMonsterType.a);
-        }
         EntityLiving entityLiving = ((CraftLivingEntity) livingEntity).getHandle();
-        return EnchantmentManager.a(nmsItemStack, entityLiving.eS());
+        return EnchantmentManager.a(nmsItemStack, entityLiving);
     }
 
     @Override
     public int getItemComponentsSize(ItemStack itemStack) {
-        throw new UnsupportedOperationException();
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        return nmsItemStack.a().d();
     }
 
     @Override
     public GameProfile getPlayerHeadProfile(ItemStack playerHead) {
-        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(playerHead);
-        NBTTagCompound tag = nmsItemStack.v();
-        if (tag == null) {
+        try {
+            net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(playerHead);
+            ResolvableProfile resolvableProfile = nmsItemStack.a(DataComponents.ak);
+            if (resolvableProfile == null) {
+                return null;
+            }
+            return resolvableProfile.a().get().f();
+        } catch (InterruptedException | ExecutionException e) {
             return null;
         }
-        return TileEntitySkull.d(tag);
     }
 
     @Override
     public ItemFlag getHideAdditionalItemFlag() {
-        return ItemFlag.HIDE_POTION_EFFECTS;
+        return ItemFlag.HIDE_ADDITIONAL_TOOLTIP;
     }
 
     @Override
     public boolean shouldHideTooltip(ItemStack itemStack) {
-        return false;
+        if (!itemStack.hasItemMeta()) {
+            return false;
+        }
+        return itemStack.getItemMeta().isHideTooltip();
     }
 
+    @SuppressWarnings("PatternValidation")
     @Override
     public Key getAttributeModifierKey(Object attributeModifier) {
-        throw new UnsupportedOperationException();
+        NamespacedKey namespacedKey = ((AttributeModifier) attributeModifier).getKey();
+        return Key.key(namespacedKey.getNamespace(), namespacedKey.getKey());
     }
 
     @Override
@@ -638,9 +689,9 @@ public class V1_20_3 extends NMSAddonWrapper {
     public Fraction getWeightForBundle(ItemStack itemStack) {
         try {
             net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-            bundleItemGetWeightMethod.setAccessible(true);
-            int weight = (int) bundleItemGetWeightMethod.invoke(null, nmsItemStack);
-            return Fraction.getFraction(weight, 64);
+            bundleContentsGetWeightMethod.setAccessible(true);
+            org.apache.commons.lang3.math.Fraction weight = (org.apache.commons.lang3.math.Fraction) bundleContentsGetWeightMethod.invoke(null, nmsItemStack);
+            return Fraction.getFraction(weight.getNumerator(), weight.getDenominator());
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
@@ -648,87 +699,127 @@ public class V1_20_3 extends NMSAddonWrapper {
 
     @Override
     public CustomModelData getCustomModelData(ItemStack itemStack) {
-        ItemMeta itemMeta = itemStack.getItemMeta();
-        if (itemMeta == null || !itemMeta.hasCustomModelData()) {
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        net.minecraft.world.item.component.CustomModelData customModelData = nmsItemStack.a(DataComponents.p);
+        if (customModelData == null) {
             return null;
         }
-        return new CustomModelData(itemMeta.getCustomModelData());
+        return new CustomModelData(customModelData.a(), customModelData.b(), customModelData.c(), customModelData.d());
     }
 
     @Override
     public boolean hasDataComponent(ItemStack itemStack, Key componentName, boolean ignoreDefault) {
-        return false;
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        Optional<DataComponentType<?>> optType = BuiltInRegistries.am.b(MinecraftKey.a(componentName.namespace(), componentName.value()));
+        if (!optType.isPresent()) {
+            return false;
+        }
+        DataComponentType<?> dataComponentType = optType.get();
+        return ignoreDefault ? nmsItemStack.d(dataComponentType) : nmsItemStack.c(dataComponentType);
     }
 
     @Override
     public String getBlockStateProperty(ItemStack itemStack, String property) {
-        return null;
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        BlockItemStateProperties blockStateComponent = nmsItemStack.a(DataComponents.aq);
+        if (blockStateComponent == null) {
+            return null;
+        }
+        return blockStateComponent.b().get(property);
     }
 
     @Override
     public ItemDamageInfo getItemDamageInfo(ItemStack itemStack) {
-        ItemMeta itemMeta = itemStack.getItemMeta();
-        if (itemMeta instanceof Damageable) {
-            return new ItemDamageInfo(((Damageable) itemMeta).getDamage(), itemStack.getType().getMaxDurability());
-        }
-        return new ItemDamageInfo(0, itemStack.getType().getMaxDurability());
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        int damage = nmsItemStack.o();
+        int maxDamage = nmsItemStack.p();
+        return new ItemDamageInfo(damage, maxDamage);
     }
 
     @Override
     public float getItemCooldownProgress(Player player, ItemStack itemStack) {
-        return 0.0F;
+        EntityPlayer entityPlayer = ((CraftPlayer) player).getHandle();
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        return entityPlayer.gG().a(nmsItemStack, 0.0F);
     }
 
     @Override
     public float getSkyAngle(World world) {
-        return 0F;
+        return ((CraftWorld) world).getHandle().f(1.0F);
     }
 
     @Override
     public int getMoonPhase(World world) {
-        return 0;
+        return ((CraftWorld) world).getHandle().at();
     }
 
     @Override
     public int getCrossbowPullTime(ItemStack itemStack, LivingEntity livingEntity) {
-        return 0;
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        EntityLiving entityLiving = ((CraftLivingEntity) livingEntity).getHandle();
+        return ItemCrossbow.b(nmsItemStack, entityLiving);
     }
 
     @Override
     public int getItemUseTimeLeft(LivingEntity livingEntity) {
-        return 0;
+        EntityLiving entityLiving = ((CraftLivingEntity) livingEntity).getHandle();
+        return entityLiving.fC();
     }
 
     @Override
     public int getTicksUsedSoFar(ItemStack itemStack, LivingEntity livingEntity) {
-        return 0;
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        EntityLiving entityLiving = ((CraftLivingEntity) livingEntity).getHandle();
+        return nmsItemStack.a(entityLiving) - getItemUseTimeLeft(livingEntity);
     }
 
+    @SuppressWarnings("PatternValidation")
     @Override
     public Key getItemModelResourceLocation(ItemStack itemStack) {
-        return NMS.getInstance().getNMSItemStackNamespacedKey(itemStack);
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        MinecraftKey itemModel = nmsItemStack.a(DataComponents.i);
+        if (itemModel == null) {
+            return NMS.getInstance().getNMSItemStackNamespacedKey(itemStack);
+        }
+        return Key.key(itemModel.b(), itemModel.a());
     }
 
     @Override
     public Boolean getEnchantmentGlintOverride(ItemStack itemStack) {
-        return null;
+        if (!itemStack.hasItemMeta()) {
+            return null;
+        }
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (!itemMeta.hasEnchantmentGlintOverride()) {
+            return null;
+        }
+        return itemMeta.getEnchantmentGlintOverride();
     }
 
+    @SuppressWarnings("PatternValidation")
     @Override
     public Key getCustomTooltipResourceLocation(ItemStack itemStack) {
-        return null;
+        if (!itemStack.hasItemMeta()) {
+            return null;
+        }
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        if (!itemMeta.hasTooltipStyle()) {
+            return null;
+        }
+        NamespacedKey namespacedKey = itemMeta.getTooltipStyle();
+        return Key.key(namespacedKey.getNamespace(), namespacedKey.getKey());
     }
 
     @Override
     public String getBannerPatternTranslationKey(PatternType type, DyeColor color) {
-        Key typeKey = getPatternTypeKey(type);
-        return "block.minecraft.banner." + typeKey.value() + "." + color.name().toLowerCase();
+        String translationKey = CraftPatternType.bukkitToMinecraft(type).b();
+        return translationKey + "." + color.name().toLowerCase();
     }
 
     @Override
     public Component getTrimMaterialDescription(Object trimMaterial) {
         TrimMaterial material = CraftTrimMaterial.bukkitToMinecraft((org.bukkit.inventory.meta.trim.TrimMaterial) trimMaterial);
-        IChatBaseComponent description = material.e();
+        IChatBaseComponent description = material.b();
         return InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(description));
     }
 
@@ -737,7 +828,7 @@ public class V1_20_3 extends NMSAddonWrapper {
         TrimPattern pattern = CraftTrimPattern.bukkitToMinecraft((org.bukkit.inventory.meta.trim.TrimPattern) trimPattern);
         IChatBaseComponent description;
         if (trimMaterial == null) {
-            description = pattern.c();
+            description = pattern.b();
         } else {
             TrimMaterial material = CraftTrimMaterial.bukkitToMinecraft((org.bukkit.inventory.meta.trim.TrimMaterial) trimMaterial);
             description = pattern.a(Holder.a(material));
@@ -748,35 +839,55 @@ public class V1_20_3 extends NMSAddonWrapper {
     @Override
     public OptionalInt getFireworkFlightDuration(ItemStack itemStack) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        if (nmsItemStack.d() instanceof ItemFireworks) {
-            NBTTagCompound nbt = nmsItemStack.b("Fireworks");
-            if (nbt != null) {
-                if (nbt.b("Flight", NBTBase.u)) {
-                    return OptionalInt.of(nbt.f("Flight"));
-                }
-            }
+        Fireworks fireworks = nmsItemStack.a(DataComponents.aj);
+        if (fireworks == null) {
+            return OptionalInt.empty();
         }
-        return OptionalInt.empty();
+        return OptionalInt.of(fireworks.a());
     }
 
     @Override
     public boolean shouldShowOperatorBlockWarnings(ItemStack itemStack, Player player) {
-        return false;
+        EntityPlayer nmsPlayer = ((CraftPlayer) player).getHandle();
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        return nmsItemStack.h().a(nmsItemStack, nmsPlayer);
     }
 
     @Override
     public Object getItemStackDataComponentValue(ItemStack itemStack, Key component) {
-        throw new UnsupportedOperationException();
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        DataComponentType<?> componentType = BuiltInRegistries.am.a(MinecraftKey.a(component.namespace(), component.value()));
+        if (componentType == null) {
+            return false;
+        }
+        return nmsItemStack.a(componentType);
     }
 
     @Override
     public Object serializeDataComponent(Key component, String data) {
-        throw new UnsupportedOperationException();
+        DataComponentType<?> componentType = BuiltInRegistries.am.a(MinecraftKey.a(component.namespace(), component.value()));
+        if (componentType == null) {
+            return null;
+        }
+        IRegistryCustom registryAccess = ((CraftWorld)Bukkit.getWorlds().get(0)).getHandle().J_();
+        JsonElement jsonElement = new Gson().fromJson(data, JsonElement.class);
+        Object nativeJsonElement = NativeJsonConverter.toNative(jsonElement);
+        return componentType.c().decode(registryAccess.a((DynamicOps<Object>) (DynamicOps<?>) JsonOps.INSTANCE), nativeJsonElement).result().map(r -> r.getFirst()).orElse(null);
     }
 
     @Override
     public boolean evaluateComponentPredicateOnItemStack(ItemStack itemStack, String predicateData, String data) {
-        throw new UnsupportedOperationException();
+        IRegistryCustom registryAccess = ((CraftWorld)Bukkit.getWorlds().get(0)).getHandle().J_();
+        JsonElement jsonElement = new Gson().fromJson(predicateData, JsonElement.class);
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.add("predicate", jsonElement);
+        Object nativeJsonObject = NativeJsonConverter.toNative(jsonObject);
+        DataComponentPredicate.a<?> predicate = DataComponentPredicate.a("predicate").codec().decode(registryAccess.a((DynamicOps<Object>) (DynamicOps<?>) JsonOps.INSTANCE), nativeJsonObject).result().map(r -> r.getFirst()).orElse(null);
+        if (predicate == null) {
+            return false;
+        }
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        return predicate.b().a(nmsItemStack);
     }
 
 }

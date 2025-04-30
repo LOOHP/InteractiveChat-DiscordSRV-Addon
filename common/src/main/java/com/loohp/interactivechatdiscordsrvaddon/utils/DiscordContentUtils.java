@@ -22,6 +22,7 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
+import com.loohp.interactivechat.libs.com.loohp.platformscheduler.Scheduler;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import com.loohp.interactivechat.objectholders.ICInventoryHolder;
@@ -376,7 +377,7 @@ public class DiscordContentUtils {
                 int slot = Integer.parseInt(((SelectionMenuInteraction) event.getInteraction()).getValues().get(0));
                 if (slot >= 0 && slot < items.length) {
                     event.deferReply().setEphemeral(true).queue();
-                    Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+                    Scheduler.runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
                         OfflineICPlayer offlineICPlayer = offlineICPlayerAtomicRef.updateAndGet(p -> p instanceof ICPlayer ? (p.isOnline() ? p : ICPlayerFactory.getOfflineICPlayer(p.getUniqueId())) : p);
                         try {
                             ItemStack item = items[slot];
@@ -474,7 +475,7 @@ public class DiscordContentUtils {
                 return;
             }
             event.deferEdit().queue();
-            Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+            Scheduler.runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
                 AtomicInteger currentPage = currentPages.get(user.getId());
                 if (currentPage == null) {
                     currentPages.put(user.getId(), currentPage = new AtomicInteger(0));

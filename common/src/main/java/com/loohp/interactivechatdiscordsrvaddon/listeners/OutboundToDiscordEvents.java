@@ -22,6 +22,7 @@ package com.loohp.interactivechatdiscordsrvaddon.listeners;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.api.InteractiveChatAPI;
+import com.loohp.interactivechat.libs.com.loohp.platformscheduler.Scheduler;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -690,7 +691,7 @@ public class OutboundToDiscordEvents implements Listener {
             e.printStackTrace();
         }
 
-        Bukkit.getScheduler().runTaskLaterAsynchronously(InteractiveChat.plugin, () -> {
+        Scheduler.runTaskLaterAsynchronously(InteractiveChat.plugin, () -> {
             Debug.debug("onDeathMessageSend sending item to discord");
             TextChannel destinationChannel = DiscordSRV.getPlugin().getDestinationTextChannelForGameChannelName(event.getChannel());
             if (event.isUsingWebhooks()) {
@@ -975,7 +976,7 @@ public class OutboundToDiscordEvents implements Listener {
             }
             if (InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter > 0) {
                 String finalText = text;
-                Bukkit.getScheduler().runTaskLaterAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+                Scheduler.runTaskLaterAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
                     WebhookUtil.editMessage(channel, String.valueOf(messageId), finalText, Collections.emptyList(), Collections.emptyMap(), Collections.emptyList());
                 }, InteractiveChatDiscordSrvAddon.plugin.embedDeleteAfter * 20L);
             }
@@ -1003,7 +1004,7 @@ public class OutboundToDiscordEvents implements Listener {
                 if (!InteractiveChatDiscordSrvAddon.plugin.isEnabled()) {
                     return;
                 }
-                Bukkit.getScheduler().runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
+                Scheduler.runTaskAsynchronously(InteractiveChatDiscordSrvAddon.plugin, () -> {
                     if (isWebhookMessage) {
                         handleWebhook(messageId, message, textOriginal, channel);
                     } else {

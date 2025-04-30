@@ -26,15 +26,17 @@ import com.loohp.interactivechat.libs.org.json.simple.parser.ParseException;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.OptionalInt;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class EquipmentModelDefinition {
 
     public static EquipmentModelDefinition fromJson(JSONObject rootJson) throws ParseException {
-        Map<EquipmentLayerType, List<EquipmentLayer>> layers = new EnumMap<>(EquipmentLayerType.class);
+        Map<EquipmentLayerType, List<EquipmentLayer>> layers = new HashMap<>();
         for (Object keyObj : rootJson.keySet()) {
             EquipmentLayerType equipmentLayerType = EquipmentLayerType.fromName((String) keyObj);
             List<EquipmentLayer> list = new ArrayList<>();
@@ -62,7 +64,7 @@ public class EquipmentModelDefinition {
     private final Map<EquipmentLayerType, List<EquipmentLayer>> layers;
 
     public EquipmentModelDefinition(Map<EquipmentLayerType, List<EquipmentLayer>> layers) {
-        this.layers = layers;
+        this.layers = Collections.unmodifiableMap(layers);
     }
 
     public Map<EquipmentLayerType, List<EquipmentLayer>> getLayers() {
@@ -122,21 +124,44 @@ public class EquipmentModelDefinition {
         }
     }
 
-    public enum EquipmentLayerType {
+    public static class EquipmentLayerType {
 
-        HUMANOID("humanoid"),
-        HUMANOID_LEGGINGS("humanoid_leggings"),
-        WINGS("wings"),
-        WOLF_BODY("wolf_body"),
-        HORSE_BODY("horse_body"),
-        LLAMA_BODY("llama_body"),
-        IC_LEGACY("ic_legacy");
+        private static final Map<String, EquipmentLayerType> VALUES = new ConcurrentHashMap<>();
 
-        private static final EquipmentLayerType[] VALUES = values();
+        public static final EquipmentLayerType HUMANOID = register("humanoid");
+        public static final EquipmentLayerType HUMANOID_LEGGINGS = register("humanoid_leggings");
+        public static final EquipmentLayerType WINGS = register("wings");
+        public static final EquipmentLayerType WOLF_BODY = register("wolf_body");
+        public static final EquipmentLayerType HORSE_BODY = register("horse_body");
+        public static final EquipmentLayerType LLAMA_BODY = register("llama_body");
+        public static final EquipmentLayerType CAMEL_SADDLE = register("camel_saddle");
+        public static final EquipmentLayerType DONKEY_SADDLE = register("donkey_saddle");
+        public static final EquipmentLayerType HORSE_SADDLE = register("horse_saddle");
+        public static final EquipmentLayerType MULE_SADDLE = register("mule_saddle");
+        public static final EquipmentLayerType PIG_SADDLE = register("pig_saddle");
+        public static final EquipmentLayerType SKELETON_HORSE_SADDLE = register("skeleton_horse_saddle");
+        public static final EquipmentLayerType STRIDER_SADDLE = register("strider_saddle");
+        public static final EquipmentLayerType ZOMBIE_HORSE_SADDLE = register("zombie_horse_saddle");
+        public static final EquipmentLayerType IC_LEGACY = register("ic_legacy");
+
+        private static EquipmentLayerType register(String name) {
+            EquipmentLayerType type = new EquipmentLayerType(name);
+            VALUES.put(type.getName(), type);
+            return type;
+        }
+
+        public static EquipmentLayerType fromName(String name) {
+            EquipmentLayerType type = VALUES.get(name);
+            return type == null ? register(name) : type;
+        }
+
+        public static Map<String, EquipmentLayerType> values() {
+            return Collections.unmodifiableMap(VALUES);
+        }
 
         private final String name;
 
-        EquipmentLayerType(String name) {
+        public EquipmentLayerType(String name) {
             this.name = name;
         }
 
@@ -144,13 +169,16 @@ public class EquipmentModelDefinition {
             return this.name;
         }
 
-        public static EquipmentLayerType fromName(String name) {
-            for (EquipmentLayerType type : VALUES) {
-                if (type.getName().equalsIgnoreCase(name)) {
-                    return type;
-                }
-            }
-            return null;
+        @Override
+        public boolean equals(Object object) {
+            if (object == null || getClass() != object.getClass()) return false;
+            EquipmentLayerType that = (EquipmentLayerType) object;
+            return Objects.equals(name, that.name);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(name);
         }
     }
 

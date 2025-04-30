@@ -214,4 +214,10 @@ public abstract class NMSAddonWrapper {
 
     public abstract boolean shouldShowOperatorBlockWarnings(ItemStack itemStack, Player player);
 
+    public abstract Object getItemStackDataComponentValue(ItemStack itemStack, Key component);
+
+    public abstract Object serializeDataComponent(Key component, String data);
+
+    public abstract boolean evaluateComponentPredicateOnItemStack(ItemStack itemStack, String predicateData, String data);
+
 }

@@ -20,7 +20,7 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.api.events;
 
-import org.bukkit.Bukkit;
+import com.loohp.interactivechat.libs.com.loohp.platformscheduler.Scheduler;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
@@ -38,7 +38,7 @@ public class InteractiveChatDiscordSRVConfigReloadEvent extends Event {
     }
 
     public InteractiveChatDiscordSRVConfigReloadEvent() {
-        super(!Bukkit.isPrimaryThread());
+        super(!Scheduler.isPrimaryThread());
     }
 
     public HandlerList getHandlers() {
