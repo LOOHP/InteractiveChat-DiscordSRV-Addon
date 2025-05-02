@@ -33,6 +33,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.CompoundTag;
 import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
 import com.loohp.interactivechat.libs.org.apache.commons.text.WordUtils;
+import com.loohp.interactivechat.nms.NMS;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.objectholders.OfflineICPlayer;
 import com.loohp.interactivechat.utils.ChatColorUtils;
@@ -52,7 +53,6 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent.ToolTipType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.SpecificTranslateFunction;
-import com.loohp.interactivechatdiscordsrvaddon.resources.languages.TranslateFunction;
 import github.scarsz.discordsrv.dependencies.kyori.adventure.text.KeybindComponent;
 import github.scarsz.discordsrv.dependencies.kyori.adventure.text.TranslatableComponent;
 import github.scarsz.discordsrv.dependencies.mcdiscordreserializer.discord.DiscordSerializer;
@@ -106,6 +106,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -503,18 +504,33 @@ public class DiscordItemStackUtils {
             CrossbowMeta meta = (CrossbowMeta) item.getItemMeta();
             List<ItemStack> charged = meta.getChargedProjectiles();
             if (charged != null && !charged.isEmpty()) {
-                ItemStack charge = charged.get(0);
-                List<ToolTipComponent<?>> chargedItemInfo = getToolTip(charge, player, false).getComponents();
-                Component chargeItemName = chargedItemInfo.get(0).getToolTipComponent(ToolTipType.TEXT);
-                prints.add(tooltipText(translatable(getCrossbowProjectile()).color(WHITE).append(text(" [").color(WHITE)).append(chargeItemName).append(text("]").color(WHITE))));
-                if (InteractiveChatDiscordSrvAddon.plugin.showFireworkRocketDetailsInCrossbow && ICMaterial.from(charge).isMaterial(XMaterial.FIREWORK_ROCKET)) {
-                    chargedItemInfo.stream().skip(1).forEachOrdered(each -> {
-                        if (each.getType().equals(ToolTipType.TEXT)) {
-                            prints.add(tooltipText(text("  ").append(each.getToolTipComponent(ToolTipType.TEXT))));
-                        } else {
-                            prints.add(each);
-                        }
-                    });
+                Map<String, ChargedItemInfo> chargedItemsInfo = new LinkedHashMap<>(charged.size());
+                for (ItemStack charge : charged) {
+                    List<ToolTipComponent<?>> chargedItemInfo = getToolTip(charge, player, false).getComponents();
+                    String nbt = NMS.getInstance().getNMSItemStackJson(charge);
+                    ChargedItemInfo chargedItemMeta = chargedItemsInfo.get(nbt);
+                    if (chargedItemMeta == null) {
+                        chargedItemsInfo.put(nbt, new ChargedItemInfo(chargedItemInfo, charge, charge.getAmount()));
+                    } else {
+                        chargedItemMeta.setCount(chargedItemMeta.getCount() + charge.getAmount());
+                    }
+                }
+                for (ChargedItemInfo chargedItemMeta : chargedItemsInfo.values()) {
+                    List<ToolTipComponent<?>> chargedItemInfo = chargedItemMeta.getTooltip();
+                    ItemStack charge = chargedItemMeta.getItemStack();
+                    int count = chargedItemMeta.getCount();
+                    Component chargeItemName = chargedItemInfo.get(0).getToolTipComponent(ToolTipType.TEXT);
+                    String countText = count == 1 ? "" : " " + count + " x";
+                    prints.add(tooltipText(translatable(getCrossbowProjectile()).color(WHITE).append(text(countText).color(WHITE)).append(text(" [").color(WHITE)).append(chargeItemName).append(text("]").color(WHITE))));
+                    if (InteractiveChatDiscordSrvAddon.plugin.showFireworkRocketDetailsInCrossbow) {
+                        chargedItemInfo.stream().skip(1).forEachOrdered(each -> {
+                            if (each.getType().equals(ToolTipType.TEXT)) {
+                                prints.add(tooltipText(text("  ").append(each.getToolTipComponent(ToolTipType.TEXT))));
+                            } else {
+                                prints.add(each);
+                            }
+                        });
+                    }
                 }
             }
         }
@@ -876,6 +892,35 @@ public class DiscordItemStackUtils {
 
         public boolean isHideTooltip() {
             return isHideTooltip;
+        }
+    }
+
+    public static class ChargedItemInfo {
+
+        private final List<ToolTipComponent<?>> tooltip;
+        private final ItemStack itemStack;
+        private int count;
+
+        public ChargedItemInfo(List<ToolTipComponent<?>> tooltip, ItemStack itemStack, int count) {
+            this.tooltip = tooltip;
+            this.itemStack = itemStack;
+            this.count = count;
+        }
+
+        public List<ToolTipComponent<?>> getTooltip() {
+            return tooltip;
+        }
+
+        public ItemStack getItemStack() {
+            return itemStack;
+        }
+
+        public int getCount() {
+            return count;
+        }
+
+        public void setCount(int count) {
+            this.count = count;
         }
     }
 
