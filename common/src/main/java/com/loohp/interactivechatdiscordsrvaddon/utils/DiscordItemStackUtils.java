@@ -26,6 +26,7 @@ import com.loohp.interactivechat.api.InteractiveChatAPI;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.Style;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
@@ -48,6 +49,7 @@ import com.loohp.interactivechat.utils.RarityUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.AttributeBase;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ToolTipComponent;
@@ -115,70 +117,12 @@ import java.util.OptionalInt;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.loohp.interactivechat.libs.net.kyori.adventure.text.Component.empty;
-import static com.loohp.interactivechat.libs.net.kyori.adventure.text.Component.text;
-import static com.loohp.interactivechat.libs.net.kyori.adventure.text.Component.translatable;
-import static com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor.BLUE;
-import static com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor.DARK_GRAY;
-import static com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor.DARK_GREEN;
-import static com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor.DARK_PURPLE;
-import static com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor.GRAY;
-import static com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor.RED;
-import static com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor.WHITE;
+import static com.loohp.interactivechat.libs.net.kyori.adventure.text.Component.*;
+import static com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor.*;
 import static com.loohp.interactivechat.utils.LanguageUtils.getTranslation;
 import static com.loohp.interactivechat.utils.LanguageUtils.getTranslationKey;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils.join;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getAttributeModifierKey;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getBannerPatternItemName;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getBannerPatternName;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getBookAuthor;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getBookGeneration;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getBundleEmptyDescription;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getBundleLegacyFullness;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getCanDestroy;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getCanPlace;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getCrossbowProjectile;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getDiscFragmentName;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getDurability;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getDyeColor;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getEffect;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getEffectLevel;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getEnchantmentDescription;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getEnchantmentLevel;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getEntityTypeName;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getFilledMapId;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getFilledMapLevel;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getFilledMapScale;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getFireworkColor;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getFireworkFade;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getFireworkFlicker;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getFireworkTrail;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getFireworkType;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getItemComponents;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getItemNbtTag;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getJukeboxSongDescription;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getModifierSlotGroupKey;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getModifierSlotKey;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getNoEffect;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getPaintingDimension;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getPotionDurationInfinite;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getPotionWhenDrunk;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getPotionWithAmplifier;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getPotionWithDuration;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getPotterySherdName;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getRocketFlightDuration;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getSmithingTemplateAppliesTo;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getSmithingTemplateArmorTrimAppliesTo;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getSmithingTemplateArmorTrimIngredients;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getSmithingTemplateIngredients;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getSmithingTemplateNetheriteUpgradeAppliesTo;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getSmithingTemplateNetheriteUpgradeIngredients;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getSmithingTemplateUpgrade;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getSpawnerDescription1;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getSpawnerDescription2;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getTrimPatternName;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getTropicalFishBucketName;
-import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.getUnbreakable;
+import static com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils.*;
 
 @SuppressWarnings("deprecation")
 public class DiscordItemStackUtils {
@@ -557,7 +501,7 @@ public class DiscordItemStackUtils {
                 if (effects.isEmpty()) {
                     prints.add(tooltipText(translatable(getNoEffect()).color(GRAY)));
                 } else {
-                    Map<String, AttributeModifier> attributes = new HashMap<>();
+                    Map<AttributeBase, AttributeModifier> attributes = new HashMap<>();
                     for (PotionEffect effect : effects) {
                         if (InteractiveChat.version.isLegacy()) {
                             String key = getEffect(effect.getType());
@@ -580,13 +524,13 @@ public class DiscordItemStackUtils {
                                     description += " (" + TimeUtils.getReadableTimeBetween(0, effect.getDuration() * 50L, ":", ChronoUnit.MINUTES, ChronoUnit.SECONDS, true) + ")";
                                 }
                             }
-                            ChatColor color;
+                            TextColor color;
                             try {
                                 color = PotionUtils.getPotionEffectChatColor(effect.getType());
                             } catch (Throwable e) {
-                                color = ChatColor.BLUE;
+                                color = BLUE;
                             }
-                            prints.add(tooltipText(LegacyComponentSerializer.legacySection().deserialize(color + description)));
+                            prints.add(tooltipText(LegacyComponentSerializer.legacySection().deserialize(ColorUtils.toChatColor(NamedTextColor.nearestTo(color)) + description)));
                         } else {
                             String key = getEffect(effect.getType());
                             String potionName;
@@ -607,7 +551,7 @@ public class DiscordItemStackUtils {
                             }
                             TextColor color;
                             try {
-                                color = ColorUtils.toTextColor(PotionUtils.getPotionEffectChatColor(effect.getType()));
+                                color = PotionUtils.getPotionEffectChatColor(effect.getType());
                             } catch (Throwable e) {
                                 color = BLUE;
                             }
@@ -626,20 +570,27 @@ public class DiscordItemStackUtils {
                             }
                             prints.add(tooltipText(component.color(color)));
                         }
-                        attributes.putAll(PotionUtils.getPotionAttributes(effect));
+                        for (Entry<AttributeBase, AttributeModifier> entry : PotionUtils.getPotionAttributes(effect).entrySet()) {
+                            AttributeBase attributeBase = entry.getKey();
+                            if (!attributeBase.isHidden()) {
+                                attributes.put(attributeBase, entry.getValue());
+                            }
+                        }
                     }
                     if (!attributes.isEmpty()) {
                         prints.add(tooltipEmpty());
                         prints.add(tooltipText(translatable(getPotionWhenDrunk()).color(DARK_PURPLE)));
-                        for (Entry<String, AttributeModifier> entry : attributes.entrySet()) {
-                            String attributeName = entry.getKey();
+                        for (Entry<AttributeBase, AttributeModifier> entry : attributes.entrySet()) {
+                            AttributeBase attributeBase = entry.getKey();
+                            String attributeName = attributeBase.getDescriptionId();
                             AttributeModifier attributeModifier = entry.getValue();
                             double amount = attributeModifier.getAmount();
                             int operation = attributeModifier.getOperation().ordinal();
                             if (!(operation != 1 && operation != 2)) {
                                 amount *= 100;
                             }
-                            prints.add(tooltipText(translatable(getAttributeModifierKey(false, amount, operation)).arguments(text(DURATION_FORMAT.format(Math.abs(amount))), translatable(attributeName)).color(amount < 0 ? RED : BLUE)));
+                            TextColor color = attributeBase.getStyle(amount >= 0);
+                            prints.add(tooltipText(translatable(getAttributeModifierKey(false, amount, operation)).arguments(text(DURATION_FORMAT.format(Math.abs(amount))), translatable(attributeName)).color(color)));
                         }
                     }
                 }
@@ -694,42 +645,45 @@ public class DiscordItemStackUtils {
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && hasMeta && !item.getItemMeta().hasItemFlag(ItemFlag.HIDE_ATTRIBUTES)) {
             if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_21)) {
                 Map<EquipmentSlotGroup, List<ToolTipComponent<?>>> tooltips = new EnumMap<>(EquipmentSlotGroup.class);
-                Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> attributeList = AttributeModifiersUtils.getAttributeModifiers(item);
-                for (Entry<EquipmentSlotGroup, Multimap<String, AttributeModifier>> entry : attributeList.entrySet()) {
-                    for (Entry<String, AttributeModifier> subEntry : entry.getValue().entries()) {
-                        AttributeModifier attributemodifier = subEntry.getValue();
-                        String attributeName = subEntry.getKey();
-                        double amount = attributemodifier.getAmount();
-                        AttributeModifier.Operation operation = attributemodifier.getOperation();
+                Map<EquipmentSlotGroup, Multimap<AttributeBase, AttributeModifier>> attributeList = AttributeModifiersUtils.getAttributeModifiers(item);
+                for (Entry<EquipmentSlotGroup, Multimap<AttributeBase, AttributeModifier>> entry : attributeList.entrySet()) {
+                    for (Entry<AttributeBase, AttributeModifier> subEntry : entry.getValue().entries()) {
+                        AttributeBase attributeBase = subEntry.getKey();
+                        if (!attributeBase.isHidden()) {
+                            AttributeModifier attributemodifier = subEntry.getValue();
+                            String attributeName = attributeBase.getDescriptionId();
+                            double amount = attributemodifier.getAmount();
+                            AttributeModifier.Operation operation = attributemodifier.getOperation();
 
-                        boolean flag = false;
+                            boolean flag = false;
 
-                        if (bukkitPlayer != null) {
-                            Key attributeModifierKey = NMSAddon.getInstance().getAttributeModifierKey(attributemodifier);
-                            if (attributeModifierKey.equals(AttributeModifiersUtils.BASE_ATTACK_DAMAGE_MODIFIER_ID)) {
-                                amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).getBaseValue();
-                                flag = true;
-                            } else if (attributeModifierKey.equals(AttributeModifiersUtils.BASE_ATTACK_SPEED_MODIFIER_ID)) {
-                                amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_SPEED).getBaseValue();
-                                flag = true;
+                            if (bukkitPlayer != null) {
+                                Key attributeModifierKey = NMSAddon.getInstance().getAttributeModifierKey(attributemodifier);
+                                if (attributeModifierKey.equals(AttributeModifiersUtils.BASE_ATTACK_DAMAGE_MODIFIER_ID)) {
+                                    amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).getBaseValue();
+                                    flag = true;
+                                } else if (attributeModifierKey.equals(AttributeModifiersUtils.BASE_ATTACK_SPEED_MODIFIER_ID)) {
+                                    amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_SPEED).getBaseValue();
+                                    flag = true;
+                                }
                             }
-                        }
-                        if (!attributemodifier.getOperation().equals(AttributeModifier.Operation.ADD_SCALAR) && !attributemodifier.getOperation().equals(AttributeModifier.Operation.MULTIPLY_SCALAR_1)) {
-                            if (attributeName.equals(AttributeModifiersUtils.GENERIC_KNOCKBACK_RESISTANCE)) {
-                                amount = amount * 10.0D;
+                            if (!attributemodifier.getOperation().equals(AttributeModifier.Operation.ADD_SCALAR) && !attributemodifier.getOperation().equals(AttributeModifier.Operation.MULTIPLY_SCALAR_1)) {
+                                if (attributeName.equals(AttributeModifiersUtils.GENERIC_KNOCKBACK_RESISTANCE)) {
+                                    amount = amount * 10.0D;
+                                }
+                            } else {
+                                amount = amount * 100.0D;
                             }
-                        } else {
-                            amount = amount * 100.0D;
-                        }
 
-                        if (flag || amount != 0) {
-                            TextColor color = flag ? DARK_GREEN : (amount < 0 ? RED : BLUE);
-                            Component component = translatable(getAttributeModifierKey(flag, amount, operation.ordinal())).arguments(text(ATTRIBUTE_FORMAT.format(Math.abs(amount))), translatable(attributeName)).color(color);
-                            if (flag) {
-                                component = text(" ").append(component);
+                            if (flag || amount != 0) {
+                                TextColor color = flag ? DARK_GREEN : attributeBase.getStyle(amount >= 0);
+                                Component component = translatable(getAttributeModifierKey(flag, amount, operation.ordinal())).arguments(text(ATTRIBUTE_FORMAT.format(Math.abs(amount))), translatable(attributeName)).color(color);
+                                if (flag) {
+                                    component = text(" ").append(component);
+                                }
+                                ToolTipComponent<?> attributeComponent = tooltipText(component);
+                                tooltips.computeIfAbsent(entry.getKey(), k -> new LinkedList<>()).add(attributeComponent);
                             }
-                            ToolTipComponent<?> attributeComponent = tooltipText(component);
-                            tooltips.computeIfAbsent(entry.getKey(), k -> new LinkedList<>()).add(attributeComponent);
                         }
                     }
                 }
@@ -744,45 +698,48 @@ public class DiscordItemStackUtils {
                 }
             } else {
                 Map<EquipmentSlot, List<ToolTipComponent<?>>> tooltips = new EnumMap<>(EquipmentSlot.class);
-                Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> attributeList = AttributeModifiersUtils.getAttributeModifiers(item);
-                for (Entry<EquipmentSlotGroup, Multimap<String, AttributeModifier>> entry : attributeList.entrySet()) {
-                    for (Entry<String, AttributeModifier> subEntry : entry.getValue().entries()) {
-                        AttributeModifier attributemodifier = subEntry.getValue();
-                        String attributeName = subEntry.getKey();
-                        double amount = attributemodifier.getAmount();
-                        AttributeModifier.Operation operation = attributemodifier.getOperation();
+                Map<EquipmentSlotGroup, Multimap<AttributeBase, AttributeModifier>> attributeList = AttributeModifiersUtils.getAttributeModifiers(item);
+                for (Entry<EquipmentSlotGroup, Multimap<AttributeBase, AttributeModifier>> entry : attributeList.entrySet()) {
+                    for (Entry<AttributeBase, AttributeModifier> subEntry : entry.getValue().entries()) {
+                        AttributeBase attributeBase = subEntry.getKey();
+                        if (!attributeBase.isHidden()) {
+                            AttributeModifier attributemodifier = subEntry.getValue();
+                            String attributeName = attributeBase.getDescriptionId();
+                            double amount = attributemodifier.getAmount();
+                            AttributeModifier.Operation operation = attributemodifier.getOperation();
 
-                        boolean flag = false;
+                            boolean flag = false;
 
-                        if (bukkitPlayer != null) {
-                            if (attributemodifier.getUniqueId().equals(AttributeModifiersUtils.BASE_ATTACK_DAMAGE_UUID)) {
-                                amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).getBaseValue();
-                                amount += NMSAddon.getInstance().getEnchantmentDamageBonus(item, null);
-                                flag = true;
-                            } else if (attributemodifier.getUniqueId().equals(AttributeModifiersUtils.BASE_ATTACK_SPEED_UUID)) {
-                                amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_SPEED).getBaseValue();
-                                flag = true;
+                            if (bukkitPlayer != null) {
+                                if (attributemodifier.getUniqueId().equals(AttributeModifiersUtils.BASE_ATTACK_DAMAGE_UUID)) {
+                                    amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).getBaseValue();
+                                    amount += NMSAddon.getInstance().getEnchantmentDamageBonus(item, null);
+                                    flag = true;
+                                } else if (attributemodifier.getUniqueId().equals(AttributeModifiersUtils.BASE_ATTACK_SPEED_UUID)) {
+                                    amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_SPEED).getBaseValue();
+                                    flag = true;
+                                }
                             }
-                        }
 
-                        if (!attributemodifier.getOperation().equals(AttributeModifier.Operation.ADD_SCALAR) && !attributemodifier.getOperation().equals(AttributeModifier.Operation.MULTIPLY_SCALAR_1)) {
-                            if (attributeName.equals(AttributeModifiersUtils.GENERIC_KNOCKBACK_RESISTANCE)) {
-                                amount = amount * 10.0D;
+                            if (!attributemodifier.getOperation().equals(AttributeModifier.Operation.ADD_SCALAR) && !attributemodifier.getOperation().equals(AttributeModifier.Operation.MULTIPLY_SCALAR_1)) {
+                                if (attributeName.equals(AttributeModifiersUtils.GENERIC_KNOCKBACK_RESISTANCE)) {
+                                    amount = amount * 10.0D;
+                                }
+                            } else {
+                                amount = amount * 100.0D;
                             }
-                        } else {
-                            amount = amount * 100.0D;
-                        }
 
-                        if (amount != 0) {
-                            TextColor color = flag ? DARK_GREEN : (amount < 0 ? RED : BLUE);
-                            Component component = translatable(getAttributeModifierKey(flag, amount, operation.ordinal())).arguments(text(ATTRIBUTE_FORMAT.format(Math.abs(amount))), translatable(attributeName)).color(color);
-                            if (flag) {
-                                component = text(" ").append(component);
-                            }
-                            ToolTipComponent<?> attributeComponent = tooltipText(component);
-                            List<EquipmentSlot> slots = entry.getKey().getEquipmentSlots();
-                            if (!slots.isEmpty()) {
-                                tooltips.computeIfAbsent(slots.get(0), k -> new LinkedList<>()).add(attributeComponent);
+                            if (amount != 0) {
+                                TextColor color = flag ? DARK_GREEN : attributeBase.getStyle(amount >= 0);
+                                Component component = translatable(getAttributeModifierKey(flag, amount, operation.ordinal())).arguments(text(ATTRIBUTE_FORMAT.format(Math.abs(amount))), translatable(attributeName)).color(color);
+                                if (flag) {
+                                    component = text(" ").append(component);
+                                }
+                                ToolTipComponent<?> attributeComponent = tooltipText(component);
+                                List<EquipmentSlot> slots = entry.getKey().getEquipmentSlots();
+                                if (!slots.isEmpty()) {
+                                    tooltips.computeIfAbsent(slots.get(0), k -> new LinkedList<>()).add(attributeComponent);
+                                }
                             }
                         }
                     }

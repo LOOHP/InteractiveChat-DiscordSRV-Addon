@@ -20,8 +20,9 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
-import net.md_5.bungee.api.ChatColor;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.AttributeBase;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -54,12 +55,12 @@ public class PotionUtils {
         return NMSAddon.getInstance().getAllPotionEffects(potion);
     }
 
-    public static ChatColor getPotionEffectChatColor(PotionEffectType type) {
+    public static TextColor getPotionEffectChatColor(PotionEffectType type) {
         return NMSAddon.getInstance().getPotionEffectChatColor(type);
     }
 
-    public static Map<String, AttributeModifier> getPotionAttributes(PotionEffect effect) {
-        return (Map<String, AttributeModifier>) NMSAddon.getInstance().getPotionAttributeModifiers(effect);
+    public static Map<AttributeBase, AttributeModifier> getPotionAttributes(PotionEffect effect) {
+        return (Map<AttributeBase, AttributeModifier>) NMSAddon.getInstance().getPotionAttributeModifiers(effect);
     }
 
 }

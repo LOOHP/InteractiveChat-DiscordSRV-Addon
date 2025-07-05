@@ -27,6 +27,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.AttributeBase;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
@@ -37,7 +38,6 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.ProfileProperty;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import net.md_5.bungee.api.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -104,9 +104,9 @@ public abstract class NMSAddonWrapper {
 
     public abstract List<PotionEffect> getAllPotionEffects(ItemStack potion);
 
-    public abstract ChatColor getPotionEffectChatColor(PotionEffectType type);
+    public abstract TextColor getPotionEffectChatColor(PotionEffectType type);
 
-    public abstract Map<String, ?> getPotionAttributeModifiers(PotionEffect effect);
+    public abstract Map<AttributeBase, ?> getPotionAttributeModifiers(PotionEffect effect);
 
     public abstract boolean isItemUnbreakable(ItemStack itemStack);
 
@@ -136,7 +136,7 @@ public abstract class NMSAddonWrapper {
 
     public abstract Key getArmorMaterialKey(ItemStack armorItem);
 
-    public abstract Map<EquipmentSlotGroup, ? extends Multimap<String, ?>> getItemAttributeModifiers(ItemStack itemStack);
+    public abstract Map<EquipmentSlotGroup, ? extends Multimap<AttributeBase, ?>> getItemAttributeModifiers(ItemStack itemStack);
 
     public abstract Component getDeathMessage(Player player);
 

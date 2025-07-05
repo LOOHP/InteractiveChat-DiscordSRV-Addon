@@ -37,7 +37,8 @@ public enum EquipmentSlotGroup {
     CHEST("chest", EquipmentSlot.CHEST),
     HEAD("head", EquipmentSlot.HEAD),
     ARMOR("armor", EquipmentSlot.FEET, EquipmentSlot.LEGS, EquipmentSlot.CHEST, EquipmentSlot.HEAD),
-    BODY("body");
+    BODY("body"),
+    SADDLE("saddle");
 
     private final String name;
     private final List<EquipmentSlot> slots;

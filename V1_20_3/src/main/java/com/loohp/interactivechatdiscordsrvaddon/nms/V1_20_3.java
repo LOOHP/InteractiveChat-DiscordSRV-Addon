@@ -22,8 +22,6 @@ package com.loohp.interactivechatdiscordsrvaddon.nms;
 
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
-import com.loohp.interactivechat.libs.com.google.gson.Gson;
-import com.loohp.interactivechat.libs.com.google.gson.JsonElement;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
@@ -32,9 +30,9 @@ import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
 import com.loohp.interactivechat.nms.NMS;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
-import com.loohp.interactivechat.utils.NativeJsonConverter;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.AttributeBase;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
@@ -45,8 +43,6 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.ProfileProperty;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import com.mojang.serialization.DynamicOps;
-import com.mojang.serialization.JsonOps;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.EnumChatFormat;
 import net.minecraft.MinecraftVersion;
@@ -54,7 +50,6 @@ import net.minecraft.advancements.AdvancementDisplay;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.core.BlockPosition;
 import net.minecraft.core.Holder;
-import net.minecraft.core.IRegistryCustom;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -71,7 +66,6 @@ import net.minecraft.world.effect.MobEffectList;
 import net.minecraft.world.entity.EntityLiving;
 import net.minecraft.world.entity.EnumItemSlot;
 import net.minecraft.world.entity.EnumMonsterType;
-import net.minecraft.world.entity.ai.attributes.AttributeBase;
 import net.minecraft.world.entity.projectile.EntityFishingHook;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.BundleItem;
@@ -312,23 +306,24 @@ public class V1_20_3 extends NMSAddonWrapper {
     }
 
     @Override
-    public ChatColor getPotionEffectChatColor(PotionEffectType type) {
-        MobEffectList mobEffectList = ((CraftPotionEffectType) type).getHandle();
+    public TextColor getPotionEffectChatColor(PotionEffectType type) {
+        MobEffectList mobEffectList = CraftPotionEffectType.bukkitToMinecraft(type);
         EnumChatFormat chatFormat = mobEffectList.f().a();
-        return ChatColor.getByChar(chatFormat.toString().charAt(1));
+        return TextColor.color(chatFormat.f());
     }
 
     @Override
-    public Map<String, AttributeModifier> getPotionAttributeModifiers(PotionEffect effect) {
-        Map<String, AttributeModifier> attributes = new HashMap<>();
+    public Map<AttributeBase, AttributeModifier> getPotionAttributeModifiers(PotionEffect effect) {
+        Map<AttributeBase, AttributeModifier> attributes = new HashMap<>();
         MobEffect mobEffect = CraftPotionUtil.fromBukkit(effect);
         MobEffectList mobEffectList = mobEffect.c();
-        Map<AttributeBase, AttributeModifierTemplate> nmsMap = mobEffectList.h();
-        for (Map.Entry<AttributeBase, AttributeModifierTemplate> entry : nmsMap.entrySet()) {
-            String name = entry.getKey().c();
+        Map<net.minecraft.world.entity.ai.attributes.AttributeBase, AttributeModifierTemplate> nmsMap = mobEffectList.h();
+        for (Map.Entry<net.minecraft.world.entity.ai.attributes.AttributeBase, AttributeModifierTemplate> entry : nmsMap.entrySet()) {
+            net.minecraft.world.entity.ai.attributes.AttributeBase nmsAttributeBase = entry.getKey();
+            AttributeBase attributeBase = new AttributeBase(nmsAttributeBase.c(), nmsAttributeBase.b());
             AttributeModifierTemplate template = entry.getValue();
             AttributeModifier attributeModifier = CraftAttributeInstance.convert(template.a(effect.getAmplifier()));
-            attributes.put(name, attributeModifier);
+            attributes.put(attributeBase, attributeModifier);
         }
         return attributes;
     }
@@ -501,17 +496,18 @@ public class V1_20_3 extends NMSAddonWrapper {
     }
 
     @Override
-    public Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> getItemAttributeModifiers(ItemStack itemStack) {
+    public Map<EquipmentSlotGroup, Multimap<AttributeBase, AttributeModifier>> getItemAttributeModifiers(ItemStack itemStack) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> result = new EnumMap<>(EquipmentSlotGroup.class);
+        Map<EquipmentSlotGroup, Multimap<AttributeBase, AttributeModifier>> result = new EnumMap<>(EquipmentSlotGroup.class);
         for (EnumItemSlot slot : EnumItemSlot.values()) {
             EquipmentSlotGroup equipmentSlotGroup = EquipmentSlotGroup.forEquipmentSlot(CraftEquipmentSlot.getSlot(slot));
-            Multimap<AttributeBase, net.minecraft.world.entity.ai.attributes.AttributeModifier> nmsMap = nmsItemStack.a(slot);
-            for (Map.Entry<AttributeBase, net.minecraft.world.entity.ai.attributes.AttributeModifier> entry : nmsMap.entries()) {
-                Multimap<String, AttributeModifier> attributes = result.computeIfAbsent(equipmentSlotGroup, k -> LinkedHashMultimap.create());
-                String name = entry.getKey().c();
+            Multimap<net.minecraft.world.entity.ai.attributes.AttributeBase, net.minecraft.world.entity.ai.attributes.AttributeModifier> nmsMap = nmsItemStack.a(slot);
+            for (Map.Entry<net.minecraft.world.entity.ai.attributes.AttributeBase, net.minecraft.world.entity.ai.attributes.AttributeModifier> entry : nmsMap.entries()) {
+                Multimap<AttributeBase, AttributeModifier> attributes = result.computeIfAbsent(equipmentSlotGroup, k -> LinkedHashMultimap.create());
+                net.minecraft.world.entity.ai.attributes.AttributeBase nmsAttributeBase = entry.getKey();
+                AttributeBase attributeBase = new AttributeBase(nmsAttributeBase.c(), nmsAttributeBase.b());
                 AttributeModifier attributeModifier = CraftAttributeInstance.convert(entry.getValue());
-                attributes.put(name, attributeModifier);
+                attributes.put(attributeBase, attributeModifier);
             }
         }
         return result;

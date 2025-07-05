@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
 
 public class ItemModelDefinitionManager extends AbstractManager implements IItemsModelDefinitionManager {
 
-    public static final ItemModelDefinition MISSING_MODEL = new ItemModelDefinition.ItemModelDefinitionModel(true, ResourceRegistry.ICD_PREFIX + "does_not_exist", Collections.emptyList());
+    public static final ItemModelDefinition MISSING_MODEL = new ItemModelDefinition.ItemModelDefinitionModel(true, false, ResourceRegistry.ICD_PREFIX + "does_not_exist", Collections.emptyList());
 
     private static final ItemModelDefinition LEGACY_DEFINITION = new ItemModelDefinition.ItemModelDefinitionInteractiveChatDiscordSrvAddonLegacy(true);
 

@@ -511,13 +511,13 @@ public class ItemRenderUtils {
 
             Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction = manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, slot, item, is1_8, predicates, player, world, livingEntity, manager.getLanguageManager().getTranslateFunction().ofLanguage(language)).orElse(null);
 
-            return new ItemStackProcessResult(requiresEnchantmentGlint, Collections.singletonList(new ModelLayer(modelKey, predicates, providedTextures, tintColorProvider, postResolveFunction)), enchantmentGlintFunction, rawEnchantmentGlintFunction);
+            return new ItemStackProcessResult(requiresEnchantmentGlint, itemModelDefinition.isOversizedInGui(), Collections.singletonList(new ModelLayer(modelKey, predicates, providedTextures, tintColorProvider, postResolveFunction)), enchantmentGlintFunction, rawEnchantmentGlintFunction);
         } else {
             List<ModelLayer> modelLayers = resolveItemModelDefinition(manager, player, displayPosition, item, itemModelDefinition, (modelKey, predicates) -> {
                 return manager.getResourceRegistry(CustomItemTextureRegistry.IDENTIFIER, CustomItemTextureRegistry.class).getItemPostResolveFunction(modelKey, slot, item, is1_8, predicates, player, world, livingEntity, manager.getLanguageManager().getTranslateFunction().ofLanguage(language)).orElse(null);
             });
 
-            return new ItemStackProcessResult(requiresEnchantmentGlint, modelLayers, enchantmentGlintFunction, rawEnchantmentGlintFunction);
+            return new ItemStackProcessResult(requiresEnchantmentGlint, itemModelDefinition.isOversizedInGui(), modelLayers, enchantmentGlintFunction, rawEnchantmentGlintFunction);
         }
     }
 
@@ -959,7 +959,12 @@ public class ItemRenderUtils {
             ItemModelDefinition.SpecialModelType<?> specialModelType = special.getModel().getModelType();
             Map<String, TextureResource> providedTextures = new HashMap<>();
             String modelKey;
-            if (specialModelType.equals(ItemModelDefinition.SpecialModelType.BED)) {
+            if (specialModelType.equals(ItemModelDefinition.SpecialModelType.BANNER)) {
+                BannerAssetResult bannerAsset = BannerGraphics.generateBannerAssets(itemStack);
+                providedTextures.put(ResourceRegistry.BANNER_BASE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, bannerAsset.getBase()));
+                providedTextures.put(ResourceRegistry.BANNER_PATTERNS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, bannerAsset.getPatterns()));
+                modelKey = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + itemStack.getType().getKey().getKey();
+            } else if (specialModelType.equals(ItemModelDefinition.SpecialModelType.BED)) {
                 String base = special.getBase();
                 if (base.contains(":")) {
                     base = base.substring(base.lastIndexOf(":") + 1);
@@ -968,19 +973,14 @@ public class ItemRenderUtils {
                     base = base.substring(base.lastIndexOf("/") + 1);
                 }
                 modelKey = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + base;
-            } else if (specialModelType.equals(ItemModelDefinition.SpecialModelType.BANNER)) {
-                BannerAssetResult bannerAsset = BannerGraphics.generateBannerAssets(itemStack);
-                providedTextures.put(ResourceRegistry.BANNER_BASE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, bannerAsset.getBase()));
-                providedTextures.put(ResourceRegistry.BANNER_PATTERNS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, bannerAsset.getPatterns()));
-                modelKey = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + itemStack.getType().getKey().getKey();
-            } else if (specialModelType.equals(ItemModelDefinition.SpecialModelType.CONDUIT)) {
-                modelKey = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + itemStack.getType().getKey().getKey();
             } else if (specialModelType.equals(ItemModelDefinition.SpecialModelType.CHEST)) {
                 ItemModelDefinition.ChestSpecialModel chestSpecialModel = (ItemModelDefinition.ChestSpecialModel) special.getModel();
                 Key key = KeyUtils.toKey(chestSpecialModel.getTexture());
                 TextureResource chestTexture = manager.getTextureManager().getTexture(key.namespace() + ":entity/chest/" + key.value());
                 providedTextures.put(ResourceRegistry.CHEST_TEXTURE_PLACEHOLDER, chestTexture);
                 modelKey = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + "texture_chest";
+            } else if (specialModelType.equals(ItemModelDefinition.SpecialModelType.CONDUIT)) {
+                modelKey = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + itemStack.getType().getKey().getKey();
             } else if (specialModelType.equals(ItemModelDefinition.SpecialModelType.DECORATED_POT)) {
                 BlockStateMeta meta = (BlockStateMeta) itemStack.getItemMeta();
                 BlockState state = meta.getBlockState();
@@ -1006,7 +1006,7 @@ public class ItemRenderUtils {
                 }
                 modelKey = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + itemStack.getType().getKey().getKey();
             } else if (specialModelType.equals(ItemModelDefinition.SpecialModelType.HEAD)) {
-                if (ICMaterial.from(itemStack).isMaterial(XMaterial.PLAYER_HEAD)) {
+                if (InteractiveChat.version.isOlderThan(MCVersion.V1_21_7) && ICMaterial.from(itemStack).isMaterial(XMaterial.PLAYER_HEAD)) {
                     BufferedImage skinImage = manager.getTextureManager().getTexture(ResourceRegistry.DEFAULT_WIDE_SKIN_LOCATION).getTexture();
                     if (itemStack.hasItemMeta()) {
                         GameProfile gameProfile = NMSAddon.getInstance().getPlayerHeadProfile(itemStack);
@@ -1024,12 +1024,29 @@ public class ItemRenderUtils {
                     providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, ModelUtils.convertToModernSkinTexture(skinImage)));
                 }
                 modelKey = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + itemStack.getType().getKey().getKey();
-            } else if (specialModelType.equals(ItemModelDefinition.SpecialModelType.SHULKER_BOX)) {
+            } else if (specialModelType.equals(ItemModelDefinition.SpecialModelType.PLAYER_HEAD)) {
+                BufferedImage skinImage = manager.getTextureManager().getTexture(ResourceRegistry.DEFAULT_WIDE_SKIN_LOCATION).getTexture();
+                if (itemStack.hasItemMeta()) {
+                    GameProfile gameProfile = NMSAddon.getInstance().getPlayerHeadProfile(itemStack);
+                    String skinURL = GameProfileUtils.getSkinUrl(gameProfile);
+                    if (skinURL != null) {
+                        try {
+                            skinImage = ImageUtils.downloadImage(skinURL);
+                        } catch (Exception ignored) {
+                        }
+                    }
+                    if (skinImage == null && GameProfileUtils.hasValidUUID(gameProfile)) {
+                        skinImage = manager.getTextureManager().getTexture(DefaultSkinUtils.getTexture(gameProfile.getId())).getTexture();
+                    }
+                }
+                providedTextures.put(ResourceRegistry.SKIN_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, ModelUtils.convertToModernSkinTexture(skinImage)));
                 modelKey = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + itemStack.getType().getKey().getKey();
             } else if (specialModelType.equals(ItemModelDefinition.SpecialModelType.SHIELD)) {
                 BannerAssetResult shieldAsset = BannerGraphics.generateShieldAssets(itemStack);
                 providedTextures.put(ResourceRegistry.SHIELD_BASE_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, shieldAsset.getBase()));
                 providedTextures.put(ResourceRegistry.SHIELD_PATTERNS_TEXTURE_PLACEHOLDER, new GeneratedTextureResource(manager, shieldAsset.getPatterns()));
+                modelKey = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + itemStack.getType().getKey().getKey();
+            } else if (specialModelType.equals(ItemModelDefinition.SpecialModelType.SHULKER_BOX)) {
                 modelKey = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + itemStack.getType().getKey().getKey();
             } else if (specialModelType.equals(ItemModelDefinition.SpecialModelType.STANDING_SIGN)) {
                 ItemModelDefinition.StandingSignSpecialModel standingSignSpecialModel = (ItemModelDefinition.StandingSignSpecialModel) special.getModel();
@@ -1090,12 +1107,14 @@ public class ItemRenderUtils {
     public static class ItemStackProcessResult {
 
         private final boolean requiresEnchantmentGlint;
+        private final boolean oversizedInGui;
         private final List<ModelLayer> modelParts;
         private final Function<ModelRenderer.RawEnchantmentGlintParameters, BufferedImage> enchantmentGlintFunction;
         private final Function<ModelRenderer.RawEnchantmentGlintParameters, RawEnchantmentGlintData> rawEnchantmentGlintFunction;
 
-        public ItemStackProcessResult(boolean requiresEnchantmentGlint, List<ModelLayer> modelParts, Function<ModelRenderer.RawEnchantmentGlintParameters, BufferedImage> enchantmentGlintFunction, Function<ModelRenderer.RawEnchantmentGlintParameters, RawEnchantmentGlintData> rawEnchantmentGlintFunction) {
+        public ItemStackProcessResult(boolean requiresEnchantmentGlint, boolean oversizedInGui, List<ModelLayer> modelParts, Function<ModelRenderer.RawEnchantmentGlintParameters, BufferedImage> enchantmentGlintFunction, Function<ModelRenderer.RawEnchantmentGlintParameters, RawEnchantmentGlintData> rawEnchantmentGlintFunction) {
             this.requiresEnchantmentGlint = requiresEnchantmentGlint;
+            this.oversizedInGui = oversizedInGui;
             this.modelParts = modelParts;
             this.enchantmentGlintFunction = enchantmentGlintFunction;
             this.rawEnchantmentGlintFunction = rawEnchantmentGlintFunction;
@@ -1103,6 +1122,10 @@ public class ItemRenderUtils {
 
         public boolean requiresEnchantmentGlint() {
             return requiresEnchantmentGlint;
+        }
+
+        public boolean isOversizedInGui() {
+            return oversizedInGui;
         }
 
         public List<ModelLayer> getModelLayers() {

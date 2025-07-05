@@ -31,6 +31,7 @@ import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.AttributeBase;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
@@ -43,7 +44,6 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_16_R3.AdvancementDisplay;
-import net.minecraft.server.v1_16_R3.AttributeBase;
 import net.minecraft.server.v1_16_R3.BiomeBase;
 import net.minecraft.server.v1_16_R3.Block;
 import net.minecraft.server.v1_16_R3.CombatTracker;
@@ -58,7 +58,6 @@ import net.minecraft.server.v1_16_R3.EnumChatFormat;
 import net.minecraft.server.v1_16_R3.EnumItemSlot;
 import net.minecraft.server.v1_16_R3.EnumMonsterType;
 import net.minecraft.server.v1_16_R3.IRegistry;
-import net.minecraft.server.v1_16_R3.Item;
 import net.minecraft.server.v1_16_R3.ItemArmor;
 import net.minecraft.server.v1_16_R3.ItemFireworks;
 import net.minecraft.server.v1_16_R3.ItemMonsterEgg;
@@ -168,7 +167,7 @@ public class V1_16_4 extends NMSAddonWrapper {
             itemMonsterEggBackgroundColorField.setAccessible(true);
             itemMonsterEggHighlightColorField.setAccessible(true);
             Map<ICMaterial, TintColorProvider.SpawnEggTintData> mapping = new LinkedHashMap<>();
-            for (Item item : IRegistry.ITEM) {
+            for (net.minecraft.server.v1_16_R3.Item item : IRegistry.ITEM) {
                 if (item instanceof ItemMonsterEgg) {
                     ICMaterial icMaterial = ICMaterial.of(CraftMagicNumbers.getMaterial(item));
                     int backgroundColor = itemMonsterEggBackgroundColorField.getInt(item);
@@ -352,33 +351,34 @@ public class V1_16_4 extends NMSAddonWrapper {
     }
 
     @Override
-    public ChatColor getPotionEffectChatColor(PotionEffectType type) {
+    public TextColor getPotionEffectChatColor(PotionEffectType type) {
         try {
             mobEffectListInfoField.setAccessible(true);
             mobEffectInfoEnumChatFormatField.setAccessible(true);
             MobEffectList mobEffectList = ((CraftPotionEffectType) type).getHandle();
             MobEffectInfo info = (MobEffectInfo) mobEffectListInfoField.get(mobEffectList);
             EnumChatFormat chatFormat = (EnumChatFormat) mobEffectInfoEnumChatFormatField.get(info);
-            return ChatColor.getByChar(chatFormat.toString().charAt(1));
+            return TextColor.color(chatFormat.e());
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public Map<String, AttributeModifier> getPotionAttributeModifiers(PotionEffect effect) {
+    public Map<AttributeBase, AttributeModifier> getPotionAttributeModifiers(PotionEffect effect) {
         try {
             mobEffectListAttributeModifiersField.setAccessible(true);
-            Map<String, AttributeModifier> attributes = new HashMap<>();
+            Map<AttributeBase, AttributeModifier> attributes = new HashMap<>();
             MobEffect mobEffect = CraftPotionUtil.fromBukkit(effect);
             MobEffectList mobEffectList = mobEffect.getMobEffect();
-            Map<AttributeBase, net.minecraft.server.v1_16_R3.AttributeModifier> nmsMap = (Map<AttributeBase, net.minecraft.server.v1_16_R3.AttributeModifier>) mobEffectListAttributeModifiersField.get(mobEffectList);
-            for (Map.Entry<AttributeBase, net.minecraft.server.v1_16_R3.AttributeModifier> entry : nmsMap.entrySet()) {
-                String name = entry.getKey().getName();
+            Map<net.minecraft.server.v1_16_R3.AttributeBase, net.minecraft.server.v1_16_R3.AttributeModifier> nmsMap = (Map<net.minecraft.server.v1_16_R3.AttributeBase, net.minecraft.server.v1_16_R3.AttributeModifier>) mobEffectListAttributeModifiersField.get(mobEffectList);
+            for (Map.Entry<net.minecraft.server.v1_16_R3.AttributeBase, net.minecraft.server.v1_16_R3.AttributeModifier> entry : nmsMap.entrySet()) {
+                net.minecraft.server.v1_16_R3.AttributeBase nmsAttributeBase = entry.getKey();
+                AttributeBase attributeBase = new AttributeBase(nmsAttributeBase.getName(), nmsAttributeBase.b());
                 net.minecraft.server.v1_16_R3.AttributeModifier nmsAttributeModifier = entry.getValue();
                 AttributeModifier am = CraftAttributeInstance.convert(nmsAttributeModifier);
                 double leveledAmount = mobEffectList.a(effect.getAmplifier(), nmsAttributeModifier);
-                attributes.put(name, new AttributeModifier(am.getUniqueId(), am.getName(), leveledAmount, am.getOperation(), am.getSlot()));
+                attributes.put(attributeBase, new AttributeModifier(am.getUniqueId(), am.getName(), leveledAmount, am.getOperation(), am.getSlot()));
             }
             return attributes;
         } catch (IllegalAccessException e) {
@@ -529,7 +529,7 @@ public class V1_16_4 extends NMSAddonWrapper {
     @Override
     public boolean matchArmorSlot(ItemStack armorItem, EquipmentSlot slot) {
         net.minecraft.server.v1_16_R3.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(armorItem);
-        Item item = nmsItemStack.getItem();
+        net.minecraft.server.v1_16_R3.Item item = nmsItemStack.getItem();
         if (!(item instanceof ItemArmor)) {
             return false;
         }
@@ -542,7 +542,7 @@ public class V1_16_4 extends NMSAddonWrapper {
         try {
             enumArmorMaterialNameField.setAccessible(true);
             net.minecraft.server.v1_16_R3.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(armorItem);
-            Item item = nmsItemStack.getItem();
+            net.minecraft.server.v1_16_R3.Item item = nmsItemStack.getItem();
             if (!(item instanceof ItemArmor)) {
                 return null;
             }
@@ -555,17 +555,18 @@ public class V1_16_4 extends NMSAddonWrapper {
     }
 
     @Override
-    public Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> getItemAttributeModifiers(ItemStack itemStack) {
+    public Map<EquipmentSlotGroup, Multimap<AttributeBase, AttributeModifier>> getItemAttributeModifiers(ItemStack itemStack) {
         net.minecraft.server.v1_16_R3.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> result = new EnumMap<>(EquipmentSlotGroup.class);
+        Map<EquipmentSlotGroup, Multimap<AttributeBase, AttributeModifier>> result = new EnumMap<>(EquipmentSlotGroup.class);
         for (EnumItemSlot slot : EnumItemSlot.values()) {
             EquipmentSlotGroup equipmentSlotGroup = EquipmentSlotGroup.forEquipmentSlot(CraftEquipmentSlot.getSlot(slot));
-            Multimap<AttributeBase, net.minecraft.server.v1_16_R3.AttributeModifier> nmsMap = nmsItemStack.a(slot);
-            for (Map.Entry<AttributeBase, net.minecraft.server.v1_16_R3.AttributeModifier> entry : nmsMap.entries()) {
-                Multimap<String, AttributeModifier> attributes = result.computeIfAbsent(equipmentSlotGroup, k -> LinkedHashMultimap.create());
-                String name = entry.getKey().getName();
+            Multimap<net.minecraft.server.v1_16_R3.AttributeBase, net.minecraft.server.v1_16_R3.AttributeModifier> nmsMap = nmsItemStack.a(slot);
+            for (Map.Entry<net.minecraft.server.v1_16_R3.AttributeBase, net.minecraft.server.v1_16_R3.AttributeModifier> entry : nmsMap.entries()) {
+                Multimap<AttributeBase, AttributeModifier> attributes = result.computeIfAbsent(equipmentSlotGroup, k -> LinkedHashMultimap.create());
+                net.minecraft.server.v1_16_R3.AttributeBase nmsAttributeBase = entry.getKey();
+                AttributeBase attributeBase = new AttributeBase(nmsAttributeBase.getName(), nmsAttributeBase.b());
                 AttributeModifier attributeModifier = CraftAttributeInstance.convert(entry.getValue());
-                attributes.put(name, attributeModifier);
+                attributes.put(attributeBase, attributeModifier);
             }
         }
         return result;

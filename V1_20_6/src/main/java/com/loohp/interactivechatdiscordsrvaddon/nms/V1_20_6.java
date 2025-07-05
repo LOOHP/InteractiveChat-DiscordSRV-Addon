@@ -36,6 +36,7 @@ import com.loohp.interactivechat.utils.NativeJsonConverter;
 import com.loohp.interactivechat.utils.ReflectionUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.AttributeBase;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
@@ -334,21 +335,22 @@ public class V1_20_6 extends NMSAddonWrapper {
     }
 
     @Override
-    public ChatColor getPotionEffectChatColor(PotionEffectType type) {
-        MobEffectList mobEffectList = ((CraftPotionEffectType) type).getHandle();
+    public TextColor getPotionEffectChatColor(PotionEffectType type) {
+        MobEffectList mobEffectList = CraftPotionEffectType.bukkitToMinecraft(type);
         EnumChatFormat chatFormat = mobEffectList.f().a();
-        return ChatColor.getByChar(chatFormat.toString().charAt(1));
+        return TextColor.color(chatFormat.f());
     }
 
     @Override
-    public Map<String, AttributeModifier> getPotionAttributeModifiers(PotionEffect effect) {
-        Map<String, AttributeModifier> attributes = new HashMap<>();
+    public Map<AttributeBase, AttributeModifier> getPotionAttributeModifiers(PotionEffect effect) {
+        Map<AttributeBase, AttributeModifier> attributes = new HashMap<>();
         MobEffect mobEffect = CraftPotionUtil.fromBukkit(effect);
         MobEffectList mobEffectList = mobEffect.c().a();
         mobEffectList.a(effect.getAmplifier(), (holder, nmsAttributeModifier) -> {
-            String name = holder.a().c();
+            net.minecraft.world.entity.ai.attributes.AttributeBase nmsAttributeBase = holder.a();
+            AttributeBase attributeBase = new AttributeBase(nmsAttributeBase.c(), nmsAttributeBase.b());
             AttributeModifier attributeModifier = CraftAttributeInstance.convert(nmsAttributeModifier);
-            attributes.put(name, attributeModifier);
+            attributes.put(attributeBase, attributeModifier);
         });
         return attributes;
     }
@@ -527,16 +529,17 @@ public class V1_20_6 extends NMSAddonWrapper {
     }
 
     @Override
-    public Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> getItemAttributeModifiers(ItemStack itemStack) {
+    public Map<EquipmentSlotGroup, Multimap<AttributeBase, AttributeModifier>> getItemAttributeModifiers(ItemStack itemStack) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> result = new EnumMap<>(EquipmentSlotGroup.class);
+        Map<EquipmentSlotGroup, Multimap<AttributeBase, AttributeModifier>> result = new EnumMap<>(EquipmentSlotGroup.class);
         for (EnumItemSlot slot : EnumItemSlot.values()) {
             EquipmentSlotGroup equipmentSlotGroup = EquipmentSlotGroup.forEquipmentSlot(CraftEquipmentSlot.getSlot(slot));
             nmsItemStack.a(slot, (holder, nmsAttributeModifier) -> {
-                Multimap<String, AttributeModifier> attributes = result.computeIfAbsent(equipmentSlotGroup, k -> LinkedHashMultimap.create());
-                String name = holder.a().c();
+                Multimap<AttributeBase, AttributeModifier> attributes = result.computeIfAbsent(equipmentSlotGroup, k -> LinkedHashMultimap.create());
+                net.minecraft.world.entity.ai.attributes.AttributeBase nmsAttributeBase = holder.a();
+                AttributeBase attributeBase = new AttributeBase(nmsAttributeBase.c(), nmsAttributeBase.b());
                 AttributeModifier attributeModifier = CraftAttributeInstance.convert(nmsAttributeModifier);
-                attributes.put(name, attributeModifier);
+                attributes.put(attributeBase, attributeModifier);
             });
         }
         return result;

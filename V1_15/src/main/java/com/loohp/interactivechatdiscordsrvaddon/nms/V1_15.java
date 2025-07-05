@@ -28,9 +28,11 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
 import com.loohp.interactivechat.nms.NMS;
 import com.loohp.interactivechat.objectholders.ICMaterial;
+import com.loohp.interactivechat.utils.ColorUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.AttributeBase;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
@@ -43,7 +45,6 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_15_R1.AdvancementDisplay;
-import net.minecraft.server.v1_15_R1.AttributeBase;
 import net.minecraft.server.v1_15_R1.BiomeBase;
 import net.minecraft.server.v1_15_R1.Block;
 import net.minecraft.server.v1_15_R1.CombatTracker;
@@ -246,33 +247,34 @@ public class V1_15 extends NMSAddonWrapper {
     }
 
     @Override
-    public ChatColor getPotionEffectChatColor(PotionEffectType type) {
+    public TextColor getPotionEffectChatColor(PotionEffectType type) {
         try {
             mobEffectListInfoField.setAccessible(true);
             mobEffectInfoEnumChatFormatField.setAccessible(true);
             MobEffectList mobEffectList = ((CraftPotionEffectType) type).getHandle();
             MobEffectInfo info = (MobEffectInfo) mobEffectListInfoField.get(mobEffectList);
             EnumChatFormat chatFormat = (EnumChatFormat) mobEffectInfoEnumChatFormatField.get(info);
-            return ChatColor.getByChar(chatFormat.toString().charAt(1));
+            return ColorUtils.toTextColor(ChatColor.getByChar(chatFormat.character));
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public Map<String, AttributeModifier> getPotionAttributeModifiers(PotionEffect effect) {
+    public Map<AttributeBase, AttributeModifier> getPotionAttributeModifiers(PotionEffect effect) {
         try {
             mobEffectListAttributeModifiersField.setAccessible(true);
-            Map<String, AttributeModifier> attributes = new HashMap<>();
+            Map<AttributeBase, AttributeModifier> attributes = new HashMap<>();
             MobEffect mobEffect = CraftPotionUtil.fromBukkit(effect);
             MobEffectList mobEffectList = mobEffect.getMobEffect();
-            Map<AttributeBase, net.minecraft.server.v1_15_R1.AttributeModifier> nmsMap = (Map<AttributeBase, net.minecraft.server.v1_15_R1.AttributeModifier>) mobEffectListAttributeModifiersField.get(mobEffectList);
-            for (Map.Entry<AttributeBase, net.minecraft.server.v1_15_R1.AttributeModifier> entry : nmsMap.entrySet()) {
-                String name = entry.getKey().getName();
+            Map<net.minecraft.server.v1_15_R1.AttributeBase, net.minecraft.server.v1_15_R1.AttributeModifier> nmsMap = (Map<net.minecraft.server.v1_15_R1.AttributeBase, net.minecraft.server.v1_15_R1.AttributeModifier>) mobEffectListAttributeModifiersField.get(mobEffectList);
+            for (Map.Entry<net.minecraft.server.v1_15_R1.AttributeBase, net.minecraft.server.v1_15_R1.AttributeModifier> entry : nmsMap.entrySet()) {
+                net.minecraft.server.v1_15_R1.AttributeBase nmsAttributeBase = entry.getKey();
+                AttributeBase attributeBase = new AttributeBase(nmsAttributeBase.getName(), nmsAttributeBase.c());
                 net.minecraft.server.v1_15_R1.AttributeModifier nmsAttributeModifier = entry.getValue();
                 AttributeModifier am = CraftAttributeInstance.convert(nmsAttributeModifier);
                 double leveledAmount = mobEffectList.a(effect.getAmplifier(), nmsAttributeModifier);
-                attributes.put(name, new AttributeModifier(am.getUniqueId(), am.getName(), leveledAmount, am.getOperation(), am.getSlot()));
+                attributes.put(attributeBase, new AttributeModifier(am.getUniqueId(), am.getName(), leveledAmount, am.getOperation(), am.getSlot()));
             }
             return attributes;
         } catch (IllegalAccessException e) {
@@ -449,17 +451,17 @@ public class V1_15 extends NMSAddonWrapper {
     }
 
     @Override
-    public Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> getItemAttributeModifiers(ItemStack itemStack) {
+    public Map<EquipmentSlotGroup, Multimap<AttributeBase, AttributeModifier>> getItemAttributeModifiers(ItemStack itemStack) {
         net.minecraft.server.v1_15_R1.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> result = new EnumMap<>(EquipmentSlotGroup.class);
+        Map<EquipmentSlotGroup, Multimap<AttributeBase, AttributeModifier>> result = new EnumMap<>(EquipmentSlotGroup.class);
         for (EnumItemSlot slot : EnumItemSlot.values()) {
             EquipmentSlotGroup equipmentSlotGroup = EquipmentSlotGroup.forEquipmentSlot(CraftEquipmentSlot.getSlot(slot));
             Multimap<String, net.minecraft.server.v1_15_R1.AttributeModifier> nmsMap = nmsItemStack.a(slot);
             for (Map.Entry<String, net.minecraft.server.v1_15_R1.AttributeModifier> entry : nmsMap.entries()) {
-                Multimap<String, AttributeModifier> attributes = result.computeIfAbsent(equipmentSlotGroup, k -> LinkedHashMultimap.create());
-                String name = entry.getKey();
+                Multimap<AttributeBase, AttributeModifier> attributes = result.computeIfAbsent(equipmentSlotGroup, k -> LinkedHashMultimap.create());
+                AttributeBase attributeBase = new AttributeBase(entry.getKey());
                 AttributeModifier attributeModifier = CraftAttributeInstance.convert(entry.getValue());
-                attributes.put(name, attributeModifier);
+                attributes.put(attributeBase, attributeModifier);
             }
         }
         return result;

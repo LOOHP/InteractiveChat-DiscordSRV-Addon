@@ -49,18 +49,29 @@ public abstract class ItemModelDefinition {
 
     private final ItemModelDefinitionType<?> type;
     private final boolean handAnimationOnSwap;
+    private final boolean oversizedInGui;
 
-    public ItemModelDefinition(ItemModelDefinitionType<?> type, boolean handAnimationOnSwap) {
+    public ItemModelDefinition(ItemModelDefinitionType<?> type, boolean handAnimationOnSwap, boolean oversizedInGui) {
         this.type = type;
         this.handAnimationOnSwap = handAnimationOnSwap;
+        this.oversizedInGui = oversizedInGui;
     }
 
     public ItemModelDefinitionType<?> getType() {
         return type;
     }
 
+    public boolean isHandAnimationOnSwap() {
+        return handAnimationOnSwap;
+    }
+
+    public boolean isOversizedInGui() {
+        return oversizedInGui;
+    }
+
     public static ItemModelDefinition fromJson(JSONObject rootJson) throws ParseException {
         boolean handAnimationOnSwapString = (boolean) rootJson.getOrDefault("hand_animation_on_swap", true);
+        boolean oversizedInGui = (boolean) rootJson.getOrDefault("oversized_in_gui", false);
         String typeKey = ensureNamespace((String) rootJson.get("type"));
         ItemModelDefinitionType<?> type = ItemModelDefinitionType.getItemModelDefinitionType(typeKey);
 
@@ -74,14 +85,14 @@ public abstract class ItemModelDefinition {
                     tints.add(TintSource.fromJson(tintJson));
                 }
             }
-            return new ItemModelDefinitionModel(handAnimationOnSwapString, model, tints);
+            return new ItemModelDefinitionModel(handAnimationOnSwapString, oversizedInGui, model, tints);
         } else if (type == ItemModelDefinitionType.COMPOSITE) {
             JSONArray modelsArray = (JSONArray) rootJson.get("models");
             List<ItemModelDefinition> models = new ArrayList<>();
             for (Object modelObj : modelsArray) {
                 models.add(ItemModelDefinition.fromJson((JSONObject) modelObj));
             }
-            return new ItemModelDefinitionComposite(handAnimationOnSwapString, models);
+            return new ItemModelDefinitionComposite(handAnimationOnSwapString, oversizedInGui, models);
         } else if (type == ItemModelDefinitionType.CONDITION) {
             String propertyKey = ensureNamespace((String) rootJson.get("property"));
             ConditionPropertyType<?> propertyType = ConditionPropertyType.getConditionPropertyType(propertyKey);
@@ -90,37 +101,37 @@ public abstract class ItemModelDefinition {
             ItemModelDefinition onTrue = onTrueJson != null ? ItemModelDefinition.fromJson(onTrueJson) : null;
             ItemModelDefinition onFalse = onFalseJson != null ? ItemModelDefinition.fromJson(onFalseJson) : null;
             if (propertyType.equals(ConditionPropertyType.USING_ITEM)) {
-                return new UsingItemConditionProperty(handAnimationOnSwapString, propertyType, onTrue, onFalse);
+                return new UsingItemConditionProperty(handAnimationOnSwapString, oversizedInGui, propertyType, onTrue, onFalse);
             } else if (propertyType.equals(ConditionPropertyType.BROKEN)) {
-                return new BrokenConditionProperty(handAnimationOnSwapString, propertyType, onTrue, onFalse);
+                return new BrokenConditionProperty(handAnimationOnSwapString, oversizedInGui, propertyType, onTrue, onFalse);
             } else if (propertyType.equals(ConditionPropertyType.DAMAGED)) {
-                return new DamagedConditionProperty(handAnimationOnSwapString, propertyType, onTrue, onFalse);
+                return new DamagedConditionProperty(handAnimationOnSwapString, oversizedInGui, propertyType, onTrue, onFalse);
             } else if (propertyType.equals(ConditionPropertyType.HAS_COMPONENT)) {
                 Key component = KeyUtils.toKey((String) rootJson.get("component"));
                 boolean ignoreDefault = (boolean) rootJson.getOrDefault("ignore_default", false);
-                return new HasComponentConditionProperty(handAnimationOnSwapString, propertyType, onTrue, onFalse, component, ignoreDefault);
+                return new HasComponentConditionProperty(handAnimationOnSwapString, oversizedInGui, propertyType, onTrue, onFalse, component, ignoreDefault);
             } else if (propertyType.equals(ConditionPropertyType.FISHING_ROD_CAST)) {
-                return new FishingRodCastConditionProperty(handAnimationOnSwapString, propertyType, onTrue, onFalse);
+                return new FishingRodCastConditionProperty(handAnimationOnSwapString, oversizedInGui, propertyType, onTrue, onFalse);
             } else if (propertyType.equals(ConditionPropertyType.BUNDLE_SELECTED_ITEM)) {
-                return new BundleSelectedItemConditionProperty(handAnimationOnSwapString, propertyType, onTrue, onFalse);
+                return new BundleSelectedItemConditionProperty(handAnimationOnSwapString, oversizedInGui, propertyType, onTrue, onFalse);
             } else if (propertyType.equals(ConditionPropertyType.SELECTED)) {
-                return new SelectedConditionProperty(handAnimationOnSwapString, propertyType, onTrue, onFalse);
+                return new SelectedConditionProperty(handAnimationOnSwapString, oversizedInGui, propertyType, onTrue, onFalse);
             } else if (propertyType.equals(ConditionPropertyType.CARRIED)) {
-                return new CarriedConditionProperty(handAnimationOnSwapString, propertyType, onTrue, onFalse);
+                return new CarriedConditionProperty(handAnimationOnSwapString, oversizedInGui, propertyType, onTrue, onFalse);
             } else if (propertyType.equals(ConditionPropertyType.EXTENDED_VIEW)) {
-                return new ExtendedViewConditionProperty(handAnimationOnSwapString, propertyType, onTrue, onFalse);
+                return new ExtendedViewConditionProperty(handAnimationOnSwapString, oversizedInGui, propertyType, onTrue, onFalse);
             } else if (propertyType.equals(ConditionPropertyType.KEYBIND_DOWN)) {
                 int keybind = ((Number) rootJson.get("keybind")).intValue();
-                return new KeybindDownConditionProperty(handAnimationOnSwapString, propertyType, onTrue, onFalse, keybind);
+                return new KeybindDownConditionProperty(handAnimationOnSwapString, oversizedInGui, propertyType, onTrue, onFalse, keybind);
             } else if (propertyType.equals(ConditionPropertyType.VIEW_ENTITY)) {
-                return new ViewEntityConditionProperty(handAnimationOnSwapString, propertyType, onTrue, onFalse);
+                return new ViewEntityConditionProperty(handAnimationOnSwapString, oversizedInGui, propertyType, onTrue, onFalse);
             } else if (propertyType.equals(ConditionPropertyType.COMPONENT)) {
                 String predicate = (String) rootJson.get("predicate");
                 String value = (String) rootJson.get("value");
-                return new ComponentConditionProperty(handAnimationOnSwapString, propertyType, onTrue, onFalse, predicate, value);
+                return new ComponentConditionProperty(handAnimationOnSwapString, oversizedInGui, propertyType, onTrue, onFalse, predicate, value);
             } else if (propertyType.equals(ConditionPropertyType.CUSTOM_MODEL_DATA)) {
                 int index = ((Number) rootJson.getOrDefault("index", 0)).intValue();
-                return new CustomModelDataConditionProperty(handAnimationOnSwapString, propertyType, onTrue, onFalse, index);
+                return new CustomModelDataConditionProperty(handAnimationOnSwapString, oversizedInGui, propertyType, onTrue, onFalse, index);
             } else {
                 throw new IllegalArgumentException("Unknown condition property type: " + propertyKey);
             }
@@ -146,32 +157,32 @@ public abstract class ItemModelDefinition {
             JSONObject fallbackJson = (JSONObject) rootJson.get("fallback");
             ItemModelDefinition fallback = fallbackJson != null ? ItemModelDefinition.fromJson(fallbackJson) : null;
             if (propertyType.equals(SelectPropertyType.MAIN_HAND)) {
-                return new MainHandSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> MainHand.valueOf(c.toUpperCase())), fallback);
+                return new MainHandSelectProperty(handAnimationOnSwapString, oversizedInGui, propertyType, parse(cases, c -> MainHand.valueOf(c.toUpperCase())), fallback);
             } else if (propertyType.equals(SelectPropertyType.CHARGE_TYPE)) {
-                return new ChargeTypeSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> ChargeType.fromName(c)), fallback);
+                return new ChargeTypeSelectProperty(handAnimationOnSwapString, oversizedInGui, propertyType, parse(cases, c -> ChargeType.fromName(c)), fallback);
             } else if (propertyType.equals(SelectPropertyType.COMPONENT)) {
                 Key component = KeyUtils.toKey(ensureNamespace((String) rootJson.get("component")));
-                return new ComponentSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> NMSAddon.getInstance().serializeDataComponent(component, c)), fallback, component);
+                return new ComponentSelectProperty(handAnimationOnSwapString, oversizedInGui, propertyType, parse(cases, c -> NMSAddon.getInstance().serializeDataComponent(component, c)), fallback, component);
             } else if (propertyType.equals(SelectPropertyType.TRIM_MATERIAL)) {
-                return new TrimMaterialSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> KeyUtils.toKey(c)), fallback);
+                return new TrimMaterialSelectProperty(handAnimationOnSwapString, oversizedInGui, propertyType, parse(cases, c -> KeyUtils.toKey(c)), fallback);
             } else if (propertyType.equals(SelectPropertyType.BLOCK_STATE)) {
                 String blockStateProperty = (String) rootJson.get("block_state_property");
-                return new BlockStateSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> c), fallback, blockStateProperty);
+                return new BlockStateSelectProperty(handAnimationOnSwapString, oversizedInGui, propertyType, parse(cases, c -> c), fallback, blockStateProperty);
             } else if (propertyType.equals(SelectPropertyType.DISPLAY_CONTEXT)) {
-                return new DisplayContextSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> ModelDisplay.ModelDisplayPosition.fromKey(c)), fallback);
+                return new DisplayContextSelectProperty(handAnimationOnSwapString, oversizedInGui, propertyType, parse(cases, c -> ModelDisplay.ModelDisplayPosition.fromKey(c)), fallback);
             } else if (propertyType.equals(SelectPropertyType.LOCAL_TIME)) {
                 String pattern = (String) rootJson.getOrDefault("pattern", "");
                 String locale = (String) rootJson.getOrDefault("locale", "");
                 TimeZone timeZone = TimeZone.getTimeZone((String) rootJson.getOrDefault("time_zone", ""));
                 Optional<TimeZone> optTimeZone = timeZone == TimeZone.UNKNOWN_ZONE ? Optional.empty() : Optional.of(timeZone);
-                return new LocalTimeSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> c), fallback, pattern, locale, optTimeZone);
+                return new LocalTimeSelectProperty(handAnimationOnSwapString, oversizedInGui, propertyType, parse(cases, c -> c), fallback, pattern, locale, optTimeZone);
             } else if (propertyType.equals(SelectPropertyType.CONTEXT_DIMENSION)) {
-                return new ContextDimensionSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> KeyUtils.toKey(c)), fallback);
+                return new ContextDimensionSelectProperty(handAnimationOnSwapString, oversizedInGui, propertyType, parse(cases, c -> KeyUtils.toKey(c)), fallback);
             } else if (propertyType.equals(SelectPropertyType.CONTEXT_ENTITY_TYPE)) {
-                return new ContextEntityTypeSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> KeyUtils.toKey(c)), fallback);
+                return new ContextEntityTypeSelectProperty(handAnimationOnSwapString, oversizedInGui, propertyType, parse(cases, c -> KeyUtils.toKey(c)), fallback);
             } else if (propertyType.equals(SelectPropertyType.CUSTOM_MODEL_DATA)) {
                 int index = ((Number) rootJson.getOrDefault("index", 0)).intValue();
-                return new CustomModelDataSelectProperty(handAnimationOnSwapString, propertyType, parse(cases, c -> c), fallback, index);
+                return new CustomModelDataSelectProperty(handAnimationOnSwapString, oversizedInGui, propertyType, parse(cases, c -> c), fallback, index);
             } else {
                 throw new IllegalArgumentException("Unknown select property type: " + propertyKey);
             }
@@ -191,82 +202,84 @@ public abstract class ItemModelDefinition {
             JSONObject fallbackJson = (JSONObject) rootJson.get("fallback");
             ItemModelDefinition fallback = fallbackJson != null ? ItemModelDefinition.fromJson(fallbackJson) : null;
             if (propertyType.equals(RangeDispatchPropertyType.BUNDLE_FULLNESS)) {
-                return new BundleFullnessRangeDispatchProperty(handAnimationOnSwapString, propertyType, scale, entries, fallback);
+                return new BundleFullnessRangeDispatchProperty(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback);
             } else if (propertyType.equals(RangeDispatchPropertyType.DAMAGE)) {
                 boolean normalize = (boolean) rootJson.getOrDefault("normalize", true);
-                return new DamageRangeDispatchProperty(handAnimationOnSwapString, propertyType, scale, entries, fallback, normalize);
+                return new DamageRangeDispatchProperty(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback, normalize);
             } else if (propertyType.equals(RangeDispatchPropertyType.COUNT)) {
                 boolean normalize = (boolean) rootJson.getOrDefault("normalize", true);
-                return new CountRangeDispatchProperty(handAnimationOnSwapString, propertyType, scale, entries, fallback, normalize);
+                return new CountRangeDispatchProperty(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback, normalize);
             } else if (propertyType.equals(RangeDispatchPropertyType.COOLDOWN)) {
-                return new CooldownRangeDispatchProperty(handAnimationOnSwapString, propertyType, scale, entries, fallback);
+                return new CooldownRangeDispatchProperty(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback);
             } else if (propertyType.equals(RangeDispatchPropertyType.TIME)) {
                 TimeRangeDispatchProperty.TimeSource timeSource = TimeRangeDispatchProperty.TimeSource.valueOf(((String) rootJson.get("source")).toUpperCase());
                 boolean wobble = (boolean) rootJson.getOrDefault("wobble", true);
-                return new TimeRangeDispatchProperty(handAnimationOnSwapString, propertyType, scale, entries, fallback, timeSource, wobble);
+                return new TimeRangeDispatchProperty(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback, timeSource, wobble);
             } else if (propertyType.equals(RangeDispatchPropertyType.COMPASS)) {
                 CompassRangeDispatchProperty.CompassTarget target = CompassRangeDispatchProperty.CompassTarget.valueOf(((String) rootJson.get("target")).toUpperCase());
                 boolean wobble = (boolean) rootJson.getOrDefault("wobble", true);
-                return new CompassRangeDispatchProperty(handAnimationOnSwapString, propertyType, scale, entries, fallback, target, wobble);
+                return new CompassRangeDispatchProperty(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback, target, wobble);
             } else if (propertyType.equals(RangeDispatchPropertyType.CROSSBOW_PULL)) {
-                return new CrossbowPullRangeDispatchProperty(handAnimationOnSwapString, propertyType, scale, entries, fallback);
+                return new CrossbowPullRangeDispatchProperty(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback);
             } else if (propertyType.equals(RangeDispatchPropertyType.USE_DURATION)) {
                 boolean remaining = (boolean) rootJson.getOrDefault("remaining", false);
-                return new UseDurationRangeDispatchProperty(handAnimationOnSwapString, propertyType, scale, entries, fallback, remaining);
+                return new UseDurationRangeDispatchProperty(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback, remaining);
             } else if (propertyType.equals(RangeDispatchPropertyType.USE_CYCLE)) {
                 float period = ((Number) rootJson.getOrDefault("period", 1.0)).floatValue();
-                return new UseCycleRangeDispatchProperty(handAnimationOnSwapString, propertyType, scale, entries, fallback, period);
+                return new UseCycleRangeDispatchProperty(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback, period);
             } else if (propertyType.equals(RangeDispatchPropertyType.CUSTOM_MODEL_DATA)) {
                 int index = ((Number) rootJson.getOrDefault("index", 0)).intValue();
-                return new CustomModelDataRangeDispatchProperty(handAnimationOnSwapString, propertyType, scale, entries, fallback, index);
+                return new CustomModelDataRangeDispatchProperty(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback, index);
             } else {
                 throw new IllegalArgumentException("Unknown range_dispatch property type: " + propertyKey);
             }
         } else if (type == ItemModelDefinitionType.EMPTY) {
-            return new ItemModelDefinitionEmpty(handAnimationOnSwapString);
+            return new ItemModelDefinitionEmpty(handAnimationOnSwapString, oversizedInGui);
         } else if (type == ItemModelDefinitionType.BUNDLE_SELECTED_ITEM) {
-            return new ItemModelDefinitionBundleSelectedItem(handAnimationOnSwapString);
+            return new ItemModelDefinitionBundleSelectedItem(handAnimationOnSwapString, oversizedInGui);
         } else if (type == ItemModelDefinitionType.SPECIAL) {
             String base = (String) rootJson.get("base");
             JSONObject modelJson = (JSONObject) rootJson.get("model");
             String modelTypeKey = ensureNamespace((String) modelJson.get("type"));
             SpecialModelType<?> specialModelType = SpecialModelType.getSpecialModelType(modelTypeKey);
-            if (specialModelType.equals(SpecialModelType.BED)) {
-                String texture = ensureNamespace((String) modelJson.get("texture"));
-                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new BedSpecialModel(texture));
-            } else if (specialModelType.equals(SpecialModelType.BANNER)) {
+            if (specialModelType.equals(SpecialModelType.BANNER)) {
                 String color = (String) modelJson.get("color");
-                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new BannerSpecialModel(color));
+                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, oversizedInGui, base, new BannerSpecialModel(color));
+            } else if (specialModelType.equals(SpecialModelType.BED)) {
+                String texture = ensureNamespace((String) modelJson.get("texture"));
+                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, oversizedInGui, base, new BedSpecialModel(texture));
             } else if (specialModelType.equals(SpecialModelType.CONDUIT)) {
-                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new ConduitSpecialModel());
+                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, oversizedInGui, base, new ConduitSpecialModel());
+            } else if (specialModelType.equals(SpecialModelType.DECORATED_POT)) {
+                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, oversizedInGui, base, new DecoratedPotSpecialModel());
             } else if (specialModelType.equals(SpecialModelType.CHEST)) {
                 String texture = ensureNamespace((String) modelJson.get("texture"));
                 float openness = ((Number) modelJson.getOrDefault("openness", 0.0)).floatValue();
-                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new ChestSpecialModel(texture, openness));
-            } else if (specialModelType.equals(SpecialModelType.DECORATED_POT)) {
-                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new DecoratedPotSpecialModel());
+                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, oversizedInGui, base, new ChestSpecialModel(texture, openness));
             } else if (specialModelType.equals(SpecialModelType.HEAD)) {
                 String kind = (String) modelJson.get("kind");
                 String texture = ensureNamespace((String) modelJson.get("texture"));
                 float animation = ((Number) modelJson.getOrDefault("animation", 0.0)).floatValue();
-                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new HeadSpecialModel(kind, texture, animation));
+                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, oversizedInGui, base, new HeadSpecialModel(kind, texture, animation));
+            } else if (specialModelType.equals(SpecialModelType.PLAYER_HEAD)) {
+                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, oversizedInGui, base, new PlayerHeadSpecialModel());
             } else if (specialModelType.equals(SpecialModelType.SHULKER_BOX)) {
                 String name = ensureNamespace((String) modelJson.get("name"));
                 float openness = ((Number) modelJson.getOrDefault("openness", 0.0)).floatValue();
                 String orientation = (String) modelJson.getOrDefault("orientation", "up");
-                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new ShulkerBoxSpecialModel(name, openness, orientation));
+                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, oversizedInGui, base, new ShulkerBoxSpecialModel(name, openness, orientation));
             } else if (specialModelType.equals(SpecialModelType.SHIELD)) {
-                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new ShieldSpecialModel());
+                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, oversizedInGui, base, new ShieldSpecialModel());
             } else if (specialModelType.equals(SpecialModelType.STANDING_SIGN)) {
                 String woodType = (String) modelJson.get("wood_type");
                 String texture = ensureNamespace((String) modelJson.get("texture"));
-                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new StandingSignSpecialModel(woodType, texture));
+                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, oversizedInGui, base, new StandingSignSpecialModel(woodType, texture));
             } else if (specialModelType.equals(SpecialModelType.HANGING_SIGN)) {
                 String woodType = (String) modelJson.get("wood_type");
                 String texture = ensureNamespace((String) modelJson.get("texture"));
-                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new HangingSignSpecialModel(woodType, texture));
+                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, oversizedInGui, base, new HangingSignSpecialModel(woodType, texture));
             } else if (specialModelType.equals(SpecialModelType.TRIDENT)) {
-                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, base, new TridentSpecialModel());
+                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, oversizedInGui, base, new TridentSpecialModel());
             } else {
                 throw new IllegalArgumentException("Unsupported special model type: " + modelTypeKey);
             }
@@ -408,8 +421,8 @@ public abstract class ItemModelDefinition {
         private final String model;
         private final List<TintSource> tints;
 
-        public ItemModelDefinitionModel(boolean handAnimationOnSwapString, String model, List<TintSource> tints) {
-            super(ItemModelDefinitionType.MODEL, handAnimationOnSwapString);
+        public ItemModelDefinitionModel(boolean handAnimationOnSwapString, boolean oversizedInGui, String model, List<TintSource> tints) {
+            super(ItemModelDefinitionType.MODEL, handAnimationOnSwapString, oversizedInGui);
             this.model = model;
             this.tints = tints;
         }
@@ -428,8 +441,8 @@ public abstract class ItemModelDefinition {
 
         private final List<ItemModelDefinition> models;
 
-        public ItemModelDefinitionComposite(boolean handAnimationOnSwapString, List<ItemModelDefinition> models) {
-            super(ItemModelDefinitionType.COMPOSITE, handAnimationOnSwapString);
+        public ItemModelDefinitionComposite(boolean handAnimationOnSwapString, boolean oversizedInGui, List<ItemModelDefinition> models) {
+            super(ItemModelDefinitionType.COMPOSITE, handAnimationOnSwapString, oversizedInGui);
             this.models = models;
         }
 
@@ -445,8 +458,8 @@ public abstract class ItemModelDefinition {
         private final ItemModelDefinition onTrue;
         private final ItemModelDefinition onFalse;
 
-        public ItemModelDefinitionCondition(boolean handAnimationOnSwap, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
-            super(ItemModelDefinitionType.CONDITION, handAnimationOnSwap);
+        public ItemModelDefinitionCondition(boolean handAnimationOnSwap, boolean oversizedInGui, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
+            super(ItemModelDefinitionType.CONDITION, handAnimationOnSwap, oversizedInGui);
             this.propertyType = propertyType;
             this.onTrue = onTrue;
             this.onFalse = onFalse;
@@ -478,8 +491,8 @@ public abstract class ItemModelDefinition {
 
         private final Object2ObjectMap<T, ItemModelDefinition> caseModels;
 
-        public ItemModelDefinitionSelect(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<T>> cases, ItemModelDefinition fallback) {
-            super(ItemModelDefinitionType.SELECT, handAnimationOnSwapString);
+        public ItemModelDefinitionSelect(boolean handAnimationOnSwapString, boolean oversizedInGui, SelectPropertyType<?> propertyType, List<SelectCase<T>> cases, ItemModelDefinition fallback) {
+            super(ItemModelDefinitionType.SELECT, handAnimationOnSwapString, oversizedInGui);
             this.property = propertyType;
             this.cases = cases;
             this.fallback = fallback;
@@ -528,8 +541,8 @@ public abstract class ItemModelDefinition {
 
         private final float[] thresholds;
 
-        public ItemModelDefinitionRangeDispatch(boolean handAnimationOnSwapString, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback) {
-            super(ItemModelDefinitionType.RANGE_DISPATCH, handAnimationOnSwapString);
+        public ItemModelDefinitionRangeDispatch(boolean handAnimationOnSwapString, boolean oversizedInGui, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback) {
+            super(ItemModelDefinitionType.RANGE_DISPATCH, handAnimationOnSwapString, oversizedInGui);
             this.propertyType = propertyType;
             this.scale = scale;
             this.entries = entries;
@@ -588,15 +601,15 @@ public abstract class ItemModelDefinition {
 
     // EMPTY Definition
     public static class ItemModelDefinitionEmpty extends ItemModelDefinition {
-        public ItemModelDefinitionEmpty(boolean handAnimationOnSwapString) {
-            super(ItemModelDefinitionType.EMPTY, handAnimationOnSwapString);
+        public ItemModelDefinitionEmpty(boolean handAnimationOnSwapString, boolean oversizedInGui) {
+            super(ItemModelDefinitionType.EMPTY, handAnimationOnSwapString, oversizedInGui);
         }
     }
 
     // BUNDLE_SELECTED_ITEM Definition
     public static class ItemModelDefinitionBundleSelectedItem extends ItemModelDefinition {
-        public ItemModelDefinitionBundleSelectedItem(boolean handAnimationOnSwapString) {
-            super(ItemModelDefinitionType.BUNDLE_SELECTED_ITEM, handAnimationOnSwapString);
+        public ItemModelDefinitionBundleSelectedItem(boolean handAnimationOnSwapString, boolean oversizedInGui) {
+            super(ItemModelDefinitionType.BUNDLE_SELECTED_ITEM, handAnimationOnSwapString, oversizedInGui);
         }
     }
 
@@ -606,8 +619,8 @@ public abstract class ItemModelDefinition {
         private final String base;
         private final SpecialModel model;
 
-        public ItemModelDefinitionSpecial(boolean handAnimationOnSwapString, String base, SpecialModel model) {
-            super(ItemModelDefinitionType.SPECIAL, handAnimationOnSwapString);
+        public ItemModelDefinitionSpecial(boolean handAnimationOnSwapString, boolean oversizedInGui, String base, SpecialModel model) {
+            super(ItemModelDefinitionType.SPECIAL, handAnimationOnSwapString, oversizedInGui);
             this.base = base;
             this.model = model;
         }
@@ -624,7 +637,7 @@ public abstract class ItemModelDefinition {
     // IC LEGACY Definition
     public static class ItemModelDefinitionInteractiveChatDiscordSrvAddonLegacy extends ItemModelDefinition {
         public ItemModelDefinitionInteractiveChatDiscordSrvAddonLegacy(boolean handAnimationOnSwapString) {
-            super(ItemModelDefinitionType.IC_LEGACY, handAnimationOnSwapString);
+            super(ItemModelDefinitionType.IC_LEGACY, handAnimationOnSwapString, true);
         }
     }
 
@@ -967,14 +980,14 @@ public abstract class ItemModelDefinition {
     }
 
     public static class UsingItemConditionProperty extends ItemModelDefinitionCondition {
-        public UsingItemConditionProperty(boolean handAnimationOnSwap, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
-            super(handAnimationOnSwap, propertyType, onTrue, onFalse);
+        public UsingItemConditionProperty(boolean handAnimationOnSwap, boolean oversizedInGui, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
+            super(handAnimationOnSwap, oversizedInGui, propertyType, onTrue, onFalse);
         }
     }
 
     public static class BrokenConditionProperty extends ItemModelDefinitionCondition {
-        public BrokenConditionProperty(boolean handAnimationOnSwap, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
-            super(handAnimationOnSwap, propertyType, onTrue, onFalse);
+        public BrokenConditionProperty(boolean handAnimationOnSwap, boolean oversizedInGui, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
+            super(handAnimationOnSwap, oversizedInGui, propertyType, onTrue, onFalse);
         }
     }
 
@@ -982,8 +995,8 @@ public abstract class ItemModelDefinition {
         private final Key component;
         private final boolean ignoreDefault;
 
-        public HasComponentConditionProperty(boolean handAnimationOnSwap, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse, Key component, boolean ignoreDefault) {
-            super(handAnimationOnSwap, propertyType, onTrue, onFalse);
+        public HasComponentConditionProperty(boolean handAnimationOnSwap, boolean oversizedInGui, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse, Key component, boolean ignoreDefault) {
+            super(handAnimationOnSwap, oversizedInGui, propertyType, onTrue, onFalse);
             this.component = component;
             this.ignoreDefault = ignoreDefault;
         }
@@ -998,46 +1011,46 @@ public abstract class ItemModelDefinition {
     }
 
     public static class DamagedConditionProperty extends ItemModelDefinitionCondition {
-        public DamagedConditionProperty(boolean handAnimationOnSwap, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
-            super(handAnimationOnSwap, propertyType, onTrue, onFalse);
+        public DamagedConditionProperty(boolean handAnimationOnSwap, boolean oversizedInGui, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
+            super(handAnimationOnSwap, oversizedInGui, propertyType, onTrue, onFalse);
         }
     }
 
     public static class FishingRodCastConditionProperty extends ItemModelDefinitionCondition {
-        public FishingRodCastConditionProperty(boolean handAnimationOnSwap, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
-            super(handAnimationOnSwap, propertyType, onTrue, onFalse);
+        public FishingRodCastConditionProperty(boolean handAnimationOnSwap, boolean oversizedInGui, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
+            super(handAnimationOnSwap, oversizedInGui, propertyType, onTrue, onFalse);
         }
     }
 
     public static class BundleSelectedItemConditionProperty extends ItemModelDefinitionCondition {
-        public BundleSelectedItemConditionProperty(boolean handAnimationOnSwap, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
-            super(handAnimationOnSwap, propertyType, onTrue, onFalse);
+        public BundleSelectedItemConditionProperty(boolean handAnimationOnSwap, boolean oversizedInGui, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
+            super(handAnimationOnSwap, oversizedInGui, propertyType, onTrue, onFalse);
         }
     }
 
     public static class SelectedConditionProperty extends ItemModelDefinitionCondition {
-        public SelectedConditionProperty(boolean handAnimationOnSwap, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
-            super(handAnimationOnSwap, propertyType, onTrue, onFalse);
+        public SelectedConditionProperty(boolean handAnimationOnSwap, boolean oversizedInGui, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
+            super(handAnimationOnSwap, oversizedInGui, propertyType, onTrue, onFalse);
         }
     }
 
     public static class CarriedConditionProperty extends ItemModelDefinitionCondition {
-        public CarriedConditionProperty(boolean handAnimationOnSwap, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
-            super(handAnimationOnSwap, propertyType, onTrue, onFalse);
+        public CarriedConditionProperty(boolean handAnimationOnSwap, boolean oversizedInGui, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
+            super(handAnimationOnSwap, oversizedInGui, propertyType, onTrue, onFalse);
         }
     }
 
     public static class ExtendedViewConditionProperty extends ItemModelDefinitionCondition {
-        public ExtendedViewConditionProperty(boolean handAnimationOnSwap, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
-            super(handAnimationOnSwap, propertyType, onTrue, onFalse);
+        public ExtendedViewConditionProperty(boolean handAnimationOnSwap, boolean oversizedInGui, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
+            super(handAnimationOnSwap, oversizedInGui, propertyType, onTrue, onFalse);
         }
     }
 
     public static class KeybindDownConditionProperty extends ItemModelDefinitionCondition {
         private final int keybind;
 
-        public KeybindDownConditionProperty(boolean handAnimationOnSwap, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse, int keybind) {
-            super(handAnimationOnSwap, propertyType, onTrue, onFalse);
+        public KeybindDownConditionProperty(boolean handAnimationOnSwap, boolean oversizedInGui, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse, int keybind) {
+            super(handAnimationOnSwap, oversizedInGui, propertyType, onTrue, onFalse);
             this.keybind = keybind;
         }
 
@@ -1047,8 +1060,8 @@ public abstract class ItemModelDefinition {
     }
 
     public static class ViewEntityConditionProperty extends ItemModelDefinitionCondition {
-        public ViewEntityConditionProperty(boolean handAnimationOnSwap, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
-            super(handAnimationOnSwap, propertyType, onTrue, onFalse);
+        public ViewEntityConditionProperty(boolean handAnimationOnSwap, boolean oversizedInGui, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse) {
+            super(handAnimationOnSwap, oversizedInGui, propertyType, onTrue, onFalse);
         }
     }
 
@@ -1056,8 +1069,8 @@ public abstract class ItemModelDefinition {
         private final String predicate;
         private final String value;
 
-        public ComponentConditionProperty(boolean handAnimationOnSwap, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse, String predicate, String value) {
-            super(handAnimationOnSwap, propertyType, onTrue, onFalse);
+        public ComponentConditionProperty(boolean handAnimationOnSwap, boolean oversizedInGui, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse, String predicate, String value) {
+            super(handAnimationOnSwap, oversizedInGui, propertyType, onTrue, onFalse);
             this.predicate = predicate;
             this.value = value;
         }
@@ -1074,8 +1087,8 @@ public abstract class ItemModelDefinition {
     public static class CustomModelDataConditionProperty extends ItemModelDefinitionCondition {
         private final int index;
 
-        public CustomModelDataConditionProperty(boolean handAnimationOnSwap, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse, int index) {
-            super(handAnimationOnSwap, propertyType, onTrue, onFalse);
+        public CustomModelDataConditionProperty(boolean handAnimationOnSwap, boolean oversizedInGui, ConditionPropertyType<?> propertyType, ItemModelDefinition onTrue, ItemModelDefinition onFalse, int index) {
+            super(handAnimationOnSwap, oversizedInGui, propertyType, onTrue, onFalse);
             this.index = index;
         }
 
@@ -1137,22 +1150,22 @@ public abstract class ItemModelDefinition {
     }
 
     public static class MainHandSelectProperty extends ItemModelDefinitionSelect<MainHand> {
-        public MainHandSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<MainHand>> cases, ItemModelDefinition fallback) {
-            super(handAnimationOnSwapString, propertyType, cases, fallback);
+        public MainHandSelectProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, SelectPropertyType<?> propertyType, List<SelectCase<MainHand>> cases, ItemModelDefinition fallback) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, cases, fallback);
         }
     }
 
     public static class ChargeTypeSelectProperty extends ItemModelDefinitionSelect<ChargeType> {
-        public ChargeTypeSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<ChargeType>> cases, ItemModelDefinition fallback) {
-            super(handAnimationOnSwapString, propertyType, cases, fallback);
+        public ChargeTypeSelectProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, SelectPropertyType<?> propertyType, List<SelectCase<ChargeType>> cases, ItemModelDefinition fallback) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, cases, fallback);
         }
     }
 
     public static class ComponentSelectProperty extends ItemModelDefinitionSelect<Object> {
         private final Key component;
 
-        public ComponentSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<Object>> cases, ItemModelDefinition fallback, Key component) {
-            super(handAnimationOnSwapString, propertyType, cases, fallback);
+        public ComponentSelectProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, SelectPropertyType<?> propertyType, List<SelectCase<Object>> cases, ItemModelDefinition fallback, Key component) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, cases, fallback);
             this.component = component;
         }
 
@@ -1162,16 +1175,16 @@ public abstract class ItemModelDefinition {
     }
 
     public static class TrimMaterialSelectProperty extends ItemModelDefinitionSelect<Key> {
-        public TrimMaterialSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<Key>> cases, ItemModelDefinition fallback) {
-            super(handAnimationOnSwapString, propertyType, cases, fallback);
+        public TrimMaterialSelectProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, SelectPropertyType<?> propertyType, List<SelectCase<Key>> cases, ItemModelDefinition fallback) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, cases, fallback);
         }
     }
 
     public static class BlockStateSelectProperty extends ItemModelDefinitionSelect<String> {
         private final String blockStateProperty;
 
-        public BlockStateSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<String>> cases, ItemModelDefinition fallback, String blockStateProperty) {
-            super(handAnimationOnSwapString, propertyType, cases, fallback);
+        public BlockStateSelectProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, SelectPropertyType<?> propertyType, List<SelectCase<String>> cases, ItemModelDefinition fallback, String blockStateProperty) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, cases, fallback);
             this.blockStateProperty = blockStateProperty;
         }
 
@@ -1181,8 +1194,8 @@ public abstract class ItemModelDefinition {
     }
 
     public static class DisplayContextSelectProperty extends ItemModelDefinitionSelect<ModelDisplay.ModelDisplayPosition> {
-        public DisplayContextSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<ModelDisplay.ModelDisplayPosition>> cases, ItemModelDefinition fallback) {
-            super(handAnimationOnSwapString, propertyType, cases, fallback);
+        public DisplayContextSelectProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, SelectPropertyType<?> propertyType, List<SelectCase<ModelDisplay.ModelDisplayPosition>> cases, ItemModelDefinition fallback) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, cases, fallback);
         }
     }
 
@@ -1191,8 +1204,8 @@ public abstract class ItemModelDefinition {
         private final String locale;
         private final Optional<TimeZone> timeZone;
 
-        public LocalTimeSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<String>> cases, ItemModelDefinition fallback, String pattern, String locale, Optional<TimeZone> timeZone) {
-            super(handAnimationOnSwapString, propertyType, cases, fallback);
+        public LocalTimeSelectProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, SelectPropertyType<?> propertyType, List<SelectCase<String>> cases, ItemModelDefinition fallback, String pattern, String locale, Optional<TimeZone> timeZone) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, cases, fallback);
             this.pattern = pattern;
             this.locale = locale;
             this.timeZone = timeZone;
@@ -1212,22 +1225,22 @@ public abstract class ItemModelDefinition {
     }
 
     public static class ContextDimensionSelectProperty extends ItemModelDefinitionSelect<Key> {
-        public ContextDimensionSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<Key>> cases, ItemModelDefinition fallback) {
-            super(handAnimationOnSwapString, propertyType, cases, fallback);
+        public ContextDimensionSelectProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, SelectPropertyType<?> propertyType, List<SelectCase<Key>> cases, ItemModelDefinition fallback) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, cases, fallback);
         }
     }
 
     public static class ContextEntityTypeSelectProperty extends ItemModelDefinitionSelect<Key> {
-        public ContextEntityTypeSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<Key>> cases, ItemModelDefinition fallback) {
-            super(handAnimationOnSwapString, propertyType, cases, fallback);
+        public ContextEntityTypeSelectProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, SelectPropertyType<?> propertyType, List<SelectCase<Key>> cases, ItemModelDefinition fallback) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, cases, fallback);
         }
     }
 
     public static class CustomModelDataSelectProperty extends ItemModelDefinitionSelect<String> {
         private final int index;
 
-        public CustomModelDataSelectProperty(boolean handAnimationOnSwapString, SelectPropertyType<?> propertyType, List<SelectCase<String>> cases, ItemModelDefinition fallback, int index) {
-            super(handAnimationOnSwapString, propertyType, cases, fallback);
+        public CustomModelDataSelectProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, SelectPropertyType<?> propertyType, List<SelectCase<String>> cases, ItemModelDefinition fallback, int index) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, cases, fallback);
             this.index = index;
         }
 
@@ -1307,16 +1320,16 @@ public abstract class ItemModelDefinition {
     }
 
     public static class BundleFullnessRangeDispatchProperty extends ItemModelDefinitionRangeDispatch {
-        public BundleFullnessRangeDispatchProperty(boolean handAnimationOnSwapString, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback) {
-            super(handAnimationOnSwapString, propertyType, scale, entries, fallback);
+        public BundleFullnessRangeDispatchProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback);
         }
     }
 
     public static class DamageRangeDispatchProperty extends ItemModelDefinitionRangeDispatch {
         private final boolean normalize;
 
-        public DamageRangeDispatchProperty(boolean handAnimationOnSwapString, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback, boolean normalize) {
-            super(handAnimationOnSwapString, propertyType, scale, entries, fallback);
+        public DamageRangeDispatchProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback, boolean normalize) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback);
             this.normalize = normalize;
         }
 
@@ -1328,8 +1341,8 @@ public abstract class ItemModelDefinition {
     public static class CountRangeDispatchProperty extends ItemModelDefinitionRangeDispatch {
         private final boolean normalize;
 
-        public CountRangeDispatchProperty(boolean handAnimationOnSwapString, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback, boolean normalize) {
-            super(handAnimationOnSwapString, propertyType, scale, entries, fallback);
+        public CountRangeDispatchProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback, boolean normalize) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback);
             this.normalize = normalize;
         }
 
@@ -1339,8 +1352,8 @@ public abstract class ItemModelDefinition {
     }
 
     public static class CooldownRangeDispatchProperty extends ItemModelDefinitionRangeDispatch {
-        public CooldownRangeDispatchProperty(boolean handAnimationOnSwapString, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback) {
-            super(handAnimationOnSwapString, propertyType, scale, entries, fallback);
+        public CooldownRangeDispatchProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback);
         }
     }
 
@@ -1348,8 +1361,8 @@ public abstract class ItemModelDefinition {
         private final TimeSource source;
         private final boolean wobble;
 
-        public TimeRangeDispatchProperty(boolean handAnimationOnSwapString, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback, TimeSource source, boolean wobble) {
-            super(handAnimationOnSwapString, propertyType, scale, entries, fallback);
+        public TimeRangeDispatchProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback, TimeSource source, boolean wobble) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback);
             this.source = source;
             this.wobble = wobble;
         }
@@ -1371,8 +1384,8 @@ public abstract class ItemModelDefinition {
         private final CompassTarget target;
         private final boolean wobble;
 
-        public CompassRangeDispatchProperty(boolean handAnimationOnSwapString, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback, CompassTarget target, boolean wobble) {
-            super(handAnimationOnSwapString, propertyType, scale, entries, fallback);
+        public CompassRangeDispatchProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback, CompassTarget target, boolean wobble) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback);
             this.target = target;
             this.wobble = wobble;
         }
@@ -1391,16 +1404,16 @@ public abstract class ItemModelDefinition {
     }
 
     public static class CrossbowPullRangeDispatchProperty extends ItemModelDefinitionRangeDispatch {
-        public CrossbowPullRangeDispatchProperty(boolean handAnimationOnSwapString, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback) {
-            super(handAnimationOnSwapString, propertyType, scale, entries, fallback);
+        public CrossbowPullRangeDispatchProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback);
         }
     }
 
     public static class UseDurationRangeDispatchProperty extends ItemModelDefinitionRangeDispatch {
         private final boolean remaining;
 
-        public UseDurationRangeDispatchProperty(boolean handAnimationOnSwapString, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback, boolean remaining) {
-            super(handAnimationOnSwapString, propertyType, scale, entries, fallback);
+        public UseDurationRangeDispatchProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback, boolean remaining) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback);
             this.remaining = remaining;
         }
 
@@ -1412,8 +1425,8 @@ public abstract class ItemModelDefinition {
     public static class UseCycleRangeDispatchProperty extends ItemModelDefinitionRangeDispatch {
         private final float period;
 
-        public UseCycleRangeDispatchProperty(boolean handAnimationOnSwapString, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback, float period) {
-            super(handAnimationOnSwapString, propertyType, scale, entries, fallback);
+        public UseCycleRangeDispatchProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback, float period) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback);
             this.period = period;
         }
 
@@ -1425,8 +1438,8 @@ public abstract class ItemModelDefinition {
     public static class CustomModelDataRangeDispatchProperty extends ItemModelDefinitionRangeDispatch {
         private final int index;
 
-        public CustomModelDataRangeDispatchProperty(boolean handAnimationOnSwapString, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback, int index) {
-            super(handAnimationOnSwapString, propertyType, scale, entries, fallback);
+        public CustomModelDataRangeDispatchProperty(boolean handAnimationOnSwapString, boolean oversizedInGui, RangeDispatchPropertyType<?> propertyType, float scale, List<RangeEntry> entries, ItemModelDefinition fallback, int index) {
+            super(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback);
             this.index = index;
         }
 
@@ -1437,14 +1450,15 @@ public abstract class ItemModelDefinition {
 
     public static class SpecialModelType<T extends SpecialModel> {
 
-        public static final SpecialModelType<BedSpecialModel> BED = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":bed", BedSpecialModel.class);
         public static final SpecialModelType<BannerSpecialModel> BANNER = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":banner", BannerSpecialModel.class);
-        public static final SpecialModelType<ConduitSpecialModel> CONDUIT = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":conduit", ConduitSpecialModel.class);
+        public static final SpecialModelType<BedSpecialModel> BED = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":bed", BedSpecialModel.class);
         public static final SpecialModelType<ChestSpecialModel> CHEST = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":chest", ChestSpecialModel.class);
+        public static final SpecialModelType<ConduitSpecialModel> CONDUIT = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":conduit", ConduitSpecialModel.class);
         public static final SpecialModelType<DecoratedPotSpecialModel> DECORATED_POT = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":decorated_pot", DecoratedPotSpecialModel.class);
         public static final SpecialModelType<HeadSpecialModel> HEAD = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":head", HeadSpecialModel.class);
-        public static final SpecialModelType<ShulkerBoxSpecialModel> SHULKER_BOX = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":shulker_box", ShulkerBoxSpecialModel.class);
+        public static final SpecialModelType<PlayerHeadSpecialModel> PLAYER_HEAD = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":player_head", PlayerHeadSpecialModel.class);
         public static final SpecialModelType<ShieldSpecialModel> SHIELD = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":shield", ShieldSpecialModel.class);
+        public static final SpecialModelType<ShulkerBoxSpecialModel> SHULKER_BOX = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":shulker_box", ShulkerBoxSpecialModel.class);
         public static final SpecialModelType<StandingSignSpecialModel> STANDING_SIGN = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":standing_sign", StandingSignSpecialModel.class);
         public static final SpecialModelType<HangingSignSpecialModel> HANGING_SIGN = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":hanging_sign", HangingSignSpecialModel.class);
         public static final SpecialModelType<TridentSpecialModel> TRIDENT = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":trident", TridentSpecialModel.class);
@@ -1452,14 +1466,15 @@ public abstract class ItemModelDefinition {
         private static final Map<String, SpecialModelType<?>> TYPES_MAP = new HashMap<>();
 
         static {
-            TYPES_MAP.put(BED.getNamespacedKey(), BED);
             TYPES_MAP.put(BANNER.getNamespacedKey(), BANNER);
-            TYPES_MAP.put(CONDUIT.getNamespacedKey(), CONDUIT);
+            TYPES_MAP.put(BED.getNamespacedKey(), BED);
             TYPES_MAP.put(CHEST.getNamespacedKey(), CHEST);
+            TYPES_MAP.put(CONDUIT.getNamespacedKey(), CONDUIT);
             TYPES_MAP.put(DECORATED_POT.getNamespacedKey(), DECORATED_POT);
             TYPES_MAP.put(HEAD.getNamespacedKey(), HEAD);
-            TYPES_MAP.put(SHULKER_BOX.getNamespacedKey(), SHULKER_BOX);
+            TYPES_MAP.put(PLAYER_HEAD.getNamespacedKey(), PLAYER_HEAD);
             TYPES_MAP.put(SHIELD.getNamespacedKey(), SHIELD);
+            TYPES_MAP.put(SHULKER_BOX.getNamespacedKey(), SHULKER_BOX);
             TYPES_MAP.put(STANDING_SIGN.getNamespacedKey(), STANDING_SIGN);
             TYPES_MAP.put(HANGING_SIGN.getNamespacedKey(), HANGING_SIGN);
             TYPES_MAP.put(TRIDENT.getNamespacedKey(), TRIDENT);
@@ -1501,19 +1516,6 @@ public abstract class ItemModelDefinition {
         }
     }
 
-    public static class BedSpecialModel extends SpecialModel {
-        private final String texture;
-
-        public BedSpecialModel(String texture) {
-            super(SpecialModelType.BED);
-            this.texture = texture;
-        }
-
-        public String getTexture() {
-            return texture;
-        }
-    }
-
     public static class BannerSpecialModel extends SpecialModel {
         private final String color;
 
@@ -1527,9 +1529,16 @@ public abstract class ItemModelDefinition {
         }
     }
 
-    public static class ConduitSpecialModel extends SpecialModel {
-        public ConduitSpecialModel() {
-            super(SpecialModelType.CONDUIT);
+    public static class BedSpecialModel extends SpecialModel {
+        private final String texture;
+
+        public BedSpecialModel(String texture) {
+            super(SpecialModelType.BED);
+            this.texture = texture;
+        }
+
+        public String getTexture() {
+            return texture;
         }
     }
 
@@ -1549,6 +1558,12 @@ public abstract class ItemModelDefinition {
 
         public float getOpenness() {
             return openness;
+        }
+    }
+
+    public static class ConduitSpecialModel extends SpecialModel {
+        public ConduitSpecialModel() {
+            super(SpecialModelType.CONDUIT);
         }
     }
 
@@ -1583,6 +1598,18 @@ public abstract class ItemModelDefinition {
         }
     }
 
+    public static class PlayerHeadSpecialModel extends SpecialModel {
+        public PlayerHeadSpecialModel() {
+            super(SpecialModelType.PLAYER_HEAD);
+        }
+    }
+
+    public static class ShieldSpecialModel extends SpecialModel {
+        public ShieldSpecialModel() {
+            super(SpecialModelType.SHIELD);
+        }
+    }
+
     public static class ShulkerBoxSpecialModel extends SpecialModel {
         private final String name;
         private final float openness;
@@ -1605,12 +1632,6 @@ public abstract class ItemModelDefinition {
 
         public String getOrientation() {
             return orientation;
-        }
-    }
-
-    public static class ShieldSpecialModel extends SpecialModel {
-        public ShieldSpecialModel() {
-            super(SpecialModelType.SHIELD);
         }
     }
 

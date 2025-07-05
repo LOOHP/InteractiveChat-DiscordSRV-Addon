@@ -53,12 +53,7 @@ import java.net.URLConnection;
 import java.util.BitSet;
 import java.util.List;
 
-import static com.loohp.blockmodelrenderer.utils.ColorUtils.composite;
-import static com.loohp.blockmodelrenderer.utils.ColorUtils.getAlpha;
-import static com.loohp.blockmodelrenderer.utils.ColorUtils.getBlue;
-import static com.loohp.blockmodelrenderer.utils.ColorUtils.getGreen;
-import static com.loohp.blockmodelrenderer.utils.ColorUtils.getIntFromColor;
-import static com.loohp.blockmodelrenderer.utils.ColorUtils.getRed;
+import static com.loohp.blockmodelrenderer.utils.ColorUtils.*;
 
 public class ImageUtils {
 

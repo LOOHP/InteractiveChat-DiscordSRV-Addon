@@ -32,10 +32,11 @@ import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.AttributeBase;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ItemDamageInfo;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ProfileProperty;
@@ -208,19 +209,19 @@ public class V1_8 extends NMSAddonWrapper {
     }
 
     @Override
-    public ChatColor getPotionEffectChatColor(PotionEffectType type) {
+    public TextColor getPotionEffectChatColor(PotionEffectType type) {
         try {
             mobEffectListIsDebuffField.setAccessible(true);
             MobEffectList mobEffectList = ((CraftPotionEffectType) type).getHandle();
             boolean isDebuff = mobEffectListIsDebuffField.getBoolean(mobEffectList);
-            return isDebuff ? ChatColor.RED : ChatColor.BLUE;
+            return isDebuff ? NamedTextColor.RED : NamedTextColor.BLUE;
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public Map<String, ?> getPotionAttributeModifiers(PotionEffect effect) {
+    public Map<AttributeBase, ?> getPotionAttributeModifiers(PotionEffect effect) {
         throw new UnsupportedOperationException();
     }
 
@@ -371,7 +372,7 @@ public class V1_8 extends NMSAddonWrapper {
     }
 
     @Override
-    public Map<EquipmentSlotGroup, ? extends Multimap<String, ?>> getItemAttributeModifiers(ItemStack itemStack) {
+    public Map<EquipmentSlotGroup, ? extends Multimap<AttributeBase, ?>> getItemAttributeModifiers(ItemStack itemStack) {
         throw new UnsupportedOperationException();
     }
 

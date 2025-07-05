@@ -37,6 +37,7 @@ import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.EOFException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -121,15 +122,20 @@ public abstract class MinecraftFont {
             }
             case UnihexFont.TYPE_KEY: {
                 String hexFile = fontJson.get("hex_file").toString();
+                List<UnihexFont.SizeOverride> sizeOverrides;
                 JSONArray sizeOverridesArray = (JSONArray) fontJson.get("size_overrides");
-                List<UnihexFont.SizeOverride> sizeOverrides = new ArrayList<>(sizeOverridesArray.size());
-                for (Object obj : sizeOverridesArray) {
-                    JSONObject sizeOverride = (JSONObject) obj;
-                    int from = ((String) sizeOverride.get("from")).codePointAt(0);
-                    int to = ((String) sizeOverride.get("to")).codePointAt(0);
-                    byte left = ((Number) sizeOverride.get("left")).byteValue();
-                    byte right = ((Number) sizeOverride.get("right")).byteValue();
-                    sizeOverrides.add(new UnihexFont.SizeOverride(from, to, left, right));
+                if (sizeOverridesArray == null) {
+                    sizeOverrides = Collections.emptyList();
+                } else {
+                    sizeOverrides = new ArrayList<>(sizeOverridesArray.size());
+                    for (Object obj : sizeOverridesArray) {
+                        JSONObject sizeOverride = (JSONObject) obj;
+                        int from = ((String) sizeOverride.get("from")).codePointAt(0);
+                        int to = ((String) sizeOverride.get("to")).codePointAt(0);
+                        byte left = ((Number) sizeOverride.get("left")).byteValue();
+                        byte right = ((Number) sizeOverride.get("right")).byteValue();
+                        sizeOverrides.add(new UnihexFont.SizeOverride(from, to, left, right));
+                    }
                 }
                 return new UnihexFont(manager, provider, sizeOverrides, hexFile);
             }

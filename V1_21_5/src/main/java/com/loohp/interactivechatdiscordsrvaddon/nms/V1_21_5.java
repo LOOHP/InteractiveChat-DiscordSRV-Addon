@@ -37,6 +37,7 @@ import com.loohp.interactivechat.utils.NativeJsonConverter;
 import com.loohp.interactivechat.utils.ReflectionUtils;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.AttributeBase;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
@@ -165,11 +166,13 @@ public class V1_21_5 extends NMSAddonWrapper {
 
     private final Field adventureModePredicatePredicatesField;
     private final Method bundleContentsGetWeightMethod;
+    private final Field attributeBaseSentimentField;
 
     public V1_21_5() {
         try {
             adventureModePredicatePredicatesField = ReflectionUtils.findDeclaredField(AdventureModePredicate.class, List.class, "predicates", "f");
             bundleContentsGetWeightMethod = ReflectionUtils.findDeclaredMethod(BundleContents.class, new Class[] {net.minecraft.world.item.ItemStack.class}, "getWeight", "b");
+            attributeBaseSentimentField = ReflectionUtils.findDeclaredField(net.minecraft.world.entity.ai.attributes.AttributeBase.class, net.minecraft.world.entity.ai.attributes.AttributeBase.a.class, "sentiment", "f");
         } catch (NoSuchFieldException | NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
@@ -328,21 +331,29 @@ public class V1_21_5 extends NMSAddonWrapper {
     }
 
     @Override
-    public ChatColor getPotionEffectChatColor(PotionEffectType type) {
-        MobEffectList mobEffectList = ((CraftPotionEffectType) type).getHandle();
+    public TextColor getPotionEffectChatColor(PotionEffectType type) {
+        MobEffectList mobEffectList = CraftPotionEffectType.bukkitToMinecraft(type);
         EnumChatFormat chatFormat = mobEffectList.h().a();
-        return ChatColor.getByChar(chatFormat.toString().charAt(1));
+        return TextColor.color(chatFormat.f());
     }
 
     @Override
-    public Map<String, AttributeModifier> getPotionAttributeModifiers(PotionEffect effect) {
-        Map<String, AttributeModifier> attributes = new HashMap<>();
+    public Map<AttributeBase, AttributeModifier> getPotionAttributeModifiers(PotionEffect effect) {
+        attributeBaseSentimentField.setAccessible(true);
+        Map<AttributeBase, AttributeModifier> attributes = new HashMap<>();
         MobEffect mobEffect = CraftPotionUtil.fromBukkit(effect);
         MobEffectList mobEffectList = mobEffect.c().a();
         mobEffectList.a(effect.getAmplifier(), (holder, nmsAttributeModifier) -> {
-            String name = holder.a().c();
-            AttributeModifier attributeModifier = CraftAttributeInstance.convert(nmsAttributeModifier);
-            attributes.put(name, attributeModifier);
+            try {
+                net.minecraft.world.entity.ai.attributes.AttributeBase nmsAttributeBase = holder.a();
+                net.minecraft.world.entity.ai.attributes.AttributeBase.a nmsSentiment = (net.minecraft.world.entity.ai.attributes.AttributeBase.a) attributeBaseSentimentField.get(nmsAttributeBase);
+                AttributeBase.AttributeSentiment sentiment = AttributeBase.AttributeSentiment.fromNMS(nmsSentiment);
+                AttributeBase attributeBase = new AttributeBase(nmsAttributeBase.c(), nmsAttributeBase.b(), sentiment);
+                AttributeModifier attributeModifier = CraftAttributeInstance.convert(nmsAttributeModifier);
+                attributes.put(attributeBase, attributeModifier);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
         });
         return attributes;
     }
@@ -466,7 +477,7 @@ public class V1_21_5 extends NMSAddonWrapper {
     public String getEntityNBT(Entity entity) {
         net.minecraft.world.entity.Entity nmsEntity = ((CraftEntity) entity).getHandle();
         NBTTagCompound nbt = new NBTTagCompound();
-        nmsEntity.f(nbt);
+        nmsEntity.g(nbt);
         return nbt.toString();
     }
 
@@ -531,16 +542,24 @@ public class V1_21_5 extends NMSAddonWrapper {
     }
 
     @Override
-    public Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> getItemAttributeModifiers(ItemStack itemStack) {
+    public Map<EquipmentSlotGroup, Multimap<AttributeBase, AttributeModifier>> getItemAttributeModifiers(ItemStack itemStack) {
+        attributeBaseSentimentField.setAccessible(true);
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        Map<EquipmentSlotGroup, Multimap<String, AttributeModifier>> result = new EnumMap<>(EquipmentSlotGroup.class);
+        Map<EquipmentSlotGroup, Multimap<AttributeBase, AttributeModifier>> result = new EnumMap<>(EquipmentSlotGroup.class);
         for (net.minecraft.world.entity.EquipmentSlotGroup slotGroup : net.minecraft.world.entity.EquipmentSlotGroup.values()) {
             EquipmentSlotGroup equipmentSlotGroup = EquipmentSlotGroup.fromName(slotGroup.c());
             nmsItemStack.a(slotGroup, (holder, nmsAttributeModifier) -> {
-                Multimap<String, AttributeModifier> attributes = result.computeIfAbsent(equipmentSlotGroup, k -> LinkedHashMultimap.create());
-                String name = holder.a().c();
-                AttributeModifier attributeModifier = CraftAttributeInstance.convert(nmsAttributeModifier);
-                attributes.put(name, attributeModifier);
+                try {
+                    Multimap<AttributeBase, AttributeModifier> attributes = result.computeIfAbsent(equipmentSlotGroup, k -> LinkedHashMultimap.create());
+                    net.minecraft.world.entity.ai.attributes.AttributeBase nmsAttributeBase = holder.a();
+                    net.minecraft.world.entity.ai.attributes.AttributeBase.a nmsSentiment = (net.minecraft.world.entity.ai.attributes.AttributeBase.a) attributeBaseSentimentField.get(nmsAttributeBase);
+                    AttributeBase.AttributeSentiment sentiment = AttributeBase.AttributeSentiment.fromNMS(nmsSentiment);
+                    AttributeBase attributeBase = new AttributeBase(nmsAttributeBase.c(), nmsAttributeBase.b(), sentiment);
+                    AttributeModifier attributeModifier = CraftAttributeInstance.convert(nmsAttributeModifier);
+                    attributes.put(attributeBase, attributeModifier);
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(e);
+                }
             });
         }
         return result;
