@@ -57,6 +57,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -79,8 +80,10 @@ public class ResourceManager implements AutoCloseable {
     private final Map<String, ModManager> modManagers;
 
     private final Set<Flag> flags;
+    private final Map<String, TextureAtlases> textureAtlases;
 
     private final BiFunction<File, ResourcePackType, DefaultResourcePackInfo> defaultResourcePackInfoFunction;
+    private final AtomicBoolean resourcesLoaded;
     private final AtomicBoolean isValid;
     private final UUID uuid;
 
@@ -91,7 +94,9 @@ public class ResourceManager implements AutoCloseable {
         this.defaultResourcePackInfoFunction = defaultResourcePackInfoFunction;
 
         this.flags = flags.length == 0 ? Collections.emptySet() : Collections.unmodifiableSet(EnumSet.copyOf(Arrays.asList(flags)));
+        this.textureAtlases = new HashMap<>();
 
+        this.resourcesLoaded = new AtomicBoolean(false);
         this.isValid = new AtomicBoolean(true);
         this.uuid = UUID.randomUUID();
 
@@ -121,216 +126,276 @@ public class ResourceManager implements AutoCloseable {
         }, flags);
     }
 
-    public ResourcePackInfo loadResources(File resourcePackFile, ResourcePackType type) {
-        return loadResources(resourcePackFile, type, false);
-    }
-
-    public synchronized ResourcePackInfo loadResources(File resourcePackFile, ResourcePackType type, boolean defaultResource) {
+    public synchronized Map<ResourcePackSource, ResourcePackInfo> loadResources(List<ResourcePackSource> resourcePackSources, BiConsumer<ResourcePackSource, ResourcePackInfo> progressListener) {
         if (!isValid()) {
             throw new IllegalStateException("ResourceManager already closed!");
         }
-        DefaultResourcePackInfo defaultResourcePackInfo = defaultResource ? defaultResourcePackInfoFunction.apply(resourcePackFile, type) : null;
-
-        String resourcePackNameStr = resourcePackFile.getName();
-        Component resourcePackName = Component.text(resourcePackNameStr);
-        if (!resourcePackFile.exists()) {
-            new IllegalArgumentException(resourcePackFile.getAbsolutePath() + " is not a directory nor is a zip file.").printStackTrace();
-            ResourcePackInfo info = new ResourcePackInfo(this, null, type, resourcePackName, "Resource Pack is not a directory nor a zip file.");
-            resourcePackInfo.add(0, info);
-            return info;
+        if (hasResourcesLoaded()) {
+            throw new IllegalStateException("ResourceManager already loaded resources!");
         }
-        ResourcePackFile resourcePack;
-        if (resourcePackFile.isDirectory()) {
-            resourcePack = new ResourcePackSystemFile(resourcePackFile);
-        } else {
+        Map<ResourcePackSource, ResourcePackInfo> result = new HashMap<>(resourcePackSources.size());
+
+        Map<ResourcePackSource, ResourcePackFile> resourcePackFilesMap = new HashMap<>();
+        Map<String, TextureAtlases> textureAtlasesMap = new HashMap<>();
+        for (ResourcePackSource resourcePackSource : resourcePackSources) {
+            File resourcePackFile = resourcePackSource.getResourcePackFile();
+            ResourcePackType type = resourcePackSource.getType();
+            boolean defaultResource = resourcePackSource.isDefaultResource();
+
             try {
-                resourcePack = new ResourcePackZipEntryFile(resourcePackFile);
-            } catch (IOException e) {
-                new IllegalArgumentException(resourcePackFile.getAbsolutePath() + " is an invalid zip file.", e).printStackTrace();
-                ResourcePackInfo info = new ResourcePackInfo(this, null, type, resourcePackName, "Resource Pack is an invalid zip file.");
-                resourcePackInfo.add(0, info);
-                return info;
-            }
-        }
-        ResourcePackFile packMcmeta = resourcePack.getChild("pack.mcmeta");
-        if (!packMcmeta.exists()) {
-            new ResourceLoadingException(resourcePackNameStr + " does not have a pack.mcmeta").printStackTrace();
-            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, "pack.mcmeta not found");
-            resourcePackInfo.add(0, info);
-            return info;
-        }
+                DefaultResourcePackInfo defaultResourcePackInfo = defaultResource ? defaultResourcePackInfoFunction.apply(resourcePackFile, type) : null;
 
-        JSONObject json;
-        try (InputStreamReader reader = new InputStreamReader(new BOMInputStream(packMcmeta.getInputStream()), StandardCharsets.UTF_8)) {
-            json = (JSONObject) new JSONParser().parse(reader);
-        } catch (Throwable e) {
-            new ResourceLoadingException("Unable to read pack.mcmeta for " + resourcePackNameStr, e).printStackTrace();
-            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, "Unable to read pack.mcmeta");
-            resourcePackInfo.add(0, info);
-            return info;
-        }
-
-        PackFormat format;
-        Component description = null;
-        Map<String, LanguageMeta> languageMeta = new HashMap<>();
-        List<PackOverlay> overlays = new ArrayList<>();
-        List<ResourceFilterBlock> resourceFilterBlocks;
-        try {
-            JSONObject packJson = (JSONObject) json.get("pack");
-            if (packJson == null && defaultResource) {
-                resourcePackName = defaultResourcePackInfo.getName();
-                format = defaultResourcePackInfo.getVersion();
-                description = defaultResourcePackInfo.getDescription();
-            } else {
-                int majorFormat = ((Number) packJson.get("pack_format")).intValue();
-                if (packJson.containsKey("supported_formats")) {
-                    Object supportedFormatsObj = packJson.get("supported_formats");
-                    if (supportedFormatsObj instanceof Number) {
-                        int supportedFormat = ((Number) supportedFormatsObj).intValue();
-                        format = PackFormat.version(majorFormat, supportedFormat, supportedFormat);
-                    } else if (supportedFormatsObj instanceof JSONArray) {
-                        JSONArray supportedFormats = (JSONArray) supportedFormatsObj;
-                        format = PackFormat.version(majorFormat, ((Number) supportedFormats.get(0)).intValue(), ((Number) supportedFormats.get(1)).intValue());
-                    } else if (supportedFormatsObj instanceof JSONObject) {
-                        JSONObject supportedFormats = (JSONObject) supportedFormatsObj;
-                        format = PackFormat.version(majorFormat, ((Number) supportedFormats.get("min_inclusive")).intValue(), ((Number) supportedFormats.get("max_inclusive")).intValue());
-                    } else {
-                        throw new IllegalArgumentException("Don't know how to read supported_formats " + supportedFormatsObj);
-                    }
+                String resourcePackNameStr = resourcePackFile.getName();
+                Component resourcePackName = Component.text(resourcePackNameStr);
+                if (!resourcePackFile.exists()) {
+                    new IllegalArgumentException(resourcePackFile.getAbsolutePath() + " is not a directory nor is a zip file.").printStackTrace();
+                    ResourcePackInfo info = new ResourcePackInfo(this, null, type, resourcePackName, "Resource Pack is not a directory nor a zip file.");
+                    resourcePackInfo.add(0, info);
+                    result.put(resourcePackSource, info);
+                    continue;
+                }
+                ResourcePackFile resourcePack;
+                if (resourcePackFile.isDirectory()) {
+                    resourcePack = new ResourcePackSystemFile(resourcePackFile);
                 } else {
-                    format = PackFormat.version(majorFormat);
-                }
-                Object descriptionObj = packJson.get("description");
-                if (descriptionObj instanceof JSONObject) {
-                    String descriptionJson = new GsonBuilder().create().toJson(descriptionObj);
                     try {
-                        description = InteractiveChatComponentSerializer.gson().deserialize(descriptionJson);
-                    } catch (Exception e) {
-                        description = null;
+                        resourcePack = new ResourcePackZipEntryFile(resourcePackFile);
+                    } catch (IOException e) {
+                        new IllegalArgumentException(resourcePackFile.getAbsolutePath() + " is an invalid zip file.", e).printStackTrace();
+                        ResourcePackInfo info = new ResourcePackInfo(this, null, type, resourcePackName, "Resource Pack is an invalid zip file.");
+                        resourcePackInfo.add(0, info);
+                        result.put(resourcePackSource, info);
+                        continue;
                     }
                 }
-                if (description == null) {
-                    String rawDescription = packJson.get("description").toString();
-                    try {
-                        description = InteractiveChatComponentSerializer.gson().deserialize(rawDescription);
-                    } catch (Exception e) {
-                        description = null;
-                    }
-                    if (description == null) {
-                        description = LegacyComponentSerializer.legacySection().deserialize(rawDescription);
-                    }
-                }
-            }
-            description = description.applyFallbackStyle(NamedTextColor.GRAY);
 
-            JSONObject languageJson = (JSONObject) json.get("language");
-            if (languageJson != null) {
-                for (Object obj : languageJson.keySet()) {
-                    String language = (String) obj;
-                    JSONObject meta = (JSONObject) languageJson.get(language);
-                    String region = (String) meta.get("region");
-                    String name = (String) meta.get("name");
-                    boolean bidirectional = (boolean) meta.get("bidirectional");
-                    languageMeta.put(language, new LanguageMeta(language, region, name, bidirectional));
-                }
-            }
+                ResourcePackFile assetsFolder = resourcePack.getChild("assets");
+                Map<String, TextureAtlases> textureAtlases = loadAtlases(assetsFolder);
 
-            JSONObject overlaysJson = (JSONObject) json.get("overlays");
-            if (overlaysJson != null) {
-                JSONArray entriesArray = (JSONArray) overlaysJson.get("entries");
-                for (Object obj : entriesArray) {
-                    JSONObject entry = (JSONObject) obj;
-
-                    PackFormat overlayFormat;
-                    Object formatsObj = entry.get("formats");
-                    if (formatsObj instanceof Number) {
-                        int supportedFormat = ((Number) formatsObj).intValue();
-                        overlayFormat = PackFormat.version(supportedFormat, supportedFormat);
-                    } else if (formatsObj instanceof JSONArray) {
-                        JSONArray supportedFormats = (JSONArray) formatsObj;
-                        overlayFormat = PackFormat.version(((Number) supportedFormats.get(0)).intValue(), ((Number) supportedFormats.get(1)).intValue());
-                    } else if (formatsObj instanceof JSONObject) {
-                        JSONObject supportedFormats = (JSONObject) formatsObj;
-                        overlayFormat = PackFormat.version(((Number) supportedFormats.get("min_inclusive")).intValue(), ((Number) supportedFormats.get("max_inclusive")).intValue());
+                for (Map.Entry<String, TextureAtlases> entry : textureAtlases.entrySet()) {
+                    String key = entry.getKey();
+                    TextureAtlases atlases = entry.getValue();
+                    TextureAtlases existing = textureAtlasesMap.get(key);
+                    if (existing == null) {
+                        textureAtlasesMap.put(key, atlases);
                     } else {
-                        throw new IllegalArgumentException("Don't know how to read supported_formats " + formatsObj);
+                        textureAtlasesMap.put(key, existing.merge(atlases));
                     }
-
-                    String directory = (String) entry.get("directory");
-                    overlays.add(0, new PackOverlay(overlayFormat, directory));
                 }
-            }
 
-            JSONObject filterJson = (JSONObject) json.get("filter");
-            JSONArray filterBlockArray;
-            if (filterJson != null && (filterBlockArray = (JSONArray) filterJson.get("block")) != null) {
-                resourceFilterBlocks = ResourceFilterBlock.fromJson(filterBlockArray);
-            } else {
-                resourceFilterBlocks = Collections.emptyList();
-            }
-        } catch (Exception e) {
-            new ResourceLoadingException("Invalid pack.mcmeta for " + resourcePackNameStr, e).printStackTrace();
-            ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, "Invalid pack.mcmeta");
-            resourcePackInfo.add(0, info);
-            return info;
-        }
-
-        BufferedImage icon = null;
-        ResourcePackFile packIcon = resourcePack.getChild("pack.png");
-        if (packIcon.exists()) {
-            try (InputStream inputStream = packIcon.getInputStream()) {
-                icon = ImageIO.read(inputStream);
-            } catch (Exception ignore) {
+                resourcePackFilesMap.put(resourcePackSource, resourcePack);
+            } catch (Exception e) {
+                new ResourceLoadingException("Unable to load resource pack from file " + resourcePackFile.getAbsolutePath(), e).printStackTrace();
             }
         }
 
-        ResourcePackFile assetsFolder = resourcePack.getChild("assets");
-        Map<String, TextureAtlases> textureAtlases = loadAtlases(assetsFolder);
+        this.textureAtlases.putAll(textureAtlasesMap);
 
-        for (PackOverlay overlay : overlays) {
-            if (overlay.getFormats().isCompatible(nativeServerPackFormat)) {
+        for (ResourcePackSource resourcePackSource : resourcePackSources) {
+            ResourcePackFile resourcePack = resourcePackFilesMap.get(resourcePackSource);
+            if (resourcePack == null) {
+                progressListener.accept(resourcePackSource, null);
+                continue;
+            }
+            File resourcePackFile = resourcePackSource.getResourcePackFile();
+            ResourcePackType type = resourcePackSource.getType();
+            boolean defaultResource = resourcePackSource.isDefaultResource();
+
+            try {
+                DefaultResourcePackInfo defaultResourcePackInfo = defaultResource ? defaultResourcePackInfoFunction.apply(resourcePackFile, type) : null;
+                String resourcePackNameStr = resourcePackFile.getName();
+                Component resourcePackName = Component.text(resourcePackNameStr);
+
+                ResourcePackFile packMcmeta = resourcePack.getChild("pack.mcmeta");
+                if (!packMcmeta.exists()) {
+                    new ResourceLoadingException(resourcePackNameStr + " does not have a pack.mcmeta").printStackTrace();
+                    ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, "pack.mcmeta not found");
+                    resourcePackInfo.add(0, info);
+                    result.put(resourcePackSource, info);
+                    continue;
+                }
+
+                JSONObject json;
+                try (InputStreamReader reader = new InputStreamReader(new BOMInputStream(packMcmeta.getInputStream()), StandardCharsets.UTF_8)) {
+                    json = (JSONObject) new JSONParser().parse(reader);
+                } catch (Throwable e) {
+                    new ResourceLoadingException("Unable to read pack.mcmeta for " + resourcePackNameStr, e).printStackTrace();
+                    ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, "Unable to read pack.mcmeta");
+                    resourcePackInfo.add(0, info);
+                    result.put(resourcePackSource, info);
+                    continue;
+                }
+
+                PackFormat format;
+                Component description = null;
+                Map<String, LanguageMeta> languageMeta = new HashMap<>();
+                List<PackOverlay> overlays = new ArrayList<>();
+                List<ResourceFilterBlock> resourceFilterBlocks;
                 try {
-                    ResourcePackFile overlayAssetsFolder = resourcePack.getChild(overlay.getDirectory()).getChild("assets");
-                    Map<String, TextureAtlases> overlayTextureAtlases = loadAtlases(overlayAssetsFolder);
-                    for (Map.Entry<String, TextureAtlases> entry : overlayTextureAtlases.entrySet()) {
-                        String namespace = entry.getKey();
-                        TextureAtlases atlases = textureAtlases.get(namespace);
-                        if (atlases == null) {
-                            textureAtlases.put(namespace, entry.getValue());
+                    JSONObject packJson = (JSONObject) json.get("pack");
+                    if (packJson == null && defaultResource) {
+                        resourcePackName = defaultResourcePackInfo.getName();
+                        format = defaultResourcePackInfo.getVersion();
+                        description = defaultResourcePackInfo.getDescription();
+                    } else {
+                        int majorFormat = ((Number) packJson.get("pack_format")).intValue();
+                        if (packJson.containsKey("supported_formats")) {
+                            Object supportedFormatsObj = packJson.get("supported_formats");
+                            if (supportedFormatsObj instanceof Number) {
+                                int supportedFormat = ((Number) supportedFormatsObj).intValue();
+                                format = PackFormat.version(majorFormat, supportedFormat, supportedFormat);
+                            } else if (supportedFormatsObj instanceof JSONArray) {
+                                JSONArray supportedFormats = (JSONArray) supportedFormatsObj;
+                                format = PackFormat.version(majorFormat, ((Number) supportedFormats.get(0)).intValue(), ((Number) supportedFormats.get(1)).intValue());
+                            } else if (supportedFormatsObj instanceof JSONObject) {
+                                JSONObject supportedFormats = (JSONObject) supportedFormatsObj;
+                                format = PackFormat.version(majorFormat, ((Number) supportedFormats.get("min_inclusive")).intValue(), ((Number) supportedFormats.get("max_inclusive")).intValue());
+                            } else {
+                                throw new IllegalArgumentException("Don't know how to read supported_formats " + supportedFormatsObj);
+                            }
                         } else {
-                            textureAtlases.put(namespace, atlases.merge(entry.getValue()));
+                            format = PackFormat.version(majorFormat);
+                        }
+                        Object descriptionObj = packJson.get("description");
+                        if (descriptionObj instanceof JSONObject) {
+                            String descriptionJson = new GsonBuilder().create().toJson(descriptionObj);
+                            try {
+                                description = InteractiveChatComponentSerializer.gson().deserialize(descriptionJson);
+                            } catch (Exception e) {
+                                description = null;
+                            }
+                        }
+                        if (description == null) {
+                            String rawDescription = packJson.get("description").toString();
+                            try {
+                                description = InteractiveChatComponentSerializer.gson().deserialize(rawDescription);
+                            } catch (Exception e) {
+                                description = null;
+                            }
+                            if (description == null) {
+                                description = LegacyComponentSerializer.legacySection().deserialize(rawDescription);
+                            }
                         }
                     }
-                } catch (Throwable e) {
-                    new ResourceLoadingException("Unable to load overlay " + overlay.getDirectory() + " for pack " + resourcePackNameStr, e).printStackTrace();
-                }
-            }
-        }
+                    description = description.applyFallbackStyle(NamedTextColor.GRAY);
 
-        ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, true, null, format, description, languageMeta, icon, resourceFilterBlocks, textureAtlases, overlays);
-        resourcePackInfo.add(0, info);
-
-        try {
-            filterResources(resourceFilterBlocks);
-            loadAssets(assetsFolder, languageMeta, textureAtlases);
-            for (PackOverlay overlay : overlays) {
-                try {
-                    if (overlay.getFormats().isCompatible(nativeServerPackFormat)) {
-                        loadAssets(resourcePack.getChild(overlay.getDirectory()).getChild("assets"), languageMeta, textureAtlases);
+                    JSONObject languageJson = (JSONObject) json.get("language");
+                    if (languageJson != null) {
+                        for (Object obj : languageJson.keySet()) {
+                            String language = (String) obj;
+                            JSONObject meta = (JSONObject) languageJson.get(language);
+                            String region = (String) meta.get("region");
+                            String name = (String) meta.get("name");
+                            boolean bidirectional = (boolean) meta.get("bidirectional");
+                            languageMeta.put(language, new LanguageMeta(language, region, name, bidirectional));
+                        }
                     }
-                } catch (Throwable e) {
-                    new ResourceLoadingException("Unable to load overlay " + overlay.getDirectory() + " for pack " + resourcePackNameStr, e).printStackTrace();
-                }
-            }
-        } catch (Exception e) {
-            new ResourceLoadingException("Unable to load assets for " + resourcePackNameStr, e).printStackTrace();
-            resourcePackInfo.remove(0);
-            info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, false, "Unable to load assets", format, description, languageMeta, icon, resourceFilterBlocks, textureAtlases, overlays);
-            resourcePackInfo.add(0, info);
-            return info;
-        }
 
-        return info;
+                    JSONObject overlaysJson = (JSONObject) json.get("overlays");
+                    if (overlaysJson != null) {
+                        JSONArray entriesArray = (JSONArray) overlaysJson.get("entries");
+                        for (Object obj : entriesArray) {
+                            JSONObject entry = (JSONObject) obj;
+
+                            PackFormat overlayFormat;
+                            Object formatsObj = entry.get("formats");
+                            if (formatsObj instanceof Number) {
+                                int supportedFormat = ((Number) formatsObj).intValue();
+                                overlayFormat = PackFormat.version(supportedFormat, supportedFormat);
+                            } else if (formatsObj instanceof JSONArray) {
+                                JSONArray supportedFormats = (JSONArray) formatsObj;
+                                overlayFormat = PackFormat.version(((Number) supportedFormats.get(0)).intValue(), ((Number) supportedFormats.get(1)).intValue());
+                            } else if (formatsObj instanceof JSONObject) {
+                                JSONObject supportedFormats = (JSONObject) formatsObj;
+                                overlayFormat = PackFormat.version(((Number) supportedFormats.get("min_inclusive")).intValue(), ((Number) supportedFormats.get("max_inclusive")).intValue());
+                            } else {
+                                throw new IllegalArgumentException("Don't know how to read supported_formats " + formatsObj);
+                            }
+
+                            String directory = (String) entry.get("directory");
+                            overlays.add(0, new PackOverlay(overlayFormat, directory));
+                        }
+                    }
+
+                    JSONObject filterJson = (JSONObject) json.get("filter");
+                    JSONArray filterBlockArray;
+                    if (filterJson != null && (filterBlockArray = (JSONArray) filterJson.get("block")) != null) {
+                        resourceFilterBlocks = ResourceFilterBlock.fromJson(filterBlockArray);
+                    } else {
+                        resourceFilterBlocks = Collections.emptyList();
+                    }
+                } catch (Exception e) {
+                    new ResourceLoadingException("Invalid pack.mcmeta for " + resourcePackNameStr, e).printStackTrace();
+                    ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, "Invalid pack.mcmeta");
+                    resourcePackInfo.add(0, info);
+                    result.put(resourcePackSource, info);
+                    continue;
+                }
+
+                BufferedImage icon = null;
+                ResourcePackFile packIcon = resourcePack.getChild("pack.png");
+                if (packIcon.exists()) {
+                    try (InputStream inputStream = packIcon.getInputStream()) {
+                        icon = ImageIO.read(inputStream);
+                    } catch (Exception ignore) {
+                    }
+                }
+
+                ResourcePackFile assetsFolder = resourcePack.getChild("assets");
+
+                for (PackOverlay overlay : overlays) {
+                    if (overlay.getFormats().isCompatible(nativeServerPackFormat)) {
+                        try {
+                            ResourcePackFile overlayAssetsFolder = resourcePack.getChild(overlay.getDirectory()).getChild("assets");
+                            Map<String, TextureAtlases> overlayTextureAtlases = loadAtlases(overlayAssetsFolder);
+                            for (Map.Entry<String, TextureAtlases> entry : overlayTextureAtlases.entrySet()) {
+                                String namespace = entry.getKey();
+                                TextureAtlases atlases = textureAtlases.get(namespace);
+                                if (atlases == null) {
+                                    textureAtlases.put(namespace, entry.getValue());
+                                } else {
+                                    textureAtlases.put(namespace, atlases.merge(entry.getValue()));
+                                }
+                            }
+                        } catch (Throwable e) {
+                            new ResourceLoadingException("Unable to load overlay " + overlay.getDirectory() + " for pack " + resourcePackNameStr, e).printStackTrace();
+                        }
+                    }
+                }
+
+                ResourcePackInfo info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, true, null, format, description, languageMeta, icon, resourceFilterBlocks, overlays);
+                resourcePackInfo.add(0, info);
+
+                try {
+                    filterResources(resourceFilterBlocks);
+                    loadAssets(assetsFolder, languageMeta, textureAtlases);
+                    for (PackOverlay overlay : overlays) {
+                        try {
+                            if (overlay.getFormats().isCompatible(nativeServerPackFormat)) {
+                                loadAssets(resourcePack.getChild(overlay.getDirectory()).getChild("assets"), languageMeta, textureAtlases);
+                            }
+                        } catch (Throwable e) {
+                            new ResourceLoadingException("Unable to load overlay " + overlay.getDirectory() + " for pack " + resourcePackNameStr, e).printStackTrace();
+                        }
+                    }
+                } catch (Exception e) {
+                    new ResourceLoadingException("Unable to load assets for " + resourcePackNameStr, e).printStackTrace();
+                    resourcePackInfo.remove(0);
+                    info = new ResourcePackInfo(this, resourcePack, type, resourcePackName, false, "Unable to load assets", format, description, languageMeta, icon, resourceFilterBlocks, overlays);
+                    resourcePackInfo.add(0, info);
+                    result.put(resourcePackSource, info);
+                    continue;
+                }
+
+                result.put(resourcePackSource, info);
+                progressListener.accept(resourcePackSource, info);
+            } catch (Exception e) {
+                new ResourceLoadingException("Unable to load resource pack from file " + resourcePackFile.getAbsolutePath(), e).printStackTrace();
+                progressListener.accept(resourcePackSource, null);
+            }
+        }
+        resourcesLoaded.set(true);
+        return result;
     }
 
     private void filterResources(List<ResourceFilterBlock> resourceFilterBlocks) {
@@ -572,6 +637,14 @@ public class ResourceManager implements AutoCloseable {
             return file;
         }
         return null;
+    }
+
+    public boolean hasResourcesLoaded() {
+        return resourcesLoaded.get();
+    }
+
+    public Map<String, TextureAtlases> getTextureAtlases() {
+        return Collections.unmodifiableMap(textureAtlases);
     }
 
     public boolean isValid() {

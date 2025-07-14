@@ -39,6 +39,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.PackFormat;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceDownloadManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
+import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackSource;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackType;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageManager;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ResourcePackInfoUtils;
@@ -410,22 +411,18 @@ public class MinecraftFontRenderer extends JFrame {
                         PackFormat.version(packFormat),
                         ResourceManager.Flag.build(false, packFormat < 9, packFormat < 46)
                 );
-                resourceManager.loadResources(new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN, true);
-                resourceBar.setValue(valuePerPack);
+                List<ResourcePackSource> sources = new ArrayList<>();
+                sources.add(ResourcePackSource.ofDefault("Default", new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN));
                 for (String resourceName : resourceOrder) {
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    System.setErr(new PrintStream(baos));
-                    try {
-                        File resourcePackFile = new File("InteractiveChatDiscordSrvAddon/resourcepacks/" + resourceName);
-                        ResourcePackInfo info = resourceManager.loadResources(resourcePackFile, ResourcePackType.LOCAL);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    String error = baos.toString();
-                    if (!error.isEmpty()) {
-                        ForkJoinPool.commonPool().execute(() -> JOptionPane.showMessageDialog(null, GUIMain.createLabel("There are errors while loading \"" + resourceName + "\":\n" + error, 13, Color.RED), title, JOptionPane.ERROR_MESSAGE));
-                    }
-                    resourceBar.setValue(resourceBar.getValue() + valuePerPack);
+                    File resourcePackFile = new File("InteractiveChatDiscordSrvAddon/resourcepacks/" + resourceName);
+                    sources.add(ResourcePackSource.ofCustom(resourceName, new File("InteractiveChatDiscordSrvAddon/resourcepacks/" + resourceName), ResourcePackType.LOCAL));
+                }
+                resourceBar.setValue(valuePerPack);
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                resourceManager.loadResources(sources, (s, i) -> resourceBar.setValue(resourceBar.getValue() + valuePerPack));
+                String error = baos.toString();
+                if (!error.isEmpty()) {
+                    ForkJoinPool.commonPool().execute(() -> JOptionPane.showMessageDialog(null, GUIMain.createLabel("There are errors while loading resources:\n" + error, 13, Color.RED), title, JOptionPane.ERROR_MESSAGE));
                 }
             } catch (Throwable e) {
                 StringWriter sw = new StringWriter();
