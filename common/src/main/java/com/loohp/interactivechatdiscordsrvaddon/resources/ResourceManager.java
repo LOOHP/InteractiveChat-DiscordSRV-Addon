@@ -483,7 +483,7 @@ public class ResourceManager implements AutoCloseable {
                     if (ResourceRegistry.RESOURCE_PACK_VERSION <= 9) {
                         ((AbstractManager) textureManager).loadDirectory(namespace, textures);
                     } else {
-                        ((AbstractManager) textureManager).loadDirectory(namespace, textures, textureAtlases.getOrDefault(namespace, TextureAtlases.EMPTY_ATLAS));
+                        ((AbstractManager) textureManager).loadDirectory(namespace, textures, textureAtlases);
                     }
                 }
             }

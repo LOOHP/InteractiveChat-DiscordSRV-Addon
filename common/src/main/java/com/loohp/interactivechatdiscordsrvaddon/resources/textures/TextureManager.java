@@ -20,6 +20,7 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.resources.textures;
 
+import com.google.common.collect.Collections2;
 import com.loohp.interactivechat.libs.org.apache.commons.io.input.BOMInputStream;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
@@ -114,9 +115,9 @@ public class TextureManager extends AbstractManager implements ITextureManager {
         if (!root.exists() || !root.isDirectory()) {
             throw new IllegalArgumentException(root.getAbsolutePath() + " is not a directory.");
         }
-        TextureAtlases textureAtlases = null;
-        if (meta.length > 0 && meta[0] instanceof TextureAtlases) {
-            textureAtlases = (TextureAtlases) meta[0];
+        Map<String, TextureAtlases> textureAtlases = null;
+        if (meta.length > 0 && meta[0] instanceof Map) {
+            textureAtlases = (Map<String, TextureAtlases>) meta[0];
         }
         JSONParser parser = new JSONParser();
         Map<String, TextureResource> textures = new HashMap<>();
@@ -171,22 +172,30 @@ public class TextureManager extends AbstractManager implements ITextureManager {
         }
         this.textures.putAll(textures);
         if (textureAtlases != null) {
-            this.textureAtlases.put(namespace, textureAtlases);
+            this.textureAtlases.putAll(textureAtlases);
         }
     }
 
-    private Iterable<List<TextureAtlases.TextureAtlasSource>> getFullTextureAtlasSource(TextureAtlases textureAtlases) {
-        Stream.Builder<List<TextureAtlases.TextureAtlasSource>> builder = Stream.builder();
-        textureAtlases.getTextureAtlases().values().forEach(e -> builder.add(e));
+    private Iterable<Collection<TextureAtlases.TextureAtlasSource>> getFullTextureAtlasSource(Map<String, TextureAtlases> textureAtlases, String namespace) {
+        Stream.Builder<Collection<TextureAtlases.TextureAtlasSource>> builder = Stream.builder();
+        for (Map.Entry<String, TextureAtlases> entry : textureAtlases.entrySet()) {
+            for (Map.Entry<TextureAtlases.TextureAtlasType, List<TextureAtlases.TextureAtlasSource>> textureEntry : entry.getValue().getTextureAtlases().entrySet()) {
+                if (entry.getKey().equals(namespace)) {
+                    builder.add(textureEntry.getValue());
+                } else {
+                    builder.add(Collections2.filter(textureEntry.getValue(), a -> a.getType().appliesAcrossNamespaces()));
+                }
+            }
+        }
         builder.add(TextureAtlases.DEFAULT_BLOCK_ATLASES);
         builder.add(TextureAtlases.DEFAULT_BLOCK_ATLASES);
-        Iterator<List<TextureAtlases.TextureAtlasSource>> itr = builder.build().iterator();
+        Iterator<Collection<TextureAtlases.TextureAtlasSource>> itr = builder.build().iterator();
         return () -> itr;
     }
 
-    protected List<TextureAtlases.TextureAtlasSource> checkAtlasInclusion(TextureAtlases textureAtlases, String namespace, String relativePath) {
+    protected List<TextureAtlases.TextureAtlasSource> checkAtlasInclusion(Map<String, TextureAtlases> textureAtlases, String namespace, String relativePath) {
         List<TextureAtlases.TextureAtlasSource> results = new ArrayList<>();
-        for (List<TextureAtlases.TextureAtlasSource> textureAtlasesLists : getFullTextureAtlasSource(textureAtlases)) {
+        for (Collection<TextureAtlases.TextureAtlasSource> textureAtlasesLists : getFullTextureAtlasSource(textureAtlases, namespace)) {
             for (TextureAtlases.TextureAtlasSource source : textureAtlasesLists) {
                 if (!source.getType().equals(TextureAtlases.TextureAtlasSourceType.FILTER) && source.isIncluded(namespace, relativePath)) {
                     boolean filtered = false;

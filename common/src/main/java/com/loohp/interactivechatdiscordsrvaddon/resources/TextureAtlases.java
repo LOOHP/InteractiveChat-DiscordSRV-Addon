@@ -225,11 +225,11 @@ public class TextureAtlases {
 
     public static final class TextureAtlasSourceType<T extends TextureAtlasSource> {
 
-        public static final TextureAtlasSourceType<TextureAtlasDirectorySource> DIRECTORY = new TextureAtlasSourceType<>("directory", TextureAtlasDirectorySource.class);
-        public static final TextureAtlasSourceType<TextureAtlasSingleSource> SINGLE = new TextureAtlasSourceType<>("single", TextureAtlasSingleSource.class);
-        public static final TextureAtlasSourceType<TextureAtlasFilterSource> FILTER = new TextureAtlasSourceType<>("filter", TextureAtlasFilterSource.class);
-        public static final TextureAtlasSourceType<TextureAtlasUnstitchSource> UNSTITCH = new TextureAtlasSourceType<>("unstitch", TextureAtlasUnstitchSource.class);
-        public static final TextureAtlasSourceType<TextureAtlasPalettedPermutationsSource> PALETTED_PERMUTATIONS = new TextureAtlasSourceType<>("paletted_permutations", TextureAtlasPalettedPermutationsSource.class);
+        public static final TextureAtlasSourceType<TextureAtlasDirectorySource> DIRECTORY = new TextureAtlasSourceType<>("directory", true, TextureAtlasDirectorySource.class);
+        public static final TextureAtlasSourceType<TextureAtlasSingleSource> SINGLE = new TextureAtlasSourceType<>("single", false, TextureAtlasSingleSource.class);
+        public static final TextureAtlasSourceType<TextureAtlasFilterSource> FILTER = new TextureAtlasSourceType<>("filter", false, TextureAtlasFilterSource.class);
+        public static final TextureAtlasSourceType<TextureAtlasUnstitchSource> UNSTITCH = new TextureAtlasSourceType<>("unstitch", false, TextureAtlasUnstitchSource.class);
+        public static final TextureAtlasSourceType<TextureAtlasPalettedPermutationsSource> PALETTED_PERMUTATIONS = new TextureAtlasSourceType<>("paletted_permutations", false, TextureAtlasPalettedPermutationsSource.class);
 
         private static final Map<Key, TextureAtlasSourceType<?>> TYPES;
 
@@ -248,15 +248,17 @@ public class TextureAtlases {
         }
 
         private final Key key;
+        private final boolean appliesAcrossNamespaces;
         private final Class<T> typeClass;
 
-        private TextureAtlasSourceType(Key key, Class<T> typeClass) {
+        private TextureAtlasSourceType(Key key, boolean appliesAcrossNamespaces, Class<T> typeClass) {
             this.key = key;
+            this.appliesAcrossNamespaces = appliesAcrossNamespaces;
             this.typeClass = typeClass;
         }
 
-        private TextureAtlasSourceType(String key, Class<T> typeClass) {
-            this(KeyUtils.toKey(key), typeClass);
+        private TextureAtlasSourceType(String key, boolean appliesAcrossNamespaces, Class<T> typeClass) {
+            this(KeyUtils.toKey(key), appliesAcrossNamespaces, typeClass);
         }
 
         public Key getKey() {
@@ -265,6 +267,10 @@ public class TextureAtlases {
 
         public String name() {
             return key.asString();
+        }
+
+        public boolean appliesAcrossNamespaces() {
+            return appliesAcrossNamespaces;
         }
 
         @Override
@@ -281,15 +287,14 @@ public class TextureAtlases {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             TextureAtlasSourceType<?> that = (TextureAtlasSourceType<?>) o;
-            return key.equals(that.key) && typeClass.equals(that.typeClass);
+            return appliesAcrossNamespaces == that.appliesAcrossNamespaces && Objects.equals(key, that.key) && Objects.equals(typeClass, that.typeClass);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(key, typeClass);
+            return Objects.hash(key, typeClass, appliesAcrossNamespaces);
         }
     }
 
