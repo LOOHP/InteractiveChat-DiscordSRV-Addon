@@ -27,6 +27,7 @@ import com.loohp.interactivechat.utils.FileUtils;
 import com.loohp.interactivechat.utils.HTTPRequestUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TriConsumer;
+import net.md_5.bungee.api.ChatColor;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
