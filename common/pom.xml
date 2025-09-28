@@ -297,12 +297,22 @@
             <url>https://repo.codemc.org/repository/maven-snapshots/</url>
         </repository>
         <repository>
+            <id>matteodev</id>
+            <url>https://maven.devs.beer/</url>
+        </repository>
+        <repository>
             <id>loohp-repo</id>
             <url>https://repo.loohpjames.com/repository</url>
         </repository>
     </repositories>
 
     <dependencies>
+        <dependency>
+            <groupId>org.nothings.stb</groupId>
+            <artifactId>StbImageJava</artifactId>
+            <version>2.23.0</version>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>org.mapdb</groupId>
             <artifactId>mapdb</artifactId>
@@ -376,9 +386,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.LoneDev6</groupId>
-            <artifactId>API-ItemsAdder</artifactId>
-            <version>3.4.1d</version>
+            <groupId>dev.lone</groupId>
+            <artifactId>api-itemsadder</artifactId>
+            <version>4.0.10</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

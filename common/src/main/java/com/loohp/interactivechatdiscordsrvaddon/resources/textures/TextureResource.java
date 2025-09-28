@@ -24,7 +24,6 @@ import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.utils.AnimatedTextureUtils;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
@@ -88,7 +87,7 @@ public class TextureResource {
             return image;
         }
         try (InputStream inputStream = file.getInputStream()) {
-            image = ImageIO.read(inputStream);
+            image = ImageUtils.fromInputStreamStb(inputStream);
             if (image == null) {
                 throw new IOException("Image is null!");
             }

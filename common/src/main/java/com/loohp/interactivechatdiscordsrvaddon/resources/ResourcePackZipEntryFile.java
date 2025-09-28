@@ -191,8 +191,7 @@ public class ResourcePackZipEntryFile implements ResourcePackFile {
     @Override
     public Collection<ResourcePackFile> listFilesRecursively(String[] extensions) {
         List<ResourcePackFile> list = new ArrayList<>();
-        Enumeration<? extends ZipEntry> itr = zipRoot.entries();
-        while (itr.hasMoreElements()) {
+        for (Enumeration<? extends ZipEntry> itr = zipRoot.entries(); itr.hasMoreElements();) {
             ZipEntry entry = itr.nextElement();
             if (!entry.isDirectory()) {
                 String entryPath = entry.getName();

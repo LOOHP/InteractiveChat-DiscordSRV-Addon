@@ -24,6 +24,7 @@ import com.loohp.blockmodelrenderer.blending.BlendingModes;
 import com.loohp.blockmodelrenderer.utils.MathUtils;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import com.loohp.interactivechat.libs.org.apache.commons.compress.utils.IOUtils;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ComponentFlattening;
 import com.loohp.interactivechat.utils.ComponentModernizing;
@@ -36,6 +37,8 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageMeta
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.I18nUtils;
 import it.unimi.dsi.fastutil.chars.CharObjectPair;
+import org.nothings.stb.image.ColorComponents;
+import org.nothings.stb.image.ImageResult;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageOutputStream;
@@ -75,8 +78,33 @@ public class ImageUtils {
         return ImageIO.read(inputStream);
     }
 
+    public static BufferedImage fromInputStreamStb(InputStream inputStream) throws IOException {
+        return fromArrayStb(IOUtils.toByteArray(inputStream));
+    }
+
     public static BufferedImage fromArray(byte[] data) throws IOException {
         return fromInputStream(new ByteArrayInputStream(data));
+    }
+
+    public static BufferedImage fromArrayStb(byte[] data) throws IOException {
+        try {
+            ImageResult image = ImageResult.FromData(data, ColorComponents.RedGreenBlueAlpha, true);
+            int w = image.getWidth();
+            int h = image.getHeight();
+            BufferedImage bufferedImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+            byte[] colors = image.getData();
+            for (int i = 0; i < w * h; i++) {
+                int index = i * 4;
+                int r = colors[index];
+                int g = colors[index + 1];
+                int b = colors[index + 2];
+                int a = colors[index + 3];
+                bufferedImage.setRGB(i % w, i / w, getIntFromColor(r, g, b, a));
+            }
+            return bufferedImage;
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
     }
 
     public static ByteArrayOutputStream toGifOutputStream(List<BufferedImage> images, int delayMs) throws IOException {
