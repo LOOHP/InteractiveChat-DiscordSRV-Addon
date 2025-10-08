@@ -96,6 +96,8 @@ public class ResourceRegistry {
 
     public static final String CHEST_TEXTURE_PLACEHOLDER = ICD_PREFIX + "chest_texture";
 
+    public static final String COPPER_GOLEM_TEXTURE_PLACEHOLDER = ICD_PREFIX + "copper_golem";
+
     public static final String LEGACY_SINGLE_PAINTING_LOCATION = "minecraft:painting/paintings_kristoffer_zetterstrand";
 
     public static final String LEGACY_BED_TEXTURE_PLACEHOLDER = ICD_PREFIX + "legacy_bed";

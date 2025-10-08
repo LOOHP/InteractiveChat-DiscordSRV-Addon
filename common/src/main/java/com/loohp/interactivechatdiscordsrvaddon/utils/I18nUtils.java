@@ -26,7 +26,7 @@ import com.ibm.icu.text.BidiRun;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CharacterData;
-import it.unimi.dsi.fastutil.chars.CharObjectPair;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ComponentCharacter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,18 +43,18 @@ public class I18nUtils {
         return str;
     }
 
-    public static List<CharObjectPair<CharacterData>> bidirectionalReorder(Component component, boolean rightToLeft) {
-        ValuePairs<String, List<CharObjectPair<CharacterData>>> pair = CharacterData.fromComponent(component, str -> shaping(str));
-        List<CharObjectPair<CharacterData>> data = pair.getSecond();
+    public static List<ValuePairs<ComponentCharacter, CharacterData>> bidirectionalReorder(Component component, boolean rightToLeft) {
+        ValuePairs<String, List<ValuePairs<ComponentCharacter, CharacterData>>> pair = ComponentUtils.fromComponent(component, str -> shaping(str));
+        List<ValuePairs<ComponentCharacter, CharacterData>> data = pair.getSecond();
         Bidi bidi = new Bidi(pair.getFirst(), rightToLeft ? 127 : 126);
         bidi.setReorderingMode(0);
-        List<CharObjectPair<CharacterData>> result = new ArrayList<>(data.size());
+        List<ValuePairs<ComponentCharacter, CharacterData>> result = new ArrayList<>(data.size());
         int totalRuns = bidi.countRuns();
         for (int i = 0; i < totalRuns; i++) {
             BidiRun bidiRun = bidi.getVisualRun(i);
             int start = bidiRun.getStart();
             int limit = bidiRun.getLimit();
-            List<CharObjectPair<CharacterData>> subResult = new ArrayList<>(bidiRun.getLength());
+            List<ValuePairs<ComponentCharacter, CharacterData>> subResult = new ArrayList<>(bidiRun.getLength());
             for (int u = start; u < limit; u++) {
                 if (u < 0 || u >= data.size()) {
                     continue;
@@ -62,7 +62,7 @@ public class I18nUtils {
                 subResult.add(data.get(u));
             }
             if (bidiRun.isOddRun()) {
-                ListIterator<CharObjectPair<CharacterData>> itr = subResult.listIterator(subResult.size());
+                ListIterator<ValuePairs<ComponentCharacter, CharacterData>> itr = subResult.listIterator(subResult.size());
                 while (itr.hasPrevious()) {
                     result.add(itr.previous());
                 }

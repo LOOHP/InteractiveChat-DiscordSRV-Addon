@@ -24,6 +24,7 @@ import com.google.common.collect.Multimap;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.object.PlayerHeadObjectContents;
 import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
 import com.loohp.interactivechat.objectholders.ICMaterial;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
@@ -38,6 +39,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.ProfileProperty;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import com.mojang.authlib.properties.PropertyMap;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -168,11 +170,15 @@ public abstract class NMSAddonWrapper {
 
     public abstract GameProfile getPlayerHeadProfile(ItemStack playerHead);
 
+    public abstract GameProfile getPlayerHeadProfile(PlayerHeadObjectContents contents);
+
     public abstract ItemFlag getHideAdditionalItemFlag();
 
     public abstract boolean shouldHideTooltip(ItemStack itemStack);
 
     public abstract Key getAttributeModifierKey(Object attributeModifier);
+
+    public abstract PropertyMap getGameProfilePropertyMap(GameProfile gameProfile);
 
     public abstract ProfileProperty toProfileProperty(Property property);
 

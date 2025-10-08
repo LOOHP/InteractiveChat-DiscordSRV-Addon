@@ -28,6 +28,7 @@ import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechat.libs.org.json.simple.parser.ParseException;
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ChargeType;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.CopperGolemStatuePose;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay;
 import com.loohp.interactivechatdiscordsrvaddon.utils.KeyUtils;
@@ -280,6 +281,10 @@ public abstract class ItemModelDefinition {
                 return new ItemModelDefinitionSpecial(handAnimationOnSwapString, oversizedInGui, base, new HangingSignSpecialModel(woodType, texture));
             } else if (specialModelType.equals(SpecialModelType.TRIDENT)) {
                 return new ItemModelDefinitionSpecial(handAnimationOnSwapString, oversizedInGui, base, new TridentSpecialModel());
+            } else if (specialModelType.equals(SpecialModelType.COPPER_GOLEM_STATUE)) {
+                CopperGolemStatuePose pose = CopperGolemStatuePose.fromKey((String) modelJson.get("pose"));
+                String texture = ensureNamespace((String) modelJson.get("texture"));
+                return new ItemModelDefinitionSpecial(handAnimationOnSwapString, oversizedInGui, base, new CopperGolemStatueSpecialModel(pose, texture));
             } else {
                 throw new IllegalArgumentException("Unsupported special model type: " + modelTypeKey);
             }
@@ -1450,34 +1455,26 @@ public abstract class ItemModelDefinition {
 
     public static class SpecialModelType<T extends SpecialModel> {
 
-        public static final SpecialModelType<BannerSpecialModel> BANNER = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":banner", BannerSpecialModel.class);
-        public static final SpecialModelType<BedSpecialModel> BED = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":bed", BedSpecialModel.class);
-        public static final SpecialModelType<ChestSpecialModel> CHEST = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":chest", ChestSpecialModel.class);
-        public static final SpecialModelType<ConduitSpecialModel> CONDUIT = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":conduit", ConduitSpecialModel.class);
-        public static final SpecialModelType<DecoratedPotSpecialModel> DECORATED_POT = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":decorated_pot", DecoratedPotSpecialModel.class);
-        public static final SpecialModelType<HeadSpecialModel> HEAD = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":head", HeadSpecialModel.class);
-        public static final SpecialModelType<PlayerHeadSpecialModel> PLAYER_HEAD = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":player_head", PlayerHeadSpecialModel.class);
-        public static final SpecialModelType<ShieldSpecialModel> SHIELD = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":shield", ShieldSpecialModel.class);
-        public static final SpecialModelType<ShulkerBoxSpecialModel> SHULKER_BOX = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":shulker_box", ShulkerBoxSpecialModel.class);
-        public static final SpecialModelType<StandingSignSpecialModel> STANDING_SIGN = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":standing_sign", StandingSignSpecialModel.class);
-        public static final SpecialModelType<HangingSignSpecialModel> HANGING_SIGN = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":hanging_sign", HangingSignSpecialModel.class);
-        public static final SpecialModelType<TridentSpecialModel> TRIDENT = new SpecialModelType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":trident", TridentSpecialModel.class);
-
         private static final Map<String, SpecialModelType<?>> TYPES_MAP = new HashMap<>();
 
-        static {
-            TYPES_MAP.put(BANNER.getNamespacedKey(), BANNER);
-            TYPES_MAP.put(BED.getNamespacedKey(), BED);
-            TYPES_MAP.put(CHEST.getNamespacedKey(), CHEST);
-            TYPES_MAP.put(CONDUIT.getNamespacedKey(), CONDUIT);
-            TYPES_MAP.put(DECORATED_POT.getNamespacedKey(), DECORATED_POT);
-            TYPES_MAP.put(HEAD.getNamespacedKey(), HEAD);
-            TYPES_MAP.put(PLAYER_HEAD.getNamespacedKey(), PLAYER_HEAD);
-            TYPES_MAP.put(SHIELD.getNamespacedKey(), SHIELD);
-            TYPES_MAP.put(SHULKER_BOX.getNamespacedKey(), SHULKER_BOX);
-            TYPES_MAP.put(STANDING_SIGN.getNamespacedKey(), STANDING_SIGN);
-            TYPES_MAP.put(HANGING_SIGN.getNamespacedKey(), HANGING_SIGN);
-            TYPES_MAP.put(TRIDENT.getNamespacedKey(), TRIDENT);
+        public static final SpecialModelType<BannerSpecialModel> BANNER = register(ResourceRegistry.DEFAULT_NAMESPACE + ":banner", BannerSpecialModel.class);
+        public static final SpecialModelType<BedSpecialModel> BED = register(ResourceRegistry.DEFAULT_NAMESPACE + ":bed", BedSpecialModel.class);
+        public static final SpecialModelType<ChestSpecialModel> CHEST = register(ResourceRegistry.DEFAULT_NAMESPACE + ":chest", ChestSpecialModel.class);
+        public static final SpecialModelType<ConduitSpecialModel> CONDUIT = register(ResourceRegistry.DEFAULT_NAMESPACE + ":conduit", ConduitSpecialModel.class);
+        public static final SpecialModelType<DecoratedPotSpecialModel> DECORATED_POT = register(ResourceRegistry.DEFAULT_NAMESPACE + ":decorated_pot", DecoratedPotSpecialModel.class);
+        public static final SpecialModelType<HeadSpecialModel> HEAD = register(ResourceRegistry.DEFAULT_NAMESPACE + ":head", HeadSpecialModel.class);
+        public static final SpecialModelType<PlayerHeadSpecialModel> PLAYER_HEAD = register(ResourceRegistry.DEFAULT_NAMESPACE + ":player_head", PlayerHeadSpecialModel.class);
+        public static final SpecialModelType<ShieldSpecialModel> SHIELD = register(ResourceRegistry.DEFAULT_NAMESPACE + ":shield", ShieldSpecialModel.class);
+        public static final SpecialModelType<ShulkerBoxSpecialModel> SHULKER_BOX = register(ResourceRegistry.DEFAULT_NAMESPACE + ":shulker_box", ShulkerBoxSpecialModel.class);
+        public static final SpecialModelType<StandingSignSpecialModel> STANDING_SIGN = register(ResourceRegistry.DEFAULT_NAMESPACE + ":standing_sign", StandingSignSpecialModel.class);
+        public static final SpecialModelType<HangingSignSpecialModel> HANGING_SIGN = register(ResourceRegistry.DEFAULT_NAMESPACE + ":hanging_sign", HangingSignSpecialModel.class);
+        public static final SpecialModelType<TridentSpecialModel> TRIDENT = register(ResourceRegistry.DEFAULT_NAMESPACE + ":trident", TridentSpecialModel.class);
+        public static final SpecialModelType<CopperGolemStatueSpecialModel> COPPER_GOLEM_STATUE = register(ResourceRegistry.DEFAULT_NAMESPACE + ":copper_golem_statue", CopperGolemStatueSpecialModel.class);
+
+        private static <T extends SpecialModel> SpecialModelType<T> register(String namespacedKey, Class<T> typeClass) {
+            SpecialModelType<T> type = new SpecialModelType<>(namespacedKey, typeClass);
+            TYPES_MAP.put(type.getNamespacedKey(), type);
+            return type;
         }
 
         private final String namespacedKey;
@@ -1676,6 +1673,25 @@ public abstract class ItemModelDefinition {
     public static class TridentSpecialModel extends SpecialModel {
         public TridentSpecialModel() {
             super(SpecialModelType.TRIDENT);
+        }
+    }
+
+    public static class CopperGolemStatueSpecialModel extends SpecialModel {
+        private final CopperGolemStatuePose pose;
+        private final String texture;
+
+        public CopperGolemStatueSpecialModel(CopperGolemStatuePose pose, String texture) {
+            super(SpecialModelType.COPPER_GOLEM_STATUE);
+            this.pose = pose;
+            this.texture = texture;
+        }
+
+        public CopperGolemStatuePose getPose() {
+            return pose;
+        }
+
+        public String getTexture() {
+            return texture;
         }
     }
 }

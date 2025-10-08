@@ -981,6 +981,16 @@ public class ItemRenderUtils {
                 modelKey = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + "texture_chest";
             } else if (specialModelType.equals(ItemModelDefinition.SpecialModelType.CONDUIT)) {
                 modelKey = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + itemStack.getType().getKey().getKey();
+            } else if (specialModelType.equals(ItemModelDefinition.SpecialModelType.COPPER_GOLEM_STATUE)) {
+                ItemModelDefinition.CopperGolemStatueSpecialModel copperGolemStatueSpecialModel = (ItemModelDefinition.CopperGolemStatueSpecialModel) special.getModel();
+                Key key = KeyUtils.toKey(copperGolemStatueSpecialModel.getTexture());
+                String value = key.value();
+                if (value.startsWith("textures/")) {
+                    value = value.substring("textures/".length());
+                }
+                TextureResource copperGolemTexture = manager.getTextureManager().getTexture(key.namespace() + ":" + value);
+                providedTextures.put(ResourceRegistry.COPPER_GOLEM_TEXTURE_PLACEHOLDER, copperGolemTexture);
+                modelKey = ResourceRegistry.BUILTIN_ENTITY_MODEL_LOCATION + "copper_golem_" + copperGolemStatueSpecialModel.getPose().getKey();
             } else if (specialModelType.equals(ItemModelDefinition.SpecialModelType.DECORATED_POT)) {
                 BlockStateMeta meta = (BlockStateMeta) itemStack.getItemMeta();
                 BlockState state = meta.getBlockState();

@@ -26,6 +26,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.object.PlayerHeadObjectContents;
 import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
 import com.loohp.interactivechat.libs.org.apache.commons.text.WordUtils;
 import com.loohp.interactivechat.nms.NMS;
@@ -44,6 +45,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.ProfileProperty;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+import com.mojang.authlib.properties.PropertyMap;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_12_R1.AdvancementDisplay;
 import net.minecraft.server.v1_12_R1.Block;
@@ -549,6 +551,11 @@ public class V1_12 extends NMSAddonWrapper {
     }
 
     @Override
+    public GameProfile getPlayerHeadProfile(PlayerHeadObjectContents contents) {
+        return null;
+    }
+
+    @Override
     public ItemFlag getHideAdditionalItemFlag() {
         return ItemFlag.HIDE_POTION_EFFECTS;
     }
@@ -561,6 +568,11 @@ public class V1_12 extends NMSAddonWrapper {
     @Override
     public Key getAttributeModifierKey(Object attributeModifier) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public PropertyMap getGameProfilePropertyMap(GameProfile gameProfile) {
+        return gameProfile.getProperties();
     }
 
     @Override

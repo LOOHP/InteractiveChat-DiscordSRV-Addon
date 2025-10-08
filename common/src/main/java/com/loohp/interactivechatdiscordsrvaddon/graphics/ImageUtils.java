@@ -23,20 +23,30 @@ package com.loohp.interactivechatdiscordsrvaddon.graphics;
 import com.loohp.blockmodelrenderer.blending.BlendingModes;
 import com.loohp.blockmodelrenderer.utils.MathUtils;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.object.ObjectContents;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.object.PlayerHeadObjectContents;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.object.SpriteObjectContents;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import com.loohp.interactivechat.libs.org.apache.commons.compress.utils.IOUtils;
+import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ComponentFlattening;
 import com.loohp.interactivechat.utils.ComponentModernizing;
 import com.loohp.interactivechat.utils.HashUtils;
+import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CharacterData;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.ComponentCharacter;
+import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.MinecraftFont;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.MinecraftFont.FontRenderResult;
 import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageMeta;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.DefaultSkinUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.GameProfileUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.I18nUtils;
-import it.unimi.dsi.fastutil.chars.CharObjectPair;
+import com.loohp.interactivechatdiscordsrvaddon.utils.ModelUtils;
+import com.mojang.authlib.GameProfile;
 import org.nothings.stb.image.ColorComponents;
 import org.nothings.stb.image.ImageResult;
 
@@ -87,24 +97,20 @@ public class ImageUtils {
     }
 
     public static BufferedImage fromArrayStb(byte[] data) throws IOException {
-        try {
-            ImageResult image = ImageResult.FromData(data, ColorComponents.RedGreenBlueAlpha, true);
-            int w = image.getWidth();
-            int h = image.getHeight();
-            BufferedImage bufferedImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-            byte[] colors = image.getData();
-            for (int i = 0; i < w * h; i++) {
-                int index = i * 4;
-                int r = colors[index];
-                int g = colors[index + 1];
-                int b = colors[index + 2];
-                int a = colors[index + 3];
-                bufferedImage.setRGB(i % w, i / w, getIntFromColor(r, g, b, a));
-            }
-            return bufferedImage;
-        } catch (Exception e) {
-            throw new IOException(e);
+        ImageResult image = ImageResult.FromData(data, ColorComponents.RedGreenBlueAlpha, true);
+        int w = image.getWidth();
+        int h = image.getHeight();
+        BufferedImage bufferedImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        byte[] colors = image.getData();
+        for (int i = 0; i < w * h; i++) {
+            int index = i * 4;
+            int r = colors[index];
+            int g = colors[index + 1];
+            int b = colors[index + 2];
+            int a = colors[index + 3];
+            bufferedImage.setRGB(i % w, i / w, getIntFromColor(r, g, b, a));
         }
+        return bufferedImage;
     }
 
     public static ByteArrayOutputStream toGifOutputStream(List<BufferedImage> images, int delayMs) throws IOException {
@@ -575,6 +581,59 @@ public class ImageUtils {
         return result;
     }
 
+    private static FontRenderResult drawObject(BufferedImage image, BufferedImage object, int x, int y, float fontSize, int color) {
+        object = multiply(object, changeColorTo(ImageUtils.copyImage(object), color));
+        float scale = fontSize / 8;
+        int width = Math.round(8 * scale);
+        object = resizeImageFillWidth(object, width);
+        int height = object.getHeight();
+        int inset = Math.round(scale);
+        Graphics2D g = image.createGraphics();
+        g.drawImage(object, x, y - inset, null);
+        g.dispose();
+        return new FontRenderResult(image, width - inset, height, 1, 0);
+    }
+
+    private static FontRenderResult drawSprite(ResourceManager manager, BufferedImage image, SpriteObjectContents contents, int x, int y, float fontSize, int color) {
+        String resourceLocation = contents.sprite().asString();
+        BufferedImage sprite = manager.getTextureManager().getTexture(resourceLocation).getTexture();
+        return drawObject(image, sprite, x, y, fontSize, color);
+    }
+
+    private static FontRenderResult drawPlayerHead(ResourceManager manager, BufferedImage image, PlayerHeadObjectContents contents, int x, int y, float fontSize, int color) {
+        BufferedImage skinImage = null;
+        if (contents.texture() != null) {
+            skinImage = manager.getTextureManager().getTexture(ResourceRegistry.ENTITY_TEXTURE_LOCATION + "player/" + contents.texture().asString()).getTexture();
+        }
+        if (skinImage == null) {
+            GameProfile gameProfile = NMSAddon.getInstance().getPlayerHeadProfile(contents);
+            String skinURL = GameProfileUtils.getSkinUrl(gameProfile);
+            if (skinURL != null) {
+                try {
+                    skinImage = ImageUtils.downloadImage(skinURL);
+                } catch (Exception ignored) {
+                }
+            }
+            if (skinImage == null && GameProfileUtils.hasValidUUID(gameProfile)) {
+                skinImage = manager.getTextureManager().getTexture(DefaultSkinUtils.getTexture(gameProfile.getId())).getTexture();
+            }
+        }
+        BufferedImage avatar = ImageUtils.copyAndGetSubImage(skinImage, 8, 8, 8, 8);
+        BufferedImage avatarOverlay = ImageUtils.copyAndGetSubImage(skinImage, 40, 8, 8, 8);
+        if (ModelUtils.isRenderedUpsideDown(contents.name())) {
+            avatar = ImageUtils.rotateImageByDegrees(avatar, 180);
+            avatarOverlay = ImageUtils.rotateImageByDegrees(avatarOverlay, 180);
+        }
+        BufferedImage sprite = new BufferedImage(8, 8, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = sprite.createGraphics();
+        g.drawImage(avatar, 0, 0, 8, 8, null);
+        if (contents.hat()) {
+            g.drawImage(avatarOverlay, 0, 0, 8, 8, null);
+        }
+        g.dispose();
+        return drawObject(image, sprite, x, y, fontSize, color);
+    }
+
     public static ComponentPrintResult printComponentShadowlessDynamicSize(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int centerX, int topY, float fontSize, boolean dynamicFontSize) {
         Component text = ComponentFlattening.flatten(ComponentStringUtils.resolve(ComponentModernizing.modernize(component), manager.getLanguageManager().getTranslateFunction().ofLanguage(language)));
         String striped = ChatColorUtils.stripColor(ChatColorUtils.filterIllegalColorCodes(PlainTextComponentSerializer.plainText().serialize(text)));
@@ -586,7 +645,7 @@ public class ImageUtils {
         BufferedImage textImage = new BufferedImage(image.getWidth() + centerX, image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
 
         LanguageMeta languageMeta = manager.getLanguageManager().getLanguageMeta(language);
-        List<CharObjectPair<CharacterData>> data = I18nUtils.bidirectionalReorder(text, languageMeta.isBidirectional());
+        List<ValuePairs<ComponentCharacter, CharacterData>> data = I18nUtils.bidirectionalReorder(text, languageMeta.isBidirectional());
 
         int x = centerX;
         int lastItalicExtraWidth = 0;
@@ -594,21 +653,36 @@ public class ImageUtils {
         int height = 0;
         String character = null;
         for (int i = 0; i < data.size(); i++) {
-            CharObjectPair<CharacterData> pair = data.get(i);
-            char c = pair.firstChar();
-            if (character == null) {
-                character = String.valueOf(c);
-                if (Character.isHighSurrogate(c)) {
-                    continue;
-                } else if (Character.isLowSurrogate(c) && i + 1 < data.size()) {
-                    character = String.valueOf(data.get(++i).firstChar()) + character;
+            ValuePairs<ComponentCharacter, CharacterData> pair = data.get(i);
+            ComponentCharacter componentCharacter = pair.getFirst();
+            CharacterData characterData = pair.getSecond();
+            FontRenderResult result;
+            if (componentCharacter instanceof ComponentCharacter.ComponentCharacterText) {
+                char c = ((ComponentCharacter.ComponentCharacterText) componentCharacter).getText();
+                if (character == null) {
+                    character = String.valueOf(c);
+                    if (Character.isHighSurrogate(c)) {
+                        continue;
+                    } else if (Character.isLowSurrogate(c) && i + 1 < data.size()) {
+                        character = String.valueOf(((ComponentCharacter.ComponentCharacterText) data.get(++i).getFirst()).getText()) + character;
+                    }
+                } else {
+                    character += String.valueOf(c);
+                }
+                MinecraftFont fontProvider = manager.getFontManager().getFontProviders(characterData.getFont()).forCharacter(character);
+                result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, characterData.getColor(), characterData.getDecorations());
+            } else if (componentCharacter instanceof ComponentCharacter.ComponentCharacterObject) {
+                ObjectContents objectContents = ((ComponentCharacter.ComponentCharacterObject) componentCharacter).getObjectContents();
+                if (objectContents instanceof SpriteObjectContents) {
+                    result = drawSprite(manager, textImage, (SpriteObjectContents) objectContents, x, 1 + image.getHeight(), fontSize, characterData.getColor());
+                } else if (objectContents instanceof PlayerHeadObjectContents) {
+                    result = drawPlayerHead(manager, textImage, (PlayerHeadObjectContents) objectContents, x, 1 + image.getHeight(), fontSize, characterData.getColor());
+                } else {
+                    throw new IllegalStateException("Unknown ObjectContents type " + objectContents.getClass());
                 }
             } else {
-                character += String.valueOf(c);
+                throw new IllegalStateException("Unknown ComponentCharacter type " + character.getClass());
             }
-            CharacterData characterData = pair.right();
-            MinecraftFont fontProvider = manager.getFontManager().getFontProviders(characterData.getFont()).forCharacter(character);
-            FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, characterData.getColor(), characterData.getDecorations());
             textImage = result.getImage();
             x += result.getWidth() + (lastSpaceWidth = result.getSpaceWidth());
             lastItalicExtraWidth = result.getItalicExtraWidth();
@@ -738,27 +812,16 @@ public class ImageUtils {
 
         BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
         LanguageMeta languageMeta = manager.getLanguageManager().getLanguageMeta(language);
-        List<CharObjectPair<CharacterData>> data = I18nUtils.bidirectionalReorder(text, languageMeta.isBidirectional());
+        List<ValuePairs<ComponentCharacter, CharacterData>> data = I18nUtils.bidirectionalReorder(text, languageMeta.isBidirectional());
 
         int x = topX;
         int lastItalicExtraWidth = 0;
         int lastSpaceWidth = 0;
         String character = null;
         for (int i = 0; i < data.size(); i++) {
-            CharObjectPair<CharacterData> pair = data.get(i);
-            char c = pair.firstChar();
-            if (character == null) {
-                character = String.valueOf(c);
-                if (Character.isHighSurrogate(c)) {
-                    continue;
-                } else if (Character.isLowSurrogate(c) && i + 1 < data.size()) {
-                    character = String.valueOf(data.get(++i).firstChar()) + character;
-                }
-            } else {
-                character += String.valueOf(c);
-            }
-            CharacterData characterData = pair.right();
-            MinecraftFont fontProvider = manager.getFontManager().getFontProviders(characterData.getFont()).forCharacter(character);
+            ValuePairs<ComponentCharacter, CharacterData> pair = data.get(i);
+            ComponentCharacter componentCharacter = pair.getFirst();
+            CharacterData characterData = pair.getSecond();
             int color;
             if (isShadow) {
                 color = characterData.getShadowColor().orElseGet(() -> {
@@ -771,7 +834,33 @@ public class ImageUtils {
             } else {
                 color = characterData.getColor();
             }
-            FontRenderResult result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, color, characterData.getDecorations());
+            FontRenderResult result;
+            if (componentCharacter instanceof ComponentCharacter.ComponentCharacterText) {
+                char c = ((ComponentCharacter.ComponentCharacterText) componentCharacter).getText();
+                if (character == null) {
+                    character = String.valueOf(c);
+                    if (Character.isHighSurrogate(c)) {
+                        continue;
+                    } else if (Character.isLowSurrogate(c) && i + 1 < data.size()) {
+                        character = String.valueOf(((ComponentCharacter.ComponentCharacterText) data.get(++i).getFirst()).getText()) + character;
+                    }
+                } else {
+                    character += String.valueOf(c);
+                }
+                MinecraftFont fontProvider = manager.getFontManager().getFontProviders(characterData.getFont()).forCharacter(character);
+                result = fontProvider.printCharacter(textImage, character, x, 1 + image.getHeight(), fontSize, lastItalicExtraWidth, color, characterData.getDecorations());
+            } else if (componentCharacter instanceof ComponentCharacter.ComponentCharacterObject) {
+                ObjectContents objectContents = ((ComponentCharacter.ComponentCharacterObject) componentCharacter).getObjectContents();
+                if (objectContents instanceof SpriteObjectContents) {
+                    result = drawSprite(manager, textImage, (SpriteObjectContents) objectContents, x, 1 + image.getHeight(), fontSize, color);
+                } else if (objectContents instanceof PlayerHeadObjectContents) {
+                    result = drawPlayerHead(manager, textImage, (PlayerHeadObjectContents) objectContents, x, 1 + image.getHeight(), fontSize, color);
+                } else {
+                    throw new IllegalStateException("Unknown ObjectContents type " + objectContents.getClass());
+                }
+            } else {
+                throw new IllegalStateException("Unknown ComponentCharacter type " + character.getClass());
+            }
             textImage = result.getImage();
             x += result.getWidth() + (lastSpaceWidth = result.getSpaceWidth());
             lastItalicExtraWidth = result.getItalicExtraWidth();

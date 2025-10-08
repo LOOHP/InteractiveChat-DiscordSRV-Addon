@@ -82,7 +82,8 @@ public class ModelDisplay {
         GUI("gui"),
         HEAD("head"),
         GROUND("ground"),
-        FIXED("fixed");
+        FIXED("fixed"),
+        ON_SHELF("on_shelf");
 
         public static ModelDisplayPosition fromKey(String key) {
             for (ModelDisplayPosition position : values()) {
@@ -90,7 +91,7 @@ public class ModelDisplay {
                     return position;
                 }
             }
-            return null;
+            throw new IllegalArgumentException("Unknown model display position type: " + key);
         }
 
         private ModelDisplayPosition fallback;

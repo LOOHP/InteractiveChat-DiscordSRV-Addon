@@ -75,7 +75,7 @@ public class GameProfileUtils {
             if (gameProfile == null) {
                 return null;
             }
-            Collection<Property> textures = gameProfile.getProperties().get("textures");
+            Collection<Property> textures = NMSAddon.getInstance().getGameProfilePropertyMap(gameProfile).get("textures");
             if (textures != null && !textures.isEmpty()) {
                 String value = NMSAddon.getInstance().toProfileProperty(textures.iterator().next()).getValue();
                 String json = FIX_WEIRD_SKULL_TEXTURE.apply(new String(Base64.getDecoder().decode(value)));
