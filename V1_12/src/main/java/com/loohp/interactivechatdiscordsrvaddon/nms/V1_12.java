@@ -520,8 +520,13 @@ public class V1_12 extends NMSAddonWrapper {
     }
 
     @Override
-    public int getServerResourcePackVersion() {
+    public int getServerResourcePackMajorVersion() {
         return 3;
+    }
+
+    @Override
+    public int getServerResourcePackMinorVersion() {
+        return 0;
     }
 
     @Override

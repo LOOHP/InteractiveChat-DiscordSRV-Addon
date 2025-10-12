@@ -23,35 +23,50 @@ package com.loohp.interactivechatdiscordsrvaddon.resources;
 public class PackFormat {
 
     public static PackFormat version(int version) {
-        return new PackFormat(version, version, version);
+        return version(version, version, version);
     }
 
     public static PackFormat version(int major, int min, int max) {
         if (major < min || major > max) {
             throw new IllegalArgumentException("Major version must be within range");
         }
-        return new PackFormat(major, min, max);
+        return new PackFormat(PackFormatVersion.of(min), PackFormatVersion.of(max));
     }
 
     public static PackFormat version(int min, int max) {
-        return new PackFormat(max, min, max);
+        return version(max, min, max);
     }
 
-    private final int major;
-    private final int min;
-    private final int max;
+    public static PackFormat version(PackFormatVersion min, PackFormatVersion max) {
+        return new PackFormat(min, max);
+    }
 
-    private PackFormat(int major, int min, int max) {
-        this.major = major;
+    public static PackFormat version(PackFormatVersion only) {
+        return version(only, only);
+    }
+
+    private final PackFormatVersion min;
+    private final PackFormatVersion max;
+
+    private PackFormat(PackFormatVersion min, PackFormatVersion max) {
         this.min = min;
         this.max = max;
     }
 
-    public int getMajor() {
-        return major;
+    public PackFormatVersion getMax() {
+        return max;
     }
 
-    public boolean isCompatible(int version) {
-        return min <= version && version <= max;
+    public PackFormatVersion getMin() {
+        return min;
+    }
+
+    public boolean isCompatible(PackFormatVersion version) {
+        return min.compareTo(version) <= 0 && max.compareTo(version) >= 0;
+    }
+
+    @Override
+    public String toString() {
+        return "{min=" + min + ", max=" + max + "}";
     }
 }

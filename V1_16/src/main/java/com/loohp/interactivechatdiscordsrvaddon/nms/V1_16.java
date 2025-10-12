@@ -637,8 +637,13 @@ public class V1_16 extends NMSAddonWrapper {
     }
 
     @Override
-    public int getServerResourcePackVersion() {
+    public int getServerResourcePackMajorVersion() {
         return MinecraftVersion.a().getPackVersion();
+    }
+
+    @Override
+    public int getServerResourcePackMinorVersion() {
+        return 0;
     }
 
     @Override

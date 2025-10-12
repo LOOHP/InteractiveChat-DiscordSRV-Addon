@@ -21,6 +21,7 @@
 package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
+import com.loohp.interactivechatdiscordsrvaddon.resources.PackFormatVersion;
 
 public class ResourcePackUtils {
 
@@ -32,8 +33,8 @@ public class ResourcePackUtils {
         return NMSAddon.getInstance().getServerResourcePackHash();
     }
 
-    public static int getServerResourcePackVersion() {
-        return NMSAddon.getInstance().getServerResourcePackVersion();
+    public static PackFormatVersion getServerResourcePackVersion() {
+        return PackFormatVersion.of(NMSAddon.getInstance().getServerResourcePackMajorVersion(), NMSAddon.getInstance().getServerResourcePackMinorVersion());
     }
 
 }

@@ -45,7 +45,6 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.bridge.game.PackType;
-import net.md_5.bungee.api.ChatColor;
 import net.minecraft.EnumChatFormat;
 import net.minecraft.MinecraftVersion;
 import net.minecraft.advancements.AdvancementDisplay;
@@ -571,8 +570,13 @@ public class V1_19 extends NMSAddonWrapper {
     }
 
     @Override
-    public int getServerResourcePackVersion() {
+    public int getServerResourcePackMajorVersion() {
         return MinecraftVersion.a().getPackVersion(PackType.RESOURCE);
+    }
+
+    @Override
+    public int getServerResourcePackMinorVersion() {
+        return 0;
     }
 
     @Override

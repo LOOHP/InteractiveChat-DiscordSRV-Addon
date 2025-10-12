@@ -68,6 +68,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.PlayerMo
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.PlayerModelItemPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RawEnchantmentGlintData;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RenderResult;
+import com.loohp.interactivechatdiscordsrvaddon.resources.PackFormatVersion;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.definitions.equipment.EquipmentModelDefinition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.fonts.MinecraftFont.FontRenderResult;
@@ -391,7 +392,7 @@ public class ImageGeneration {
         //boots
         ItemStack boots = inventory.getItem(i);
         if (boots == null || boots.getType().equals(Material.AIR)) {
-            String resourceLocation = ResourceRegistry.RESOURCE_PACK_VERSION < 46 ? ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_boots" : ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/slot/boots";
+            String resourceLocation = ResourceRegistry.RESOURCE_PACK_VERSION.getMajor() < 46 ? ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_boots" : ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/slot/boots";
             g.drawImage(resourceManager.get().getTextureManager().getTexture(resourceLocation).getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
         } else {
             BufferedImage itemImage = getSingleRawItemImage(boots, player);
@@ -404,7 +405,7 @@ public class ImageGeneration {
         //leggings
         ItemStack leggings = inventory.getItem(i);
         if (leggings == null || leggings.getType().equals(Material.AIR)) {
-            String resourceLocation = ResourceRegistry.RESOURCE_PACK_VERSION < 46 ? ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_leggings" : ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/slot/leggings";
+            String resourceLocation = ResourceRegistry.RESOURCE_PACK_VERSION.getMajor() < 46 ? ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_leggings" : ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/slot/leggings";
             g.drawImage(resourceManager.get().getTextureManager().getTexture(resourceLocation).getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
         } else {
             BufferedImage itemImage = getSingleRawItemImage(leggings, player);
@@ -417,7 +418,7 @@ public class ImageGeneration {
         //chestplate
         ItemStack chestplate = inventory.getItem(i);
         if (chestplate == null || chestplate.getType().equals(Material.AIR)) {
-            String resourceLocation = ResourceRegistry.RESOURCE_PACK_VERSION < 46 ? ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_chestplate" : ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/slot/chestplate";
+            String resourceLocation = ResourceRegistry.RESOURCE_PACK_VERSION.getMajor() < 46 ? ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_chestplate" : ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/slot/chestplate";
             g.drawImage(resourceManager.get().getTextureManager().getTexture(resourceLocation).getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
         } else {
             BufferedImage itemImage = getSingleRawItemImage(chestplate, player);
@@ -430,7 +431,7 @@ public class ImageGeneration {
         //helmet
         ItemStack helmet = inventory.getItem(i);
         if (helmet == null || helmet.getType().equals(Material.AIR)) {
-            String resourceLocation = ResourceRegistry.RESOURCE_PACK_VERSION < 46 ? ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_helmet" : ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/slot/helmet";
+            String resourceLocation = ResourceRegistry.RESOURCE_PACK_VERSION.getMajor() < 46 ? ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_helmet" : ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/slot/helmet";
             g.drawImage(resourceManager.get().getTextureManager().getTexture(resourceLocation).getTexture(32, 32), 18, 126 - (SPACING * (i - 36)), 32, 32, null);
         } else {
             BufferedImage itemImage = getSingleRawItemImage(helmet, player);
@@ -444,7 +445,7 @@ public class ImageGeneration {
         if (!version.get().isOld()) {
             ItemStack offhand = inventory.getItem(i);
             if (offhand == null || offhand.getType().equals(Material.AIR)) {
-                String resourceLocation = ResourceRegistry.RESOURCE_PACK_VERSION < 46 ? ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_shield" : ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/slot/shield";
+                String resourceLocation = ResourceRegistry.RESOURCE_PACK_VERSION.getMajor() < 46 ? ResourceRegistry.ITEM_TEXTURE_LOCATION + "empty_armor_slot_shield" : ResourceRegistry.DEFAULT_SPRITE_LOCATION + "container/slot/shield";
                 g.drawImage(resourceManager.get().getTextureManager().getTexture(resourceLocation).getTexture(32, 32), 162, 126, 32, 32, null);
             } else {
                 BufferedImage itemImage = getSingleRawItemImage(offhand, player);
@@ -969,7 +970,7 @@ public class ImageGeneration {
 
         BufferedImage asset;
         int iconWidth;
-        if (resourceManager.get().getNativeServerPackFormat() >= 24) {
+        if (resourceManager.get().getNativeServerPackFormat().getMajor() >= 24) {
             asset = null;
             iconWidth = -1;
         } else {
@@ -990,7 +991,7 @@ public class ImageGeneration {
                 }
 
                 BufferedImage iconImage;
-                if (resourceManager.get().getNativeServerPackFormat() >= 24) {
+                if (resourceManager.get().getNativeServerPackFormat().getMajor() >= 24) {
                     String assetName = NMSAddon.getInstance().getMapCursorTypeKey(icon).asString();
                     iconImage = resourceManager.get().getTextureManager().getTexture(assetName).getTexture();
                 } else {
@@ -1143,7 +1144,7 @@ public class ImageGeneration {
         BufferedImage background = new BufferedImage(maxX + 4, currentY - 196, BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D g2 = background.createGraphics();
-        if (ResourceRegistry.RESOURCE_PACK_VERSION < 46) {
+        if (ResourceRegistry.RESOURCE_PACK_VERSION.getMajor() < 46) {
             g2.setColor(TOOLTIP_BACKGROUND_COLOR);
             g2.fillRect(2, 0, background.getWidth() - 4, background.getHeight());
             g2.fillRect(0, 2, 2, background.getHeight() - 4);
@@ -1450,7 +1451,7 @@ public class ImageGeneration {
     }
 
     public static BufferedImage getPingIcon(int ms, boolean useNoConnectionIcon) {
-        if (resourceManager.get().getNativeServerPackFormat() < 16) {
+        if (resourceManager.get().getNativeServerPackFormat().getMajor() < 16) {
             BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "icons").getTexture();
             int scale = icons.getWidth() / 256;
             if (useNoConnectionIcon && ms < 0) {
@@ -1490,7 +1491,7 @@ public class ImageGeneration {
             BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "achievement/achievement_background").getTexture();
             int scale = icons.getWidth() / 256;
             return icons.getSubimage(0, 202 * scale, 26 * scale, 26 * scale);
-        } else if (resourceManager.get().getNativeServerPackFormat() < 16) {
+        } else if (resourceManager.get().getNativeServerPackFormat().getMajor() < 16) {
             BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "advancements/widgets").getTexture();
             int scale = icons.getWidth() / 256;
             int offsetY = completed ? 0 : 26 * scale;
@@ -1525,9 +1526,9 @@ public class ImageGeneration {
     }
 
     public static BufferedImage getBundleContainerInterface(OfflineICPlayer offlineICPlayer, List<ItemStack> items) throws IOException {
-        int packFormat = resourceManager.get().getNativeServerPackFormat();
+        PackFormatVersion packFormat = resourceManager.get().getNativeServerPackFormat();
 
-        if (packFormat >= 39) {
+        if (packFormat.getMajor() >= 39) {
             Fraction weight = BundleUtils.getWeight(items);
             int h = items.size() / 4;
             int padToFour = items.size() % 4;
@@ -1541,12 +1542,12 @@ public class ImageGeneration {
             for (int i = 0; i < items.size(); i++) {
                 BufferedImage itemImage = getSingleRawItemImage(items.get(i), offlineICPlayer);
                 int gridPosition = i + padToFour;
-                if (ResourceRegistry.RESOURCE_PACK_VERSION >= 46) {
+                if (ResourceRegistry.RESOURCE_PACK_VERSION.getMajor() >= 46) {
                     g.drawImage(itemBackground, gridPosition % 4 * 48, gridPosition / 4 * 48 + 4, null);
                 }
                 g.drawImage(itemImage, gridPosition % 4 * 48 + 8, gridPosition / 4 * 48 + 12, null);
             }
-            if (ResourceRegistry.RESOURCE_PACK_VERSION < 46) {
+            if (ResourceRegistry.RESOURCE_PACK_VERSION.getMajor() < 46) {
                 g.setColor(weight.compareTo(Fraction.ONE) >= 0 ? BUNDLE_WEIGHT_FULL_COLOR : BUNDLE_WEIGHT_COLOR);
                 g.fillRect(2, image.getHeight() - 28, (int) Math.ceil(weight.doubleValue() * 188), 22);
                 g.setColor(BUNDLE_WEIGHT_OUTLINE_COLOR);
@@ -1600,7 +1601,7 @@ public class ImageGeneration {
             BufferedImage image = new BufferedImage(36 * gridWidth + 4, 40 * gridHeight + 4, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = image.createGraphics();
 
-            if (packFormat < 16) {
+            if (packFormat.getMajor() < 16) {
                 BufferedImage icons = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.GUI_TEXTURE_LOCATION + "container/bundle").getTexture(256, 256);
 
                 BufferedImage topCorner = icons.getSubimage(0, 40, 2, 2);
@@ -1708,7 +1709,7 @@ public class ImageGeneration {
         BufferedImage background = ImageUtils.copyAndGetSubImage(icons, 38, 0, 296, 364);
         BufferedImage nextPage;
         BufferedImage previousPage;
-        if (resourceManager.get().getNativeServerPackFormat() < 16) {
+        if (resourceManager.get().getNativeServerPackFormat().getMajor() < 16) {
             nextPage = ImageUtils.copyAndGetSubImage(icons, 0, 384, 46, 26);
             previousPage = ImageUtils.copyAndGetSubImage(icons, 0, 410, 46, 26);
         } else {
@@ -1764,7 +1765,7 @@ public class ImageGeneration {
 
     public static BufferedImage getPaintingImage(PaintingVariant paintingVariant) {
         BufferedImage originalPaintingImage;
-        if (resourceManager.get().getNativeServerPackFormat() >= 24) {
+        if (resourceManager.get().getNativeServerPackFormat().getMajor() >= 24) {
             originalPaintingImage = resourceManager.get().getTextureManager().getTexture(paintingVariant.getKey().asString()).getTexture();
         } else if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_14)) {
             originalPaintingImage = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.LEGACY_PAINTINGS_LOCATION + paintingVariant.getKey().value()).getTexture();

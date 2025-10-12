@@ -110,14 +110,20 @@ public class ResourcePackInfo {
         return packFormat;
     }
 
-    public int compareServerPackFormat(int localFormat) {
+    public int compareServerPackFormat(PackFormatVersion localFormat) {
         if (packFormat == null) {
             return 1;
         }
         if (packFormat.isCompatible(localFormat)) {
             return 0;
         }
-        return Integer.compare(packFormat.getMajor(), localFormat);
+        if (packFormat.getMax().compareTo(localFormat) < 0) {
+            return 1;
+        }
+        if (packFormat.getMin().compareTo(localFormat) > 0) {
+            return -1;
+        }
+        throw new IllegalStateException("Incorrect comparison logic for " + packFormat + " compared to " + localFormat);
     }
 
     public Component getDescription() {

@@ -20,11 +20,13 @@
 
 package com.loohp.interactivechatdiscordsrvaddon.registry;
 
+import com.loohp.interactivechatdiscordsrvaddon.resources.PackFormatVersion;
+
 public class ResourceRegistry {
 
     static {
         boolean isMinecraftServerEnvironment;
-        int resourcePackVersion;
+        PackFormatVersion resourcePackVersion;
         String itemTextureLocation;
         String blockTextureLocation;
         try {
@@ -35,7 +37,7 @@ public class ResourceRegistry {
             blockTextureLocation = com.loohp.interactivechat.InteractiveChat.version.isLegacy() ? "minecraft:blocks/" : "minecraft:block/";
         } catch (ClassNotFoundException | NoClassDefFoundError e) {
             isMinecraftServerEnvironment = false;
-            resourcePackVersion = 46;
+            resourcePackVersion = PackFormatVersion.of(46);
             itemTextureLocation = "minecraft:item/";
             blockTextureLocation = "minecraft:block/";
         }
@@ -50,9 +52,9 @@ public class ResourceRegistry {
 
     public static final String ICD_PREFIX = "minecraft:interactivechatdiscordsrvaddon/";
 
-    public static final int RESOURCE_PACK_VERSION;
+    public static final PackFormatVersion RESOURCE_PACK_VERSION;
 
-    public static final String ITEM_COMPONENT_TAG = RESOURCE_PACK_VERSION >= 24 ? "components" : "tag";
+    public static final String ITEM_COMPONENT_TAG = RESOURCE_PACK_VERSION.getMajor() >= 24 ? "components" : "tag";
 
     public static final String BANNER_TEXTURE_LOCATION = "minecraft:entity/banner/";
     public static final String SHIELD_TEXTURE_LOCATION = "minecraft:entity/shield/";
@@ -70,8 +72,8 @@ public class ResourceRegistry {
 
     public static final String LEGACY_PAINTINGS_LOCATION = "minecraft:paintings/";
 
-    public static final String ARMOR_TEXTURE_LOCATION = RESOURCE_PACK_VERSION < 46 ? "models/armor/": "entity/equipment/humanoid/";
-    public static final String ARMOR_LEGGINGS_TEXTURE_LOCATION = RESOURCE_PACK_VERSION < 46 ? "models/armor/": "entity/equipment/humanoid_leggings/";
+    public static final String ARMOR_TEXTURE_LOCATION = RESOURCE_PACK_VERSION.getMajor() < 46 ? "models/armor/": "entity/equipment/humanoid/";
+    public static final String ARMOR_LEGGINGS_TEXTURE_LOCATION = RESOURCE_PACK_VERSION.getMajor() < 46 ? "models/armor/": "entity/equipment/humanoid_leggings/";
 
     public static final String IC_OLD_BASE_BLOCK_MODEL = ICD_PREFIX + "block/block";
     public static final String IC_OLD_BASE_ITEM_MODEL = ICD_PREFIX + "item/generated";
@@ -79,8 +81,8 @@ public class ResourceRegistry {
     public static final String ITEM_MODEL_LOCATION = "item/";
     public static final String BUILTIN_ENTITY_MODEL_LOCATION = ICD_PREFIX + "builtin_entity/";
 
-    public static final String ENCHANTMENT_GLINT_ENTITY_LOCATION = ResourceRegistry.MISC_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION < 13 ? "enchanted_item_glint" : "enchanted_glint_entity");
-    public static final String ENCHANTMENT_GLINT_ITEM_LOCATION = ResourceRegistry.MISC_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION < 13 ? "enchanted_item_glint" : "enchanted_glint_item");
+    public static final String ENCHANTMENT_GLINT_ENTITY_LOCATION = ResourceRegistry.MISC_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION.getMajor() < 13 ? "enchanted_item_glint" : "enchanted_glint_entity");
+    public static final String ENCHANTMENT_GLINT_ITEM_LOCATION = ResourceRegistry.MISC_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION.getMajor() < 13 ? "enchanted_item_glint" : "enchanted_glint_item");
 
     public static final String SKIN_TEXTURE_PLACEHOLDER = ICD_PREFIX + "skin";
     public static final String SKIN_FULL_TEXTURE_PLACEHOLDER = ICD_PREFIX + "skin_full";
@@ -107,16 +109,16 @@ public class ResourceRegistry {
     public static final String GRASS_COLORMAP_LOCATION = COLORMAP_TEXTURE_LOCATION + "grass";
     public static final String FOLIAGE_COLORMAP_LOCATION = COLORMAP_TEXTURE_LOCATION + "foliage";
 
-    public static final String DEFAULT_WIDE_SKIN_LOCATION = ENTITY_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION < 12 ? "steve" : "player/wide/steve");
-    public static final String DEFAULT_SLIM_SKIN_LOCATION = ENTITY_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION < 12 ? "alex" : "player/slim/alex");
+    public static final String DEFAULT_WIDE_SKIN_LOCATION = ENTITY_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION.getMajor() < 12 ? "steve" : "player/wide/steve");
+    public static final String DEFAULT_SLIM_SKIN_LOCATION = ENTITY_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION.getMajor() < 12 ? "alex" : "player/slim/alex");
 
     public static final String DECORATED_POT_SHERD_MINECRAFT_LOCATION = ENTITY_TEXTURE_LOCATION + "decorated_pot/%s";
     public static final String DECORATED_POT_SHERD_LOCATION = "%s" + DECORATED_POT_SHERD_MINECRAFT_LOCATION.substring(DEFAULT_NAMESPACE.length());
     public static final String DECORATED_POT_FACE_PLACEHOLDER = ICD_PREFIX + "decorated_pot/face_%s";
 
     public static final String TRIM_TEXTURE_LOCATION = "minecraft:trims/";
-    public static final String ARMOR_TRIM_LOCATION = TRIM_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION < 39 ? "models/armor/%s_%s" : "entity/humanoid/%s_%s");
-    public static final String ARMOR_TRIM_LEGGINGS_LOCATION = TRIM_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION < 39 ? "models/armor/%s_leggings_%s" : "entity/humanoid_leggings/%s_%s");
+    public static final String ARMOR_TRIM_LOCATION = TRIM_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION.getMajor() < 39 ? "models/armor/%s_%s" : "entity/humanoid/%s_%s");
+    public static final String ARMOR_TRIM_LEGGINGS_LOCATION = TRIM_TEXTURE_LOCATION + (RESOURCE_PACK_VERSION.getMajor() < 39 ? "models/armor/%s_leggings_%s" : "entity/humanoid_leggings/%s_%s");
 
     public static final double ENCHANTMENT_GLINT_FACTOR = 190.0 / 255.0;
 

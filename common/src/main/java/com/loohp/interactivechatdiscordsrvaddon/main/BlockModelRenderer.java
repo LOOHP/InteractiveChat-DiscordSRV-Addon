@@ -36,6 +36,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RawEnchantmentGlintData;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ModelRenderer.RenderResult;
 import com.loohp.interactivechatdiscordsrvaddon.resources.PackFormat;
+import com.loohp.interactivechatdiscordsrvaddon.resources.PackFormatVersion;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourceManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackInfo;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackSource;
@@ -591,7 +592,7 @@ public class BlockModelRenderer extends JFrame {
 
             PrintStream original = System.err;
             try {
-                int packFormat = GUIMain.getDefaultPackVersion((Integer) defaultPackVersionSpinner.getValue());
+                PackFormatVersion packFormat = PackFormatVersion.of(GUIMain.getDefaultPackVersion((Integer) defaultPackVersionSpinner.getValue()));
                 defaultPackVersionSpinner.setValue(packFormat);
 
                 resourceManager = new ResourceManager(
@@ -599,7 +600,7 @@ public class BlockModelRenderer extends JFrame {
                         Collections.emptyList(),
                         Collections.singletonList(ICacheManager.getDummySupplier()),
                         PackFormat.version(packFormat),
-                        ResourceManager.Flag.build(false, packFormat < 9, packFormat < 46)
+                        ResourceManager.Flag.build(false, packFormat.getMajor() < 9, packFormat.getMajor() < 46)
                 );
                 List<ResourcePackSource> sources = new ArrayList<>();
                 sources.add(ResourcePackSource.ofDefault("Default", new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN));

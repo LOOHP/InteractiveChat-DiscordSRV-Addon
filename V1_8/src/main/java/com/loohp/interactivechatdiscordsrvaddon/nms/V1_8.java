@@ -45,7 +45,6 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
-import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_8_R1.Block;
 import net.minecraft.server.v1_8_R1.ChatSerializer;
 import net.minecraft.server.v1_8_R1.CombatTracker;
@@ -460,8 +459,13 @@ public class V1_8 extends NMSAddonWrapper {
     }
 
     @Override
-    public int getServerResourcePackVersion() {
+    public int getServerResourcePackMajorVersion() {
         return 1;
+    }
+
+    @Override
+    public int getServerResourcePackMinorVersion() {
+        return 0;
     }
 
     @Override

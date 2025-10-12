@@ -65,7 +65,7 @@ import java.util.stream.IntStream;
 
 public class ResourceManager implements AutoCloseable {
 
-    private final int nativeServerPackFormat;
+    private final PackFormatVersion nativeServerPackFormat;
     private final List<ResourcePackInfo> resourcePackInfo;
 
     private final Map<String, IResourceRegistry> resourceRegistries;
@@ -87,7 +87,7 @@ public class ResourceManager implements AutoCloseable {
     private final AtomicBoolean isValid;
     private final UUID uuid;
 
-    public ResourceManager(int nativeServerPackFormat, Collection<ModManagerSupplier<?>> modManagerProviders, Collection<ResourceRegistrySupplier<?>> resourceManagerUtilsProviders, BiFunction<File, ResourcePackType, DefaultResourcePackInfo> defaultResourcePackInfoFunction, Flag... flags) {
+    public ResourceManager(PackFormatVersion nativeServerPackFormat, Collection<ModManagerSupplier<?>> modManagerProviders, Collection<ResourceRegistrySupplier<?>> resourceManagerUtilsProviders, BiFunction<File, ResourcePackType, DefaultResourcePackInfo> defaultResourcePackInfoFunction, Flag... flags) {
         this.nativeServerPackFormat = nativeServerPackFormat;
 
         this.resourcePackInfo = new ArrayList<>();
@@ -120,7 +120,7 @@ public class ResourceManager implements AutoCloseable {
         }
     }
 
-    public ResourceManager(int nativeServerPackFormat, Collection<ModManagerSupplier<?>> modManagerProviders, Collection<ResourceRegistrySupplier<?>> resourceManagerUtilsProviders, PackFormat defaultResourcePackVersion, Flag... flags) {
+    public ResourceManager(PackFormatVersion nativeServerPackFormat, Collection<ModManagerSupplier<?>> modManagerProviders, Collection<ResourceRegistrySupplier<?>> resourceManagerUtilsProviders, PackFormat defaultResourcePackVersion, Flag... flags) {
         this(nativeServerPackFormat, modManagerProviders, resourceManagerUtilsProviders, (resourcePackFile, type) -> {
             return new ResourceManager.DefaultResourcePackInfo(Component.text(resourcePackFile.getName()), defaultResourcePackVersion, Component.text("The default look and feel of Minecraft (Modified by LOOHP)"));
         }, flags);
@@ -238,23 +238,53 @@ public class ResourceManager implements AutoCloseable {
                         format = defaultResourcePackInfo.getVersion();
                         description = defaultResourcePackInfo.getDescription();
                     } else {
-                        int majorFormat = ((Number) packJson.get("pack_format")).intValue();
-                        if (packJson.containsKey("supported_formats")) {
-                            Object supportedFormatsObj = packJson.get("supported_formats");
-                            if (supportedFormatsObj instanceof Number) {
-                                int supportedFormat = ((Number) supportedFormatsObj).intValue();
-                                format = PackFormat.version(majorFormat, supportedFormat, supportedFormat);
-                            } else if (supportedFormatsObj instanceof JSONArray) {
-                                JSONArray supportedFormats = (JSONArray) supportedFormatsObj;
-                                format = PackFormat.version(majorFormat, ((Number) supportedFormats.get(0)).intValue(), ((Number) supportedFormats.get(1)).intValue());
-                            } else if (supportedFormatsObj instanceof JSONObject) {
-                                JSONObject supportedFormats = (JSONObject) supportedFormatsObj;
-                                format = PackFormat.version(majorFormat, ((Number) supportedFormats.get("min_inclusive")).intValue(), ((Number) supportedFormats.get("max_inclusive")).intValue());
+                        if (packJson.containsKey("pack_format")) {
+                            int majorFormat = ((Number) packJson.get("pack_format")).intValue();
+                            if (packJson.containsKey("supported_formats")) {
+                                Object supportedFormatsObj = packJson.get("supported_formats");
+                                if (supportedFormatsObj instanceof Number) {
+                                    int supportedFormat = ((Number) supportedFormatsObj).intValue();
+                                    format = PackFormat.version(majorFormat, supportedFormat, supportedFormat);
+                                } else if (supportedFormatsObj instanceof JSONArray) {
+                                    JSONArray supportedFormats = (JSONArray) supportedFormatsObj;
+                                    format = PackFormat.version(majorFormat, ((Number) supportedFormats.get(0)).intValue(), ((Number) supportedFormats.get(1)).intValue());
+                                } else if (supportedFormatsObj instanceof JSONObject) {
+                                    JSONObject supportedFormats = (JSONObject) supportedFormatsObj;
+                                    format = PackFormat.version(majorFormat, ((Number) supportedFormats.get("min_inclusive")).intValue(), ((Number) supportedFormats.get("max_inclusive")).intValue());
+                                } else {
+                                    throw new IllegalArgumentException("Don't know how to read supported_formats " + supportedFormatsObj);
+                                }
                             } else {
-                                throw new IllegalArgumentException("Don't know how to read supported_formats " + supportedFormatsObj);
+                                format = PackFormat.version(majorFormat);
                             }
                         } else {
-                            format = PackFormat.version(majorFormat);
+                            Object minFormatObj = packJson.get("min_format");
+                            PackFormatVersion minFormatVersion;
+                            if (minFormatObj instanceof Number) {
+                                int minFormat = ((Number) minFormatObj).intValue();
+                                minFormatVersion = PackFormatVersion.of(minFormat);
+                            } else if (minFormatObj instanceof JSONArray) {
+                                JSONArray minFormat = (JSONArray) minFormatObj;
+                                int major = ((Number) minFormat.get(0)).intValue();
+                                int minor = minFormat.size() > 1 ? ((Number) minFormat.get(1)).intValue() : 0;
+                                minFormatVersion = PackFormatVersion.of(major, minor);
+                            } else {
+                                throw new IllegalArgumentException("Don't know how to read min_format " + minFormatObj);
+                            }
+                            Object maxFormatObj = packJson.get("max_format");
+                            PackFormatVersion maxFormatVersion;
+                            if (minFormatObj instanceof Number) {
+                                int maxFormat = ((Number) minFormatObj).intValue();
+                                maxFormatVersion = PackFormatVersion.of(maxFormat);
+                            } else if (minFormatObj instanceof JSONArray) {
+                                JSONArray maxFormat = (JSONArray) minFormatObj;
+                                int major = ((Number) maxFormat.get(0)).intValue();
+                                int minor = maxFormat.size() > 1 ? ((Number) maxFormat.get(1)).intValue() : 0;
+                                maxFormatVersion = PackFormatVersion.of(major, minor);
+                            } else {
+                                throw new IllegalArgumentException("Don't know how to read min_format " + minFormatObj);
+                            }
+                            format = PackFormat.version(minFormatVersion, maxFormatVersion);
                         }
                         Object descriptionObj = packJson.get("description");
                         if (descriptionObj instanceof JSONObject) {
@@ -296,20 +326,49 @@ public class ResourceManager implements AutoCloseable {
                         JSONArray entriesArray = (JSONArray) overlaysJson.get("entries");
                         for (Object obj : entriesArray) {
                             JSONObject entry = (JSONObject) obj;
-
                             PackFormat overlayFormat;
-                            Object formatsObj = entry.get("formats");
-                            if (formatsObj instanceof Number) {
-                                int supportedFormat = ((Number) formatsObj).intValue();
-                                overlayFormat = PackFormat.version(supportedFormat, supportedFormat);
-                            } else if (formatsObj instanceof JSONArray) {
-                                JSONArray supportedFormats = (JSONArray) formatsObj;
-                                overlayFormat = PackFormat.version(((Number) supportedFormats.get(0)).intValue(), ((Number) supportedFormats.get(1)).intValue());
-                            } else if (formatsObj instanceof JSONObject) {
-                                JSONObject supportedFormats = (JSONObject) formatsObj;
-                                overlayFormat = PackFormat.version(((Number) supportedFormats.get("min_inclusive")).intValue(), ((Number) supportedFormats.get("max_inclusive")).intValue());
+                            if (entry.containsKey("formats")) {
+                                Object formatsObj = entry.get("formats");
+                                if (formatsObj instanceof Number) {
+                                    int supportedFormat = ((Number) formatsObj).intValue();
+                                    overlayFormat = PackFormat.version(supportedFormat, supportedFormat);
+                                } else if (formatsObj instanceof JSONArray) {
+                                    JSONArray supportedFormats = (JSONArray) formatsObj;
+                                    overlayFormat = PackFormat.version(((Number) supportedFormats.get(0)).intValue(), ((Number) supportedFormats.get(1)).intValue());
+                                } else if (formatsObj instanceof JSONObject) {
+                                    JSONObject supportedFormats = (JSONObject) formatsObj;
+                                    overlayFormat = PackFormat.version(((Number) supportedFormats.get("min_inclusive")).intValue(), ((Number) supportedFormats.get("max_inclusive")).intValue());
+                                } else {
+                                    throw new IllegalArgumentException("Don't know how to read supported_formats " + formatsObj);
+                                }
                             } else {
-                                throw new IllegalArgumentException("Don't know how to read supported_formats " + formatsObj);
+                                Object minFormatObj = entry.get("min_format");
+                                PackFormatVersion minFormatVersion;
+                                if (minFormatObj instanceof Number) {
+                                    int minFormat = ((Number) minFormatObj).intValue();
+                                    minFormatVersion = PackFormatVersion.of(minFormat);
+                                } else if (minFormatObj instanceof JSONArray) {
+                                    JSONArray minFormat = (JSONArray) minFormatObj;
+                                    int major = ((Number) minFormat.get(0)).intValue();
+                                    int minor = minFormat.size() > 1 ? ((Number) minFormat.get(1)).intValue() : 0;
+                                    minFormatVersion = PackFormatVersion.of(major, minor);
+                                } else {
+                                    throw new IllegalArgumentException("Don't know how to read min_format " + minFormatObj);
+                                }
+                                Object maxFormatObj = entry.get("max_format");
+                                PackFormatVersion maxFormatVersion;
+                                if (minFormatObj instanceof Number) {
+                                    int maxFormat = ((Number) minFormatObj).intValue();
+                                    maxFormatVersion = PackFormatVersion.of(maxFormat);
+                                } else if (minFormatObj instanceof JSONArray) {
+                                    JSONArray maxFormat = (JSONArray) minFormatObj;
+                                    int major = ((Number) maxFormat.get(0)).intValue();
+                                    int minor = maxFormat.size() > 1 ? ((Number) maxFormat.get(1)).intValue() : 0;
+                                    maxFormatVersion = PackFormatVersion.of(major, minor);
+                                } else {
+                                    throw new IllegalArgumentException("Don't know how to read min_format " + minFormatObj);
+                                }
+                                overlayFormat = PackFormat.version(minFormatVersion, maxFormatVersion);
                             }
 
                             String directory = (String) entry.get("directory");
@@ -480,7 +539,7 @@ public class ResourceManager implements AutoCloseable {
                 String namespace = folder.getName();
                 ResourcePackFile textures = folder.getChild("textures");
                 if (textures.exists() && textures.isDirectory()) {
-                    if (ResourceRegistry.RESOURCE_PACK_VERSION <= 9) {
+                    if (ResourceRegistry.RESOURCE_PACK_VERSION.getMajor() <= 9) {
                         ((AbstractManager) textureManager).loadDirectory(namespace, textures);
                     } else {
                         ((AbstractManager) textureManager).loadDirectory(namespace, textures, textureAtlases);
@@ -533,7 +592,7 @@ public class ResourceManager implements AutoCloseable {
         return Collections.unmodifiableList(resourcePackInfo);
     }
 
-    public int getNativeServerPackFormat() {
+    public PackFormatVersion getNativeServerPackFormat() {
         return nativeServerPackFormat;
     }
 
