@@ -27,6 +27,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.Mo
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelElement.ModelElementRotation;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelFace.ModelFaceSide;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.utils.JsonLenientUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,7 +43,7 @@ public class BlockModel {
 
     public static BlockModel fromJson(IModelManager manager, String resourceLocation, JSONObject rootJson, boolean useLegacyOverrides) {
         String parent = (String) rootJson.getOrDefault("parent", null);
-        boolean ambientocclusion = (boolean) rootJson.getOrDefault("ambientocclusion", true);
+        boolean ambientocclusion = JsonLenientUtils.getBooleanLenientOrDefault(rootJson, "ambientocclusion", true);
         ModelGUILight guiLight = rootJson.containsKey("gui_light") ? ModelGUILight.fromKey((String) rootJson.get("gui_light")) : null;
         Map<ModelDisplayPosition, ModelDisplay> display = new EnumMap<>(ModelDisplayPosition.class);
         JSONObject displayJson = (JSONObject) rootJson.get("display");
@@ -106,10 +107,10 @@ public class BlockModel {
                     }
                     ModelAxis axis = ModelAxis.valueOf(rotationJson.get("axis").toString().toUpperCase());
                     double angle = ((Number) rotationJson.get("angle")).doubleValue();
-                    boolean rescale = (boolean) rotationJson.getOrDefault("rescale", false);
+                    boolean rescale = JsonLenientUtils.getBooleanLenientOrDefault(rotationJson, "rescale", false);
                     rotation = new ModelElementRotation(origin, axis, angle, rescale);
                 }
-                boolean shade = (boolean) elementJson.getOrDefault("shade", true);
+                boolean shade = JsonLenientUtils.getBooleanLenientOrDefault(elementJson, "shade", true);
                 Map<ModelFaceSide, ModelFace> face = new EnumMap<>(ModelFaceSide.class);
                 JSONObject facesJson = (JSONObject) elementJson.get("faces");
                 if (facesJson != null) {
@@ -203,7 +204,7 @@ public class BlockModel {
         return resourceLocation;
     }
 
-    protected String getRawParent() {
+    public String getRawParent() {
         return parent;
     }
 

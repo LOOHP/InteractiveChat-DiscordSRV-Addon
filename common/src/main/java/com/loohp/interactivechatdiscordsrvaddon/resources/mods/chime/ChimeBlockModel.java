@@ -23,25 +23,18 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime;
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
-import com.loohp.interactivechatdiscordsrvaddon.resources.models.Coordinates3D;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.IModelManager;
-import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelAxis;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelElement;
-import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelElement.ModelElementRotation;
-import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelFace;
-import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelFace.ModelFaceSide;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelGUILight;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
-import com.loohp.interactivechatdiscordsrvaddon.resources.models.TextureUV;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimeModelOverride.ChimeModelOverrideType;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -49,108 +42,7 @@ import java.util.Map;
 public class ChimeBlockModel extends BlockModel {
 
     public static ChimeBlockModel fromJson(IModelManager manager, String resourceLocation, JSONObject rootJson, boolean useLegacyOverrides) {
-        String parent = (String) rootJson.getOrDefault("parent", null);
-        boolean ambientocclusion = (boolean) rootJson.getOrDefault("ambientocclusion", true);
-        ModelGUILight guiLight = rootJson.containsKey("gui_light") ? ModelGUILight.fromKey((String) rootJson.get("gui_light")) : null;
-        Map<ModelDisplayPosition, ModelDisplay> display = new EnumMap<>(ModelDisplayPosition.class);
-        JSONObject displayJson = (JSONObject) rootJson.get("display");
-        if (displayJson != null) {
-            for (Object obj : displayJson.keySet()) {
-                String displayKey = obj.toString();
-                JSONArray rotationArray = (JSONArray) ((JSONObject) displayJson.get(displayKey)).get("rotation");
-                JSONArray translationArray = (JSONArray) ((JSONObject) displayJson.get(displayKey)).get("translation");
-                JSONArray scaleArray = (JSONArray) ((JSONObject) displayJson.get(displayKey)).get("scale");
-                Coordinates3D rotation;
-                if (rotationArray == null) {
-                    rotation = new Coordinates3D(0, 0, 0);
-                } else {
-                    rotation = new Coordinates3D(((Number) rotationArray.get(0)).doubleValue(), ((Number) rotationArray.get(1)).doubleValue(), ((Number) rotationArray.get(2)).doubleValue());
-                }
-                Coordinates3D translation;
-                if (translationArray == null) {
-                    translation = new Coordinates3D(0, 0, 0);
-                } else {
-                    translation = new Coordinates3D(((Number) translationArray.get(0)).doubleValue(), ((Number) translationArray.get(1)).doubleValue(), ((Number) translationArray.get(2)).doubleValue());
-                }
-                Coordinates3D scale;
-                if (scaleArray == null) {
-                    scale = new Coordinates3D(1, 1, 1);
-                } else {
-                    scale = new Coordinates3D(((Number) scaleArray.get(0)).doubleValue(), ((Number) scaleArray.get(1)).doubleValue(), ((Number) scaleArray.get(2)).doubleValue());
-                }
-                ModelDisplayPosition displayPos = ModelDisplayPosition.fromKey(displayKey);
-                display.put(displayPos, new ModelDisplay(displayPos, rotation, translation, scale));
-            }
-        }
-        Map<String, String> texture = new HashMap<>();
-        JSONObject textureJson = (JSONObject) rootJson.get("textures");
-        if (textureJson != null) {
-            for (Object obj : textureJson.keySet()) {
-                String textureKey = obj.toString();
-                texture.put(textureKey, textureJson.get(textureKey).toString());
-            }
-        }
-        List<ModelElement> elements = new ArrayList<>();
-        JSONArray elementsArray = (JSONArray) rootJson.get("elements");
-        if (elementsArray != null) {
-            for (Object obj : elementsArray) {
-                JSONObject elementJson = (JSONObject) obj;
-                String name = (String) elementJson.get("name");
-                JSONArray fromArray = (JSONArray) elementJson.get("from");
-                JSONArray toArray = (JSONArray) elementJson.get("to");
-                Coordinates3D from = new Coordinates3D(((Number) fromArray.get(0)).doubleValue(), ((Number) fromArray.get(1)).doubleValue(), ((Number) fromArray.get(2)).doubleValue());
-                Coordinates3D to = new Coordinates3D(((Number) toArray.get(0)).doubleValue(), ((Number) toArray.get(1)).doubleValue(), ((Number) toArray.get(2)).doubleValue());
-                ModelElementRotation rotation;
-                JSONObject rotationJson = (JSONObject) elementJson.get("rotation");
-                if (rotationJson == null) {
-                    rotation = null;
-                } else {
-                    Coordinates3D origin;
-                    JSONArray originArray = (JSONArray) rotationJson.get("origin");
-                    if (originArray == null) {
-                        origin = new Coordinates3D(0, 0, 0);
-                    } else {
-                        origin = new Coordinates3D(((Number) originArray.get(0)).doubleValue(), ((Number) originArray.get(1)).doubleValue(), ((Number) originArray.get(2)).doubleValue());
-                    }
-                    ModelAxis axis = ModelAxis.valueOf(rotationJson.get("axis").toString().toUpperCase());
-                    double angle = ((Number) rotationJson.get("angle")).doubleValue();
-                    boolean rescale = (boolean) rotationJson.getOrDefault("rescale", false);
-                    rotation = new ModelElementRotation(origin, axis, angle, rescale);
-                }
-                boolean shade = (boolean) elementJson.getOrDefault("shade", true);
-                Map<ModelFaceSide, ModelFace> face = new EnumMap<>(ModelFaceSide.class);
-                JSONObject facesJson = (JSONObject) elementJson.get("faces");
-                if (facesJson != null) {
-                    for (Object obj1 : facesJson.keySet()) {
-                        String faceKey = obj1.toString();
-                        ModelFaceSide side = ModelFaceSide.fromKey(faceKey);
-                        JSONObject faceJson = (JSONObject) facesJson.get(faceKey);
-                        TextureUV uv;
-                        JSONArray uvArray = (JSONArray) faceJson.get("uv");
-                        if (uvArray == null) {
-                            uv = null;
-                        } else {
-                            uv = new TextureUV(((Number) uvArray.get(0)).doubleValue(), ((Number) uvArray.get(1)).doubleValue(), ((Number) uvArray.get(2)).doubleValue(), ((Number) uvArray.get(3)).doubleValue());
-                        }
-                        String faceTexture = (String) faceJson.get("texture");
-                        if (texture.containsKey(faceTexture)) {
-                            faceTexture = "#" + faceTexture;
-                        }
-                        Object cullfaceObj = faceJson.get("cullface");
-                        ModelFaceSide cullface;
-                        if (cullfaceObj != null && cullfaceObj instanceof String) {
-                            cullface = ModelFaceSide.fromKey((String) cullfaceObj);
-                        } else {
-                            cullface = side;
-                        }
-                        int faceRotation = ((Number) faceJson.getOrDefault("rotation", 0)).intValue();
-                        int faceTintindex = ((Number) faceJson.getOrDefault("tintindex", -1)).intValue();
-                        face.put(side, new ModelFace(side, uv, faceTexture, cullface, faceRotation, faceTintindex));
-                    }
-                }
-                elements.add(new ModelElement(name, from, to, rotation, shade, face));
-            }
-        }
+        BlockModel base = BlockModel.fromJson(manager, resourceLocation, rootJson, useLegacyOverrides);
         List<ChimeModelOverride> overrides;
         if (useLegacyOverrides) {
             overrides = new ArrayList<>();
@@ -182,11 +74,15 @@ public class ChimeBlockModel extends BlockModel {
         } else {
             overrides = Collections.emptyList();
         }
-        return new ChimeBlockModel(manager, resourceLocation, parent, ambientocclusion, guiLight, display, texture, elements, overrides);
+        return new ChimeBlockModel(base, overrides);
     }
 
     public ChimeBlockModel(IModelManager manager, String resourceLocation, String parent, boolean ambientocclusion, ModelGUILight guiLight, Map<ModelDisplayPosition, ModelDisplay> display, Map<String, String> textures, List<ModelElement> elements, List<ChimeModelOverride> overrides) {
         super(manager, resourceLocation, parent, ambientocclusion, guiLight, display, textures, elements, (List<ModelOverride>) (List<?>) overrides);
+    }
+
+    public ChimeBlockModel(BlockModel baseBlockModel, List<ChimeModelOverride> overrides) {
+        super(baseBlockModel.getManager(), baseBlockModel.getResourceLocation(), baseBlockModel.getRawParent(), baseBlockModel.isAmbientocclusion(), baseBlockModel.getGUILight(), baseBlockModel.getRawDisplay(), baseBlockModel.getTextures(), baseBlockModel.getElements(), (List<ModelOverride>) (List<?>) overrides);
     }
 
     public List<ChimeModelOverride> getChimeOverrides() {

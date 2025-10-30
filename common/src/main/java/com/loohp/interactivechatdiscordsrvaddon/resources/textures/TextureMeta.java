@@ -24,6 +24,7 @@ import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
 import com.loohp.interactivechatdiscordsrvaddon.resources.ResourcePackFile;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureAnimation.TextureAnimationFrames;
+import com.loohp.interactivechatdiscordsrvaddon.utils.JsonLenientUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,7 +81,7 @@ public class TextureMeta extends TextureResource {
                     case "nine_slice": {
                         int width = ((Number) scalingJson.get("width")).intValue();
                         int height = ((Number) scalingJson.get("height")).intValue();
-                        boolean stretchInner = (boolean) scalingJson.getOrDefault("stretch_inner", false);
+                        boolean stretchInner = JsonLenientUtils.getBooleanLenientOrDefault(scalingJson, "stretch_inner", false);
                         int borderLeft;
                         int borderTop;
                         int borderRight;

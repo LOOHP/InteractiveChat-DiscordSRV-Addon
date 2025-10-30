@@ -31,6 +31,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.ChargeType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CopperGolemStatuePose;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay;
+import com.loohp.interactivechatdiscordsrvaddon.utils.JsonLenientUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.KeyUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.ThrowingFunction;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -71,8 +72,8 @@ public abstract class ItemModelDefinition {
     }
 
     public static ItemModelDefinition fromJson(JSONObject rootJson) throws ParseException {
-        boolean handAnimationOnSwapString = (boolean) rootJson.getOrDefault("hand_animation_on_swap", true);
-        boolean oversizedInGui = (boolean) rootJson.getOrDefault("oversized_in_gui", false);
+        boolean handAnimationOnSwapString = JsonLenientUtils.getBooleanLenientOrDefault(rootJson, "hand_animation_on_swap", true);
+        boolean oversizedInGui = JsonLenientUtils.getBooleanLenientOrDefault(rootJson, "oversized_in_gui", false);
         String typeKey = ensureNamespace((String) rootJson.get("type"));
         ItemModelDefinitionType<?> type = ItemModelDefinitionType.getItemModelDefinitionType(typeKey);
 
@@ -109,7 +110,7 @@ public abstract class ItemModelDefinition {
                 return new DamagedConditionProperty(handAnimationOnSwapString, oversizedInGui, propertyType, onTrue, onFalse);
             } else if (propertyType.equals(ConditionPropertyType.HAS_COMPONENT)) {
                 Key component = KeyUtils.toKey((String) rootJson.get("component"));
-                boolean ignoreDefault = (boolean) rootJson.getOrDefault("ignore_default", false);
+                boolean ignoreDefault = JsonLenientUtils.getBooleanLenientOrDefault(rootJson, "ignore_default", false);
                 return new HasComponentConditionProperty(handAnimationOnSwapString, oversizedInGui, propertyType, onTrue, onFalse, component, ignoreDefault);
             } else if (propertyType.equals(ConditionPropertyType.FISHING_ROD_CAST)) {
                 return new FishingRodCastConditionProperty(handAnimationOnSwapString, oversizedInGui, propertyType, onTrue, onFalse);
@@ -205,25 +206,25 @@ public abstract class ItemModelDefinition {
             if (propertyType.equals(RangeDispatchPropertyType.BUNDLE_FULLNESS)) {
                 return new BundleFullnessRangeDispatchProperty(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback);
             } else if (propertyType.equals(RangeDispatchPropertyType.DAMAGE)) {
-                boolean normalize = (boolean) rootJson.getOrDefault("normalize", true);
+                boolean normalize = JsonLenientUtils.getBooleanLenientOrDefault(rootJson, "normalize", true);
                 return new DamageRangeDispatchProperty(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback, normalize);
             } else if (propertyType.equals(RangeDispatchPropertyType.COUNT)) {
-                boolean normalize = (boolean) rootJson.getOrDefault("normalize", true);
+                boolean normalize = JsonLenientUtils.getBooleanLenientOrDefault(rootJson, "normalize", true);
                 return new CountRangeDispatchProperty(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback, normalize);
             } else if (propertyType.equals(RangeDispatchPropertyType.COOLDOWN)) {
                 return new CooldownRangeDispatchProperty(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback);
             } else if (propertyType.equals(RangeDispatchPropertyType.TIME)) {
                 TimeRangeDispatchProperty.TimeSource timeSource = TimeRangeDispatchProperty.TimeSource.valueOf(((String) rootJson.get("source")).toUpperCase());
-                boolean wobble = (boolean) rootJson.getOrDefault("wobble", true);
+                boolean wobble = JsonLenientUtils.getBooleanLenientOrDefault(rootJson, "wobble", true);
                 return new TimeRangeDispatchProperty(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback, timeSource, wobble);
             } else if (propertyType.equals(RangeDispatchPropertyType.COMPASS)) {
                 CompassRangeDispatchProperty.CompassTarget target = CompassRangeDispatchProperty.CompassTarget.valueOf(((String) rootJson.get("target")).toUpperCase());
-                boolean wobble = (boolean) rootJson.getOrDefault("wobble", true);
+                boolean wobble = JsonLenientUtils.getBooleanLenientOrDefault(rootJson, "wobble", true);
                 return new CompassRangeDispatchProperty(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback, target, wobble);
             } else if (propertyType.equals(RangeDispatchPropertyType.CROSSBOW_PULL)) {
                 return new CrossbowPullRangeDispatchProperty(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback);
             } else if (propertyType.equals(RangeDispatchPropertyType.USE_DURATION)) {
-                boolean remaining = (boolean) rootJson.getOrDefault("remaining", false);
+                boolean remaining = JsonLenientUtils.getBooleanLenientOrDefault(rootJson, "remaining", false);
                 return new UseDurationRangeDispatchProperty(handAnimationOnSwapString, oversizedInGui, propertyType, scale, entries, fallback, remaining);
             } else if (propertyType.equals(RangeDispatchPropertyType.USE_CYCLE)) {
                 float period = ((Number) rootJson.getOrDefault("period", 1.0)).floatValue();

@@ -38,6 +38,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.languages.LanguageMeta
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.ModManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureManager;
+import com.loohp.interactivechatdiscordsrvaddon.utils.JsonLenientUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -316,7 +317,7 @@ public class ResourceManager implements AutoCloseable {
                             JSONObject meta = (JSONObject) languageJson.get(language);
                             String region = (String) meta.get("region");
                             String name = (String) meta.get("name");
-                            boolean bidirectional = (boolean) meta.get("bidirectional");
+                            boolean bidirectional = JsonLenientUtils.getBooleanLenientOrDefault(meta, "bidirectional", false);
                             languageMeta.put(language, new LanguageMeta(language, region, name, bidirectional));
                         }
                     }
