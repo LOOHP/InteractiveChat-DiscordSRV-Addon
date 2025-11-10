@@ -182,7 +182,7 @@ public class MinecraftFontRenderer extends JFrame {
 
         resourceBar.setMaximum(10000);
 
-        defaultPackVersionSpinner.setValue(ResourceRegistry.RESOURCE_PACK_VERSION);
+        defaultPackVersionSpinner.setValue(ResourceRegistry.RESOURCE_PACK_VERSION.getMajor());
 
         backgroundColorTextField.addFocusListener(new FocusAdapter() {
             @Override
@@ -403,7 +403,7 @@ public class MinecraftFontRenderer extends JFrame {
             PrintStream original = System.err;
             try {
                 PackFormatVersion packFormat = PackFormatVersion.of(GUIMain.getDefaultPackVersion((Integer) defaultPackVersionSpinner.getValue()));
-                defaultPackVersionSpinner.setValue(packFormat);
+                defaultPackVersionSpinner.setValue(packFormat.getMajor());
 
                 resourceManager = new ResourceManager(
                         packFormat,

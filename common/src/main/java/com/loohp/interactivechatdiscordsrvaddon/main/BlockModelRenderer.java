@@ -230,7 +230,7 @@ public class BlockModelRenderer extends JFrame {
         }
         predicateValuePanel.setLayout(new GridLayout(0, 1));
 
-        defaultPackVersionSpinner.setValue(ResourceRegistry.RESOURCE_PACK_VERSION);
+        defaultPackVersionSpinner.setValue(ResourceRegistry.RESOURCE_PACK_VERSION.getMajor());
 
         providedTexturesDialog = new JDialog(this, "Provided Textures");
         providedTexturesDialog.setIconImage(image);
@@ -593,7 +593,7 @@ public class BlockModelRenderer extends JFrame {
             PrintStream original = System.err;
             try {
                 PackFormatVersion packFormat = PackFormatVersion.of(GUIMain.getDefaultPackVersion((Integer) defaultPackVersionSpinner.getValue()));
-                defaultPackVersionSpinner.setValue(packFormat);
+                defaultPackVersionSpinner.setValue(packFormat.getMajor());
 
                 resourceManager = new ResourceManager(
                         packFormat,
