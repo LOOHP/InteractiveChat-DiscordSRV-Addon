@@ -42,6 +42,7 @@ import com.loohp.interactivechatdiscordsrvaddon.api.events.ResourceManagerInitia
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.hooks.imageframe.ImageFrameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordCommandEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordInteractionEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordReadyEvents;
@@ -128,6 +129,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public static DiscordSRV discordsrv;
 
     public static boolean itemsAdderHook = false;
+    public static boolean imageFrameHook = false;
 
     public static boolean isReady = false;
 
@@ -358,8 +360,14 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         }
 
         if (InteractiveChat.isPluginEnabled("ItemsAdder")) {
-            getServer().getConsoleSender().sendMessage(org.bukkit.ChatColor.AQUA + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon has hooked into ItemsAdder!");
+            getServer().getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon has hooked into ItemsAdder!");
             itemsAdderHook = true;
+        }
+
+        if (InteractiveChat.isPluginEnabled("ImageFrame")) {
+            getServer().getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon has hooked into ImageFrame!");
+            Bukkit.getPluginManager().registerEvents(new ImageFrameEvents(), this);
+            imageFrameHook = true;
         }
 
         if (!compatible()) {

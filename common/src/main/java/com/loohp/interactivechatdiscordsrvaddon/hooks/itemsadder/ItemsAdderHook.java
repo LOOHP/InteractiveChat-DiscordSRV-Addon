@@ -18,7 +18,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.loohp.interactivechatdiscordsrvaddon.hooks;
+package com.loohp.interactivechatdiscordsrvaddon.hooks.itemsadder;
 
 import dev.lone.itemsadder.api.ItemsAdder;
 

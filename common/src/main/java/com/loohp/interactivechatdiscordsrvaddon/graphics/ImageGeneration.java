@@ -1028,6 +1028,27 @@ public class ImageGeneration {
         return image;
     }
 
+    public static BufferedImage getMapImage(BufferedImage source) {
+        InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
+        Debug.debug("ImageGeneration creating map image with image");
+
+        BufferedImage background = resourceManager.get().getTextureManager().getTexture(ResourceRegistry.MAP_TEXTURE_LOCATION + "map_background").getTexture();
+
+        int width = (int) Math.round(source.getWidth() * ((double) MAP_SIZE / (double) source.getHeight()));
+        BufferedImage image = new BufferedImage(width, MAP_SIZE, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = image.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        g.drawImage(background, 0, 0, image.getWidth(), image.getHeight(), null);
+
+        int borderOffsetY = (int) (image.getHeight() / 23.3333333333333333333);
+        int borderOffsetX = (int) (borderOffsetY * ((float) image.getWidth() / (float) image.getHeight()));
+
+        g.drawImage(source, borderOffsetX, borderOffsetY, width - borderOffsetX * 2, MAP_SIZE - borderOffsetY * 2, null);
+        g.dispose();
+
+        return image;
+    }
+
     public static BufferedImage getToolTipImage(Component print, Key customTooltip) {
         return getToolTipImage(print, false, customTooltip);
     }

@@ -393,6 +393,12 @@
         </dependency>
         <dependency>
             <groupId>com.loohp</groupId>
+            <artifactId>ImageFrame</artifactId>
+            <version>1.8.7.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.loohp</groupId>
             <artifactId>InteractiveChat</artifactId>
             <version>4.3.4.0</version>
             <scope>provided</scope>

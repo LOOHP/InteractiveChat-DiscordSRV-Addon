@@ -427,6 +427,10 @@ public class ImageUtils {
     }
 
     public static BufferedImage squarify(BufferedImage image) {
+        return squarify(image, null);
+    }
+
+    public static BufferedImage squarify(BufferedImage image, Color backgroundColor) {
         if (image.getHeight() == image.getWidth()) {
             return image;
         }
@@ -435,6 +439,13 @@ public class ImageUtils {
         int offsetY = (size - image.getHeight()) / 2;
 
         BufferedImage newImage = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+
+        if (backgroundColor != null) {
+            Graphics2D g = newImage.createGraphics();
+            g.setColor(backgroundColor);
+            g.fillRect(0, 0, newImage.getWidth(), newImage.getHeight());
+            g.dispose();
+        }
 
         for (int y = 0; y < image.getHeight(); y++) {
             for (int x = 0; x < image.getWidth(); x++) {

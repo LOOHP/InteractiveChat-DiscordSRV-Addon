@@ -26,6 +26,7 @@ import com.loohp.interactivechat.nms.NMS;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageFrame;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.hooks.imageframe.ImageFrameHook;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.InboundToGameEvents;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -52,17 +53,20 @@ public class GraphicsToPacketMapWrapper {
     private int totalTime;
     private boolean playbackBar;
     private Color backgroundColor;
+    private BufferedImage singleImage;
 
     public GraphicsToPacketMapWrapper(List<ImageFrame> frames, boolean playbackBar, Color backgroundColor) {
         this.done = true;
         this.frames = frames;
         this.playbackBar = playbackBar;
         this.backgroundColor = backgroundColor;
+        this.singleImage = null;
         update();
     }
 
     public GraphicsToPacketMapWrapper(BufferedImage image, Color backgroundColor) {
         this(Collections.singletonList(new ImageFrame(image)), false, backgroundColor);
+        this.singleImage = image;
     }
 
     public GraphicsToPacketMapWrapper(boolean playbackBar, Color backgroundColor) {
@@ -70,6 +74,15 @@ public class GraphicsToPacketMapWrapper {
         this.frames = null;
         this.playbackBar = playbackBar;
         this.backgroundColor = backgroundColor;
+        this.singleImage = null;
+    }
+
+    public BufferedImage getSingleImage() {
+        return singleImage;
+    }
+
+    public Color getBackgroundColor() {
+        return backgroundColor;
     }
 
     public boolean futureCompleted() {
@@ -167,6 +180,9 @@ public class GraphicsToPacketMapWrapper {
         InboundToGameEvents.MAP_VIEWERS.put(player, this);
 
         NMS.getInstance().sendFakeMainHandSlot(player, mapItem);
+        if (InteractiveChatDiscordSrvAddon.imageFrameHook) {
+            ImageFrameHook.notifyHDMapCleared(player, MAP_ID);
+        }
 
         GraphicsToPacketMapWrapper ref = this;
         new BukkitRunnable() {
@@ -179,6 +195,9 @@ public class GraphicsToPacketMapWrapper {
                     byte[] colorArray = colors.get(index);
                     NMS.getInstance().sendFakeMapUpdate(player, MAP_ID, Collections.emptyList(), colorArray);
                 } else {
+                    if (InteractiveChatDiscordSrvAddon.imageFrameHook) {
+                        ImageFrameHook.notifyHDMapCleared(player, MAP_ID);
+                    }
                     this.cancel();
                 }
                 if (++index >= colors.size()) {

@@ -42,6 +42,7 @@ import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.hooks.imageframe.ImageFrameHook;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordInteractionEvents;
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.DiscordDisplayData;
@@ -183,13 +184,20 @@ public class DiscordContentUtils {
                         if ((forceShow || !discordToolTip.isHideTooltip()) && (forceShow || !discordToolTip.isBaseItem() || InteractiveChatDiscordSrvAddon.plugin.itemUseTooltipImageOnBaseItem)) {
                             BufferedImage tooltip = ImageGeneration.getToolTipImage(toolTipComponents, NMSAddon.getInstance().getCustomTooltipResourceLocation(item));
 
-                            if (iData.isFilledMap() && InteractiveChatDiscordSrvAddon.plugin.showMaps) {
-                                MapView mapView = FilledMapUtils.getMapView(item);
-                                boolean isContextual = mapView == null || FilledMapUtils.isContextual(mapView);
-                                ICPlayer icPlayer = iData.getPlayer().getPlayer();
-                                boolean isPlayerLocal = icPlayer != null && icPlayer.isLocal();
-                                if (!isContextual || isPlayerLocal) {
-                                    BufferedImage map = ImageGeneration.getMapImage(item, isPlayerLocal ? icPlayer.getLocalPlayer() : null).get();
+                            if (InteractiveChatDiscordSrvAddon.plugin.showMaps) {
+                                if (iData.isFilledMap()) {
+                                    MapView mapView = FilledMapUtils.getMapView(item);
+                                    boolean isContextual = mapView == null || FilledMapUtils.isContextual(mapView);
+                                    ICPlayer icPlayer = iData.getPlayer().getPlayer();
+                                    boolean isPlayerLocal = icPlayer != null && icPlayer.isLocal();
+                                    if (!isContextual || isPlayerLocal) {
+                                        BufferedImage map = ImageGeneration.getMapImage(item, isPlayerLocal ? icPlayer.getLocalPlayer() : null).get();
+                                        tooltip = ImageUtils.resizeImage(tooltip, 5);
+                                        tooltip = ImageUtils.appendImageBottom(tooltip, map, 10, 0);
+                                    }
+                                } else if (InteractiveChatDiscordSrvAddon.imageFrameHook && ImageFrameHook.isImageFrameCombinedImageItem(item)) {
+                                    BufferedImage source = ImageFrameHook.getImageFrameCombinedImage(item);
+                                    BufferedImage map = ImageGeneration.getMapImage(source);
                                     tooltip = ImageUtils.resizeImage(tooltip, 5);
                                     tooltip = ImageUtils.appendImageBottom(tooltip, map, 10, 0);
                                 }

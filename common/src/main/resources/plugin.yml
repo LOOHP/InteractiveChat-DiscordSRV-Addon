@@ -6,7 +6,7 @@ api-version: 1.13
 folia-supported: true
 description: DiscordSRV addon to InteractiveChat
 depend: [InteractiveChat, DiscordSRV]
-softdepend: [ItemsAdder]
+softdepend: [ItemsAdder, ImageFrame]
 prefix: InteractiveChatDiscordSRVAddon
 
 commands:
