@@ -192,6 +192,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                     }
                 } catch (Exception e) {
                     sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.linkExpired);
+                    e.printStackTrace();
                 }
             }
             return true;

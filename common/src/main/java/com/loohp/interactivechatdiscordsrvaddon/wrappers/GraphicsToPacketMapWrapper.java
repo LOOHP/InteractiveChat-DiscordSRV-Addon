@@ -22,6 +22,7 @@ package com.loohp.interactivechatdiscordsrvaddon.wrappers;
 
 import com.loohp.interactivechat.InteractiveChat;
 import com.loohp.interactivechat.libs.com.cryptomorin.xseries.XMaterial;
+import com.loohp.interactivechat.libs.com.loohp.platformscheduler.ScheduledRunnable;
 import com.loohp.interactivechat.nms.NMS;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageFrame;
@@ -32,7 +33,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.MapPalette;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -185,7 +185,7 @@ public class GraphicsToPacketMapWrapper {
         }
 
         GraphicsToPacketMapWrapper ref = this;
-        new BukkitRunnable() {
+        new ScheduledRunnable() {
             int index = 0;
 
             @Override
