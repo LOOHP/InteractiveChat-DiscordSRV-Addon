@@ -209,7 +209,7 @@ public class DiscordContentUtils {
                         }
 
                         if (iData.isBook() && InteractiveChatDiscordSrvAddon.plugin.showBooks) {
-                            List<Component> pages = BookUtils.getPages((BookMeta) item.getItemMeta());
+                            List<Component> pages = BookUtils.getPages((BookMeta) item.getItemMeta(), player.isOnline() && player.getPlayer().isLocal() ? player.getPlayer().getLocalPlayer() : null);
                             if (pages.isEmpty()) {
                                 pages = Collections.singletonList(Component.empty());
                             }
