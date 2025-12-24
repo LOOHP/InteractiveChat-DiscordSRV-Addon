@@ -195,7 +195,7 @@ public class V1_21_11 extends NMSAddonWrapper {
     @SuppressWarnings("PatternValidation")
     @Override
     public Key getMapCursorTypeKey(MapCursor mapCursor) {
-        MapDecorationType nmsType = CraftMapCursor.CraftType.bukkitToMinecraft(mapCursor.getType());
+        MapDecorationType nmsType = CraftMapCursor.CraftType.bukkitToMinecraftHolder(mapCursor.getType()).a();
         MinecraftKey key = nmsType.b();
         return Key.key(key.b(), key.a());
     }
@@ -260,7 +260,7 @@ public class V1_21_11 extends NMSAddonWrapper {
 
     @Override
     public TextColor getPotionEffectChatColor(PotionEffectType type) {
-        MobEffectList mobEffectList = CraftPotionEffectType.bukkitToMinecraft(type);
+        MobEffectList mobEffectList = CraftPotionEffectType.bukkitToMinecraftHolder(type).a();
         EnumChatFormat chatFormat = mobEffectList.h().a();
         return TextColor.color(chatFormat.f());
     }
@@ -544,7 +544,7 @@ public class V1_21_11 extends NMSAddonWrapper {
 
     @Override
     public Component getEnchantmentDescription(Enchantment enchantment) {
-        IChatBaseComponent description = CraftEnchantment.bukkitToMinecraft(enchantment).f();
+        IChatBaseComponent description = CraftEnchantment.bukkitToMinecraftHolder(enchantment).a().f();
         return InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(description));
     }
 
@@ -557,7 +557,7 @@ public class V1_21_11 extends NMSAddonWrapper {
 
     @Override
     public String getEntityTypeTranslationKey(EntityType type) {
-        return CraftEntityType.bukkitToMinecraft(type).g();
+        return CraftEntityType.bukkitToMinecraftHolder(type).g();
     }
 
     @Override
@@ -803,25 +803,25 @@ public class V1_21_11 extends NMSAddonWrapper {
 
     @Override
     public String getBannerPatternTranslationKey(PatternType type, DyeColor color) {
-        String translationKey = CraftPatternType.bukkitToMinecraft(type).b();
+        String translationKey = CraftPatternType.bukkitToMinecraftHolder(type).a().b();
         return translationKey + "." + color.name().toLowerCase();
     }
 
     @Override
     public Component getTrimMaterialDescription(Object trimMaterial) {
-        TrimMaterial material = CraftTrimMaterial.bukkitToMinecraft((org.bukkit.inventory.meta.trim.TrimMaterial) trimMaterial);
+        TrimMaterial material = CraftTrimMaterial.bukkitToMinecraftHolder((org.bukkit.inventory.meta.trim.TrimMaterial) trimMaterial).a();
         IChatBaseComponent description = material.b();
         return InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(description));
     }
 
     @Override
     public Component getTrimPatternDescription(Object trimPattern, Object trimMaterial) {
-        TrimPattern pattern = CraftTrimPattern.bukkitToMinecraft((org.bukkit.inventory.meta.trim.TrimPattern) trimPattern);
+        TrimPattern pattern = CraftTrimPattern.bukkitToMinecraftHolder((org.bukkit.inventory.meta.trim.TrimPattern) trimPattern).a();
         IChatBaseComponent description;
         if (trimMaterial == null) {
             description = pattern.b();
         } else {
-            TrimMaterial material = CraftTrimMaterial.bukkitToMinecraft((org.bukkit.inventory.meta.trim.TrimMaterial) trimMaterial);
+            TrimMaterial material = CraftTrimMaterial.bukkitToMinecraftHolder((org.bukkit.inventory.meta.trim.TrimMaterial) trimMaterial).a();
             description = pattern.a(Holder.a(material));
         }
         return InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(description));
