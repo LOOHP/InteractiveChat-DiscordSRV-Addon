@@ -41,7 +41,7 @@ import java.util.OptionalInt;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
-public class ComponentUtils {
+public class ComponentCharacterUtils {
 
     public static ValuePairs<String, List<ValuePairs<ComponentCharacter, CharacterData>>> fromComponent(Component component, UnaryOperator<String> shaper) {
         List<ValuePairs<ComponentCharacter, CharacterData>> data = new ArrayList<>();

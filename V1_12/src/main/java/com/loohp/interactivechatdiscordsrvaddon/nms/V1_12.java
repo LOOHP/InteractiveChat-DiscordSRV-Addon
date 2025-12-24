@@ -37,16 +37,16 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AttributeBase;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.LegacyDimensionManager;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ItemDamageInfo;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.MoonPhase;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ProfileProperty;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
-import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_12_R1.AdvancementDisplay;
 import net.minecraft.server.v1_12_R1.Block;
 import net.minecraft.server.v1_12_R1.CombatTracker;
@@ -178,7 +178,7 @@ public class V1_12 extends NMSAddonWrapper {
     }
 
     @Override
-    public DimensionManager getDimensionManager(World world) {
+    public LegacyDimensionManager getLegacyDimensionManager(World world) {
         throw new UnsupportedOperationException();
     }
 
@@ -616,13 +616,13 @@ public class V1_12 extends NMSAddonWrapper {
     }
 
     @Override
-    public float getSkyAngle(World world) {
+    public float getSkyAngle(Location location) {
         return 0F;
     }
 
     @Override
-    public int getMoonPhase(World world) {
-        return 0;
+    public MoonPhase getMoonPhase(Location location) {
+        return MoonPhase.FULL_MOON;
     }
 
     @Override

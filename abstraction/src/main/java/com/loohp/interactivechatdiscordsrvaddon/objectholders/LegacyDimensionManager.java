@@ -24,7 +24,7 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 
 import java.util.OptionalLong;
 
-public interface DimensionManager {
+public interface LegacyDimensionManager {
 
     boolean hasFixedTime();
 

@@ -36,7 +36,7 @@ public class I18nUtils {
 
     public static String shaping(String str) {
         try {
-            return new ArabicShaping(8).shape(str);
+            return new ArabicShaping(ArabicShaping.LETTERS_SHAPE).shape(str);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -44,10 +44,10 @@ public class I18nUtils {
     }
 
     public static List<ValuePairs<ComponentCharacter, CharacterData>> bidirectionalReorder(Component component, boolean rightToLeft) {
-        ValuePairs<String, List<ValuePairs<ComponentCharacter, CharacterData>>> pair = ComponentUtils.fromComponent(component, str -> shaping(str));
+        ValuePairs<String, List<ValuePairs<ComponentCharacter, CharacterData>>> pair = ComponentCharacterUtils.fromComponent(component, str -> shaping(str));
         List<ValuePairs<ComponentCharacter, CharacterData>> data = pair.getSecond();
-        Bidi bidi = new Bidi(pair.getFirst(), rightToLeft ? 127 : 126);
-        bidi.setReorderingMode(0);
+        Bidi bidi = new Bidi(pair.getFirst(), rightToLeft ? Bidi.DIRECTION_DEFAULT_RIGHT_TO_LEFT : Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT);
+        bidi.setReorderingMode(Bidi.REORDER_DEFAULT);
         List<ValuePairs<ComponentCharacter, CharacterData>> result = new ArrayList<>(data.size());
         int totalRuns = bidi.countRuns();
         for (int i = 0; i < totalRuns; i++) {

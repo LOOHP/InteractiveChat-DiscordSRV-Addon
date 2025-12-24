@@ -105,7 +105,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                     }
                 }
             } else {
-                sender.sendMessage(InteractiveChat.noPermissionMessage);
+                InteractiveChat.sendMessage(sender, InteractiveChat.noPermissionMessage);
             }
             return true;
         }
@@ -130,7 +130,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                     e.printStackTrace();
                 }
             } else {
-                sender.sendMessage(InteractiveChat.noPermissionMessage);
+                InteractiveChat.sendMessage(sender, InteractiveChat.noPermissionMessage);
             }
             return true;
         }
@@ -143,7 +143,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                 sender.sendMessage(InteractiveChatDiscordSrvAddon.plugin.reloadTextureMessage);
                 InteractiveChatDiscordSrvAddon.plugin.reloadTextures(redownload, clean, sender);
             } else {
-                sender.sendMessage(InteractiveChat.noPermissionMessage);
+                InteractiveChat.sendMessage(sender, InteractiveChat.noPermissionMessage);
             }
             return true;
         }
@@ -165,7 +165,7 @@ public class Commands implements CommandExecutor, TabCompleter {
                     }
                 });
             } else {
-                sender.sendMessage(InteractiveChat.noPermissionMessage);
+                InteractiveChat.sendMessage(sender, InteractiveChat.noPermissionMessage);
             }
             return true;
         }

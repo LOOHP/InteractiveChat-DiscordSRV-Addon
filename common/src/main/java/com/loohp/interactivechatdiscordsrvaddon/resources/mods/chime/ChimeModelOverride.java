@@ -163,31 +163,31 @@ public class ChimeModelOverride extends ModelOverride {
             return world != null && WorldUtils.getNamespacedKey(world).asString().equals(value);
         }),
         DIMENSION_HAS_SKY_LIGHT("dimension/has_sky_light", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
-            return world != null && NMSAddon.getInstance().getDimensionManager(world).hasSkyLight() == value;
+            return world != null && NMSAddon.getInstance().getLegacyDimensionManager(world).hasSkyLight() == value;
         }),
         DIMENSION_HAS_CEILING("dimension/has_ceiling", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
-            return world != null && NMSAddon.getInstance().getDimensionManager(world).hasCeiling() == value;
+            return world != null && NMSAddon.getInstance().getLegacyDimensionManager(world).hasCeiling() == value;
         }),
         DIMENSION_ULTRAWARM("dimension/ultrawarm", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
-            return world != null && NMSAddon.getInstance().getDimensionManager(world).ultraWarm() == value;
+            return world != null && NMSAddon.getInstance().getLegacyDimensionManager(world).ultraWarm() == value;
         }),
         DIMENSION_NATURAL("dimension/natural", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
-            return world != null && NMSAddon.getInstance().getDimensionManager(world).natural() == value;
+            return world != null && NMSAddon.getInstance().getLegacyDimensionManager(world).natural() == value;
         }),
         DIMENSION_HAS_ENDER_DRAGON_FIGHT("dimension/has_ender_dragon_fight", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
-            return world != null && NMSAddon.getInstance().getDimensionManager(world).createDragonFight() == value;
+            return world != null && NMSAddon.getInstance().getLegacyDimensionManager(world).createDragonFight() == value;
         }),
         DIMENSION_PIGLIN_SAFE("dimension/piglin_safe", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
-            return world != null && NMSAddon.getInstance().getDimensionManager(world).piglinSafe() == value;
+            return world != null && NMSAddon.getInstance().getLegacyDimensionManager(world).piglinSafe() == value;
         }),
         DIMENSION_BED_WORKS("dimension/bed_works", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
-            return world != null && NMSAddon.getInstance().getDimensionManager(world).bedWorks() == value;
+            return world != null && NMSAddon.getInstance().getLegacyDimensionManager(world).bedWorks() == value;
         }),
         DIMENSION_RESPAWN_ANCHOR_WORKS("dimension/respawn_anchor_works", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
-            return world != null && NMSAddon.getInstance().getDimensionManager(world).respawnAnchorWorks() == value;
+            return world != null && NMSAddon.getInstance().getLegacyDimensionManager(world).respawnAnchorWorks() == value;
         }),
         DIMENSION_HAS_RAIDS("dimension/has_raids", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
-            return world != null && NMSAddon.getInstance().getDimensionManager(world).hasRaids() == value;
+            return world != null && NMSAddon.getInstance().getLegacyDimensionManager(world).hasRaids() == value;
         }),
         WORLD_RAINING("world/raining", boolean.class, (value, player, world, livingEntity, itemStack, translateFunction) -> {
             return world != null && world.hasStorm() == value;

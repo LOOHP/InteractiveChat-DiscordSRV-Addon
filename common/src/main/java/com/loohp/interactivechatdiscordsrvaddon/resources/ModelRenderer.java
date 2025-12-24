@@ -38,6 +38,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.Coordinates3D;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelAxis;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay.ModelDisplayPosition;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelElement;
@@ -98,9 +99,6 @@ public class ModelRenderer implements AutoCloseable {
 
     public static final int INTERNAL_W = 64;
     public static final int INTERNAL_H = 64;
-
-    public static final float RESCALE_22_5 = 1.0F / (float) Math.cos(((float) Math.PI / 8F)) - 1.0F;
-    public static final float RESCALE_45 = 1.0F / (float) Math.cos(((float) Math.PI / 4F)) - 1.0F;
 
     public static final int SKIN_RESOLUTION = 1600;
     public static final int TEXTURE_RESOLUTION = 800;
@@ -480,7 +478,7 @@ public class ModelRenderer implements AutoCloseable {
         while (itr.hasNext()) {
             ModelElement element = itr.next();
             tasks.add(renderingService.submit(() -> {
-                ModelElementRotation rotation = element.getRotation();
+                Map<ModelAxis, ModelElementRotation> rotation = element.getRotation();
                 BufferedImage[] images = new BufferedImage[6];
                 Hexahedron hexahedron = Hexahedron.fromCorners(new Point3D(element.getFrom().getX(), element.getFrom().getY(), element.getFrom().getZ()), new Point3D(element.getTo().getX(), element.getTo().getY(), element.getTo().getZ()), images);
                 BufferedImage[][] overlayImages = new BufferedImage[6][];
@@ -655,33 +653,30 @@ public class ModelRenderer implements AutoCloseable {
                 hexahedron.setOverlay(overlayImages);
                 hexahedron.setOverlayBlendingMode(overlayBlendMode);
                 hexahedron.setOverlayAdditionFactor(OVERLAY_ADDITION_FACTORS);
-                if (rotation != null) {
-                    hexahedron.translate(-rotation.getOrigin().getX(), -rotation.getOrigin().getY(), -rotation.getOrigin().getZ());
-                    if (rotation.isRescale()) {
-                        double absAngle = Math.abs(rotation.getAngle());
-                        if (absAngle != 0F) {
-                            if (absAngle == 22.5F) {
-                                hexahedron.scale(RESCALE_22_5, RESCALE_22_5, RESCALE_22_5);
-                            } else if (absAngle == 45F) {
-                                hexahedron.scale(RESCALE_45, RESCALE_45, RESCALE_45);
-                            } else {
-                                throw new IllegalArgumentException("Element rotation can only be between angles 45 and -45 with 22.5 degrees increments");
+                for (ModelAxis axis : ModelAxis.values()) {
+                    ModelElementRotation axisRotation = rotation.get(axis);
+                    if (axisRotation != null) {
+                        hexahedron.translate(-axisRotation.getOrigin().getX(), -axisRotation.getOrigin().getY(), -axisRotation.getOrigin().getZ());
+                        if (axisRotation.isRescale()) {
+                            double absAngle = Math.abs(axisRotation.getAngle());
+                            if (absAngle != 0F) {
+                                double rescale = rescaleForRotation(absAngle);
+                                hexahedron.scale(rescale, rescale, rescale);
                             }
                         }
+                        switch (axisRotation.getAxis()) {
+                            case X:
+                                hexahedron.rotate(axisRotation.getAngle(), 0, 0, false);
+                                break;
+                            case Y:
+                                hexahedron.rotate(0, axisRotation.getAngle(), 0, false);
+                                break;
+                            case Z:
+                                hexahedron.rotate(0, 0, axisRotation.getAngle(), false);
+                                break;
+                        }
+                        hexahedron.translate(axisRotation.getOrigin().getX(), axisRotation.getOrigin().getY(), axisRotation.getOrigin().getZ());
                     }
-                    switch (rotation.getAxis()) {
-                        case X:
-                            hexahedron.rotate(rotation.getAngle(), 0, 0, false);
-                            break;
-                        case Y:
-                            hexahedron.rotate(0, rotation.getAngle(), 0, false);
-                            break;
-                        case Z:
-                        default:
-                            hexahedron.rotate(0, 0, rotation.getAngle(), false);
-                            break;
-                    }
-                    hexahedron.translate(rotation.getOrigin().getX(), rotation.getOrigin().getY(), rotation.getOrigin().getZ());
                 }
                 return hexahedron;
             }));
@@ -749,6 +744,11 @@ public class ModelRenderer implements AutoCloseable {
         }
         renderModel.updateLighting(lightData.getLightVector(), lightData.getAmbientLevel(), lightData.getMaxLevel());
         renderModel.render(image, true, baseTransform, BlendingModes.NORMAL, renderingService).join();
+    }
+
+    public double rescaleForRotation(double degrees) {
+        double radians = Math.toRadians(degrees);
+        return 1.0 / Math.cos(radians) - 1.0;
     }
 
     private String cacheKey(Object... obj) {

@@ -488,7 +488,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         alternateResourcePackURL = config.getConfiguration().getString("Resources.AlternateServerResourcePack.URL");
         alternateResourcePackHash = config.getConfiguration().getString("Resources.AlternateServerResourcePack.Hash");
         optifineCustomTextures = config.getConfiguration().getBoolean("Resources.OptifineCustomTextures");
-        chimeOverrideModels = config.getConfiguration().getBoolean("Resources.ChimeOverrideModels") && InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16);
+        chimeOverrideModels = config.getConfiguration().getBoolean("Resources.ChimeOverrideModels") && InteractiveChat.version.isBetweenInclusively(MCVersion.V1_16, MCVersion.V1_20_5);
 
         itemImage = config.getConfiguration().getBoolean("InventoryImage.Item.Enabled");
         invImage = config.getConfiguration().getBoolean("InventoryImage.Inventory.Enabled");

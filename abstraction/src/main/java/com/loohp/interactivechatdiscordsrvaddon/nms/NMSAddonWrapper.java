@@ -31,9 +31,10 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AttributeBase;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.LegacyDimensionManager;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ItemDamageInfo;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.MoonPhase;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ProfileProperty;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
@@ -94,7 +95,7 @@ public abstract class NMSAddonWrapper {
 
     public abstract Key getPatternTypeKey(PatternType patternType);
 
-    public abstract DimensionManager getDimensionManager(World world);
+    public abstract LegacyDimensionManager getLegacyDimensionManager(World world);
 
     public abstract Key getNamespacedKey(World world);
 
@@ -196,9 +197,9 @@ public abstract class NMSAddonWrapper {
 
     public abstract float getItemCooldownProgress(Player player, ItemStack itemStack);
 
-    public abstract float getSkyAngle(World world);
+    public abstract float getSkyAngle(Location location);
 
-    public abstract int getMoonPhase(World world);
+    public abstract MoonPhase getMoonPhase(Location location);
 
     public abstract int getCrossbowPullTime(ItemStack itemStack, LivingEntity livingEntity);
 

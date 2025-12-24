@@ -197,9 +197,11 @@ public class DiscordContentUtils {
                                     }
                                 } else if (InteractiveChatDiscordSrvAddon.imageFrameHook && ImageFrameHook.isImageFrameCombinedImageItem(item)) {
                                     BufferedImage source = ImageFrameHook.getImageFrameCombinedImage(item);
-                                    BufferedImage map = ImageGeneration.getMapImage(source);
-                                    tooltip = ImageUtils.resizeImage(tooltip, 5);
-                                    tooltip = ImageUtils.appendImageBottom(tooltip, map, 10, 0);
+                                    if (source != null) {
+                                        BufferedImage map = ImageGeneration.getMapImage(source);
+                                        tooltip = ImageUtils.resizeImage(tooltip, 5);
+                                        tooltip = ImageUtils.appendImageBottom(tooltip, map, 10, 0);
+                                    }
                                 }
                             }
 

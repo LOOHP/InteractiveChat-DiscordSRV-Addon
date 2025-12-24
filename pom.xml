@@ -26,7 +26,7 @@
 
     <groupId>com.loohp</groupId>
     <artifactId>InteractiveChatDiscordSrvAddon-Parent</artifactId>
-    <version>4.3.4.1</version>
+    <version>4.3.5.0</version>
     <packaging>pom</packaging>
 
     <properties>
@@ -72,6 +72,7 @@
         <module>V1_21_8</module>
         <module>V1_21_9</module>
         <module>V1_21_10</module>
+        <module>V1_21_11</module>
         <module>common</module>
     </modules>
 </project>

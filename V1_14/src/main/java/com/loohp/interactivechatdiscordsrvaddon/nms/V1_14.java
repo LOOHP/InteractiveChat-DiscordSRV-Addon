@@ -24,13 +24,11 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.object.PlayerHeadObjectContents;
 import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
 import com.loohp.interactivechat.nms.NMS;
 import com.loohp.interactivechat.objectholders.ICMaterial;
-import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
 import com.loohp.interactivechat.utils.InteractiveChatComponentSerializer;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementData;
@@ -38,9 +36,10 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AttributeBase;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.DimensionManager;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.LegacyDimensionManager;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ItemDamageInfo;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.MoonPhase;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ProfileProperty;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
@@ -201,7 +200,7 @@ public class V1_14 extends NMSAddonWrapper {
     }
 
     @Override
-    public DimensionManager getDimensionManager(World world) {
+    public LegacyDimensionManager getLegacyDimensionManager(World world) {
         throw new UnsupportedOperationException();
     }
 
@@ -646,13 +645,13 @@ public class V1_14 extends NMSAddonWrapper {
     }
 
     @Override
-    public float getSkyAngle(World world) {
+    public float getSkyAngle(Location location) {
         return 0F;
     }
 
     @Override
-    public int getMoonPhase(World world) {
-        return 0;
+    public MoonPhase getMoonPhase(Location location) {
+        return MoonPhase.FULL_MOON;
     }
 
     @Override

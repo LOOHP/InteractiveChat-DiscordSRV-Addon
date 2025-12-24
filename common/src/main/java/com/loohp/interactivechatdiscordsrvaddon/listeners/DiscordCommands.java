@@ -548,7 +548,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
         if (InteractiveChatDiscordSrvAddon.plugin.shareItemCommandIsMainServer) {
             Optional<ICPlaceholder> optItemPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.equals(InteractiveChat.itemPlaceholder)).findFirst();
             if (InteractiveChatDiscordSrvAddon.plugin.shareItemCommandEnabled && optItemPlaceholder.isPresent()) {
-                String itemDescription = ChatColorUtils.stripColor(optItemPlaceholder.get().getDescription());
+                String itemDescription = PlainTextComponentSerializer.plainText().serialize(optItemPlaceholder.get().getDescription());
 
                 SubcommandData mainhandSubcommand = new SubcommandData("mainhand", itemDescription);
                 SubcommandData offhandSubcommand = new SubcommandData("offhand", itemDescription);
@@ -557,7 +557,7 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                 SubcommandData armorSubcommand = new SubcommandData("armor", itemDescription).addOptions(new OptionData(OptionType.STRING, slotLabel, slotDescription, true).addChoice("head", "head").addChoice("chest", "chest").addChoice("legs", "legs").addChoice("feet", "feet"));
                 SubcommandData enderSubcommand = new SubcommandData("ender", itemDescription).addOptions(new OptionData(OptionType.INTEGER, slotLabel, slotDescription, true).setRequiredRange(1, 27));
 
-                commandDataList.add(new CommandData(ITEM_LABEL, ChatColorUtils.stripColor(optItemPlaceholder.get().getDescription())).addSubcommands(mainhandSubcommand).addSubcommands(offhandSubcommand).addSubcommands(hotbarSubcommand).addSubcommands(inventorySubcommand).addSubcommands(armorSubcommand).addSubcommands(enderSubcommand));
+                commandDataList.add(new CommandData(ITEM_LABEL, itemDescription).addSubcommands(mainhandSubcommand).addSubcommands(offhandSubcommand).addSubcommands(hotbarSubcommand).addSubcommands(inventorySubcommand).addSubcommands(armorSubcommand).addSubcommands(enderSubcommand));
 
                 if (InteractiveChatDiscordSrvAddon.plugin.shareItemCommandAsOthers) {
                     SubcommandData mainhandOtherSubcommand = new SubcommandData("mainhand", itemDescription).addOption(OptionType.USER, memberLabel, memberDescription, true);
@@ -567,27 +567,29 @@ public class DiscordCommands implements Listener, SlashCommandProvider {
                     SubcommandData armorOtherSubcommand = new SubcommandData("armor", itemDescription).addOptions(new OptionData(OptionType.STRING, slotLabel, slotDescription, true).addChoice("head", "head").addChoice("chest", "chest").addChoice("legs", "legs").addChoice("feet", "feet")).addOption(OptionType.USER, memberLabel, memberDescription, true);
                     SubcommandData enderOtherSubcommand = new SubcommandData("ender", itemDescription).addOptions(new OptionData(OptionType.INTEGER, slotLabel, slotDescription, true).setRequiredRange(1, 27)).addOption(OptionType.USER, memberLabel, memberDescription, true);
 
-                    commandDataList.add(new CommandData(ITEM_OTHER_LABEL, ChatColorUtils.stripColor(optItemPlaceholder.get().getDescription())).addSubcommands(mainhandOtherSubcommand).addSubcommands(offhandOtherSubcommand).addSubcommands(hotbarOtherSubcommand).addSubcommands(inventoryOtherSubcommand).addSubcommands(armorOtherSubcommand).addSubcommands(enderOtherSubcommand));
+                    commandDataList.add(new CommandData(ITEM_OTHER_LABEL, itemDescription).addSubcommands(mainhandOtherSubcommand).addSubcommands(offhandOtherSubcommand).addSubcommands(hotbarOtherSubcommand).addSubcommands(inventoryOtherSubcommand).addSubcommands(armorOtherSubcommand).addSubcommands(enderOtherSubcommand));
                 }
             }
         }
         if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandIsMainServer) {
             Optional<ICPlaceholder> optInvPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.equals(InteractiveChat.invPlaceholder)).findFirst();
             if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandEnabled && optInvPlaceholder.isPresent()) {
-                commandDataList.add(new CommandData(INVENTORY_LABEL, ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())));
+                String invDescription = PlainTextComponentSerializer.plainText().serialize(optInvPlaceholder.get().getDescription());
+                commandDataList.add(new CommandData(INVENTORY_LABEL, invDescription));
 
                 if (InteractiveChatDiscordSrvAddon.plugin.shareInvCommandAsOthers) {
-                    commandDataList.add(new CommandData(INVENTORY_OTHER_LABEL, ChatColorUtils.stripColor(optInvPlaceholder.get().getDescription())).addOption(OptionType.USER, memberLabel, memberDescription, true));
+                    commandDataList.add(new CommandData(INVENTORY_OTHER_LABEL, invDescription).addOption(OptionType.USER, memberLabel, memberDescription, true));
                 }
             }
         }
         if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandIsMainServer) {
             Optional<ICPlaceholder> optEnderPlaceholder = InteractiveChat.placeholderList.values().stream().filter(each -> each.equals(InteractiveChat.enderPlaceholder)).findFirst();
             if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandEnabled && optEnderPlaceholder.isPresent()) {
-                commandDataList.add(new CommandData(ENDERCHEST_LABEL, ChatColorUtils.stripColor(optEnderPlaceholder.get().getDescription())));
+                String enderDescription = PlainTextComponentSerializer.plainText().serialize(optEnderPlaceholder.get().getDescription());
+                commandDataList.add(new CommandData(ENDERCHEST_LABEL, enderDescription));
 
                 if (InteractiveChatDiscordSrvAddon.plugin.shareEnderCommandAsOthers) {
-                    commandDataList.add(new CommandData(ENDERCHEST_OTHER_LABEL, ChatColorUtils.stripColor(optEnderPlaceholder.get().getDescription())).addOption(OptionType.USER, memberLabel, memberDescription, true));
+                    commandDataList.add(new CommandData(ENDERCHEST_OTHER_LABEL, enderDescription).addOption(OptionType.USER, memberLabel, memberDescription, true));
                 }
             }
         }

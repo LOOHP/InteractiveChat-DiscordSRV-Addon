@@ -48,6 +48,7 @@ import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ChargeType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ItemDamageInfo;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.MoonPhase;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
 import com.loohp.interactivechatdiscordsrvaddon.resources.CustomItemTextureRegistry;
@@ -832,13 +833,13 @@ public class ItemRenderUtils {
                 ICPlayer icPlayer = player.getPlayer();
                 float angle = RANDOM.nextFloat();
                 if (icPlayer != null && icPlayer.isLocal()) {
-                    World world = icPlayer.getLocalPlayer().getWorld();
+                    Location location = icPlayer.getLocalPlayer().getLocation();
                     switch (timeRangeDispatchProperty.getSource()) {
                         case DAYTIME:
-                            angle = NMSAddon.getInstance().getSkyAngle(world);
+                            angle = NMSAddon.getInstance().getSkyAngle(location);
                             break;
                         case MOON_PHASE:
-                            angle = (float) NMSAddon.getInstance().getMoonPhase(world) / 8.0f;
+                            angle = (float) NMSAddon.getInstance().getMoonPhase(location).getIndex() / (float) MoonPhase.MOON_PHASES.size();
                             break;
                     }
                 }

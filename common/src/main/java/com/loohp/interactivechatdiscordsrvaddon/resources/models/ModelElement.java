@@ -31,11 +31,11 @@ public class ModelElement {
     private final String name;
     private final Coordinates3D from;
     private final Coordinates3D to;
-    private final ModelElementRotation rotation;
+    private final Map<ModelAxis, ModelElementRotation> rotation;
     private final boolean shade;
     private final Map<ModelFaceSide, ModelFace> face;
 
-    public ModelElement(String name, Coordinates3D from, Coordinates3D to, ModelElementRotation rotation, boolean shade, Map<ModelFaceSide, ModelFace> face) {
+    public ModelElement(String name, Coordinates3D from, Coordinates3D to, Map<ModelAxis, ModelElementRotation> rotation, boolean shade, Map<ModelFaceSide, ModelFace> face) {
         this.name = name;
         this.from = from;
         this.to = to;
@@ -56,7 +56,7 @@ public class ModelElement {
         return to;
     }
 
-    public ModelElementRotation getRotation() {
+    public Map<ModelAxis, ModelElementRotation> getRotation() {
         return rotation;
     }
 

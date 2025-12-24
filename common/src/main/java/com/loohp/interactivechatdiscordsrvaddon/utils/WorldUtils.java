@@ -39,7 +39,7 @@ public class WorldUtils {
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_19)) {
             return world.isNatural();
         } else if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_16)) {
-            return NMSAddon.getInstance().getDimensionManager(world).natural();
+            return NMSAddon.getInstance().getLegacyDimensionManager(world).natural();
         } else {
             return world.getEnvironment().equals(Environment.NORMAL);
         }

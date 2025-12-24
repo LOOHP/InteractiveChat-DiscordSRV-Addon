@@ -37,7 +37,7 @@ public class ResourceRegistry {
             blockTextureLocation = com.loohp.interactivechat.InteractiveChat.version.isLegacy() ? "minecraft:blocks/" : "minecraft:block/";
         } catch (ClassNotFoundException | NoClassDefFoundError e) {
             isMinecraftServerEnvironment = false;
-            resourcePackVersion = PackFormatVersion.of(46);
+            resourcePackVersion = PackFormatVersion.of(75);
             itemTextureLocation = "minecraft:item/";
             blockTextureLocation = "minecraft:block/";
         }

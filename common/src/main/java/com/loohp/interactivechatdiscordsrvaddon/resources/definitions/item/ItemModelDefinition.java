@@ -773,9 +773,11 @@ public abstract class ItemModelDefinition {
                 if (rawDefaultValue instanceof JSONArray) {
                     int[] defaultValue = ((JSONArray) tintJson.get("default")).stream().mapToInt(val -> ((Number) val).intValue()).toArray();
                     return new CustomModelDataTintSource(index, defaultValue);
-                } else {
+                } else if (rawDefaultValue instanceof Number) {
                     int defaultValue = ((Number) rawDefaultValue).intValue();
                     return new CustomModelDataTintSource(index, defaultValue);
+                } else {
+                    return new CustomModelDataTintSource(index, 0);
                 }
             }
 

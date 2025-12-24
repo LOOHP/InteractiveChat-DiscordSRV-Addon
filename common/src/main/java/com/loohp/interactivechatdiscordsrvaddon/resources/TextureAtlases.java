@@ -155,8 +155,13 @@ public class TextureAtlases {
     }
 
     public TextureAtlases merge(TextureAtlases other) {
-        Map<TextureAtlasType, List<TextureAtlasSource>> textureAtlases = new HashMap<>(this.textureAtlases);
-        textureAtlases.putAll(other.getTextureAtlases());
+        Map<TextureAtlasType, List<TextureAtlasSource>> textureAtlases = new HashMap<>();
+        for (Map.Entry<TextureAtlasType, List<TextureAtlasSource>> entry : this.textureAtlases.entrySet()) {
+            textureAtlases.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
+        for (Map.Entry<TextureAtlasType, List<TextureAtlasSource>> entry : other.getTextureAtlases().entrySet()) {
+            textureAtlases.computeIfAbsent(entry.getKey(), k -> new ArrayList<>()).addAll(entry.getValue());
+        }
         return new TextureAtlases(textureAtlases);
     }
 

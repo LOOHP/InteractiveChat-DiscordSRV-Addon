@@ -93,11 +93,9 @@ public class BlockModel {
                 JSONArray toArray = (JSONArray) elementJson.get("to");
                 Coordinates3D from = new Coordinates3D(((Number) fromArray.get(0)).doubleValue(), ((Number) fromArray.get(1)).doubleValue(), ((Number) fromArray.get(2)).doubleValue());
                 Coordinates3D to = new Coordinates3D(((Number) toArray.get(0)).doubleValue(), ((Number) toArray.get(1)).doubleValue(), ((Number) toArray.get(2)).doubleValue());
-                ModelElementRotation rotation;
+                Map<ModelAxis, ModelElementRotation> rotation = new EnumMap<>(ModelAxis.class);
                 JSONObject rotationJson = (JSONObject) elementJson.get("rotation");
-                if (rotationJson == null) {
-                    rotation = null;
-                } else {
+                if (rotationJson != null) {
                     Coordinates3D origin;
                     JSONArray originArray = (JSONArray) rotationJson.get("origin");
                     if (originArray == null) {
@@ -105,10 +103,17 @@ public class BlockModel {
                     } else {
                         origin = new Coordinates3D(((Number) originArray.get(0)).doubleValue(), ((Number) originArray.get(1)).doubleValue(), ((Number) originArray.get(2)).doubleValue());
                     }
-                    ModelAxis axis = ModelAxis.valueOf(rotationJson.get("axis").toString().toUpperCase());
-                    double angle = ((Number) rotationJson.get("angle")).doubleValue();
                     boolean rescale = JsonLenientUtils.getBooleanLenientOrDefault(rotationJson, "rescale", false);
-                    rotation = new ModelElementRotation(origin, axis, angle, rescale);
+                    if (rotationJson.containsKey("axis") && rotationJson.containsKey("angle")) {
+                        ModelAxis axis = ModelAxis.valueOf(rotationJson.get("axis").toString().toUpperCase());
+                        double angle = ((Number) rotationJson.get("angle")).doubleValue();
+                        rotation.put(axis, new ModelElementRotation(origin, axis, angle, rescale));
+                    } else {
+                        for (ModelAxis axis : ModelAxis.values()) {
+                            double angle = ((Number) rotationJson.get(axis.getKey())).doubleValue();
+                            rotation.put(axis, new ModelElementRotation(origin, axis, angle, rescale));
+                        }
+                    }
                 }
                 boolean shade = JsonLenientUtils.getBooleanLenientOrDefault(elementJson, "shade", true);
                 Map<ModelFaceSide, ModelFace> face = new EnumMap<>(ModelFaceSide.class);

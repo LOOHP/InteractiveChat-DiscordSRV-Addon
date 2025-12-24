@@ -22,6 +22,17 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.models;
 
 public enum ModelAxis {
 
-    X, Y, Z;
+    X("x"),
+    Y("y"),
+    Z("z");
 
+    private final String key;
+
+    ModelAxis(String key) {
+        this.key = key;
+    }
+
+    public String getKey() {
+        return key;
+    }
 }

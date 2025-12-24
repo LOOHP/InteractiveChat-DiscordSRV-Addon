@@ -319,8 +319,9 @@ Resources:
   Order: []
   #Enable (Partial) Optifine Custom Textures CIT support
   OptifineCustomTextures: true
-  #Enable (Partial) Chime Custom Model Override support (1.16+)
-  ChimeOverrideModels: true
+  #Enable (Partial) Chime Custom Model Override support (1.16-1.20.4)
+  #Discontinued feature, and is no longer supported or updated
+  ChimeOverrideModels: false
 
 Messages:
   ReloadConfig: "&aICDiscordSRVAddon config has been reloaded!"
