@@ -62,6 +62,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -152,6 +153,8 @@ public abstract class NMSAddonWrapper {
     public abstract Component getJukeboxSongDescription(ItemStack disc);
 
     public abstract Component getEnchantmentDescription(Enchantment enchantment);
+
+    public abstract List<Enchantment> getEnchantmentOrderForTooltip(Collection<Enchantment> enchantments);
 
     public abstract String getEffectTranslationKey(PotionEffectType type);
 

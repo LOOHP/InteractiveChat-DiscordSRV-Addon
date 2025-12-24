@@ -128,6 +128,7 @@ import org.bukkit.potion.PotionType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -555,6 +556,11 @@ public class V1_20_2 extends NMSAddonWrapper {
     public Component getEnchantmentDescription(Enchantment enchantment) {
         NamespacedKey namespacedKey = enchantment.getKey();
         return Component.translatable("enchantment." + namespacedKey.getNamespace() + "." + namespacedKey.getKey());
+    }
+
+    @Override
+    public List<Enchantment> getEnchantmentOrderForTooltip(Collection<Enchantment> enchantments) {
+        return new ArrayList<>(enchantments);
     }
 
     @Override

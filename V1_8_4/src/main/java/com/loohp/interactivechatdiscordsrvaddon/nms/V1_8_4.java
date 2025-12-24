@@ -102,6 +102,7 @@ import org.bukkit.potion.PotionType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -415,6 +416,11 @@ public class V1_8_4 extends NMSAddonWrapper {
     @Override
     public Component getEnchantmentDescription(Enchantment enchantment) {
         return Component.translatable(net.minecraft.server.v1_8_R3.Enchantment.getById(enchantment.getId()).a());
+    }
+
+    @Override
+    public List<Enchantment> getEnchantmentOrderForTooltip(Collection<Enchantment> enchantments) {
+        return new ArrayList<>(enchantments);
     }
 
     @Override

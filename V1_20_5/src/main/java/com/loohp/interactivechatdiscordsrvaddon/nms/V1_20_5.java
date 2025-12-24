@@ -66,12 +66,14 @@ import net.minecraft.core.component.DataComponentPredicate;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.chat.IChatBaseComponent;
 import net.minecraft.resources.MinecraftKey;
 import net.minecraft.server.level.EntityPlayer;
 import net.minecraft.server.level.WorldServer;
 import net.minecraft.server.packs.EnumResourcePackType;
+import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.world.damagesource.CombatTracker;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectList;
@@ -115,6 +117,7 @@ import org.bukkit.craftbukkit.v1_20_R4.CraftWorld;
 import org.bukkit.craftbukkit.v1_20_R4.advancement.CraftAdvancement;
 import org.bukkit.craftbukkit.v1_20_R4.attribute.CraftAttributeInstance;
 import org.bukkit.craftbukkit.v1_20_R4.block.banner.CraftPatternType;
+import org.bukkit.craftbukkit.v1_20_R4.enchantments.CraftEnchantment;
 import org.bukkit.craftbukkit.v1_20_R4.entity.CraftEntity;
 import org.bukkit.craftbukkit.v1_20_R4.entity.CraftEntityType;
 import org.bukkit.craftbukkit.v1_20_R4.entity.CraftLivingEntity;
@@ -150,6 +153,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -584,6 +588,29 @@ public class V1_20_5 extends NMSAddonWrapper {
     public Component getEnchantmentDescription(Enchantment enchantment) {
         NamespacedKey namespacedKey = enchantment.getKey();
         return Component.translatable("enchantment." + namespacedKey.getNamespace() + "." + namespacedKey.getKey());
+    }
+
+    @Override
+    public List<Enchantment> getEnchantmentOrderForTooltip(Collection<Enchantment> enchantments) {
+        IRegistryCustom registryAccess = ((CraftWorld) Bukkit.getWorlds().get(0)).getHandle().H_();
+        Optional<HolderSet.Named<net.minecraft.world.item.enchantment.Enchantment>> optList = registryAccess.b(Registries.u).a(EnchantmentTags.a);
+        if (!optList.isPresent()) {
+            return new ArrayList<>(enchantments);
+        }
+        HolderSet.Named<net.minecraft.world.item.enchantment.Enchantment> list = optList.get();
+        List<Enchantment> result = new ArrayList<>();
+        for (Holder<net.minecraft.world.item.enchantment.Enchantment> registryEntry : list) {
+            Enchantment enchantment = CraftEnchantment.minecraftHolderToBukkit(registryEntry);
+            if (enchantments.contains(enchantment)) {
+                result.add(enchantment);
+            }
+        }
+        for (Enchantment enchantment : enchantments) {
+            if (!result.contains(enchantment)) {
+                result.add(enchantment);
+            }
+        }
+        return result;
     }
 
     @Override

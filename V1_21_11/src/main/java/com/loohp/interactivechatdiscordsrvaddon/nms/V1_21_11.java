@@ -42,9 +42,9 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.AdvancementType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AttributeBase;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.BiomePrecipitation;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CustomModelData;
-import com.loohp.interactivechatdiscordsrvaddon.objectholders.LegacyDimensionManager;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.EquipmentSlotGroup;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ItemDamageInfo;
+import com.loohp.interactivechatdiscordsrvaddon.objectholders.LegacyDimensionManager;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.MoonPhase;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PaintingVariant;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ProfileProperty;
@@ -76,6 +76,7 @@ import net.minecraft.server.level.EntityPlayer;
 import net.minecraft.server.level.WorldServer;
 import net.minecraft.server.packs.EnumResourcePackType;
 import net.minecraft.server.players.ProfileResolver;
+import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.damagesource.CombatTracker;
@@ -159,6 +160,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -546,6 +548,28 @@ public class V1_21_11 extends NMSAddonWrapper {
     public Component getEnchantmentDescription(Enchantment enchantment) {
         IChatBaseComponent description = CraftEnchantment.bukkitToMinecraftHolder(enchantment).a().f();
         return InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(description));
+    }
+
+    @Override
+    public List<Enchantment> getEnchantmentOrderForTooltip(Collection<Enchantment> enchantments) {
+        Optional<HolderSet.Named<net.minecraft.world.item.enchantment.Enchantment>> optList = CraftRegistry.getMinecraftRegistry().e(Registries.bf).a(EnchantmentTags.a);
+        if (!optList.isPresent()) {
+            return new ArrayList<>(enchantments);
+        }
+        HolderSet.Named<net.minecraft.world.item.enchantment.Enchantment> list = optList.get();
+        List<Enchantment> result = new ArrayList<>();
+        for (Holder<net.minecraft.world.item.enchantment.Enchantment> registryEntry : list) {
+            Enchantment enchantment = CraftEnchantment.minecraftHolderToBukkit(registryEntry);
+            if (enchantments.contains(enchantment)) {
+                result.add(enchantment);
+            }
+        }
+        for (Enchantment enchantment : enchantments) {
+            if (!result.contains(enchantment)) {
+                result.add(enchantment);
+            }
+        }
+        return result;
     }
 
     @SuppressWarnings("deprecation")

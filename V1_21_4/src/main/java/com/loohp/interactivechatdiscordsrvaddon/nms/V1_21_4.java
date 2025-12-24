@@ -74,6 +74,7 @@ import net.minecraft.resources.MinecraftKey;
 import net.minecraft.server.level.EntityPlayer;
 import net.minecraft.server.level.WorldServer;
 import net.minecraft.server.packs.EnumResourcePackType;
+import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.world.damagesource.CombatTracker;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectList;
@@ -151,6 +152,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -605,6 +607,29 @@ public class V1_21_4 extends NMSAddonWrapper {
     public Component getEnchantmentDescription(Enchantment enchantment) {
         IChatBaseComponent description = CraftEnchantment.bukkitToMinecraft(enchantment).f();
         return InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(description));
+    }
+
+    @Override
+    public List<Enchantment> getEnchantmentOrderForTooltip(Collection<Enchantment> enchantments) {
+        IRegistryCustom registryAccess = ((CraftWorld) Bukkit.getWorlds().get(0)).getHandle().K_();
+        Optional<HolderSet.Named<net.minecraft.world.item.enchantment.Enchantment>> optList = registryAccess.e(Registries.aO).a(EnchantmentTags.a);
+        if (!optList.isPresent()) {
+            return new ArrayList<>(enchantments);
+        }
+        HolderSet.Named<net.minecraft.world.item.enchantment.Enchantment> list = optList.get();
+        List<Enchantment> result = new ArrayList<>();
+        for (Holder<net.minecraft.world.item.enchantment.Enchantment> registryEntry : list) {
+            Enchantment enchantment = CraftEnchantment.minecraftHolderToBukkit(registryEntry);
+            if (enchantments.contains(enchantment)) {
+                result.add(enchantment);
+            }
+        }
+        for (Enchantment enchantment : enchantments) {
+            if (!result.contains(enchantment)) {
+                result.add(enchantment);
+            }
+        }
+        return result;
     }
 
     @SuppressWarnings("deprecation")

@@ -604,9 +604,9 @@ public class DiscordItemStackUtils {
             } else {
                 enchantments = item.getEnchantments();
             }
-            for (Entry<Enchantment, Integer> entry : enchantments.entrySet()) {
-                Enchantment enchantment = entry.getKey();
-                int level = entry.getValue();
+            List<Enchantment> order = NMSAddon.getInstance().getEnchantmentOrderForTooltip(enchantments.keySet());
+            for (Enchantment enchantment : order) {
+                int level = enchantments.getOrDefault(enchantment, 1);
                 Component description = getEnchantmentDescription(enchantment);
                 String enchantmentName;
                 if (description instanceof com.loohp.interactivechat.libs.net.kyori.adventure.text.TranslatableComponent) {
