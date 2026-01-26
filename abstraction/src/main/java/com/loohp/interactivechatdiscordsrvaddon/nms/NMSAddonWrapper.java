@@ -41,6 +41,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
+import java.util.UUID;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -184,8 +185,6 @@ public abstract class NMSAddonWrapper {
 
     public abstract Key getAttributeModifierKey(Object attributeModifier);
 
-    public abstract PropertyMap getGameProfilePropertyMap(GameProfile gameProfile);
-
     public abstract ProfileProperty toProfileProperty(Property property);
 
     public abstract Fraction getWeightForBundle(ItemStack itemStack);
@@ -231,5 +230,11 @@ public abstract class NMSAddonWrapper {
     public abstract Object serializeDataComponent(Key component, String data);
 
     public abstract boolean evaluateComponentPredicateOnItemStack(ItemStack itemStack, String predicateData, String data);
+
+    public abstract UUID getGameProfileId(GameProfile gameProfile);
+
+    public abstract String getGameProfileName(GameProfile gameProfile);
+
+    public abstract PropertyMap getGameProfileProperty(GameProfile gameProfile);
 
 }

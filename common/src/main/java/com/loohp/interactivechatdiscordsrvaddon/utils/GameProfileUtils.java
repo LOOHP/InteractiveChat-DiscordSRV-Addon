@@ -62,11 +62,11 @@ public class GameProfileUtils {
     private static final UUID UUID_ZERO = new UUID(0, 0);
 
     public static boolean hasValidUUID(GameProfile gameProfile) {
-        return gameProfile.getId() != UUID_ZERO;
+        return NMSAddon.getInstance().getGameProfileId(gameProfile) != UUID_ZERO;
     }
 
     public static boolean hasValidName(GameProfile gameProfile) {
-        return !gameProfile.getName().isEmpty();
+        return !NMSAddon.getInstance().getGameProfileName(gameProfile).isEmpty();
     }
 
     @SuppressWarnings({"deprecation", "CallToPrintStackTrace"})
@@ -75,7 +75,7 @@ public class GameProfileUtils {
             if (gameProfile == null) {
                 return null;
             }
-            Collection<Property> textures = NMSAddon.getInstance().getGameProfilePropertyMap(gameProfile).get("textures");
+            Collection<Property> textures = NMSAddon.getInstance().getGameProfileProperty(gameProfile).get("textures");
             if (textures != null && !textures.isEmpty()) {
                 String value = NMSAddon.getInstance().toProfileProperty(textures.iterator().next()).getValue();
                 String json = FIX_WEIRD_SKULL_TEXTURE.apply(new String(Base64.getDecoder().decode(value)));
@@ -95,10 +95,10 @@ public class GameProfileUtils {
             boolean validName = hasValidName(gameProfile);
             if (!validUUID || !validName) {
                 if (validUUID) {
-                    return SkinUtils.getSkinURLFromUUID(gameProfile.getId());
+                    return SkinUtils.getSkinURLFromUUID(NMSAddon.getInstance().getGameProfileId(gameProfile));
                 }
                 if (validName) {
-                    return SkinUtils.getSkinURLFromUUID(Bukkit.getOfflinePlayer(gameProfile.getName()).getUniqueId());
+                    return SkinUtils.getSkinURLFromUUID(Bukkit.getOfflinePlayer(NMSAddon.getInstance().getGameProfileName(gameProfile)).getUniqueId());
                 }
             }
             return null;

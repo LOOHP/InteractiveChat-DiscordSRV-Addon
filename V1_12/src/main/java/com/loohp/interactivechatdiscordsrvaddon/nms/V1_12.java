@@ -47,6 +47,7 @@ import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
+import java.util.UUID;
 import net.minecraft.server.v1_12_R1.AdvancementDisplay;
 import net.minecraft.server.v1_12_R1.Block;
 import net.minecraft.server.v1_12_R1.CombatTracker;
@@ -582,11 +583,6 @@ public class V1_12 extends NMSAddonWrapper {
     }
 
     @Override
-    public PropertyMap getGameProfilePropertyMap(GameProfile gameProfile) {
-        return gameProfile.getProperties();
-    }
-
-    @Override
     public ProfileProperty toProfileProperty(Property property) {
         return new ProfileProperty(property.getName(), property.getValue(), property.getSignature());
     }
@@ -711,6 +707,21 @@ public class V1_12 extends NMSAddonWrapper {
     @Override
     public boolean evaluateComponentPredicateOnItemStack(ItemStack itemStack, String predicateData, String data) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public UUID getGameProfileId(GameProfile gameProfile) {
+        return gameProfile.getId();
+    }
+
+    @Override
+    public String getGameProfileName(GameProfile gameProfile) {
+        return gameProfile.getName();
+    }
+
+    @Override
+    public PropertyMap getGameProfileProperty(GameProfile gameProfile) {
+        return gameProfile.getProperties();
     }
 
 }

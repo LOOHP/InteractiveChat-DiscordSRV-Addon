@@ -770,11 +770,6 @@ public class V1_21_9 extends NMSAddonWrapper {
     }
 
     @Override
-    public PropertyMap getGameProfilePropertyMap(GameProfile gameProfile) {
-        return gameProfile.properties();
-    }
-
-    @Override
     public ProfileProperty toProfileProperty(Property property) {
         return new ProfileProperty(property.name(), property.value(), property.signature());
     }
@@ -982,6 +977,21 @@ public class V1_21_9 extends NMSAddonWrapper {
         }
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
         return predicate.b().a(nmsItemStack);
+    }
+
+    @Override
+    public UUID getGameProfileId(GameProfile gameProfile) {
+        return gameProfile.id();
+    }
+
+    @Override
+    public String getGameProfileName(GameProfile gameProfile) {
+        return gameProfile.name();
+    }
+
+    @Override
+    public PropertyMap getGameProfileProperty(GameProfile gameProfile) {
+        return gameProfile.properties();
     }
 
 }

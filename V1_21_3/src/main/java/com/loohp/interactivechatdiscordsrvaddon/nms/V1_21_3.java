@@ -52,6 +52,7 @@ import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.JsonOps;
+import java.util.UUID;
 import net.minecraft.EnumChatFormat;
 import net.minecraft.MinecraftVersion;
 import net.minecraft.advancements.AdvancementDisplay;
@@ -736,11 +737,6 @@ public class V1_21_3 extends NMSAddonWrapper {
     }
 
     @Override
-    public PropertyMap getGameProfilePropertyMap(GameProfile gameProfile) {
-        return gameProfile.getProperties();
-    }
-
-    @Override
     public ProfileProperty toProfileProperty(Property property) {
         return new ProfileProperty(property.name(), property.value(), property.signature());
     }
@@ -927,6 +923,21 @@ public class V1_21_3 extends NMSAddonWrapper {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
         DataComponentMap dataComponentMap = nmsItemStack.a();
         return predicate.test(dataComponentMap);
+    }
+
+    @Override
+    public UUID getGameProfileId(GameProfile gameProfile) {
+        return gameProfile.getId();
+    }
+
+    @Override
+    public String getGameProfileName(GameProfile gameProfile) {
+        return gameProfile.getName();
+    }
+
+    @Override
+    public PropertyMap getGameProfileProperty(GameProfile gameProfile) {
+        return gameProfile.getProperties();
     }
 
 }
