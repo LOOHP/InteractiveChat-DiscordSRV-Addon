@@ -519,7 +519,7 @@ public class V1_21_4 extends NMSAddonWrapper {
         if (equippable == null) {
             return false;
         }
-        if (equippable.e().map(a -> a.a().anyMatch(s -> s.a().equals(EntityTypes.bS))).orElse(true)) {
+        if (equippable.e().map(a -> a.a().anyMatch(s -> s.a().equals(EntityTypes.bR))).orElse(true)) {
             return CraftEquipmentSlot.getSlot(equippable.a()).equals(slot);
         }
         return false;
@@ -673,10 +673,8 @@ public class V1_21_4 extends NMSAddonWrapper {
     }
 
     @Override
-    public float getEnchantmentDamageBonus(ItemStack itemStack, LivingEntity livingEntity) {
-        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
-        EntityLiving entityLiving = ((CraftLivingEntity) livingEntity).getHandle();
-        return EnchantmentManager.a(nmsItemStack, entityLiving);
+    public float getLegacyEnchantmentDamageBonus(ItemStack itemStack, LivingEntity livingEntity) {
+        return 0F;
     }
 
     @Override

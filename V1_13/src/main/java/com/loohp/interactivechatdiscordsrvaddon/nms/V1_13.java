@@ -538,7 +538,7 @@ public class V1_13 extends NMSAddonWrapper {
     }
 
     @Override
-    public float getEnchantmentDamageBonus(ItemStack itemStack, LivingEntity livingEntity) {
+    public float getLegacyEnchantmentDamageBonus(ItemStack itemStack, LivingEntity livingEntity) {
         net.minecraft.server.v1_13_R1.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
         if (livingEntity == null) {
             return EnchantmentManager.a(nmsItemStack, EnumMonsterType.UNDEFINED);

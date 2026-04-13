@@ -713,7 +713,7 @@ public class DiscordItemStackUtils {
                             if (bukkitPlayer != null) {
                                 if (attributemodifier.getUniqueId().equals(AttributeModifiersUtils.BASE_ATTACK_DAMAGE_UUID)) {
                                     amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).getBaseValue();
-                                    amount += NMSAddon.getInstance().getEnchantmentDamageBonus(item, null);
+                                    amount += NMSAddon.getInstance().getLegacyEnchantmentDamageBonus(item, null);
                                     flag = true;
                                 } else if (attributemodifier.getUniqueId().equals(AttributeModifiersUtils.BASE_ATTACK_SPEED_UUID)) {
                                     amount += bukkitPlayer.getAttribute(Attribute.GENERIC_ATTACK_SPEED).getBaseValue();

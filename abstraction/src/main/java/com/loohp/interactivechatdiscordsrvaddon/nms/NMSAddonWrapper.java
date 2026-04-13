@@ -171,7 +171,7 @@ public abstract class NMSAddonWrapper {
 
     public abstract int getServerResourcePackMinorVersion();
 
-    public abstract float getEnchantmentDamageBonus(ItemStack itemStack, LivingEntity livingEntity);
+    public abstract float getLegacyEnchantmentDamageBonus(ItemStack itemStack, LivingEntity livingEntity);
 
     public abstract int getItemComponentsSize(ItemStack itemStack);
 
