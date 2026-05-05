@@ -130,6 +130,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
     public static boolean itemsAdderHook = false;
     public static boolean imageFrameHook = false;
+    public static boolean craftEngineHook = false;
 
     public static boolean isReady = false;
 
@@ -368,6 +369,11 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
             getServer().getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon has hooked into ImageFrame!");
             Bukkit.getPluginManager().registerEvents(new ImageFrameEvents(), this);
             imageFrameHook = true;
+        }
+
+        if (Bukkit.getPluginManager().isPluginEnabled("CraftEngine")) {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Hooked into CraftEngine");
+            craftEngineHook = true;
         }
 
         if (!compatible()) {

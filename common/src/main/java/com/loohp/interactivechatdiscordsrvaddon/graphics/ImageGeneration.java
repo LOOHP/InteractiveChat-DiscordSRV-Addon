@@ -109,6 +109,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.trim.ArmorTrim;
 import org.bukkit.map.MapCursor;
 import org.bukkit.map.MapPalette;
+import com.loohp.interactivechatdiscordsrvaddon.hooks.craftengine.CraftEngineHook;
 
 import java.awt.Color;
 import java.awt.GradientPaint;
@@ -817,6 +818,9 @@ public class ImageGeneration {
     }
 
     private static BufferedImage getSingleRawItemImage(ItemStack item, OfflineICPlayer player, int size) throws IOException {
+        if (InteractiveChatDiscordSrvAddon.craftEngineHook) {
+            item = CraftEngineHook.toClientSideItemStack(item, player);
+        }
         return getRawItemImage(item, player, size, ModelRenderer.SINGLE_RENDER).get(0);
     }
 
