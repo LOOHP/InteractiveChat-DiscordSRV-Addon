@@ -116,12 +116,12 @@ public class LegacyDiscordCommandEvents {
                         @SuppressWarnings("deprecation")
                         OfflineICPlayer offlinePlayer = ICPlayerFactory.getUnsafe().getOfflineICPPlayerWithoutInitialization(bukkitOfflinePlayer.getUniqueId());
                         playerInfo.put(offlinePlayer.getUniqueId(), new ValuePairs<>(DiscordCommands.getPlayerGroups(bukkitOfflinePlayer), offlinePlayer.getName()));
-                        String name = ChatColorUtils.translateAlternateColorCodes('&', PlaceholderParser.parse(offlinePlayer, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandPlayerFormat));
+                        String name = PlaceholderParser.parse(offlinePlayer, InteractiveChatDiscordSrvAddon.plugin.playerlistCommandPlayerFormat);
                         Component nameComponent;
                         if (InteractiveChatDiscordSrvAddon.plugin.playerlistCommandParsePlayerNamesWithMiniMessage) {
                             nameComponent = MiniMessage.miniMessage().deserialize(name);
                         } else {
-                            nameComponent = LegacyComponentSerializer.legacySection().deserialize(name);
+                            nameComponent = LegacyComponentSerializer.legacySection().deserialize(ChatColorUtils.translateAlternateColorCodes('&', name));
                         }
                         player.add(new ValueTrios<>(offlinePlayer, nameComponent, entry.getValue()));
                     }
