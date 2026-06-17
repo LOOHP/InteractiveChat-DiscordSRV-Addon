@@ -25,7 +25,7 @@
     <groupId>com.loohp</groupId>
     <artifactId>InteractiveChatDiscordSrvAddon</artifactId>
     <name>InteractiveChatDiscordSrvAddon</name>
-    <version>2026.1.0.0</version>
+    <version>2026.1.0.2</version>
 
     <description>Have InteractiveChat Placeholders translated on DiscordSRV discord messages.</description>
     <url>https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon</url>
@@ -303,6 +303,10 @@
         <repository>
             <id>loohp-repo</id>
             <url>https://repo.loohpjames.com/repository</url>
+        </repository>
+        <repository>
+            <id>momirealms-releases</id>
+            <url>https://repo.momirealms.net/releases/</url>
         </repository>
     </repositories>
 
@@ -672,6 +676,18 @@
             <artifactId>InteractiveChatDiscordSrvAddon-V26_1_2</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.momirealms</groupId>
+            <artifactId>craft-engine-core</artifactId>
+            <version>0.0.67</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.momirealms</groupId>
+            <artifactId>craft-engine-bukkit</artifactId>
+            <version>0.0.67</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

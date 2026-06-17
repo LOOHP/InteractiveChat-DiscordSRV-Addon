@@ -42,6 +42,7 @@ import com.loohp.interactivechatdiscordsrvaddon.api.events.ResourceManagerInitia
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageGeneration;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.ImageUtils;
+import com.loohp.interactivechatdiscordsrvaddon.hooks.craftengine.CraftEngineHook;
 import com.loohp.interactivechatdiscordsrvaddon.hooks.imageframe.ImageFrameEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordCommandEvents;
 import com.loohp.interactivechatdiscordsrvaddon.listeners.DiscordInteractionEvents;
@@ -130,6 +131,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
 
     public static boolean itemsAdderHook = false;
     public static boolean imageFrameHook = false;
+    public static boolean craftEngineHook = false;
 
     public static boolean isReady = false;
 
@@ -368,6 +370,11 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
             getServer().getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon has hooked into ImageFrame!");
             Bukkit.getPluginManager().registerEvents(new ImageFrameEvents(), this);
             imageFrameHook = true;
+        }
+
+        if (Bukkit.getPluginManager().isPluginEnabled("CraftEngine")) {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Hooked into CraftEngine");
+            craftEngineHook = true;
         }
 
         if (!compatible()) {
@@ -774,6 +781,13 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                     String resourceName = serverResourcePack.getName();
                     Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"" + resourceName + "\" resources...");
                     sources.add(ResourcePackSource.ofCustom(resourceName, serverResourcePack, ResourcePackType.SERVER));
+                }
+                if (craftEngineHook) {
+                    File cePackFile = CraftEngineHook.getGeneratedResourcePackFile();
+                    if (cePackFile != null) {
+                        Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"CraftEngine\" resources...");
+                        sources.add(ResourcePackSource.ofCustom("CraftEngine", cePackFile, ResourcePackType.SERVER));
+                    }
                 }
                 resourceManager.loadResources(sources, (source, info) -> {
                     String resourceName = source.getName();
