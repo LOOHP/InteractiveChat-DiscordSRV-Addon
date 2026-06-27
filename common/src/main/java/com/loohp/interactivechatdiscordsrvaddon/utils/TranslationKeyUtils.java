@@ -320,6 +320,14 @@ public class TranslationKeyUtils {
         return NMSAddon.getInstance().getBannerPatternTranslationKey(type, color);
     }
 
+    public static String getAttributeNameKey(String attributeName) {
+        if (InteractiveChat.version.isLegacy()) {
+            return "attribute.name." + attributeName;
+        } else {
+            return attributeName;
+        }
+    }
+
     public static String getAttributeModifierKey(boolean equalFlag, double amount, int operation) {
         if (equalFlag) {
             return "attribute.modifier.equals." + operation;
@@ -468,6 +476,10 @@ public class TranslationKeyUtils {
                 return "item.minecraft.firework_star." + dyeColor.name().toLowerCase();
             }
         }
+    }
+
+    public static String getSulfurCubeContent() {
+        return "entity.minecraft.sulfur_cube.content";
     }
 
 }

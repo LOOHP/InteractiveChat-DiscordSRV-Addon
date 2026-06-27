@@ -483,6 +483,11 @@ public class V1_15 extends NMSAddonWrapper {
     public Key getDecoratedPotSherdPatternName(ItemStack itemStack) {
         throw new UnsupportedOperationException();
     }
+    
+    @Override
+    public Component getSulfurCubeContentBlockDescription(ItemStack itemStack) {
+        return null;
+    }
 
     @Override
     public boolean isJukeboxPlayable(ItemStack itemStack) {

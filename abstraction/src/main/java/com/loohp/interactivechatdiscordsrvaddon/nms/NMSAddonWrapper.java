@@ -147,6 +147,8 @@ public abstract class NMSAddonWrapper {
 
     public abstract Key getDecoratedPotSherdPatternName(ItemStack itemStack);
 
+    public abstract Component getSulfurCubeContentBlockDescription(ItemStack itemStack);
+
     public abstract boolean isJukeboxPlayable(ItemStack itemStack);
 
     public abstract boolean shouldSongShowInToolTip(ItemStack disc);

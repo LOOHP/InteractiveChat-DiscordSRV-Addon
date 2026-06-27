@@ -29,7 +29,6 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.Style;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextColor;
-import com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import com.loohp.interactivechat.libs.net.querz.nbt.tag.CompoundTag;
 import com.loohp.interactivechat.libs.org.apache.commons.lang3.math.Fraction;
@@ -119,6 +118,7 @@ import java.util.stream.Collectors;
 
 import static com.loohp.interactivechat.libs.net.kyori.adventure.text.Component.*;
 import static com.loohp.interactivechat.libs.net.kyori.adventure.text.format.NamedTextColor.*;
+import static com.loohp.interactivechat.libs.net.kyori.adventure.text.format.TextDecoration.*;
 import static com.loohp.interactivechat.utils.LanguageUtils.getTranslation;
 import static com.loohp.interactivechat.utils.LanguageUtils.getTranslationKey;
 import static com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils.join;
@@ -382,9 +382,9 @@ public class DiscordItemStackUtils {
         if (icMaterial.isMaterial(XMaterial.TROPICAL_FISH_BUCKET) && !hideAdditionalFlags) {
             List<String> translations = getTropicalFishBucketName(item);
             if (!translations.isEmpty()) {
-                prints.add(tooltipText(translatable(translations.get(0)).color(GRAY).decorate(TextDecoration.ITALIC)));
+                prints.add(tooltipText(translatable(translations.get(0)).color(GRAY).decorate(ITALIC)));
                 if (translations.size() > 1) {
-                    prints.add(tooltipText(join(empty().color(GRAY).decorate(TextDecoration.ITALIC), text(", "), translations.stream().skip(1).map(each -> translatable(each)))));
+                    prints.add(tooltipText(join(empty().color(GRAY).decorate(ITALIC), text(", "), translations.stream().skip(1).map(each -> translatable(each)))));
                 }
             }
         }
@@ -495,7 +495,6 @@ public class DiscordItemStackUtils {
 
         if (InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && !hideAdditionalFlags) {
             if (item.getItemMeta() instanceof PotionMeta) {
-                PotionMeta meta = (PotionMeta) item.getItemMeta();
                 List<PotionEffect> effects = PotionUtils.getAllPotionEffects(item);
 
                 if (effects.isEmpty()) {
@@ -608,7 +607,6 @@ public class DiscordItemStackUtils {
             for (Enchantment enchantment : order) {
                 int level = enchantments.getOrDefault(enchantment, 1);
                 Component description = getEnchantmentDescription(enchantment);
-                String enchantmentName;
                 if (description instanceof com.loohp.interactivechat.libs.net.kyori.adventure.text.TranslatableComponent) {
                     String key = ((com.loohp.interactivechat.libs.net.kyori.adventure.text.TranslatableComponent) description).key();
                     if (key.equals(getTranslation(key, language).getResult())) {
@@ -636,9 +634,16 @@ public class DiscordItemStackUtils {
             List<Component> loreLines = ItemStackUtils.getLore(item);
             if (loreLines != null) {
                 for (Component lore : loreLines) {
-                    Component component = lore.applyFallbackStyle(Style.style(DARK_PURPLE, TextDecoration.ITALIC));
+                    Component component = lore.applyFallbackStyle(Style.style(DARK_PURPLE, ITALIC));
                     prints.add(tooltipText(component));
                 }
+            }
+        }
+
+        if (icMaterial.isMaterial(XMaterial.SULFUR_CUBE_BUCKET)) {
+            Component blockDescription = NMSAddon.getInstance().getSulfurCubeContentBlockDescription(item);
+            if (blockDescription != null) {
+                prints.add(tooltipText(translatable(getSulfurCubeContent()).arguments(blockDescription).style(Style.style().decorate(ITALIC).color(GRAY).build())));
             }
         }
 
@@ -677,7 +682,7 @@ public class DiscordItemStackUtils {
 
                             if (flag || amount != 0) {
                                 TextColor color = flag ? DARK_GREEN : attributeBase.getStyle(amount >= 0);
-                                Component component = translatable(getAttributeModifierKey(flag, amount, operation.ordinal())).arguments(text(ATTRIBUTE_FORMAT.format(Math.abs(amount))), translatable(attributeName)).color(color);
+                                Component component = translatable(getAttributeModifierKey(flag, amount, operation.ordinal())).arguments(text(ATTRIBUTE_FORMAT.format(Math.abs(amount))), translatable(getAttributeNameKey(attributeName))).color(color);
                                 if (flag) {
                                     component = text(" ").append(component);
                                 }

@@ -493,6 +493,11 @@ public class V26_1 extends NMSAddonWrapper {
         Identifier key = DecoratedPotPatterns.getPatternFromItem(item).identifier();
         return Key.key(key.getNamespace(), key.getPath());
     }
+    
+    @Override
+    public Component getSulfurCubeContentBlockDescription(ItemStack itemStack) {
+        return null;
+    }
 
     @Override
     public boolean isJukeboxPlayable(ItemStack itemStack) {

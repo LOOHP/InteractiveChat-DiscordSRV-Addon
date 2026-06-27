@@ -34,6 +34,7 @@ import com.loohp.interactivechat.utils.HTTPRequestUtils;
 import com.loohp.interactivechatdiscordsrvaddon.InteractiveChatDiscordSrvAddon;
 import com.loohp.interactivechatdiscordsrvaddon.api.events.DiscordAttachmentConversionEvent;
 import com.loohp.interactivechatdiscordsrvaddon.debug.Debug;
+import com.loohp.interactivechatdiscordsrvaddon.graphics.APNGReader;
 import com.loohp.interactivechatdiscordsrvaddon.graphics.GifReader;
 import com.loohp.interactivechatdiscordsrvaddon.modules.DiscordToGameMention;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.PreviewableImageContainer;
@@ -287,7 +288,15 @@ public class InboundToGameEvents implements Listener {
                             GraphicsToPacketMapWrapper map;
                             boolean isVideo = false;
                             if (type.endsWith("gif.png") || type.endsWith("apng")) {
-                                throw new UnsupportedOperationException("Animated PNG not yet supported, this error can be ignored");
+                                map = new GraphicsToPacketMapWrapper(InteractiveChatDiscordSrvAddon.plugin.playbackBarEnabled, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
+                                APNGReader.readAPNG(stream, InteractiveChatDiscordSrvAddon.plugin.mediaReadingService, (frames, e) -> {
+                                    if (e != null) {
+                                        e.printStackTrace();
+                                        map.completeFuture(null);
+                                    } else {
+                                        map.completeFuture(frames);
+                                    }
+                                });
                             } else if (type.endsWith("gif")) {
                                 map = new GraphicsToPacketMapWrapper(InteractiveChatDiscordSrvAddon.plugin.playbackBarEnabled, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
                                 GifReader.readGif(stream, InteractiveChatDiscordSrvAddon.plugin.mediaReadingService, (frames, e) -> {
@@ -345,7 +354,15 @@ public class InboundToGameEvents implements Listener {
                                     GraphicsToPacketMapWrapper map;
                                     boolean isVideo = false;
                                     if (type.endsWith("gif.png") || type.endsWith("apng")) {
-                                        throw new UnsupportedOperationException("Animated PNG not yet supported, this error can be ignored");
+                                        map = new GraphicsToPacketMapWrapper(InteractiveChatDiscordSrvAddon.plugin.playbackBarEnabled, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
+                                        APNGReader.readAPNG(stream, InteractiveChatDiscordSrvAddon.plugin.mediaReadingService, (frames, e) -> {
+                                            if (e != null) {
+                                                e.printStackTrace();
+                                                map.completeFuture(null);
+                                            } else {
+                                                map.completeFuture(frames);
+                                            }
+                                        });
                                     } else if (type.endsWith("gif")) {
                                         map = new GraphicsToPacketMapWrapper(InteractiveChatDiscordSrvAddon.plugin.playbackBarEnabled, InteractiveChatDiscordSrvAddon.plugin.discordAttachmentsMapBackgroundColor);
                                         GifReader.readGif(stream, InteractiveChatDiscordSrvAddon.plugin.mediaReadingService, (frames, e) -> {

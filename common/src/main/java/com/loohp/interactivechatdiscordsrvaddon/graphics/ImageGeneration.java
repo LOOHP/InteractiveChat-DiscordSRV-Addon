@@ -818,9 +818,6 @@ public class ImageGeneration {
     }
 
     private static BufferedImage getSingleRawItemImage(ItemStack item, OfflineICPlayer player, int size) throws IOException {
-        if (InteractiveChatDiscordSrvAddon.craftEngineHook) {
-            item = CraftEngineHook.toClientSideItemStack(item, player);
-        }
         return getRawItemImage(item, player, size, ModelRenderer.SINGLE_RENDER).get(0);
     }
 
@@ -832,11 +829,15 @@ public class ImageGeneration {
         InteractiveChatDiscordSrvAddon.plugin.imageCounter.incrementAndGet();
         Debug.debug("ImageGeneration creating raw item stack image " + (item == null ? "null" : ItemNBTUtils.getNMSItemStackJson(item)));
 
+        if (InteractiveChatDiscordSrvAddon.craftEngineHook) {
+            item = CraftEngineHook.toClientSideItemStack(item, player);
+            Debug.debug("ImageGeneration creating CraftEngine converted raw item stack image " + (item == null ? "null" : ItemNBTUtils.getNMSItemStackJson(item)));
+        }
+
         double scale = (double) size / DEFAULT_ITEM_RENDER_SIZE;
 
         ICMaterial icMaterial = ICMaterial.from(item);
         int amount = item.getAmount();
-        String key = ModelUtils.getItemModelKey(icMaterial);
         ItemStackProcessResult processResult = ItemRenderUtils.processItemForRendering(resourceManager.get(), player, item, null, ModelDisplayPosition.GUI, version.get().isOld(), language.get());
         boolean requiresEnchantmentGlint = processResult.requiresEnchantmentGlint();
         List<ModelLayer> modelLayers = processResult.getModelLayers();

@@ -486,6 +486,11 @@ public class V1_14 extends NMSAddonWrapper {
     }
 
     @Override
+    public Component getSulfurCubeContentBlockDescription(ItemStack itemStack) {
+        return null;
+    }
+
+    @Override
     public boolean isJukeboxPlayable(ItemStack itemStack) {
         net.minecraft.server.v1_14_R1.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
         return nmsItemStack.getItem() instanceof ItemRecord;

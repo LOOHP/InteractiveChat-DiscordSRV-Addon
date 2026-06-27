@@ -372,8 +372,8 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
             imageFrameHook = true;
         }
 
-        if (Bukkit.getPluginManager().isPluginEnabled("CraftEngine")) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Hooked into CraftEngine");
+        if (InteractiveChat.isPluginEnabled("CraftEngine")) {
+            getServer().getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] InteractiveChat DiscordSRV Addon has hooked into CraftEngine");
             craftEngineHook = true;
         }
 

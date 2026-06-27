@@ -512,6 +512,11 @@ public class V1_21_11 extends NMSAddonWrapper {
         MinecraftKey key = DecoratedPotPatterns.a(item).a();
         return Key.key(key.b(), key.a());
     }
+    
+    @Override
+    public Component getSulfurCubeContentBlockDescription(ItemStack itemStack) {
+        return null;
+    }
 
     @Override
     public boolean isJukeboxPlayable(ItemStack itemStack) {
