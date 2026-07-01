@@ -425,7 +425,7 @@ public class V26_2 extends NMSAddonWrapper {
         DisplayInfo display = optAdvancementDisplay.get();
         Component title = InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(display.getTitle()));
         Component description = InteractiveChatComponentSerializer.gson().deserialize(CraftChatMessage.toJSON(display.getDescription()));
-        ItemStack item = CraftItemStack.asBukkitCopy(display.getIcon().create());
+        ItemStack item = CraftItemStack.asCraftMirror(display.getIcon().create());
         AdvancementType advancementType = AdvancementType.fromName(display.getType().getSerializedName());
         boolean isMinecraft = holder.id().getNamespace().equals(Key.MINECRAFT_NAMESPACE);
         return new AdvancementData(title, description, item, advancementType, isMinecraft);
