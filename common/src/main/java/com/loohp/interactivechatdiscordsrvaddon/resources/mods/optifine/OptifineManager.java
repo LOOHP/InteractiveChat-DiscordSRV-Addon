@@ -36,6 +36,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.TextureInfo;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.ModManager;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.ArmorProperties;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.optifine.cit.CITGlobalProperties;
@@ -228,7 +229,7 @@ public class OptifineManager extends ModManager implements IOptifineManager {
                 if (blockModel == null) {
                     return new ValuePairs<>(null, overrideTextures);
                 }
-                for (Entry<String, String> entry : blockModel.getTextures().entrySet()) {
+                for (Entry<String, TextureInfo> entry : blockModel.getTextures().entrySet()) {
                     String key = entry.getKey();
                     String pathK = citProperties.getOverrideAsset(entry.getKey(), "png");
                     if (pathK != null) {
@@ -238,7 +239,7 @@ public class OptifineManager extends ModManager implements IOptifineManager {
                             overrideTextures.put(key, getTexture(resourceLocation));
                         }
                     } else {
-                        String value = entry.getValue();
+                        String value = entry.getValue().getSprite();
                         if (value.contains(":")) {
                             value = value.substring(value.indexOf(":") + 1);
                         }
@@ -253,7 +254,7 @@ public class OptifineManager extends ModManager implements IOptifineManager {
                                 overrideTextures.put(key, getTexture(resourceLocation));
                             }
                         } else {
-                            String resourceLocation = resolveAsset(citOverride.getFirst(), entry.getValue(), "png");
+                            String resourceLocation = resolveAsset(citOverride.getFirst(), entry.getValue().getSprite(), "png");
                             TextureResource textureResource = getTexture(resourceLocation, false);
                             if (textureResource != null) {
                                 overrideTextures.put(key, textureResource);

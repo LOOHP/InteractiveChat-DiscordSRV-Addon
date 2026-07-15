@@ -209,7 +209,7 @@ public class ModelRenderer implements AutoCloseable {
                             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
                             for (int i = 0; itemBlockModel.getTextures().containsKey(ModelManager.ITEM_BASE_LAYER + i); i++) {
                                 TextureResource resource = overrideTextures.getOrDefault("", overrideTextures.get(ModelManager.ITEM_BASE_LAYER + i));
-                                String resourceLocation = itemBlockModel.getTextures().get(ModelManager.ITEM_BASE_LAYER + i);
+                                String resourceLocation = itemBlockModel.getTextures().get(ModelManager.ITEM_BASE_LAYER + i).getSprite();
                                 if (!resourceLocation.contains(":")) {
                                     resourceLocation = ResourceRegistry.DEFAULT_NAMESPACE + ":" + resourceLocation;
                                 }
@@ -368,7 +368,7 @@ public class ModelRenderer implements AutoCloseable {
                     g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
                     for (int i = 0; blockModel.getTextures().containsKey(ModelManager.ITEM_BASE_LAYER + i); i++) {
                         TextureResource resource = overrideTextures.getOrDefault("", overrideTextures.get(ModelManager.ITEM_BASE_LAYER + i));
-                        String resourceLocation = blockModel.getTextures().get(ModelManager.ITEM_BASE_LAYER + i);
+                        String resourceLocation = blockModel.getTextures().get(ModelManager.ITEM_BASE_LAYER + i).getSprite();
                         if (!resourceLocation.contains(":")) {
                             resourceLocation = ResourceRegistry.DEFAULT_NAMESPACE + ":" + resourceLocation;
                         }
@@ -522,7 +522,7 @@ public class ModelRenderer implements AutoCloseable {
                             }
                         }
                         TextureUV uv = faceData.getUV();
-                        TextureResource resource = findKey(blockModel.getTextures(), faceData.getRawTexture()).stream().findFirst().map(each -> overrideTextures.get(each)).orElse(null);
+                        TextureResource resource = blockModel.getTextures().entrySet().stream().filter(each -> each.getValue().getSprite().equals(faceData.getRawTexture())).map(Entry::getKey).findFirst().map(overrideTextures::get).orElse(null);
                         String texture = faceData.getTexture();
                         if (resource == null) {
                             resource = providedTextures.get(texture);

@@ -75,12 +75,21 @@ public class BlockModel {
                 display.put(displayPos, new ModelDisplay(displayPos, rotation, translation, scale));
             }
         }
-        Map<String, String> texture = new HashMap<>();
+        Map<String, TextureInfo> texture = new HashMap<>();
         JSONObject textureJson = (JSONObject) rootJson.get("textures");
         if (textureJson != null) {
             for (Object obj : textureJson.keySet()) {
                 String textureKey = obj.toString();
-                texture.put(textureKey, textureJson.get(textureKey).toString());
+                Object textureValue = textureJson.get(textureKey);
+                if (textureValue instanceof JSONObject) {
+                    JSONObject textureProperties = (JSONObject) textureValue;
+                    Object sprite = textureProperties.get("sprite");
+                    if (sprite != null) {
+                        texture.put(textureKey, new TextureInfo(sprite.toString(), JsonLenientUtils.getBooleanLenientOrDefault(textureProperties, "force_translucent", false)));
+                    }
+                } else if (textureValue != null) {
+                    texture.put(textureKey, new TextureInfo(textureValue.toString(), false));
+                }
             }
         }
         List<ModelElement> elements = new ArrayList<>();
@@ -185,11 +194,11 @@ public class BlockModel {
     private final boolean ambientocclusion;
     private final ModelGUILight guiLight;
     private final Map<ModelDisplayPosition, ModelDisplay> display;
-    private final Map<String, String> textures;
+    private final Map<String, TextureInfo> textures;
     private final List<ModelElement> elements;
     private final List<ModelOverride> overrides;
 
-    public BlockModel(IModelManager manager, String resourceLocation, String parent, boolean ambientocclusion, ModelGUILight guiLight, Map<ModelDisplayPosition, ModelDisplay> display, Map<String, String> textures, List<ModelElement> elements, List<ModelOverride> overrides) {
+    public BlockModel(IModelManager manager, String resourceLocation, String parent, boolean ambientocclusion, ModelGUILight guiLight, Map<ModelDisplayPosition, ModelDisplay> display, Map<String, TextureInfo> textures, List<ModelElement> elements, List<ModelOverride> overrides) {
         this.resourceLocation = resourceLocation;
         this.manager = manager;
         this.parent = parent;
@@ -249,7 +258,7 @@ public class BlockModel {
         return null;
     }
 
-    public Map<String, String> getTextures() {
+    public Map<String, TextureInfo> getTextures() {
         return textures;
     }
 
@@ -265,14 +274,14 @@ public class BlockModel {
         boolean ambientocclusion = this.isAmbientocclusion();
         Map<ModelDisplayPosition, ModelDisplay> display = new EnumMap<>(ModelDisplayPosition.class);
         display.putAll(this.getRawDisplay());
-        Map<String, String> textures = new HashMap<>(this.getTextures());
-        for (Entry<String, String> entry : textures.entrySet()) {
-            String value = entry.getValue();
+        Map<String, TextureInfo> textures = new HashMap<>(this.getTextures());
+        for (Entry<String, TextureInfo> entry : textures.entrySet()) {
+            String value = entry.getValue().getSprite();
             if (value.startsWith("#")) {
                 String var = value.substring(1);
-                String mapped = textures.get(var);
+                TextureInfo mapped = textures.get(var);
                 if (mapped != null) {
-                    entry.setValue(mapped);
+                    entry.setValue(entry.getValue().withSprite(mapped.getSprite()));
                 }
             }
         }
@@ -286,9 +295,9 @@ public class BlockModel {
                 String value = entry.getValue().getTexture();
                 if (value.startsWith("#")) {
                     String var = value.substring(1);
-                    String mapped = textures.get(var);
+                    TextureInfo mapped = textures.get(var);
                     if (mapped != null) {
-                        entry.setValue(face.cloneWithNewTexture(mapped));
+                        entry.setValue(face.cloneWithNewTexture(mapped.getSprite()));
                     }
                 }
             }
@@ -315,16 +324,16 @@ public class BlockModel {
         Map<ModelDisplayPosition, ModelDisplay> display = new EnumMap<>(ModelDisplayPosition.class);
         display.putAll(parentModel.getRawDisplay());
         display.putAll(this.getRawDisplay());
-        Map<String, String> textures = new HashMap<>();
+        Map<String, TextureInfo> textures = new HashMap<>();
         textures.putAll(parentModel.getTextures());
         textures.putAll(this.getTextures());
-        for (Entry<String, String> entry : textures.entrySet()) {
-            String value = entry.getValue();
+        for (Entry<String, TextureInfo> entry : textures.entrySet()) {
+            String value = entry.getValue().getSprite();
             if (value.startsWith("#")) {
                 String var = value.substring(1);
-                String mapped = textures.get(var);
+                TextureInfo mapped = textures.get(var);
                 if (mapped != null) {
-                    entry.setValue(mapped);
+                    entry.setValue(entry.getValue().withSprite(mapped.getSprite()));
                 }
             }
         }
@@ -338,9 +347,9 @@ public class BlockModel {
                 String value = entry.getValue().getTexture();
                 if (value.startsWith("#")) {
                     String var = value.substring(1);
-                    String mapped = textures.get(var);
+                    TextureInfo mapped = textures.get(var);
                     if (mapped != null) {
-                        entry.setValue(face.cloneWithNewTexture(mapped));
+                        entry.setValue(face.cloneWithNewTexture(mapped.getSprite()));
                     }
                 }
             }

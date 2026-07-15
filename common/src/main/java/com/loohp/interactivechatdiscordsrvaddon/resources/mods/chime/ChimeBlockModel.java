@@ -30,6 +30,7 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelElement;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelGUILight;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride.ModelOverrideType;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.TextureInfo;
 import com.loohp.interactivechatdiscordsrvaddon.resources.mods.chime.ChimeModelOverride.ChimeModelOverrideType;
 
 import java.util.ArrayList;
@@ -77,7 +78,7 @@ public class ChimeBlockModel extends BlockModel {
         return new ChimeBlockModel(base, overrides);
     }
 
-    public ChimeBlockModel(IModelManager manager, String resourceLocation, String parent, boolean ambientocclusion, ModelGUILight guiLight, Map<ModelDisplayPosition, ModelDisplay> display, Map<String, String> textures, List<ModelElement> elements, List<ChimeModelOverride> overrides) {
+    public ChimeBlockModel(IModelManager manager, String resourceLocation, String parent, boolean ambientocclusion, ModelGUILight guiLight, Map<ModelDisplayPosition, ModelDisplay> display, Map<String, TextureInfo> textures, List<ModelElement> elements, List<ChimeModelOverride> overrides) {
         super(manager, resourceLocation, parent, ambientocclusion, guiLight, display, textures, elements, (List<ModelOverride>) (List<?>) overrides);
     }
 
