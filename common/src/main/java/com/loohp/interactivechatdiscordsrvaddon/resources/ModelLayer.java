@@ -23,6 +23,7 @@ package com.loohp.interactivechatdiscordsrvaddon.resources;
 import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.TintColorProvider;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.BlockModel;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.Coordinates3D;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelOverride;
 import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResource;
 
@@ -36,13 +37,19 @@ public class ModelLayer {
     private final Map<String, TextureResource> providedTextures;
     private final TintColorProvider tintColorProvider;
     private final Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction;
+    private final Coordinates3D modelTranslation;
 
     public ModelLayer(String modelKey, Map<ModelOverride.ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintColorProvider tintColorProvider, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction) {
+        this(modelKey, predicates, providedTextures, tintColorProvider, postResolveFunction, new Coordinates3D(0, 0, 0));
+    }
+
+    public ModelLayer(String modelKey, Map<ModelOverride.ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintColorProvider tintColorProvider, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, Coordinates3D modelTranslation) {
         this.modelKey = modelKey;
         this.predicates = predicates;
         this.providedTextures = providedTextures;
         this.tintColorProvider = tintColorProvider;
         this.postResolveFunction = postResolveFunction;
+        this.modelTranslation = modelTranslation;
     }
 
     public String getModelKey() {
@@ -63,5 +70,9 @@ public class ModelLayer {
 
     public Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> getPostResolveFunction() {
         return postResolveFunction;
+    }
+
+    public Coordinates3D getModelTranslation() {
+        return modelTranslation;
     }
 }

@@ -636,11 +636,11 @@ public class ItemRenderUtils {
                 }
                 tintColorProvider = new TintColorProvider.TintIndexData(tintData);
             }
-            return Collections.singletonList(new ModelLayer(modelKey, Collections.emptyMap(), providedTextures, tintColorProvider, postResolveFunctionGenerator.generate(modelKey, Collections.emptyMap())));
+            return Collections.singletonList(new ModelLayer(modelKey, Collections.emptyMap(), providedTextures, tintColorProvider, postResolveFunctionGenerator.generate(modelKey, Collections.emptyMap()), model.getModelTranslation()));
         } else if (itemModelDefinitionType.equals(ItemModelDefinition.ItemModelDefinitionType.COMPOSITE)) {
             ItemModelDefinition.ItemModelDefinitionComposite composite = (ItemModelDefinition.ItemModelDefinitionComposite) itemModelDefinition;
             return composite.getModels().stream()
-                    .map(m -> resolveItemModelDefinition(manager, player, displayPosition, itemStack, itemModelDefinition, postResolveFunctionGenerator))
+                    .map(m -> resolveItemModelDefinition(manager, player, displayPosition, itemStack, m, postResolveFunctionGenerator))
                     .flatMap(l -> l.stream())
                     .collect(Collectors.toList());
         } else if (itemModelDefinitionType.equals(ItemModelDefinition.ItemModelDefinitionType.CONDITION)) {

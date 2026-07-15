@@ -30,6 +30,7 @@ import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ChargeType;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.CopperGolemStatuePose;
 import com.loohp.interactivechatdiscordsrvaddon.registry.ResourceRegistry;
+import com.loohp.interactivechatdiscordsrvaddon.resources.models.Coordinates3D;
 import com.loohp.interactivechatdiscordsrvaddon.resources.models.ModelDisplay;
 import com.loohp.interactivechatdiscordsrvaddon.utils.JsonLenientUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.KeyUtils;
@@ -79,6 +80,7 @@ public abstract class ItemModelDefinition {
 
         if (type == ItemModelDefinitionType.MODEL) {
             String model = ensureNamespace((String) rootJson.get("model"));
+            Coordinates3D modelTranslation = getModelTranslation(rootJson);
             JSONArray tintsArray = (JSONArray) rootJson.get("tints");
             List<TintSource> tints = new ArrayList<>();
             if (tintsArray != null) {
@@ -87,7 +89,7 @@ public abstract class ItemModelDefinition {
                     tints.add(TintSource.fromJson(tintJson));
                 }
             }
-            return new ItemModelDefinitionModel(handAnimationOnSwapString, oversizedInGui, model, tints);
+            return new ItemModelDefinitionModel(handAnimationOnSwapString, oversizedInGui, model, tints, modelTranslation);
         } else if (type == ItemModelDefinitionType.COMPOSITE) {
             JSONArray modelsArray = (JSONArray) rootJson.get("models");
             List<ItemModelDefinition> models = new ArrayList<>();
@@ -304,6 +306,18 @@ public abstract class ItemModelDefinition {
         return key;
     }
 
+    private static Coordinates3D getModelTranslation(JSONObject rootJson) {
+        JSONObject transformationJson = (JSONObject) rootJson.get("transformation");
+        if (transformationJson == null) {
+            return new Coordinates3D(0, 0, 0);
+        }
+        JSONArray translationArray = (JSONArray) transformationJson.get("translation");
+        if (translationArray == null) {
+            return new Coordinates3D(0, 0, 0);
+        }
+        return new Coordinates3D(((Number) translationArray.get(0)).doubleValue(), ((Number) translationArray.get(1)).doubleValue(), ((Number) translationArray.get(2)).doubleValue());
+    }
+
     @SuppressWarnings("rawtypes")
     public static class ItemModelDefinitionType<T extends ItemModelDefinition> {
 
@@ -426,11 +440,17 @@ public abstract class ItemModelDefinition {
 
         private final String model;
         private final List<TintSource> tints;
+        private final Coordinates3D modelTranslation;
 
         public ItemModelDefinitionModel(boolean handAnimationOnSwapString, boolean oversizedInGui, String model, List<TintSource> tints) {
+            this(handAnimationOnSwapString, oversizedInGui, model, tints, new Coordinates3D(0, 0, 0));
+        }
+
+        public ItemModelDefinitionModel(boolean handAnimationOnSwapString, boolean oversizedInGui, String model, List<TintSource> tints, Coordinates3D modelTranslation) {
             super(ItemModelDefinitionType.MODEL, handAnimationOnSwapString, oversizedInGui);
             this.model = model;
             this.tints = tints;
+            this.modelTranslation = modelTranslation;
         }
 
         public String getModel() {
@@ -439,6 +459,10 @@ public abstract class ItemModelDefinition {
 
         public List<TintSource> getTints() {
             return tints;
+        }
+
+        public Coordinates3D getModelTranslation() {
+            return modelTranslation;
         }
     }
 

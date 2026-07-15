@@ -244,6 +244,7 @@ public class ModelRenderer implements AutoCloseable {
                     }
 
                     if (itemRenderModel != null) {
+                        applyModelTranslation(itemRenderModel, modelLayer.getModelTranslation());
                         itemRenderModel.translate(-16 / 2.0, -16 / 2.0, -16 / 2.0);
                         ModelDisplay displayData = itemBlockModel.getRawDisplay().get(playerModelItem.getPosition().getModelDisplayPosition());
                         boolean flipX = playerModelItem.getPosition().isLiteralFlipped();
@@ -352,7 +353,9 @@ public class ModelRenderer implements AutoCloseable {
             if (blockModel.getParent() == null || !blockModel.getParent().contains("/")) {
                 int index = 0;
                 for (int tick : animationSpec) {
-                    renderBlockModel(generateStandardRenderModel(tick, blockModel, manager, providedTextures, overrideTextures, tintColorProvider, enchanted, false, rawEnchantmentGlintProvider), images[index], blockModel.getDisplay(displayPosition), blockModel.getGUILight(), usePlayerModelPosition);
+                    Model renderModel = generateStandardRenderModel(tick, blockModel, manager, providedTextures, overrideTextures, tintColorProvider, enchanted, false, rawEnchantmentGlintProvider);
+                    applyModelTranslation(renderModel, modelLayer.getModelTranslation());
+                    renderBlockModel(renderModel, images[index], blockModel.getDisplay(displayPosition), blockModel.getGUILight(), usePlayerModelPosition);
                     index++;
                 }
             } else if (blockModel.getParent().equals(ModelManager.ITEM_BASE)) {
@@ -409,6 +412,7 @@ public class ModelRenderer implements AutoCloseable {
             BufferedImage[] images;
             if (layers.size() > 1) {
                 images = new BufferedImage[layers.stream().mapToInt(e -> e.length).max().orElse(0)];
+                Arrays.setAll(images, i -> new BufferedImage(internalWidth, internalHeight, BufferedImage.TYPE_INT_ARGB));
                 Graphics2D[] g = Arrays.stream(images).map(e -> e.createGraphics()).toArray(Graphics2D[]::new);
                 for (BufferedImage[] layerImages : layers) {
                     for (int i = 0; i < layerImages.length; i++) {
@@ -465,6 +469,10 @@ public class ModelRenderer implements AutoCloseable {
             }
         }
         return new Model(hexahedrons);
+    }
+
+    private void applyModelTranslation(Model renderModel, Coordinates3D translation) {
+        renderModel.translate(translation.getX() * 16, translation.getY() * 16, translation.getZ() * 16);
     }
 
     @SuppressWarnings("SuspiciousNameCombination")
@@ -790,7 +798,7 @@ public class ModelRenderer implements AutoCloseable {
     }
 
     private String layersCacheKey(List<ModelLayer> modelLayers) {
-        return modelLayers.stream().map(e -> cacheKey(e.getModelKey(), cacheKeyProvidedTextures(e.getProvidedTextures()), e.getPostResolveFunction() == null ? 0 : e.getPostResolveFunction().hashCode(), e.getPredicates(), cacheKeyProvidedTextures(e.getProvidedTextures()))).collect(Collectors.joining(","));
+        return modelLayers.stream().map(e -> cacheKey(e.getModelKey(), cacheKeyProvidedTextures(e.getProvidedTextures()), e.getPostResolveFunction() == null ? 0 : e.getPostResolveFunction().hashCode(), e.getPredicates(), cacheKeyProvidedTextures(e.getProvidedTextures()), e.getModelTranslation().getX(), e.getModelTranslation().getY(), e.getModelTranslation().getZ())).collect(Collectors.joining(","));
     }
 
     private <K, V> Set<K> findKey(Map<K, V> map, V value) {
