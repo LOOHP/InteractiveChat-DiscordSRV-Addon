@@ -55,13 +55,13 @@ public class BlockModel {
                 JSONArray scaleArray = (JSONArray) ((JSONObject) displayJson.get(displayKey)).get("scale");
                 Coordinates3D rotation;
                 if (rotationArray == null) {
-                    rotation = new Coordinates3D(0, 0, 0);
+                    rotation = Coordinates3D.ZERO;
                 } else {
                     rotation = new Coordinates3D(((Number) rotationArray.get(0)).doubleValue(), ((Number) rotationArray.get(1)).doubleValue(), ((Number) rotationArray.get(2)).doubleValue());
                 }
                 Coordinates3D translation;
                 if (translationArray == null) {
-                    translation = new Coordinates3D(0, 0, 0);
+                    translation = Coordinates3D.ZERO;
                 } else {
                     translation = new Coordinates3D(((Number) translationArray.get(0)).doubleValue(), ((Number) translationArray.get(1)).doubleValue(), ((Number) translationArray.get(2)).doubleValue());
                 }
@@ -99,7 +99,7 @@ public class BlockModel {
                     Coordinates3D origin;
                     JSONArray originArray = (JSONArray) rotationJson.get("origin");
                     if (originArray == null) {
-                        origin = new Coordinates3D(0, 0, 0);
+                        origin = Coordinates3D.ZERO;
                     } else {
                         origin = new Coordinates3D(((Number) originArray.get(0)).doubleValue(), ((Number) originArray.get(1)).doubleValue(), ((Number) originArray.get(2)).doubleValue());
                     }

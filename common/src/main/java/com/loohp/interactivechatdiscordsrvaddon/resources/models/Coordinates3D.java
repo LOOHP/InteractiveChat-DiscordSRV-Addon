@@ -22,6 +22,8 @@ package com.loohp.interactivechatdiscordsrvaddon.resources.models;
 
 public class Coordinates3D {
 
+    public static final Coordinates3D ZERO = new Coordinates3D(0, 0, 0);
+
     private final double x;
     private final double y;
     private final double z;

@@ -40,7 +40,7 @@ public class ModelLayer {
     private final Coordinates3D modelTranslation;
 
     public ModelLayer(String modelKey, Map<ModelOverride.ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintColorProvider tintColorProvider, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction) {
-        this(modelKey, predicates, providedTextures, tintColorProvider, postResolveFunction, new Coordinates3D(0, 0, 0));
+        this(modelKey, predicates, providedTextures, tintColorProvider, postResolveFunction, Coordinates3D.ZERO);
     }
 
     public ModelLayer(String modelKey, Map<ModelOverride.ModelOverrideType, Float> predicates, Map<String, TextureResource> providedTextures, TintColorProvider tintColorProvider, Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction, Coordinates3D modelTranslation) {

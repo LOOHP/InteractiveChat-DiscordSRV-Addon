@@ -80,7 +80,18 @@ public abstract class ItemModelDefinition {
 
         if (type == ItemModelDefinitionType.MODEL) {
             String model = ensureNamespace((String) rootJson.get("model"));
-            Coordinates3D modelTranslation = getModelTranslation(rootJson);
+            Coordinates3D modelTranslation;
+            JSONObject transformationJson = (JSONObject) rootJson.get("transformation");
+            if (transformationJson == null) {
+                modelTranslation = Coordinates3D.ZERO;
+            } else {
+                JSONArray translationArray = (JSONArray) transformationJson.get("translation");
+                if (translationArray == null) {
+                    modelTranslation = Coordinates3D.ZERO;
+                } else {
+                    modelTranslation = new Coordinates3D(((Number) translationArray.get(0)).doubleValue(), ((Number) translationArray.get(1)).doubleValue(), ((Number) translationArray.get(2)).doubleValue());
+                }
+            }
             JSONArray tintsArray = (JSONArray) rootJson.get("tints");
             List<TintSource> tints = new ArrayList<>();
             if (tintsArray != null) {
@@ -306,18 +317,6 @@ public abstract class ItemModelDefinition {
         return key;
     }
 
-    private static Coordinates3D getModelTranslation(JSONObject rootJson) {
-        JSONObject transformationJson = (JSONObject) rootJson.get("transformation");
-        if (transformationJson == null) {
-            return new Coordinates3D(0, 0, 0);
-        }
-        JSONArray translationArray = (JSONArray) transformationJson.get("translation");
-        if (translationArray == null) {
-            return new Coordinates3D(0, 0, 0);
-        }
-        return new Coordinates3D(((Number) translationArray.get(0)).doubleValue(), ((Number) translationArray.get(1)).doubleValue(), ((Number) translationArray.get(2)).doubleValue());
-    }
-
     @SuppressWarnings("rawtypes")
     public static class ItemModelDefinitionType<T extends ItemModelDefinition> {
 
@@ -443,7 +442,7 @@ public abstract class ItemModelDefinition {
         private final Coordinates3D modelTranslation;
 
         public ItemModelDefinitionModel(boolean handAnimationOnSwapString, boolean oversizedInGui, String model, List<TintSource> tints) {
-            this(handAnimationOnSwapString, oversizedInGui, model, tints, new Coordinates3D(0, 0, 0));
+            this(handAnimationOnSwapString, oversizedInGui, model, tints, Coordinates3D.ZERO);
         }
 
         public ItemModelDefinitionModel(boolean handAnimationOnSwapString, boolean oversizedInGui, String model, List<TintSource> tints, Coordinates3D modelTranslation) {

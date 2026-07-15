@@ -244,7 +244,8 @@ public class ModelRenderer implements AutoCloseable {
                     }
 
                     if (itemRenderModel != null) {
-                        applyModelTranslation(itemRenderModel, modelLayer.getModelTranslation());
+                        Coordinates3D modelTranslation = modelLayer.getModelTranslation();
+                        itemRenderModel.translate(modelTranslation.getX() * 16, modelTranslation.getY() * 16, modelTranslation.getZ() * 16);
                         itemRenderModel.translate(-16 / 2.0, -16 / 2.0, -16 / 2.0);
                         ModelDisplay displayData = itemBlockModel.getRawDisplay().get(playerModelItem.getPosition().getModelDisplayPosition());
                         boolean flipX = playerModelItem.getPosition().isLiteralFlipped();
@@ -354,7 +355,8 @@ public class ModelRenderer implements AutoCloseable {
                 int index = 0;
                 for (int tick : animationSpec) {
                     Model renderModel = generateStandardRenderModel(tick, blockModel, manager, providedTextures, overrideTextures, tintColorProvider, enchanted, false, rawEnchantmentGlintProvider);
-                    applyModelTranslation(renderModel, modelLayer.getModelTranslation());
+                    Coordinates3D modelTranslation = modelLayer.getModelTranslation();
+                    renderModel.translate(modelTranslation.getX() * 16, modelTranslation.getY() * 16, modelTranslation.getZ() * 16);
                     renderBlockModel(renderModel, images[index], blockModel.getDisplay(displayPosition), blockModel.getGUILight(), usePlayerModelPosition);
                     index++;
                 }
@@ -469,10 +471,6 @@ public class ModelRenderer implements AutoCloseable {
             }
         }
         return new Model(hexahedrons);
-    }
-
-    private void applyModelTranslation(Model renderModel, Coordinates3D translation) {
-        renderModel.translate(translation.getX() * 16, translation.getY() * 16, translation.getZ() * 16);
     }
 
     @SuppressWarnings("SuspiciousNameCombination")
