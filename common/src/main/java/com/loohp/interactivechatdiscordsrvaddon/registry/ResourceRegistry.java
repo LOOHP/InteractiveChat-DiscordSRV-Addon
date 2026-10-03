@@ -104,6 +104,10 @@ public class ResourceRegistry {
 
     public static final String LEGACY_BED_TEXTURE_PLACEHOLDER = ICD_PREFIX + "legacy_bed";
 
+    /**
+     * Removed in 26.3
+     */
+    @Deprecated
     public static final String MAP_MARKINGS_LOCATION = ITEM_TEXTURE_LOCATION + "filled_map_markings";
 
     public static final String GRASS_COLORMAP_LOCATION = COLORMAP_TEXTURE_LOCATION + "grass";

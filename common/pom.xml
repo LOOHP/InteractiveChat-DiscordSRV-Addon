@@ -25,7 +25,7 @@
     <groupId>com.loohp</groupId>
     <artifactId>InteractiveChatDiscordSrvAddon</artifactId>
     <name>InteractiveChatDiscordSrvAddon</name>
-    <version>2026.1.1.0</version>
+    <version>2026.1.2.0</version>
 
     <description>Have InteractiveChat Placeholders translated on DiscordSRV discord messages.</description>
     <url>https://github.com/LOOHP/InteractiveChat-DiscordSRV-Addon</url>
@@ -398,13 +398,13 @@
         <dependency>
             <groupId>com.loohp</groupId>
             <artifactId>ImageFrame</artifactId>
-            <version>1.8.7.1</version>
+            <version>2026.1.5.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.loohp</groupId>
             <artifactId>InteractiveChat</artifactId>
-            <version>2026.1.1.0</version>
+            <version>2026.1.2.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -682,16 +682,23 @@
             <artifactId>InteractiveChatDiscordSrvAddon-V26_2</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
-        </dependency>        <dependency>
+        </dependency>
+        <dependency>
+            <groupId>com.loohp</groupId>
+            <artifactId>InteractiveChatDiscordSrvAddon-V26_3</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>net.momirealms</groupId>
             <artifactId>craft-engine-core</artifactId>
-            <version>0.0.67</version>
+            <version>26.9</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>net.momirealms</groupId>
             <artifactId>craft-engine-bukkit</artifactId>
-            <version>0.0.67</version>
+            <version>26.9</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

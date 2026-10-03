@@ -415,7 +415,6 @@ public class MinecraftFontRenderer extends JFrame {
                 List<ResourcePackSource> sources = new ArrayList<>();
                 sources.add(ResourcePackSource.ofDefault("Default", new File("InteractiveChatDiscordSrvAddon/built-in", "Default"), ResourcePackType.BUILT_IN));
                 for (String resourceName : resourceOrder) {
-                    File resourcePackFile = new File("InteractiveChatDiscordSrvAddon/resourcepacks/" + resourceName);
                     sources.add(ResourcePackSource.ofCustom(resourceName, new File("InteractiveChatDiscordSrvAddon/resourcepacks/" + resourceName), ResourcePackType.LOCAL));
                 }
                 resourceBar.setValue(valuePerPack);
