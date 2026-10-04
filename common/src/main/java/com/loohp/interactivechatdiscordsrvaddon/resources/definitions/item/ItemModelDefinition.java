@@ -383,26 +383,25 @@ public abstract class ItemModelDefinition {
 
     public static class TintSourceType<T extends TintSource> {
 
-        public static final TintSourceType<ConstantTintSource> CONSTANT = new TintSourceType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":constant", ConstantTintSource.class);
-        public static final TintSourceType<DyeTintSource> DYE = new TintSourceType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":dye", DyeTintSource.class);
-        public static final TintSourceType<GrassTintSource> GRASS = new TintSourceType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":grass", GrassTintSource.class);
-        public static final TintSourceType<FireworkTintSource> FIREWORK = new TintSourceType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":firework", FireworkTintSource.class);
-        public static final TintSourceType<PotionTintSource> POTION = new TintSourceType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":potion", PotionTintSource.class);
-        public static final TintSourceType<MapColorTintSource> MAP_COLOR = new TintSourceType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":map_color", MapColorTintSource.class);
-        public static final TintSourceType<TeamTintSource> TEAM = new TintSourceType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":team", TeamTintSource.class);
-        public static final TintSourceType<CustomModelDataTintSource> CUSTOM_MODEL_DATA = new TintSourceType<>(ResourceRegistry.DEFAULT_NAMESPACE + ":custom_model_data", CustomModelDataTintSource.class);
-
         private static final Map<String, TintSourceType<?>> TYPES_MAP = new HashMap<>();
 
-        static {
-            TYPES_MAP.put(CONSTANT.getNamespacedKey(), CONSTANT);
-            TYPES_MAP.put(DYE.getNamespacedKey(), DYE);
-            TYPES_MAP.put(GRASS.getNamespacedKey(), GRASS);
-            TYPES_MAP.put(FIREWORK.getNamespacedKey(), FIREWORK);
-            TYPES_MAP.put(POTION.getNamespacedKey(), POTION);
-            TYPES_MAP.put(MAP_COLOR.getNamespacedKey(), MAP_COLOR);
-            TYPES_MAP.put(TEAM.getNamespacedKey(), TEAM);
-            TYPES_MAP.put(CUSTOM_MODEL_DATA.getNamespacedKey(), CUSTOM_MODEL_DATA);
+        public static final TintSourceType<ConstantTintSource> CONSTANT = register(ResourceRegistry.DEFAULT_NAMESPACE, "constant", ConstantTintSource.class);
+        public static final TintSourceType<DyeTintSource> DYE = register(ResourceRegistry.DEFAULT_NAMESPACE, "dye", DyeTintSource.class);
+        public static final TintSourceType<GrassTintSource> GRASS = register(ResourceRegistry.DEFAULT_NAMESPACE, "grass", GrassTintSource.class);
+        public static final TintSourceType<FireworkTintSource> FIREWORK = register(ResourceRegistry.DEFAULT_NAMESPACE, "firework", FireworkTintSource.class);
+        public static final TintSourceType<PotionTintSource> POTION = register(ResourceRegistry.DEFAULT_NAMESPACE, "potion", PotionTintSource.class);
+        /**
+         * Removed in 26.3
+         */
+        @Deprecated
+        public static final TintSourceType<MapColorTintSource> MAP_COLOR = register(ResourceRegistry.DEFAULT_NAMESPACE, "map_color", MapColorTintSource.class);
+        public static final TintSourceType<TeamTintSource> TEAM = register(ResourceRegistry.DEFAULT_NAMESPACE, "team", TeamTintSource.class);
+        public static final TintSourceType<CustomModelDataTintSource> CUSTOM_MODEL_DATA = register(ResourceRegistry.DEFAULT_NAMESPACE, "custom_model_data", CustomModelDataTintSource.class);
+
+        private static <T extends TintSource> TintSourceType<T> register(String namespace, String key, Class<T> typeClass) {
+            TintSourceType<T> type = new TintSourceType<>(namespace + ":" + key, typeClass);
+            TYPES_MAP.put(type.getNamespacedKey(), type);
+            return type;
         }
 
         private final String namespacedKey;
@@ -895,6 +894,10 @@ public abstract class ItemModelDefinition {
         }
     }
 
+    /**
+     * Removed in 26.3
+     */
+    @Deprecated
     public static class MapColorTintSource extends TintSource {
         private final int defaultColor;
 

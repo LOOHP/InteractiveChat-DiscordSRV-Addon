@@ -480,7 +480,6 @@ public class DiscordItemStackUtils {
         }
 
         if (InteractiveChatDiscordSrvAddon.plugin.showMapScale && InteractiveChat.version.isNewerOrEqualTo(MCVersion.V1_12) && FilledMapUtils.isFilledMap(item) && !hideAdditionalFlags) {
-            MapMeta map = (MapMeta) item.getItemMeta();
             MapView mapView = FilledMapUtils.getMapView(item);
             int id = FilledMapUtils.getMapId(item);
             int scale = mapView == null ? 0 : mapView.getScale().getValue();

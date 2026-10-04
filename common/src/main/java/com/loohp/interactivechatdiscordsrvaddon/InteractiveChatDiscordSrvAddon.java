@@ -31,6 +31,7 @@ import com.loohp.interactivechat.libs.org.json.simple.parser.JSONParser;
 import com.loohp.interactivechat.objectholders.ICPlayer;
 import com.loohp.interactivechat.objectholders.ICPlayerFactory;
 import com.loohp.interactivechat.objectholders.PlaceholderCooldownManager;
+import com.loohp.interactivechat.objectholders.ValuePairs;
 import com.loohp.interactivechat.registry.Registry;
 import com.loohp.interactivechat.utils.ChatColorUtils;
 import com.loohp.interactivechat.utils.ColorUtils;
@@ -76,6 +77,7 @@ import github.scarsz.discordsrv.DiscordSRV;
 import github.scarsz.discordsrv.api.ListenerPriority;
 import github.scarsz.discordsrv.dependencies.jda.api.Permission;
 import github.scarsz.discordsrv.dependencies.jda.api.requests.GatewayIntent;
+import java.util.stream.Collectors;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -268,6 +270,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public String alternateResourcePackHash = "";
     public boolean optifineCustomTextures = true;
     public boolean chimeOverrideModels = true;
+    public Set<String> craftEngineResourcePacks = new HashSet<>();
     public int embedDeleteAfter = 0;
     public boolean showDurability = true;
     public boolean showArmorColor = true;
@@ -496,6 +499,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         alternateResourcePackHash = config.getConfiguration().getString("Resources.AlternateServerResourcePack.Hash");
         optifineCustomTextures = config.getConfiguration().getBoolean("Resources.OptifineCustomTextures");
         chimeOverrideModels = config.getConfiguration().getBoolean("Resources.ChimeOverrideModels") && InteractiveChat.version.isBetweenInclusively(MCVersion.V1_16, MCVersion.V1_20_5);
+        craftEngineResourcePacks = new HashSet<>(config.getConfiguration().getStringList("Resources.CraftEngineResourcePacks"));
 
         itemImage = config.getConfiguration().getBoolean("InventoryImage.Item.Enabled");
         invImage = config.getConfiguration().getBoolean("InventoryImage.Inventory.Enabled");
@@ -783,10 +787,12 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
                     sources.add(ResourcePackSource.ofCustom(resourceName, serverResourcePack, ResourcePackType.SERVER));
                 }
                 if (craftEngineHook) {
-                    File cePackFile = CraftEngineHook.getGeneratedResourcePackFile();
-                    if (cePackFile != null) {
+                    List<ValuePairs<String, File>> cePackFiles = CraftEngineHook.getGeneratedResourcePackFile(craftEngineResourcePacks);
+                    if (!cePackFiles.isEmpty()) {
                         Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[ICDiscordSrvAddon] Loading \"CraftEngine\" resources...");
-                        sources.add(ResourcePackSource.ofCustom("CraftEngine", cePackFile, ResourcePackType.SERVER));
+                        for (ValuePairs<String, File> cePackFile : cePackFiles) {
+                            sources.add(ResourcePackSource.ofCustom("CraftEngine - " + cePackFile.getFirst(), cePackFile.getSecond(), ResourcePackType.SERVER));
+                        }
                     }
                 }
                 resourceManager.loadResources(sources, (source, info) -> {
