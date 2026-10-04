@@ -1,0 +1,35 @@
+package com.loohp.interactivechatdiscordsrvaddon.utils;
+
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.minimessage.MiniMessage;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import java.util.regex.Pattern;
+
+/** Discord-only presentation; never writes item metadata or parses arbitrary message tags. */
+public final class DiscordItemNamePresentation {
+    private static final Pattern GRADIENT = Pattern.compile(
+            "(?<!\\\\)<gradient:#[0-9a-fA-F]{6}(?::#[0-9a-fA-F]{6})+(?::[-+]?(?:[01](?:\\.\\d+)?|\\.\\d+))?>[^<>]*</gradient>");
+    private static final MiniMessage FORMAT = MiniMessage.builder().tags(StandardTags.gradient()).build();
+
+    private DiscordItemNamePresentation() { }
+
+    public static Component format(Component name) {
+        if (name == null) return null;
+        return name.replaceText(builder -> builder.match(GRADIENT).replacement((match, ignored) ->
+                match.group().length() > 4096 ? Component.text(match.group()) : FORMAT.deserialize(match.group())));
+    }
+
+    /** Discord embed text cannot display per-character RGB colors. */
+    public static String plain(Component name) {
+        return PlainTextComponentSerializer.plainText().serialize(format(name));
+    }
+
+    /** Replace only the extracted weapon name, not player names or the entire death message. */
+    public static String replaceWeaponName(String message, Component weaponName) {
+        if (message == null || weaponName == null) return message;
+        String raw = PlainTextComponentSerializer.plainText().serialize(weaponName);
+        String clean = plain(weaponName);
+        return raw.isEmpty() || raw.equals(clean) ? message : message.replace(raw, clean);
+    }
+}

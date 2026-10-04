@@ -21,6 +21,7 @@
 package com.loohp.interactivechatdiscordsrvaddon.listeners;
 
 import com.loohp.interactivechat.InteractiveChat;
+import com.loohp.interactivechat.config.Config;
 import com.loohp.interactivechat.api.InteractiveChatAPI;
 import com.loohp.interactivechat.libs.com.loohp.platformscheduler.Scheduler;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
@@ -75,6 +76,8 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.languages.SpecificTran
 import com.loohp.interactivechatdiscordsrvaddon.utils.ComponentStringUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordContentUtils;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils;
+import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemNamePresentation;
+import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordPlainChat;
 import com.loohp.interactivechatdiscordsrvaddon.utils.DiscordItemStackUtils.DiscordToolTip;
 import com.loohp.interactivechatdiscordsrvaddon.utils.TranslationKeyUtils;
 import com.loohp.interactivechatdiscordsrvaddon.wrappers.TitledInventoryWrapper;
@@ -86,6 +89,7 @@ import github.scarsz.discordsrv.api.events.AchievementMessagePreProcessEvent;
 import github.scarsz.discordsrv.api.events.DeathMessagePostProcessEvent;
 import github.scarsz.discordsrv.api.events.DeathMessagePreProcessEvent;
 import github.scarsz.discordsrv.api.events.GameChatMessagePreProcessEvent;
+import github.scarsz.discordsrv.api.events.GameChatMessagePostProcessEvent;
 import github.scarsz.discordsrv.api.events.VentureChatMessagePreProcessEvent;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.ChannelType;
 import github.scarsz.discordsrv.dependencies.jda.api.entities.Message;
@@ -213,6 +217,15 @@ public class OutboundToDiscordEvents implements Listener {
         }
 
         event.setMessageComponent(ComponentStringUtils.toDiscordSRVComponent(message));
+    }
+
+    @Subscribe(priority = ListenerPriority.HIGHEST)
+    public void onPlainChatToDiscord(GameChatMessagePostProcessEvent event) {
+        if (event.isCancelled()) return;
+        if (Config.getConfig(InteractiveChatDiscordSrvAddon.CONFIG_ID).getConfiguration()
+                .getBoolean("Settings.PlainTextRelayedChat", true)) {
+            event.setProcessedMessage(DiscordPlainChat.render(event.getProcessedMessage()));
+        }
     }
 
     @Subscribe(priority = ListenerPriority.LOWEST)
@@ -429,7 +442,7 @@ public class OutboundToDiscordEvents implements Listener {
                     if (!InteractiveChat.itemAirAllow && isAir) {
                         return null;
                     }
-                    String itemStr = PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(ComponentModernizing.modernize(ItemStackUtils.getDisplayName(item)), InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)));
+                    String itemStr = PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(ComponentModernizing.modernize(DiscordItemNamePresentation.format(ItemStackUtils.getDisplayName(item))), InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language)));
                     itemStr = ComponentStringUtils.stripColorAndConvertMagic(itemStr);
 
                     int amount = item.getAmount();
@@ -633,14 +646,17 @@ public class OutboundToDiscordEvents implements Listener {
         if (event.isCancelled()) {
             return;
         }
-        if (!InteractiveChatDiscordSrvAddon.plugin.deathMessageTranslated) {
-            return;
-        }
         Component deathMessage = DEATH_MESSAGE.get(event.getPlayer().getUniqueId());
         if (deathMessage == null) {
             return;
         }
-        event.setDeathMessage(PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(deathMessage, InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language))));
+        if (InteractiveChatDiscordSrvAddon.plugin.deathMessageTranslated) {
+            event.setDeathMessage(PlainTextComponentSerializer.plainText().serialize(ComponentStringUtils.resolve(deathMessage, InteractiveChatDiscordSrvAddon.plugin.getResourceManager().getLanguageManager().getTranslateFunction().ofLanguage(InteractiveChatDiscordSrvAddon.plugin.language))));
+        }
+        ItemStack weapon = ComponentStringUtils.extractItemStack(deathMessage);
+        if (weapon != null && weapon.getType() != Material.AIR) {
+            event.setDeathMessage(DiscordItemNamePresentation.replaceWeaponName(event.getDeathMessage(), ItemStackUtils.getDisplayName(weapon)));
+        }
     }
 
     @Subscribe(priority = ListenerPriority.HIGHEST)
