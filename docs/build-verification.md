@@ -1,0 +1,19 @@
+# Build verification follow-up
+
+## Requirements
+
+- WHEN an early reactor module resolves the author's libraries THEN THE SYSTEM SHALL use the same author repository documented by common, without changing dependency versions.
+- WHEN presentation verification runs THEN THE SYSTEM SHALL compile the production presentation helpers and execute both existing proof programs against checksum-pinned companion plugin APIs, failing on compilation, proof or input-integrity errors.
+- THE SYSTEM SHALL distinguish presentation verification from a complete multi-version release build and actual Discord/client acceptance.
+
+## Task and evidence
+
+- [ ] INFRA-001: repair repository inheritance and make the 31 presentation checks reproducible in hosted CI.
+  - Current upstream master: 0c0ab3029c824ecb27bceeac98b72d75acfa2d84; included by this branch. Existing untracked local overlay script is preserved and excluded.
+  - Red diagnostic: root Maven verify cannot resolve BlockModelRenderer 1.1.4.0 or InteractiveChat 2026.1.2.0 through JitPack/Central. Their POMs and InteractiveChat JAR are available from the author's HTTPS repository; common already declares it, but abstraction and version modules do not inherit it.
+  - Existing proof mains check 12 item-name and 19 plain-relay cases using the actual relocated Adventure and DiscordSRV serializer APIs. No behavioral change or historical TDD red/green is claimed for this infrastructure task.
+  - No local SPEAR EARS validator/state helper exists in this repository. This small requirement/task/evidence record tracks spec, diagnostic proof, build infrastructure, unchanged architecture, and verification refinement without claiming absent tooling passed.
+
+## Release gate
+
+The root reactor also requires locally installed CraftBukkit/NMS artifacts for every declared version, normally obtained through Spigot BuildTools, plus its remaining companion libraries. Presentation CI does not build, shade or release the plugin and must not replace the complete root build. Never use the local release-class overlay as merged-source release evidence. Substantive review, complete build and isolated-server image/chat acceptance remain open. No production change is authorized.

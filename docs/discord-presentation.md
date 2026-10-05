@@ -13,7 +13,11 @@ option.
 Two executable regression proof classes in `common/src/test/java` cover 12 item
 name and 19 plain-chat cases. Run each `main` with the common module and its
 InteractiveChat/DiscordSRV dependencies on the classpath. These are explicit
-proof programs, not automatically discovered JUnit tests.
+proof programs, not automatically discovered JUnit tests. The common Maven test
+phase now executes both mains and fails on their assertions. The standalone
+`scripts/verify-discord-presentation.ps1` also compiles both production helpers
+and runs the proofs against SHA-256-pinned companion APIs; GitHub's presentation
+workflow runs this bounded check without claiming a complete plugin build.
 
 Local validation compiled the changed classes against release plugin APIs and
 ran all 31 checks. A full multi-module Maven build still requires the historical

@@ -1,0 +1,18 @@
+name: Discord presentation proofs
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  presentation:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Compile presentation helpers and execute 31 proof checks
+        shell: pwsh
+        run: ./scripts/verify-discord-presentation.ps1
