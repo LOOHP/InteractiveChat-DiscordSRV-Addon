@@ -4,6 +4,7 @@
 
 - WHEN an early reactor module resolves the author's libraries THEN THE SYSTEM SHALL use the same author repository documented by common, without changing dependency versions.
 - WHEN presentation verification runs THEN THE SYSTEM SHALL compile the production presentation helpers and execute both existing proof programs against checksum-pinned companion plugin APIs, failing on compilation, proof or input-integrity errors.
+- WHEN a pull request is verified THEN THE SYSTEM SHALL run the complete clean Maven reactor as a separate hosted job, without replacing it with presentation-only checks.
 - THE SYSTEM SHALL distinguish presentation verification from a complete multi-version release build and actual Discord/client acceptance.
 
 ## Task and evidence
@@ -16,4 +17,4 @@
 
 ## Release gate
 
-The root reactor also requires locally installed CraftBukkit/NMS artifacts for every declared version, normally obtained through Spigot BuildTools, plus its remaining companion libraries. Presentation CI does not build, shade or release the plugin and must not replace the complete root build. Never use the local release-class overlay as merged-source release evidence. Substantive review, complete build and isolated-server image/chat acceptance remain open. No production change is authorized.
+The root reactor also requires CraftBukkit/NMS artifacts for every declared version plus its remaining companion libraries; repository availability is checked by actual compilation, not assumed. If artifacts become unavailable, use the author's supported build prerequisites, not dummy classes or a release overlay. Presentation CI does not build, shade or release the plugin and must not replace the separate full-reactor CI job. Never use the local release-class overlay as merged-source release evidence. Substantive review, complete build and isolated-server image/chat acceptance remain open. No production change is authorized.
