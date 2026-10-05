@@ -20,7 +20,9 @@ and runs the proofs against SHA-256-pinned companion APIs; GitHub's presentation
 workflow runs this bounded check without claiming a complete plugin build.
 
 Local validation compiled the changed classes against release plugin APIs and
-ran all 31 checks. A full multi-module Maven build still requires the historical
-NMS/renderer dependencies. Hosted checks and actual Discord delivery on a test
-server are separate acceptance gates; a release-class overlay is not proof of a
-complete current-upstream release build.
+ran all 31 checks. After repository-resolution repairs, the full clean Maven
+reactor passes all 46 modules at runtime-source commit 239f804; Maven now executes
+both proof programs too. Hosted full-reactor checks, substantive review and actual
+Discord delivery on a test server remain separate acceptance gates. See
+`docs/build-verification.md` for source/artifact evidence; the older release-class
+overlay is not used as complete source-build evidence.
