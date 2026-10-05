@@ -14,6 +14,7 @@
   - Red diagnostic: root Maven verify cannot resolve BlockModelRenderer 1.1.4.0 or InteractiveChat 2026.1.2.0 through JitPack/Central. Their POMs and InteractiveChat JAR are available from the author's HTTPS repository; common already declares it, but abstraction and version modules do not inherit it.
   - Existing proof mains check 12 item-name and 19 plain-relay cases using the actual relocated Adventure and DiscordSRV serializer APIs. No behavioral change or historical TDD red/green is claimed for this infrastructure task.
   - No local SPEAR EARS validator/state helper exists in this repository. This small requirement/task/evidence record tracks spec, diagnostic proof, build infrastructure, unchanged architecture, and verification refinement without claiming absent tooling passed.
+  - Reactor diagnostics also showed HTTP 403 responses from common's obsolete Paper URL and slow attempts to resolve Central libraries through third-party repositories. Use Paper's documented endpoint (https://docs.papermc.io/paper/dev/project-setup/) and explicitly prefer Maven Central for its release artifacts, retaining all other repositories and dependency versions.
 
 ## Release gate
 
