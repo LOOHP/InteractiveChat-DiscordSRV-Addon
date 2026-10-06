@@ -27,7 +27,7 @@
     <parent>
         <groupId>com.loohp</groupId>
         <artifactId>InteractiveChatDiscordSrvAddon-Parent</artifactId>
-        <version>2026.1.2.0</version>
+        <version>2026.1.3.0</version>
     </parent>
 
     <artifactId>InteractiveChatDiscordSrvAddon-V1_21_5</artifactId>
