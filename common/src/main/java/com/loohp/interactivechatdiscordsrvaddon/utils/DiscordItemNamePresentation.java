@@ -25,11 +25,15 @@ public final class DiscordItemNamePresentation {
         return PlainTextComponentSerializer.plainText().serialize(format(name));
     }
 
-    /** Replace only the extracted weapon name, not player names or the entire death message. */
+    /** Normalize only the final bracketed weapon occurrence, leaving unrelated text intact. */
     public static String replaceWeaponName(String message, Component weaponName) {
         if (message == null || weaponName == null) return message;
         String raw = PlainTextComponentSerializer.plainText().serialize(weaponName);
         String clean = plain(weaponName);
-        return raw.isEmpty() || raw.equals(clean) ? message : message.replace(raw, clean);
+        if (raw.isEmpty() || raw.equals(clean)) return message;
+        String bracketed = "[" + raw + "]";
+        int weaponIndex = message.lastIndexOf(bracketed);
+        return weaponIndex < 0 ? message : message.substring(0, weaponIndex)
+                + "[" + clean + "]" + message.substring(weaponIndex + bracketed.length());
     }
 }

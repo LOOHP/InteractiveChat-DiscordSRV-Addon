@@ -26,6 +26,14 @@ public final class DiscordItemNamePresentationProof {
         String death = "appointive was speared by CheddarManPro using [" + literal + "]";
         check("appointive was speared by CheddarManPro using [HiWarden]".equals(
                 DiscordItemNamePresentation.replaceWeaponName(death, original)), "death weapon name");
+        check((literal + " was speared using [HiWarden]").equals(
+                DiscordItemNamePresentation.replaceWeaponName(literal + " was speared using [" + literal + "]", original)),
+                "unrelated matching name preserved");
+        check(("[" + literal + "] using [HiWarden]").equals(
+                DiscordItemNamePresentation.replaceWeaponName("[" + literal + "] using [" + literal + "]", original)),
+                "only final weapon occurrence replaced");
+        check(literal.equals(DiscordItemNamePresentation.replaceWeaponName(literal, original)),
+                "unbracketed text preserved");
         Component vanilla = Component.translatable("item.minecraft.diamond_sword");
         check(vanilla.equals(DiscordItemNamePresentation.format(vanilla)), "vanilla translations unchanged");
         Component colored = Component.text("Existing", NamedTextColor.GOLD);

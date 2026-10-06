@@ -9,6 +9,12 @@
 
 ## Task and evidence
 
+- [x] REVIEW-002 implementation and local verification: scope weapon normalization to its final bracketed occurrence, preserve code-shielded Discord mentions during plain-text normalization, and remove malformed residual section signs. Preserve authorized unshielded mention behavior, item markers, and stored Minecraft components.
+  - Red: the new weapon-name regression failed because unrelated matching text was replaced. The separate mention regression demonstrated that code-shielded `@everyone`/`@here` became unshielded text; this is text-level evidence, not a claim of a live notification exploit.
+  - Green: 15 item-name and 23 plain-chat assertions pass against checksum-pinned companion APIs. Java 25 `mvn clean verify` passes all 46 modules, including 26.2 and 26.3, and executes both proof programs (2026-10-05).
+  - Architecture: normalization remains a Discord-only presentation adapter; stored item components and authorized unshielded mentions are unchanged. Code-shielded mentions retain an invisible separator after `@` when their code delimiters are removed.
+  - Pending acceptance: fresh exact-head hosted checks/review, actual bot/webhook notification and rendered-item testing, and the separately requested EnthusiaStaff visibility/staffmode integration. No production upload or activation occurred.
+
 - [x] INFRA-001: repair repository inheritance and make the 31 presentation checks reproducible in hosted CI.
   - Current upstream master: 0c0ab3029c824ecb27bceeac98b72d75acfa2d84; included by this branch. Existing untracked local overlay script is preserved and excluded.
   - Red diagnostic: root Maven verify cannot resolve BlockModelRenderer 1.1.4.0 or InteractiveChat 2026.1.2.0 through JitPack/Central. Their POMs and InteractiveChat JAR are available from the author's HTTPS repository; common already declares it, but abstraction and version modules do not inherit it.

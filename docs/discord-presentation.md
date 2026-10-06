@@ -10,8 +10,8 @@ previous behavior. Exact `<ICD=n>` image markers are preserved. Messages typed
 directly in Discord and advancement/item embed images are not moderated by this
 option.
 
-Two executable regression proof classes in `common/src/test/java` cover 12 item
-name and 19 plain-chat cases. Run each `main` with the common module and its
+Two executable regression proof classes in `common/src/test/java` cover 15 item
+name and 23 plain-chat cases. Run each `main` with the common module and its
 InteractiveChat/DiscordSRV dependencies on the classpath. These are explicit
 proof programs, not automatically discovered JUnit tests. The common Maven test
 phase now executes both mains and fails on their assertions. The standalone
@@ -26,3 +26,10 @@ both proof programs too. Hosted full-reactor checks, substantive review and actu
 Discord delivery on a test server remain separate acceptance gates. See
 `docs/build-verification.md` for source/artifact evidence; the older release-class
 overlay is not used as complete source-build evidence.
+
+Review follow-up adds seven regressions (38 checks total): only the final
+bracketed weapon-name occurrence is normalized, code-shielded mentions retain
+non-notifying text when Markdown delimiters are removed, and malformed residual
+section signs are removed. Authorized unshielded mentions remain unchanged.
+The checksum-pinned verifier and all 46 clean reactor modules pass locally;
+fresh hosted review and real Discord delivery remain separate gates.

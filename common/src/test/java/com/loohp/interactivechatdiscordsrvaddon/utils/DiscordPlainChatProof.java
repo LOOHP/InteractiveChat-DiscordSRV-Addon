@@ -27,6 +27,10 @@ public final class DiscordPlainChatProof {
         check("Player » <gradient:not-a-color>hello</gradient>", "Player » <gradient:not-a-color\\>hello</gradient\\>");
         check("Sword<ICD=12><ICD=345>", "Sword<ICD=12><ICD=345>");
         check("", "");
+        check("Player » `@everyone` `@here`", "Player » @\u200Beveryone @\u200Bhere");
+        check("Player » `<@123456789>` `<@&123456789>`", "Player » <@\u200B123456789\\> <@\u200B&123456789\\>");
+        check("Player » @everyone @here", "Player » @everyone @here");
+        check("Player » §zhello§", "Player » zhello");
         System.out.println("Passed " + checks + " plain Discord chat checks");
     }
 }
