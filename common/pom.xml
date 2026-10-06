@@ -68,6 +68,15 @@
                 <version>3.5.0</version>
                 <executions>
                     <execution>
+                        <id>staff-visibility-proof</id>
+                        <phase>test</phase>
+                        <goals><goal>java</goal></goals>
+                        <configuration>
+                            <mainClass>com.loohp.interactivechatdiscordsrvaddon.integration.StaffPublicVisibilityProof</mainClass>
+                            <classpathScope>test</classpathScope>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>discord-item-name-proof</id>
                         <phase>test</phase>
                         <goals><goal>java</goal></goals>
