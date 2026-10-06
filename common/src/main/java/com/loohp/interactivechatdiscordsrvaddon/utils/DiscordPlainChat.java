@@ -5,12 +5,9 @@ import com.loohp.interactivechat.libs.net.kyori.adventure.text.minimessage.tag.r
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import github.scarsz.discordsrv.dependencies.mcdiscordreserializer.minecraft.MinecraftSerializer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /** Plain presentation for relayed chat only; does not affect embeds or Minecraft chat. */
 public final class DiscordPlainChat {
-    private static final Pattern CODE_SPAN = Pattern.compile("(`+)([^`]*?)\\1");
     private static final MiniMessage STYLES = MiniMessage.builder().tags(TagResolver.resolver(
             StandardTags.color(), StandardTags.decorations(), StandardTags.gradient(),
             StandardTags.rainbow(), StandardTags.reset(), StandardTags.font())).build();
@@ -47,13 +44,46 @@ public final class DiscordPlainChat {
 
     /** Code spans are non-notifying in Discord; retain that property when removing their delimiters. */
     private static String preserveCodeMentionShielding(String message) {
-        Matcher spans = CODE_SPAN.matcher(message);
-        StringBuffer shielded = new StringBuffer();
-        while (spans.find()) {
-            String replacement = spans.group(1) + spans.group(2).replace("@", "@\u200B") + spans.group(1);
-            spans.appendReplacement(shielded, Matcher.quoteReplacement(replacement));
+        StringBuilder shielded = new StringBuilder(message.length());
+        int copied = 0;
+        for (int start = 0; start < message.length();) {
+            if (message.charAt(start) != '`' || escaped(message, start)) {
+                start++;
+                continue;
+            }
+            int content = runEnd(message, start);
+            int width = content - start;
+            int end = content;
+            while (end < message.length()) {
+                if (message.charAt(end) != '`') {
+                    end++;
+                    continue;
+                }
+                int after = runEnd(message, end);
+                if (after - end == width && !escaped(message, end)) {
+                    shielded.append(message, copied, content);
+                    shielded.append(message.substring(content, end).replace("@", "@\u200B"));
+                    shielded.append(message, end, after);
+                    copied = after;
+                    break;
+                }
+                end = after;
+            }
+            start = copied > content ? copied : content;
         }
-        spans.appendTail(shielded);
+        shielded.append(message, copied, message.length());
         return shielded.toString();
+    }
+
+    private static int runEnd(String message, int start) {
+        int end = start;
+        while (end < message.length() && message.charAt(end) == '`') end++;
+        return end;
+    }
+
+    private static boolean escaped(String message, int offset) {
+        int slashes = 0;
+        while (offset > 0 && message.charAt(--offset) == '\\') slashes++;
+        return (slashes & 1) != 0;
     }
 }

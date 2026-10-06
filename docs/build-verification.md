@@ -1,5 +1,29 @@
 # Build verification follow-up
 
+## Combined release review, 2026-10-06
+
+- Spec: deliver implicit-ended bold gradients and authoritative Staff public
+  profile/list filtering together, preserving item data, existing settings and
+  mention shielding. Require exact-head hosted review and complete builds before
+  merge; test-server installation is not real Discord/client acceptance.
+- Current upstream master 28806de (2026.1.3.0) was fetched and incorporated into
+  an isolated continuation of owner PR #1. Existing independent checkouts remain
+  unchanged. Parsing 004f4ba and visibility 358c305 were safely incorporated.
+- Behavioral proof exists in their committed executable regression programs;
+  this integration does not claim a new historical red run. No EARS/state helper
+  is available. Full reactor, pinned runtime companion compatibility, hosted
+  exact-head findings and actual hidden-player/image acceptance are distinct gates.
+- Upstream's new bump requires unpublished InteractiveChat 2026.1.3.0 and the
+  full reactor fails dependency resolution. Revert that version-only bump for
+  this supported 2026.1.2.0 candidate; retain the fetched ancestry and use real
+  existing companion APIs, not stub artifacts.
+- Review regression: fenced code with an internal backtick exposed an
+  unshielded mention before the fix. Delimiter-run scanning now preserves
+  shielding; 21 item-name and 24 plain-chat checks pass. Authorized unshielded
+  mentions remain unchanged. Actual Discord notification behavior is unproven.
+- Full combined reactor and hosted review pending. No production changes or
+  test restart performed.
+
 ## Requirements
 
 - WHEN an early reactor module resolves the author's libraries THEN THE SYSTEM SHALL use the same author repository documented by common, without changing dependency versions.

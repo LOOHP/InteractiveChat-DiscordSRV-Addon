@@ -31,6 +31,11 @@ public final class DiscordPlainChatProof {
         check("Player » `<@123456789>` `<@&123456789>`", "Player » <@\u200B123456789\\> <@\u200B&123456789\\>");
         check("Player » @everyone @here", "Player » @everyone @here");
         check("Player » §zhello§", "Player » zhello");
+        String fenced = DiscordPlainChat.render("Player » ```code ` internal @everyone <@123456789>``` ");
+        if (fenced.contains("@everyone") || fenced.contains("<@123456789")) {
+            throw new AssertionError("Fenced code mentions became unshielded: " + fenced);
+        }
+        checks++;
         System.out.println("Passed " + checks + " plain Discord chat checks");
     }
 }
