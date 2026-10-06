@@ -1,0 +1,35 @@
+name: Discord presentation proofs
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  reactor:
+    name: Complete multi-version Maven verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Build all adapters and execute presentation proofs
+        run: mvn --batch-mode --no-transfer-progress clean verify
+  presentation:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Compile presentation helpers and execute 31 proof checks
+        shell: pwsh
+        run: ./scripts/verify-discord-presentation.ps1

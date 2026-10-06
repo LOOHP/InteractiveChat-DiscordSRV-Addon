@@ -110,3 +110,6 @@ buildNumber.properties
 
 # Common working directory
 run/
+
+# Local Discord item-name regression classes and downloaded build dependencies
+item-name-proof/
