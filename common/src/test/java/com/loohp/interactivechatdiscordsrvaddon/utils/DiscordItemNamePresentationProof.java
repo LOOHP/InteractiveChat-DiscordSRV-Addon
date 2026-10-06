@@ -39,7 +39,18 @@ public final class DiscordItemNamePresentationProof {
         Component colored = Component.text("Existing", NamedTextColor.GOLD);
         check(colored.equals(DiscordItemNamePresentation.format(colored)), "existing component unchanged");
         String unclosed = "<gradient:#00FF1C:#00EAFF>HiWarden";
-        check(unclosed.equals(DiscordItemNamePresentation.plain(Component.text(unclosed))), "malformed stays literal");
+        check("HiWarden".equals(DiscordItemNamePresentation.plain(Component.text(unclosed))), "implicit gradient end");
+        String supporter = "<b><gradient:#FF9B00:#FFB172>✧ Founding Supporter";
+        Component supporterName = Component.text(supporter);
+        Component supporterFormatted = DiscordItemNamePresentation.format(supporterName);
+        check("✧ Founding Supporter".equals(DiscordItemNamePresentation.plain(supporterName)), "open bold gradient embed");
+        check(hasColor(supporterFormatted), "open bold gradient tooltip colors");
+        check(hasBold(supporterFormatted), "open bold gradient tooltip bold");
+        check("FainNoir was slain by FainNeito using [✧ Founding Supporter]".equals(
+                DiscordItemNamePresentation.replaceWeaponName("FainNoir was slain by FainNeito using [" + supporter + "]", supporterName)),
+                "open bold gradient death weapon");
+        check(supporter.equals(PlainTextComponentSerializer.plainText().serialize(supporterName)), "supporter input unchanged");
+        check(("\\" + supporter).equals(DiscordItemNamePresentation.plain(Component.text("\\" + supporter))), "escaped bold gradient stays literal");
         String escaped = "\\" + literal;
         check(escaped.equals(DiscordItemNamePresentation.plain(Component.text(escaped))), "escaped stays literal");
         String unsafe = "<click:run_command:'/op x'>Name</click>";
@@ -50,5 +61,9 @@ public final class DiscordItemNamePresentationProof {
                 DiscordItemNamePresentation.replaceWeaponName("unrelated <gradient:#00FF1C:#00EAFF>Name</gradient>", original)),
                 "unrelated message markup unchanged");
         System.out.println("Passed " + checks + " Discord item-name checks");
+    }
+    private static boolean hasBold(Component component) {
+        return component.decoration(TextDecoration.BOLD) == TextDecoration.State.TRUE
+                || component.children().stream().anyMatch(DiscordItemNamePresentationProof::hasBold);
     }
 }

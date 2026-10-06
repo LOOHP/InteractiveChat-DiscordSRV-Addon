@@ -2,6 +2,7 @@ package com.loohp.interactivechatdiscordsrvaddon.utils;
 
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.Component;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.minimessage.MiniMessage;
+import com.loohp.interactivechat.libs.net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
 import com.loohp.interactivechat.libs.net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import java.util.regex.Pattern;
@@ -9,8 +10,11 @@ import java.util.regex.Pattern;
 /** Discord-only presentation; never writes item metadata or parses arbitrary message tags. */
 public final class DiscordItemNamePresentation {
     private static final Pattern GRADIENT = Pattern.compile(
-            "(?<!\\\\)<gradient:#[0-9a-fA-F]{6}(?::#[0-9a-fA-F]{6})+(?::[-+]?(?:[01](?:\\.\\d+)?|\\.\\d+))?>[^<>]*</gradient>");
-    private static final MiniMessage FORMAT = MiniMessage.builder().tags(StandardTags.gradient()).build();
+            "(?<!\\\\)(?<!<b>)(?<!<bold>)(?:<b>|<bold>)?<gradient:#[0-9a-fA-F]{6}(?::#[0-9a-fA-F]{6})+(?::[-+]?(?:[01](?:\\.\\d+)?|\\.\\d+))?>[^<>]*(?:</gradient>)?(?:</b>|</bold>)?");
+    // Item-name components provide the boundary for MiniMessage's implicit closes.
+    // Do not enable arbitrary tags (clicks, hover, selectors, placeholders, etc.).
+    private static final MiniMessage FORMAT = MiniMessage.builder().tags(
+            TagResolver.resolver(StandardTags.gradient(), StandardTags.decorations())).build();
 
     private DiscordItemNamePresentation() { }
 
