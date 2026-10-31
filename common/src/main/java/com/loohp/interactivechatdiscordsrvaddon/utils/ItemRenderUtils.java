@@ -374,19 +374,7 @@ public class ItemRenderUtils {
                 int dyedColor = NMSAddon.getInstance().getLeatherArmorColor(item).orElse(ResourceRegistry.DEFAULT_DYE_COLOR);
                 tintColorProvider = new TintColorProvider.DyeTintProvider(tintIndex -> tintIndex > 0 ? -1 : dyedColor);
             } else if (itemMeta instanceof PotionMeta) {
-                PotionMeta meta = (PotionMeta) itemMeta;
-                PotionType potiontype = NMSAddon.getInstance().getBasePotionType(item);
-                int color;
-                try {
-                    if (meta.hasColor()) {
-                        color = meta.getColor().asRGB();
-                    } else {
-                        color = PotionUtils.getPotionBaseColor(potiontype);
-                    }
-                } catch (Throwable e) {
-                    color = PotionUtils.getPotionBaseColor(PotionType.WATER);
-                }
-                int finalColor = color;
+                int finalColor = PotionUtils.getPotionColor(item, PotionUtils.WATER_COLOR);
                 tintColorProvider = new TintColorProvider.DyeTintProvider(tintIndex -> tintIndex == 0 ? finalColor : -1);
             } else if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:spawn_egg"))) {
                 TintColorProvider.SpawnEggTintData tintData = TintUtils.getSpawnEggTint(icMaterial);
@@ -576,19 +564,7 @@ public class ItemRenderUtils {
                         ItemModelDefinition.PotionTintSource potionTintSource = (ItemModelDefinition.PotionTintSource) tintSource;
                         int potionColor;
                         if (itemStack.getItemMeta() instanceof PotionMeta) {
-                            PotionMeta meta = (PotionMeta) itemStack.getItemMeta();
-                            PotionType potiontype = NMSAddon.getInstance().getBasePotionType(itemStack);
-                            int color;
-                            try {
-                                if (meta.hasColor()) {
-                                    color = meta.getColor().asRGB();
-                                } else {
-                                    color = PotionUtils.getPotionBaseColor(potiontype);
-                                }
-                            } catch (Throwable e) {
-                                color = potionTintSource.getDefaultColor();
-                            }
-                            potionColor = color;
+                            potionColor = PotionUtils.getPotionColor(itemStack, potionTintSource.getDefaultColor());
                         } else {
                             potionColor = potionTintSource.getDefaultColor();
                         }

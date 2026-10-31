@@ -796,7 +796,29 @@ public class ModelRenderer implements AutoCloseable {
     }
 
     private String layersCacheKey(List<ModelLayer> modelLayers) {
-        return modelLayers.stream().map(e -> cacheKey(e.getModelKey(), cacheKeyProvidedTextures(e.getProvidedTextures()), e.getPostResolveFunction() == null ? 0 : e.getPostResolveFunction().hashCode(), e.getPredicates(), cacheKeyProvidedTextures(e.getProvidedTextures()), e.getModelTranslation().getX(), e.getModelTranslation().getY(), e.getModelTranslation().getZ())).collect(Collectors.joining(","));
+        return modelLayers.stream().map(e -> cacheKey(e.getModelKey(), cacheKeyProvidedTextures(e.getProvidedTextures()), e.getPostResolveFunction() == null ? 0 : e.getPostResolveFunction().hashCode(), e.getPredicates(), cacheKeyProvidedTextures(e.getProvidedTextures()), e.getModelTranslation().getX(), e.getModelTranslation().getY(), e.getModelTranslation().getZ(), cacheKeyTint(e.getTintColorProvider()))).collect(Collectors.joining(","));
+    }
+
+    private static final int CACHE_KEY_TINT_INDICES = 16;
+
+    // The tint is not part of the model key or textures, so without it every potion, dyed item, etc. with the
+    // same model would share the first one's cached render.
+    private String cacheKeyTint(TintColorProvider tintColorProvider) {
+        if (tintColorProvider == null) {
+            return "null";
+        }
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < CACHE_KEY_TINT_INDICES; i++) {
+            if (i > 0) {
+                sb.append(',');
+            }
+            if (tintColorProvider.hasTintColor(i)) {
+                sb.append(Integer.toHexString(tintColorProvider.getTintColor(i)));
+            } else {
+                sb.append('-');
+            }
+        }
+        return sb.append(']').toString();
     }
 
     private <K, V> Set<K> findKey(Map<K, V> map, V value) {

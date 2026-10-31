@@ -25,6 +25,8 @@ import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.AttributeBase;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
@@ -48,6 +50,52 @@ public class PotionUtils {
             }
         } else {
             return effect.getColor().asRGB();
+        }
+    }
+
+    /**
+     * Same as vanilla PotionContents#getColor: the custom color if set, otherwise the
+     * amplifier-weighted mix of all visible effects (base potion and custom effects),
+     * otherwise the given default.
+     */
+    @SuppressWarnings("deprecation")
+    public static int getPotionColor(ItemStack potion, int defaultColor) {
+        ItemMeta itemMeta = potion.getItemMeta();
+        PotionMeta meta = itemMeta instanceof PotionMeta ? (PotionMeta) itemMeta : null;
+        try {
+            if (meta != null && meta.hasColor()) {
+                return meta.getColor().asRGB();
+            }
+            int r = 0;
+            int g = 0;
+            int b = 0;
+            int total = 0;
+            for (PotionEffect effect : getAllPotionEffects(potion)) {
+                if (!effect.hasParticles()) {
+                    continue;
+                }
+                int color = effect.getType().getColor().asRGB();
+                int weight = effect.getAmplifier() + 1;
+                r += weight * ((color >> 16) & 0xFF);
+                g += weight * ((color >> 8) & 0xFF);
+                b += weight * (color & 0xFF);
+                total += weight;
+            }
+            if (total > 0) {
+                return (r / total) << 16 | (g / total) << 8 | (b / total);
+            }
+            PotionType type = meta == null ? null : NMSAddon.getInstance().getBasePotionType(potion);
+            if (type != null && type.name().equalsIgnoreCase("UNCRAFTABLE")) {
+                return UNCRAFTABLE_COLOR;
+            }
+            return defaultColor;
+        } catch (Throwable e) {
+            try {
+                PotionType type = NMSAddon.getInstance().getBasePotionType(potion);
+                return type == null ? defaultColor : getPotionBaseColor(type);
+            } catch (Throwable e2) {
+                return defaultColor;
+            }
         }
     }
 
