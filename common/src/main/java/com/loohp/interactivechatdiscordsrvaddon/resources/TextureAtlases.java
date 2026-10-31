@@ -231,7 +231,7 @@ public class TextureAtlases {
     public static final class TextureAtlasSourceType<T extends TextureAtlasSource> {
 
         public static final TextureAtlasSourceType<TextureAtlasDirectorySource> DIRECTORY = new TextureAtlasSourceType<>("directory", true, TextureAtlasDirectorySource.class);
-        public static final TextureAtlasSourceType<TextureAtlasSingleSource> SINGLE = new TextureAtlasSourceType<>("single", false, TextureAtlasSingleSource.class);
+        public static final TextureAtlasSourceType<TextureAtlasSingleSource> SINGLE = new TextureAtlasSourceType<>("single", true, TextureAtlasSingleSource.class);
         public static final TextureAtlasSourceType<TextureAtlasFilterSource> FILTER = new TextureAtlasSourceType<>("filter", false, TextureAtlasFilterSource.class);
         public static final TextureAtlasSourceType<TextureAtlasUnstitchSource> UNSTITCH = new TextureAtlasSourceType<>("unstitch", false, TextureAtlasUnstitchSource.class);
         public static final TextureAtlasSourceType<TextureAtlasPalettedPermutationsSource> PALETTED_PERMUTATIONS = new TextureAtlasSourceType<>("paletted_permutations", false, TextureAtlasPalettedPermutationsSource.class);
@@ -380,11 +380,16 @@ public class TextureAtlases {
 
         @Override
         public boolean isIncluded(String namespace, String relativePath) {
+            String resourceNamespace = ResourceRegistry.DEFAULT_NAMESPACE;
             String file = resource;
-            if (!resource.contains(".")) {
+            if (file.contains(":")) {
+                resourceNamespace = file.substring(0, file.indexOf(":"));
+                file = file.substring(file.indexOf(":") + 1);
+            }
+            if (!file.contains(".")) {
                 file += ".png";
             }
-            return relativePath.equals(file);
+            return namespace.equals(resourceNamespace) && relativePath.equals(file);
         }
     }
 

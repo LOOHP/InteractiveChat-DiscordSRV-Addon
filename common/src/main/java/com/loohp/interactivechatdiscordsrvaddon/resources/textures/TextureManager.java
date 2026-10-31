@@ -132,6 +132,11 @@ public class TextureManager extends AbstractManager implements ITextureManager {
                     key = key.substring(0, key.lastIndexOf("."));
                 }
                 List<TextureAtlases.TextureAtlasSource> atlasSources = textureAtlases == null ? Collections.emptyList() : checkAtlasInclusion(textureAtlases, namespace, relativePath);
+                List<String> textureAliases = atlasSources.stream()
+                        .filter(each -> each.getType().equals(TextureAtlases.TextureAtlasSourceType.SINGLE))
+                        .map(each -> ((TextureAtlases.TextureAtlasSingleSource) each).getSprite())
+                        .map(each -> each.contains(":") ? each : ResourceRegistry.DEFAULT_NAMESPACE + ":" + each)
+                        .collect(Collectors.toList());
                 Map<String, UnaryOperator<BufferedImage>> imageTransformFunctions = null;
                 if (!atlasSources.isEmpty()) {
                     for (TextureAtlases.TextureAtlasSource atlasSource : atlasSources) {
@@ -150,7 +155,11 @@ public class TextureManager extends AbstractManager implements ITextureManager {
                 }
                 if (extension.equalsIgnoreCase("png")) {
                     if (imageTransformFunctions == null) {
-                        textures.put(key, new TextureResource(this, key, file, true, null));
+                        TextureResource textureResource = new TextureResource(this, key, file, true, null);
+                        textures.put(key, textureResource);
+                        for (String textureAlias : textureAliases) {
+                            textures.put(textureAlias, textureResource);
+                        }
                     } else {
                         for (Map.Entry<String, UnaryOperator<BufferedImage>> entry : imageTransformFunctions.entrySet()) {
                             String spriteName = entry.getKey();
