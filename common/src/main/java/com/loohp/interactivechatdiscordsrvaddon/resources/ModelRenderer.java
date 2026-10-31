@@ -175,8 +175,9 @@ public class ModelRenderer implements AutoCloseable {
             resolvedItems.put(playerModelItem, layerResolvedItems);
         }
 
+        boolean cacheable = tintColorProvider == TintColorProvider.EMPTY_INSTANCE && modelItems.values().stream().flatMap(each -> each.getModelLayers().stream()).allMatch(each -> each.getTintColorProvider() == TintColorProvider.EMPTY_INSTANCE);
         String cacheKey = cacheKey(width, height, animationSpec, manager.getUuid(), slim, cacheKeyResolvedItems(resolvedItems), cacheKeyProvidedTextures(providedTextures));
-        if (manager.hasResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class)) {
+        if (cacheable && manager.hasResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class)) {
             CacheObject<?> cachedRender = manager.getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).getCache(cacheKey);
             if (cachedRender != null) {
                 RenderResult cachedResult = (RenderResult) cachedRender.getObject();
@@ -303,7 +304,9 @@ public class ModelRenderer implements AutoCloseable {
         }
 
         RenderResult result = new RenderResult(images);
-        manager.getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).putCache(cacheKey, result);
+        if (cacheable) {
+            manager.getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).putCache(cacheKey, result);
+        }
         return result;
     }
 
@@ -320,13 +323,16 @@ public class ModelRenderer implements AutoCloseable {
     }
 
     public RenderResult render(int width, int height, int internalWidth, int internalHeight, SteppedIntegerRange animationSpec, ResourceManager manager, boolean post1_8, ModelDisplayPosition displayPosition, List<ModelLayer> modelLayers, boolean enchanted, boolean usePlayerModelPosition, Function<RawEnchantmentGlintParameters, BufferedImage> enchantmentGlintProvider, Function<RawEnchantmentGlintParameters, RawEnchantmentGlintData> rawEnchantmentGlintProvider) {
+        boolean cacheable = modelLayers.stream().allMatch(each -> each.getTintColorProvider() == TintColorProvider.EMPTY_INSTANCE);
         String layersCacheKey = layersCacheKey(modelLayers);
         String cacheKey = cacheKey(width, height, animationSpec, manager.getUuid(), displayPosition, layersCacheKey, enchanted);
-        CacheObject<?> cachedRender = manager.getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).getCache(cacheKey);
-        if (cachedRender != null) {
-            RenderResult cachedResult = (RenderResult) cachedRender.getObject();
-            if (cachedResult.isSuccessful()) {
-                return cachedResult;
+        if (cacheable) {
+            CacheObject<?> cachedRender = manager.getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).getCache(cacheKey);
+            if (cachedRender != null) {
+                RenderResult cachedResult = (RenderResult) cachedRender.getObject();
+                if (cachedResult.isSuccessful()) {
+                    return cachedResult;
+                }
             }
         }
 
@@ -436,7 +442,9 @@ public class ModelRenderer implements AutoCloseable {
         } else {
             result = new RenderResult(rejectedReason);
         }
-        manager.getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).putCache(cacheKey, result);
+        if (cacheable) {
+            manager.getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).putCache(cacheKey, result);
+        }
         return result;
     }
 

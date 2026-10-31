@@ -109,6 +109,8 @@ public abstract class NMSAddonWrapper {
 
     public abstract List<PotionEffect> getAllPotionEffects(ItemStack potion);
 
+    public abstract int getPotionColor(ItemStack potion, int defaultColor);
+
     public abstract TextColor getPotionEffectChatColor(PotionEffectType type);
 
     public abstract Map<AttributeBase, ?> getPotionAttributeModifiers(PotionEffect effect);

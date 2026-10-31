@@ -310,6 +310,12 @@ public class V1_20_3 extends NMSAddonWrapper {
     }
 
     @Override
+    public int getPotionColor(ItemStack potion, int defaultColor) {
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(potion);
+        return PotionUtil.c(nmsItemStack) & 0xFFFFFF;
+    }
+
+    @Override
     public TextColor getPotionEffectChatColor(PotionEffectType type) {
         MobEffectList mobEffectList = CraftPotionEffectType.bukkitToMinecraft(type);
         EnumChatFormat chatFormat = mobEffectList.f().a();

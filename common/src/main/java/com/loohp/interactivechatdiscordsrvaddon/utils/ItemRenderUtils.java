@@ -375,17 +375,13 @@ public class ItemRenderUtils {
                 tintColorProvider = new TintColorProvider.DyeTintProvider(tintIndex -> tintIndex > 0 ? -1 : dyedColor);
             } else if (itemMeta instanceof PotionMeta) {
                 PotionMeta meta = (PotionMeta) itemMeta;
-                PotionType potiontype = NMSAddon.getInstance().getBasePotionType(item);
-                int color;
+                int defaultColor;
                 try {
-                    if (meta.hasColor()) {
-                        color = meta.getColor().asRGB();
-                    } else {
-                        color = PotionUtils.getPotionBaseColor(potiontype);
-                    }
+                    defaultColor = PotionUtils.getPotionBaseColor(NMSAddon.getInstance().getBasePotionType(item));
                 } catch (Throwable e) {
-                    color = PotionUtils.getPotionBaseColor(PotionType.WATER);
+                    defaultColor = PotionUtils.getPotionBaseColor(PotionType.WATER);
                 }
+                int color = meta.hasColor() ? meta.getColor().asRGB() : NMSAddon.getInstance().getPotionColor(item, defaultColor);
                 int finalColor = color;
                 tintColorProvider = new TintColorProvider.DyeTintProvider(tintIndex -> tintIndex == 0 ? finalColor : -1);
             } else if (icMaterial.isOneOf(Collections.singletonList("CONTAINS:spawn_egg"))) {
@@ -574,24 +570,8 @@ public class ItemRenderUtils {
                         tintData[tintindex] = () -> overlayColor;
                     } else if (tintSourceType.equals(ItemModelDefinition.TintSourceType.POTION)) {
                         ItemModelDefinition.PotionTintSource potionTintSource = (ItemModelDefinition.PotionTintSource) tintSource;
-                        int potionColor;
-                        if (itemStack.getItemMeta() instanceof PotionMeta) {
-                            PotionMeta meta = (PotionMeta) itemStack.getItemMeta();
-                            PotionType potiontype = NMSAddon.getInstance().getBasePotionType(itemStack);
-                            int color;
-                            try {
-                                if (meta.hasColor()) {
-                                    color = meta.getColor().asRGB();
-                                } else {
-                                    color = PotionUtils.getPotionBaseColor(potiontype);
-                                }
-                            } catch (Throwable e) {
-                                color = potionTintSource.getDefaultColor();
-                            }
-                            potionColor = color;
-                        } else {
-                            potionColor = potionTintSource.getDefaultColor();
-                        }
+                        PotionMeta meta = itemStack.getItemMeta() instanceof PotionMeta ? (PotionMeta) itemStack.getItemMeta() : null;
+                        int potionColor = meta != null && meta.hasColor() ? meta.getColor().asRGB() : NMSAddon.getInstance().getPotionColor(itemStack, potionTintSource.getDefaultColor());
                         tintData[tintindex] = () -> potionColor;
                     } else if (tintSourceType.equals(ItemModelDefinition.TintSourceType.MAP_COLOR)) {
                         ItemModelDefinition.MapColorTintSource mapColorTintSource = (ItemModelDefinition.MapColorTintSource) tintSource;

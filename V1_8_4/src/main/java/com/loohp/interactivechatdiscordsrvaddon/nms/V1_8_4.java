@@ -61,7 +61,9 @@ import net.minecraft.server.v1_8_R3.ItemArmor;
 import net.minecraft.server.v1_8_R3.ItemRecord;
 import net.minecraft.server.v1_8_R3.MinecraftKey;
 import net.minecraft.server.v1_8_R3.MinecraftServer;
+import net.minecraft.server.v1_8_R3.MobEffect;
 import net.minecraft.server.v1_8_R3.MobEffectList;
+import net.minecraft.server.v1_8_R3.PotionBrewer;
 import net.minecraft.server.v1_8_R3.NBTTagCompound;
 import net.minecraft.server.v1_8_R3.NBTTagList;
 import net.minecraft.server.v1_8_R3.TileEntityBanner;
@@ -208,6 +210,15 @@ public class V1_8_4 extends NMSAddonWrapper {
             effects.addAll(((PotionMeta) itemMeta).getCustomEffects());
         }
         return effects;
+    }
+
+    @Override
+    public int getPotionColor(ItemStack potion, int defaultColor) {
+        List<MobEffect> effects = new ArrayList<>();
+        for (PotionEffect effect : getAllPotionEffects(potion)) {
+            effects.add(new MobEffect(effect.getType().getId(), effect.getDuration(), effect.getAmplifier(), effect.isAmbient(), effect.hasParticles()));
+        }
+        return PotionBrewer.a(effects);
     }
 
     @Override

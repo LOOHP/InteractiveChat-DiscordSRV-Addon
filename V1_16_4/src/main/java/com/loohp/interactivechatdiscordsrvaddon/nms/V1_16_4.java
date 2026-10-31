@@ -355,6 +355,12 @@ public class V1_16_4 extends NMSAddonWrapper {
     }
 
     @Override
+    public int getPotionColor(ItemStack potion, int defaultColor) {
+        net.minecraft.server.v1_16_R3.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(potion);
+        return PotionUtil.c(nmsItemStack) & 0xFFFFFF;
+    }
+
+    @Override
     public TextColor getPotionEffectChatColor(PotionEffectType type) {
         try {
             mobEffectListInfoField.setAccessible(true);
