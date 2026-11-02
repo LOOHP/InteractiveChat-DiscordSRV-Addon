@@ -57,6 +57,12 @@ public class ImageFrameHook {
             return null;
         }
         List<BufferedImage> images = imageMap.getMapIds().stream().map(i -> imageMap.getOriginalImage(i)).collect(Collectors.toList());
+        if (images.isEmpty()) {
+            return null;
+        }
+        if (images.stream().anyMatch(i -> i == null)) {
+            return null;
+        }
         int sizePerImage = images.get(0).getWidth();
         BufferedImage wholeImage = new BufferedImage(sizePerImage * imageMap.getWidth(), sizePerImage * imageMap.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = wholeImage.createGraphics();
