@@ -25,6 +25,7 @@ import com.loohp.blockmodelrenderer.utils.ColorUtils;
 import com.loohp.interactivechat.libs.net.kyori.adventure.key.Key;
 import com.loohp.interactivechat.libs.org.json.simple.JSONArray;
 import com.loohp.interactivechat.libs.org.json.simple.JSONObject;
+import com.loohp.interactivechat.libs.org.json.simple.JSONValue;
 import com.loohp.interactivechat.libs.org.json.simple.parser.ParseException;
 import com.loohp.interactivechatdiscordsrvaddon.nms.NMSAddon;
 import com.loohp.interactivechatdiscordsrvaddon.objectholders.ChargeType;
@@ -153,6 +154,7 @@ public abstract class ItemModelDefinition {
         } else if (type == ItemModelDefinitionType.SELECT) {
             String propertyKey = ensureNamespace((String) rootJson.get("property"));
             SelectPropertyType<?> propertyType = SelectPropertyType.getSelectPropertyType(propertyKey);
+            boolean jsonWhen = propertyType.equals(SelectPropertyType.COMPONENT);
             List<UnparsedSelectCase> cases = new ArrayList<>();
             JSONArray casesJson = (JSONArray) rootJson.get("cases");
             for (Object caseObj : casesJson) {
@@ -162,10 +164,10 @@ public abstract class ItemModelDefinition {
                 if (rawWhen instanceof JSONArray) {
                     whens = new ArrayList<>();
                     for (Object element : (JSONArray) rawWhen) {
-                        whens.add((String) element);
+                        whens.add(jsonWhen ? JSONValue.toJSONString(element) : (String) element);
                     }
                 } else {
-                    whens = Collections.singletonList((String) rawWhen);
+                    whens = Collections.singletonList(jsonWhen ? JSONValue.toJSONString(rawWhen) : (String) rawWhen);
                 }
                 cases.add(new UnparsedSelectCase(whens, ItemModelDefinition.fromJson((JSONObject) caseModelJson.get("model"))));
             }
