@@ -39,6 +39,7 @@ import java.awt.font.TextAttribute;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -83,7 +84,9 @@ public class TrueTypeFont extends MinecraftFont {
             this.internalGraphics = null;
         }
         try {
-            this.font = Font.createFont(Font.TRUETYPE_FONT, manager.getFontManager().getFontResource(resourceLocation).getFile().getInputStream()).deriveFont(shift);
+            try (InputStream fontStream = manager.getFontManager().getFontResource(resourceLocation).getFile().getInputStream()) {
+                this.font = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(shift);
+            }
             GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(this.font);
             this.internalGraphics = INTERNAL_IMAGE.createGraphics();
             this.internalGraphics.setFont(font.deriveFont(size));

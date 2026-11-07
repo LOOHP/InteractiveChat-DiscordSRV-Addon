@@ -125,6 +125,21 @@ public class TextureResource {
         return image;
     }
 
+    /**
+     * Copy of only the given region of the texture. Same pixels as getTexture().getSubimage(x, y, width, height),
+     * without first copying the whole texture (font sheets are copied once per drawn character otherwise).
+     */
+    public BufferedImage getTextureRegion(int x, int y, int width, int height) {
+        BufferedImage image = loadImage();
+        if (imageTransformFunction != null) {
+            image = imageTransformFunction.apply(image);
+        }
+        if (x < 0 || y < 0 || width < 1 || height < 1 || x + width > image.getWidth() || y + height > image.getHeight()) {
+            return ImageUtils.copyImage(image).getSubimage(x, y, width, height);
+        }
+        return ImageUtils.copyAndGetSubImage(image, x, y, width, height);
+    }
+
     public BufferedImage getScaledTexture(int srcWidth, int srcHeight, int dstWidth, int dstHeight) {
         TextureGui.Scaling<?> scaling = TextureGui.Scaling.DEFAULT_SCALING;
         TextureMeta meta = getTextureMeta();

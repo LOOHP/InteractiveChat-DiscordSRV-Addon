@@ -167,7 +167,14 @@ public class ModelRenderer implements AutoCloseable {
             for (int layerIndex = 0; layerIndex < playerModelItem.getModelLayers().size(); layerIndex++) {
                 ModelLayer modelLayer = playerModelItem.getModelLayers().get(layerIndex);
                 BlockModel itemBlockModel = modelLayer.getModelKey() == null ? null : manager.getModelManager().resolveBlockModel(modelLayer.getModelKey(), InteractiveChat.version.isOld(), modelLayer.getPredicates());
-                ValuePairs<BlockModel, Map<String, TextureResource>> resolveFunctionResult = playerModelItem.getPostResolveFunction().get(layerIndex).apply(itemBlockModel);
+                Function<BlockModel, ValuePairs<BlockModel, Map<String, TextureResource>>> postResolveFunction = null;
+                if (playerModelItem.getPostResolveFunction() != null && playerModelItem.getPostResolveFunction().size() > layerIndex) {
+                    postResolveFunction = playerModelItem.getPostResolveFunction().get(layerIndex);
+                }
+                if (postResolveFunction == null) {
+                    postResolveFunction = DEFAULT_POST_RESOLVE_FUNCTION;
+                }
+                ValuePairs<BlockModel, Map<String, TextureResource>> resolveFunctionResult = postResolveFunction.apply(itemBlockModel);
                 itemBlockModel = resolveFunctionResult.getFirst();
                 Map<String, TextureResource> overrideTextures = resolveFunctionResult.getSecond();
                 layerResolvedItems.add(new ValueTrios<>(itemBlockModel, overrideTextures, modelLayer.getTintColorProvider()));
@@ -220,7 +227,13 @@ public class ModelRenderer implements AutoCloseable {
                                 if (resource == null) {
                                     resource = manager.getTextureManager().getTexture(resourceLocation);
                                 }
+                                if (resource == null) {
+                                    continue;
+                                }
                                 BufferedImage texture = resource.getTexture();
+                                if (texture == null) {
+                                    continue;
+                                }
                                 texture = resolved.getThird().applyTint(texture, i);
                                 if (resource.hasTextureMeta()) {
                                     TextureMeta meta = resource.getTextureMeta();

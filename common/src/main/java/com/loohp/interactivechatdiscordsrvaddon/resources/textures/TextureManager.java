@@ -44,9 +44,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -103,11 +106,75 @@ public class TextureManager extends AbstractManager implements ITextureManager {
 
     private Map<String, TextureResource> textures;
     private Map<String, TextureAtlases> textureAtlases;
+    private Set<String> spriteAliasKeys;
 
     public TextureManager(ResourceManager manager) {
         super(manager);
         this.textures = new HashMap<>();
         this.textureAtlases = new HashMap<>();
+        this.spriteAliasKeys = new HashSet<>();
+    }
+
+    private static String normalizeSpriteLocation(String location) {
+        if (location == null) {
+            return null;
+        }
+        if (!location.contains(":")) {
+            location = ResourceRegistry.DEFAULT_NAMESPACE + ":" + location;
+        }
+        if (location.endsWith(".png")) {
+            location = location.substring(0, location.length() - 4);
+        }
+        return location;
+    }
+
+    /**
+     * Atlas "single" sources may give a texture a different sprite name, e.g.
+     * {"type":"single","resource":"minecraft:item/iron_pickaxe","sprite":"_minecraft:item/iron_pickaxe"}.
+     * Models then reference the sprite name ("_minecraft:item/iron_pickaxe"), which does not exist as a file.
+     * Register each such sprite name as an alias of the resource texture, so lookups by sprite name resolve.
+     * Recomputed on every reload so aliases follow overrides from packs loaded later.
+     */
+    private void applySpriteAliases() {
+        for (String aliasKey : spriteAliasKeys) {
+            textures.remove(aliasKey);
+        }
+        spriteAliasKeys.clear();
+        Map<String, TextureAtlases> allAtlases = new HashMap<>(this.textureAtlases);
+        Map<String, TextureAtlases> managerAtlases = manager.getTextureAtlases();
+        if (managerAtlases != null) {
+            allAtlases.putAll(managerAtlases);
+        }
+        Map<String, String> aliases = new LinkedHashMap<>();
+        for (TextureAtlases atlases : allAtlases.values()) {
+            if (atlases == null) {
+                continue;
+            }
+            for (TextureAtlases.TextureAtlasSource source : atlases.getAllTextureAtlases()) {
+                if (!source.getType().equals(TextureAtlases.TextureAtlasSourceType.SINGLE)) {
+                    continue;
+                }
+                TextureAtlases.TextureAtlasSingleSource singleSource = (TextureAtlases.TextureAtlasSingleSource) source;
+                String resource = normalizeSpriteLocation(singleSource.getResource());
+                String sprite = normalizeSpriteLocation(singleSource.getSprite());
+                if (resource == null || sprite == null || resource.equals(sprite)) {
+                    continue;
+                }
+                aliases.put(sprite, resource);
+            }
+        }
+        for (Map.Entry<String, String> entry : aliases.entrySet()) {
+            String sprite = entry.getKey();
+            if (textures.containsKey(sprite)) {
+                continue;
+            }
+            TextureResource resource = textures.get(entry.getValue());
+            if (resource == null) {
+                continue;
+            }
+            textures.put(sprite, resource);
+            spriteAliasKeys.add(sprite);
+        }
     }
 
     @Override
@@ -287,6 +354,8 @@ public class TextureManager extends AbstractManager implements ITextureManager {
             }
             this.textures.putAll(textures);
         }
+
+        applySpriteAliases();
 
         int[] grassColorArray;
         TextureResource grassColorMap = getTexture(ResourceRegistry.GRASS_COLORMAP_LOCATION, false);

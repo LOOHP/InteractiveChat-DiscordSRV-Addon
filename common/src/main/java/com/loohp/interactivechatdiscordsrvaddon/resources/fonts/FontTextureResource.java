@@ -26,6 +26,9 @@ import com.loohp.interactivechatdiscordsrvaddon.resources.textures.TextureResour
 
 import java.awt.image.BufferedImage;
 import java.lang.ref.Reference;
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 public class FontTextureResource extends FontResource {
 
@@ -66,25 +69,39 @@ public class FontTextureResource extends FontResource {
         this(resource, 0, 0, 0, 0, 0, 0);
     }
 
+    // Hash of each loaded font sheet, so a sheet is hashed once instead of once per drawn character.
+    // Weak keys: an entry goes away together with the decoded sheet image.
+    private static final Map<BufferedImage, String> SHEET_HASHES = Collections.synchronizedMap(new WeakHashMap<>());
+
     @SuppressWarnings("deprecation")
     public BufferedImage getFontImage() {
         BufferedImage image;
+        boolean regionOnly = false;
         if (resourceWidth < 1 || resourceHeight < 1) {
-            image = resource.getTexture();
+            if (width < 1 || height < 1) {
+                image = resource.getTexture();
+            } else {
+                image = resource.getTextureRegion(x, y, width, height);
+                regionOnly = true;
+            }
         } else {
             image = resource.getTexture(resourceWidth, resourceHeight);
         }
         if (CACHE_TIME > 0) {
             Reference<BufferedImage> internalReference = resource.getUnsafe().getTextureReference();
             BufferedImage internal;
-            if ((internal = internalReference.get()) != null) {
-                String hash = ImageUtils.hash(internal);
+            if (internalReference != null && (internal = internalReference.get()) != null) {
+                String hash = SHEET_HASHES.get(internal);
+                if (hash == null) {
+                    hash = ImageUtils.hash(internal);
+                    SHEET_HASHES.put(internal, hash);
+                }
                 if (resource.getManager().getManager().getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).getCache(hash) == null) {
                     resource.getManager().getManager().getResourceRegistry(ICacheManager.IDENTIFIER, ICacheManager.class).putCache(hash, internal);
                 }
             }
         }
-        if (width < 1 || height < 1) {
+        if (width < 1 || height < 1 || regionOnly) {
             return image;
         }
         return image.getSubimage(x, y, width, height);

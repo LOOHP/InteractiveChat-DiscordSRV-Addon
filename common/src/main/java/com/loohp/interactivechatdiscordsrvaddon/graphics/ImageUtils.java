@@ -52,6 +52,7 @@ import org.nothings.stb.image.ImageResult;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageOutputStream;
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -62,9 +63,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.lang.ref.SoftReference;
 import java.net.URLConnection;
+import java.security.MessageDigest;
 import java.util.BitSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.loohp.blockmodelrenderer.utils.ColorUtils.*;
 
@@ -133,16 +137,31 @@ public class ImageUtils {
     }
 
     public static String hash(BufferedImage image) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int[] colors = image.getRGB(0, 0, image.getWidth(), image.getHeight(), null, 0, image.getWidth());
-        for (int color : colors) {
-            out.write((byte) (color >>> 24));
-            out.write((byte) (color >>> 16));
-            out.write((byte) (color >>> 8));
-            out.write((byte) color);
-        }
+        // Same result as SHA-1 over the ARGB bytes of every pixel (row by row), but streamed one row at a time
+        // instead of copying the whole image into an int[] plus a growing ByteArrayOutputStream plus its byte[] copy.
         try {
-            return HashUtils.createSha1String(new ByteArrayInputStream(out.toByteArray()));
+            MessageDigest digest = MessageDigest.getInstance("SHA-1");
+            int width = image.getWidth();
+            int height = image.getHeight();
+            int[] row = new int[width];
+            byte[] bytes = new byte[width * 4];
+            for (int y = 0; y < height; y++) {
+                image.getRGB(0, y, width, 1, row, 0, width);
+                int i = 0;
+                for (int color : row) {
+                    bytes[i++] = (byte) (color >>> 24);
+                    bytes[i++] = (byte) (color >>> 16);
+                    bytes[i++] = (byte) (color >>> 8);
+                    bytes[i++] = (byte) color;
+                }
+                digest.update(bytes, 0, i);
+            }
+            byte[] result = digest.digest();
+            StringBuilder sb = new StringBuilder(result.length * 2);
+            for (byte b : result) {
+                sb.append(Integer.toString((b & 0xFF) + 0x100, 16).substring(1));
+            }
+            return sb.toString();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -803,25 +822,64 @@ public class ImageUtils {
     }
 
     public static ComponentPrintResult printComponent(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize, double shadowFactor) {
-        BufferedImage temp = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        ComponentPrintResult printResult = printComponent0(manager, temp, component, language, legacyRGB, topX, topY, fontSize, false, 1.0);
-        temp = printResult.getImage();
-        Graphics2D g = image.createGraphics();
+        // Draw the shadow and then the text straight onto the target image. This used to go through two extra
+        // full-size temporary images (one for the text, one for the shadow) per call, which for a tooltip means
+        // two more copies of the whole tooltip canvas for every single line.
         if (Double.isFinite(shadowFactor)) {
-            BufferedImage tempShadow = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
-            ComponentPrintResult shadowPrintResult = printComponent0(manager, tempShadow, component, language, legacyRGB, topX, topY, fontSize, true, shadowFactor);
-            tempShadow = shadowPrintResult.getImage();
-            g.drawImage(tempShadow, (int) (fontSize * 0.15), (int) (fontSize * 0.15), null);
+            int shadowOffset = (int) (fontSize * 0.15);
+            printComponent0(manager, image, component, language, legacyRGB, topX, topY, fontSize, true, shadowFactor, shadowOffset, shadowOffset);
         }
-        g.drawImage(temp, 0, 0, null);
-        g.dispose();
+        ComponentPrintResult printResult = printComponent0(manager, image, component, language, legacyRGB, topX, topY, fontSize, false, 1.0);
         return new ComponentPrintResult(image, printResult.getTextWidth());
     }
 
+    private static final int TEXT_SCRATCH_MAX_PIXELS = 6 * 1024 * 1024;
+    private static final AtomicReference<SoftReference<BufferedImage>> TEXT_SCRATCH = new AtomicReference<>(null);
+
+    private static BufferedImage acquireTextScratch(int width, int height) {
+        SoftReference<BufferedImage> ref = TEXT_SCRATCH.getAndSet(null);
+        BufferedImage scratch = ref == null ? null : ref.get();
+        if (scratch == null || scratch.getWidth() < width || scratch.getHeight() < height) {
+            int newWidth = scratch == null ? width : Math.max(width, scratch.getWidth());
+            int newHeight = scratch == null ? height : Math.max(height, scratch.getHeight());
+            if ((long) newWidth * newHeight > TEXT_SCRATCH_MAX_PIXELS) {
+                newWidth = width;
+                newHeight = height;
+            }
+            return new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+        }
+        Graphics2D g = scratch.createGraphics();
+        g.setComposite(AlphaComposite.Clear);
+        g.fillRect(0, 0, width, height);
+        g.dispose();
+        return scratch;
+    }
+
+    private static void releaseTextScratch(BufferedImage scratch) {
+        if ((long) scratch.getWidth() * scratch.getHeight() > TEXT_SCRATCH_MAX_PIXELS) {
+            return;
+        }
+        SoftReference<BufferedImage> current = TEXT_SCRATCH.get();
+        BufferedImage currentImage = current == null ? null : current.get();
+        if (currentImage == null || (long) currentImage.getWidth() * currentImage.getHeight() < (long) scratch.getWidth() * scratch.getHeight()) {
+            TEXT_SCRATCH.compareAndSet(current, new SoftReference<>(scratch));
+        }
+    }
+
     private static ComponentPrintResult printComponent0(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize, boolean isShadow, double shadowFactor) {
+        return printComponent0(manager, image, component, language, legacyRGB, topX, topY, fontSize, isShadow, shadowFactor, 0, 0);
+    }
+
+    private static ComponentPrintResult printComponent0(ResourceManager manager, BufferedImage image, Component component, String language, boolean legacyRGB, int topX, int topY, float fontSize, boolean isShadow, double shadowFactor, int drawOffsetX, int drawOffsetY) {
         Component text = ComponentFlattening.flatten(ComponentStringUtils.resolve(ComponentModernizing.modernize(component), manager.getLanguageManager().getTranslateFunction().ofLanguage(language)));
 
-        BufferedImage textImage = new BufferedImage(image.getWidth(), image.getHeight() * 2, BufferedImage.TYPE_INT_ARGB);
+        // Glyphs are drawn into a canvas twice the target height (baseline in the middle) and then copied onto the
+        // target. That canvas is now reused between calls instead of being allocated fresh every time. Only the
+        // width x (2 * height) area is cleared and copied, so the output is the same as with a new image.
+        int textImageWidth = image.getWidth();
+        int textImageHeight = image.getHeight() * 2;
+        BufferedImage scratch = acquireTextScratch(textImageWidth, textImageHeight);
+        BufferedImage textImage = scratch;
         LanguageMeta languageMeta = manager.getLanguageManager().getLanguageMeta(language);
         List<ValuePairs<ComponentCharacter, CharacterData>> data = I18nUtils.bidirectionalReorder(text, languageMeta.isBidirectional());
 
@@ -878,8 +936,17 @@ public class ImageUtils {
             character = null;
         }
         Graphics2D g = image.createGraphics();
-        g.drawImage(textImage, 0, topY - image.getHeight(), null);
+        if (drawOffsetX != 0 || drawOffsetY != 0) {
+            // Same clipping as drawing into a separate image of the target size and then blitting that at the offset
+            g.clipRect(drawOffsetX, drawOffsetY, image.getWidth(), image.getHeight());
+        }
+        BufferedImage toDraw = textImage;
+        if (textImage == scratch && (scratch.getWidth() != textImageWidth || scratch.getHeight() != textImageHeight)) {
+            toDraw = scratch.getSubimage(0, 0, textImageWidth, textImageHeight);
+        }
+        g.drawImage(toDraw, drawOffsetX, topY - image.getHeight() + drawOffsetY, null);
         g.dispose();
+        releaseTextScratch(scratch);
         return new ComponentPrintResult(image, x - lastSpaceWidth - topX);
     }
 
