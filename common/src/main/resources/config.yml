@@ -343,6 +343,9 @@ Messages:
     LoadedResources: "&bLoaded Resources: &a"
 
 Settings:
+  #Render Minecraft-to-Discord chat and ranks as plain text; keeps item image markers intact.
+  #Does not moderate messages typed directly in Discord or alter advancement/item images.
+  PlainTextRelayedChat: true
   #This is in seconds
   CacheTimeout: 300
   EscapePlaceholdersSentFromDiscord: true

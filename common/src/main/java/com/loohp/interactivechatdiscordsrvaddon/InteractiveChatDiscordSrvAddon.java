@@ -284,6 +284,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
     public int rendererThreads = -1;
 
     private ResourceManager resourceManager;
+    public com.loohp.interactivechatdiscordsrvaddon.integration.EnthusiaStaffDiscordHook staffDiscordVisibility;
     public ModelRenderer modelRenderer;
     public ExecutorService mediaReadingService;
 
@@ -311,6 +312,7 @@ public class InteractiveChatDiscordSrvAddon extends JavaPlugin implements Listen
         plugin = this;
         interactivechat = InteractiveChat.plugin;
         discordsrv = DiscordSRV.getPlugin();
+        staffDiscordVisibility = new com.loohp.interactivechatdiscordsrvaddon.integration.EnthusiaStaffDiscordHook(this);
 
         if (!getDataFolder().exists()) {
             getDataFolder().mkdirs();

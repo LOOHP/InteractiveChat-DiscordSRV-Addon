@@ -87,7 +87,7 @@ public class LegacyDiscordCommandEvents {
                     for (ValueTrios<UUID, String, Integer> playerinfo : bungeePlayers) {
                         UUID uuid = playerinfo.getFirst();
                         ICPlayer icPlayer = ICPlayerFactory.getICPlayer(uuid);
-                        if (icPlayer == null || !icPlayer.isVanished()) {
+                        if (!InteractiveChatDiscordSrvAddon.plugin.staffDiscordVisibility.hidden(uuid) && (icPlayer == null || !icPlayer.isVanished())) {
                             if (!InteractiveChatDiscordSrvAddon.plugin.playerlistCommandOnlyInteractiveChatServers || ICPlayerFactory.getICPlayer(uuid) != null) {
                                 players.put(Bukkit.getOfflinePlayer(uuid), playerinfo.getThird());
                             }
@@ -101,7 +101,7 @@ public class LegacyDiscordCommandEvents {
             } else {
                 players = Bukkit.getOnlinePlayers().stream().filter(each -> {
                     ICPlayer icPlayer = ICPlayerFactory.getICPlayer(each);
-                    return icPlayer == null || !icPlayer.isVanished();
+                    return !InteractiveChatDiscordSrvAddon.plugin.staffDiscordVisibility.hidden(each.getUniqueId()) && (icPlayer == null || !icPlayer.isVanished());
                 }).collect(Collectors.toMap(each -> each, each -> PlayerUtils.getPing(each), (a, b) -> a));
             }
             if (players.isEmpty()) {

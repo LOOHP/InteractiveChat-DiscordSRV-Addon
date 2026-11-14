@@ -174,7 +174,7 @@ public class DiscordItemStackUtils {
             item = new ItemStack(Material.AIR);
         }
         ICMaterial icMaterial = ICMaterial.from(item);
-        String name = InteractiveChatComponentSerializer.legacySection().serialize(ComponentStringUtils.resolve(ItemStackUtils.getDisplayName(item), translationFunction));
+        String name = InteractiveChatComponentSerializer.legacySection().serialize(ComponentStringUtils.resolve(DiscordItemNamePresentation.format(ItemStackUtils.getDisplayName(item)), translationFunction));
         if (item.getAmount() == 1 || item == null || item.getType().equals(Material.AIR)) {
             name = InteractiveChatDiscordSrvAddon.plugin.itemDisplaySingle.replace("{Item}", ComponentStringUtils.stripColorAndConvertMagic(name)).replace("{Amount}", String.valueOf(item.getAmount()));
         } else {
@@ -204,7 +204,7 @@ public class DiscordItemStackUtils {
         }
         ICMaterial icMaterial = ICMaterial.from(item);
 
-        Component itemDisplayNameComponent = ItemStackUtils.getDisplayName(item);
+        Component itemDisplayNameComponent = DiscordItemNamePresentation.format(ItemStackUtils.getDisplayName(item));
         prints.add(tooltipText(itemDisplayNameComponent));
 
         boolean hasMeta = item.getItemMeta() != null;
